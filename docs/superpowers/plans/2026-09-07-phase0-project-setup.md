@@ -442,11 +442,18 @@ Expected: commit succeeds.
 
 - [ ] **Step 1: Write the failing access-control test**
 
-Create `tests/Feature/AdminAccessTest.php`:
+Create `tests/Feature/AdminAccessTest.php`. **Note:** `RefreshDatabase` wipes the `roles`
+table between tests, so re-seed it in `beforeEach` — otherwise `assignRole()` throws
+`RoleDoesNotExist` (hit this during Task 5 execution):
 ```php
 <?php
 
 use App\Models\User;
+use Database\Seeders\RoleSeeder;
+
+beforeEach(function () {
+    $this->seed(RoleSeeder::class);
+});
 
 it('blocks a plain user from the admin dashboard', function () {
     $user = User::factory()->create();
@@ -537,20 +544,19 @@ php artisan test --filter=AdminAccessTest
 ```
 Expected: all 3 tests PASS.
 
-- [ ] **Step 7: Show the Admin nav link only to admins**
+- [ ] **Step 7: Show the Admin nav link only to admins (desktop + mobile menu)**
 
-In `resources/views/layouts/navigation.blade.php`, inside the existing nav-links block
-(next to the "Dashboard" link Breeze already generated), add:
+In `resources/views/layouts/navigation.blade.php`, immediately after the existing
+"Dashboard" `<x-nav-link>` (desktop, ~line 17) add:
 ```blade
-@can('') @endcan
 @if(auth()->user()?->hasRole('admin'))
     <x-nav-link :href="route('admin.dashboard')" :active="request()->routeIs('admin.*')">
         {{ __('Admin') }}
     </x-nav-link>
 @endif
 ```
-(Remove the empty `@can`/`@endcan` line above — it was left in by mistake; the real
-content is just the `@if` block.)
+And after the matching `<x-responsive-nav-link>` for Dashboard (mobile menu, ~line 72)
+add the same block using `<x-responsive-nav-link>` instead of `<x-nav-link>`.
 
 - [ ] **Step 8: Commit**
 
