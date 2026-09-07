@@ -69,7 +69,7 @@ regardless of shell state.
 - Produces: working `artisan` CLI, `composer.json`, Pest test runner — every later task
   runs commands through these
 
-- [ ] **Step 1: Permanently add Laragon tool paths to the user PATH (safe, append-only)**
+- [x] **Step 1: Permanently add Laragon tool paths to the user PATH (safe, append-only)**
 
 Run in PowerShell:
 ```powershell
@@ -93,14 +93,14 @@ Expected: prints either the paths added, or "Already present". This only appends
 never removes or overwrites existing PATH entries. New terminals (not this session) will
 pick it up.
 
-- [ ] **Step 2: Rename default branch `master` to `main`**
+- [x] **Step 2: Rename default branch `master` to `main`**
 
 ```bash
 cd "c:/laragon/www/DoAnMNM" && git branch -m master main && git branch
 ```
 Expected: output shows `* main`.
 
-- [ ] **Step 3: Scaffold Laravel into a temp subfolder (target dir is non-empty, so
+- [x] **Step 3: Scaffold Laravel into a temp subfolder (target dir is non-empty, so
   `composer create-project .` would fail)**
 
 ```bash
@@ -111,7 +111,7 @@ rm -rf _scaffold/.git
 ```
 Expected: `_scaffold/artisan` exists; `_scaffold/.git` does not exist after the rm.
 
-- [ ] **Step 4: Merge the scaffold into the project root, then remove the temp folder**
+- [x] **Step 4: Merge the scaffold into the project root, then remove the temp folder**
 
 ```bash
 cd "c:/laragon/www/DoAnMNM"
@@ -122,7 +122,7 @@ ls artisan composer.json .gitignore
 Expected: `ls` lists all three files with no "No such file" error. `-n` (no-clobber)
 guarantees `docs/`, `skill_agent.txt` were never touched.
 
-- [ ] **Step 5: Install Pest (spec requires Pest, not the PHPUnit default)**
+- [x] **Step 5: Install Pest (spec requires Pest, not the PHPUnit default)**
 
 ```bash
 export PATH="/c/laragon/bin/php/php-8.3.30-Win32-vs16-x64:/c/laragon/bin/composer:$PATH"
@@ -144,7 +144,7 @@ pest()->extend(TestCase::class)
     ->in('Feature');
 ```
 
-- [ ] **Step 6: Verify the skeleton boots and run the default test suite**
+- [x] **Step 6: Verify the skeleton boots and run the default test suite**
 
 ```bash
 export PATH="/c/laragon/bin/php/php-8.3.30-Win32-vs16-x64:$PATH"
@@ -156,7 +156,7 @@ Expected: `Laravel Framework 11.x.x`; test run shows at least the example tests 
 ones may fail here — no `.env`/DB yet, that's Task 2. Only confirm Pest itself runs and
 reports results, not that every test passes).
 
-- [ ] **Step 7: Commit the skeleton**
+- [x] **Step 7: Commit the skeleton**
 
 ```bash
 cd "c:/laragon/www/DoAnMNM"
@@ -183,7 +183,7 @@ Expected: commit succeeds; `git log --oneline` shows two commits total.
 - Produces: a reachable MySQL database (`doanmnm_ticket`) with default Laravel tables —
   every later migration task depends on this connection working
 
-- [ ] **Step 1: Create the `.env` file and app key**
+- [x] **Step 1: Create the `.env` file and app key**
 
 ```bash
 export PATH="/c/laragon/bin/php/php-8.3.30-Win32-vs16-x64:$PATH"
@@ -194,7 +194,7 @@ grep APP_KEY .env
 ```
 Expected: `APP_KEY=base64:...` is non-empty.
 
-- [ ] **Step 2: Create the MySQL database**
+- [x] **Step 2: Create the MySQL database**
 
 ```bash
 export PATH="/c/laragon/bin/mysql/mysql-8.4.3-winx64/bin:$PATH"
@@ -206,7 +206,7 @@ no password — if this fails with an access error, check Laragon's MySQL root p
 `C:\laragon\etc\mysql\my.ini` and adjust the `-u root` call accordingly, e.g. add
 `-proot`.)
 
-- [ ] **Step 3: Point `.env` at the new database**
+- [x] **Step 3: Point `.env` at the new database**
 
 Edit `.env`, replace the `DB_*` block with:
 ```
@@ -218,7 +218,7 @@ DB_USERNAME=root
 DB_PASSWORD=
 ```
 
-- [ ] **Step 4: Run the default migrations**
+- [x] **Step 4: Run the default migrations**
 
 ```bash
 export PATH="/c/laragon/bin/php/php-8.3.30-Win32-vs16-x64:$PATH"
@@ -228,7 +228,7 @@ php artisan migrate
 Expected: output lists `users`, `cache`, `jobs` (and related) migrations as `DONE`, no
 errors.
 
-- [ ] **Step 5: Commit `.env.example` if it changed (never commit `.env`)**
+- [x] **Step 5: Commit `.env.example` if it changed (never commit `.env`)**
 
 ```bash
 cd "c:/laragon/www/DoAnMNM"
@@ -254,7 +254,7 @@ before continuing, do not commit it). If `.env.example` is unchanged, skip the c
 - Produces: `layouts/app.blade.php` and `layouts/navigation.blade.php` — Task 5 extends
   these rather than creating a new layout
 
-- [ ] **Step 1: Install Breeze and scaffold the blade stack**
+- [x] **Step 1: Install Breeze and scaffold the blade stack**
 
 ```bash
 export PATH="/c/laragon/bin/php/php-8.3.30-Win32-vs16-x64:/c/laragon/bin/composer:$PATH"
@@ -264,7 +264,7 @@ php artisan breeze:install blade --no-interaction
 ```
 Expected: command completes; `resources/views/auth/login.blade.php` now exists.
 
-- [ ] **Step 2: Install JS deps and build assets once, to confirm the pipeline works**
+- [x] **Step 2: Install JS deps and build assets once, to confirm the pipeline works**
 
 ```bash
 export PATH="/c/laragon/bin/nodejs/node-v22:$PATH"
@@ -275,7 +275,7 @@ npm run build
 Expected: `npm run build` finishes with a `public/build/manifest.json` written, no
 errors.
 
-- [ ] **Step 3: Verify auth routes are registered**
+- [x] **Step 3: Verify auth routes are registered**
 
 ```bash
 export PATH="/c/laragon/bin/php/php-8.3.30-Win32-vs16-x64:$PATH"
@@ -284,7 +284,7 @@ php artisan route:list | grep -E "login|register"
 ```
 Expected: lines for `GET login`, `POST login`, `GET register`, `POST register`.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 cd "c:/laragon/www/DoAnMNM"
@@ -314,7 +314,7 @@ Expected: commit succeeds.
 - Produces: two DB rows in `roles` (`admin`, `user`); `role:admin` middleware alias
   usable in any route file from Task 5 onward
 
-- [ ] **Step 1: Install the package and publish its migration**
+- [x] **Step 1: Install the package and publish its migration**
 
 ```bash
 export PATH="/c/laragon/bin/php/php-8.3.30-Win32-vs16-x64:/c/laragon/bin/composer:$PATH"
@@ -327,7 +327,7 @@ Expected: migration output includes a line creating `permission_tables` (creates
 `roles`, `permissions`, `model_has_roles`, `model_has_permissions`,
 `role_has_permissions`).
 
-- [ ] **Step 2: Add the `HasRoles` trait to `User`**
+- [x] **Step 2: Add the `HasRoles` trait to `User`**
 
 In `app/Models/User.php`, add the import and trait:
 ```php
@@ -340,7 +340,7 @@ class User extends Authenticatable
 }
 ```
 
-- [ ] **Step 3: Register the `role` middleware alias**
+- [x] **Step 3: Register the `role` middleware alias**
 
 In `bootstrap/app.php`, inside the `->withMiddleware(function (Middleware $middleware) {`
 block, add:
@@ -350,7 +350,7 @@ $middleware->alias([
 ]);
 ```
 
-- [ ] **Step 4: Write the failing test for the seeder**
+- [x] **Step 4: Write the failing test for the seeder**
 
 Create `tests/Feature/RoleSeederTest.php`:
 ```php
@@ -365,7 +365,7 @@ it('seeds exactly the admin and user roles', function () {
 });
 ```
 
-- [ ] **Step 5: Run the test to verify it fails**
+- [x] **Step 5: Run the test to verify it fails**
 
 ```bash
 export PATH="/c/laragon/bin/php/php-8.3.30-Win32-vs16-x64:$PATH"
@@ -374,7 +374,7 @@ php artisan test --filter=RoleSeederTest
 ```
 Expected: FAIL — `Class "Database\Seeders\RoleSeeder" not found`.
 
-- [ ] **Step 6: Create the seeder**
+- [x] **Step 6: Create the seeder**
 
 Create `database/seeders/RoleSeeder.php`:
 ```php
@@ -400,7 +400,7 @@ In `database/seeders/DatabaseSeeder.php`, inside `run()`, add:
 $this->call(RoleSeeder::class);
 ```
 
-- [ ] **Step 7: Run the test to verify it passes**
+- [x] **Step 7: Run the test to verify it passes**
 
 ```bash
 export PATH="/c/laragon/bin/php/php-8.3.30-Win32-vs16-x64:$PATH"
@@ -409,7 +409,7 @@ php artisan test --filter=RoleSeederTest
 ```
 Expected: PASS.
 
-- [ ] **Step 8: Commit**
+- [x] **Step 8: Commit**
 
 ```bash
 cd "c:/laragon/www/DoAnMNM"
@@ -440,7 +440,7 @@ Expected: commit succeeds.
 - Produces: `/admin` route pattern and `Admin\` controller namespace — every future
   admin CRUD task (Phase 1) adds routes under this same group
 
-- [ ] **Step 1: Write the failing access-control test**
+- [x] **Step 1: Write the failing access-control test**
 
 Create `tests/Feature/AdminAccessTest.php`. **Note:** `RefreshDatabase` wipes the `roles`
 table between tests, so re-seed it in `beforeEach` — otherwise `assignRole()` throws
@@ -474,7 +474,7 @@ it('redirects a guest to login', function () {
 });
 ```
 
-- [ ] **Step 2: Run the tests to verify they fail**
+- [x] **Step 2: Run the tests to verify they fail**
 
 ```bash
 export PATH="/c/laragon/bin/php/php-8.3.30-Win32-vs16-x64:$PATH"
@@ -483,7 +483,7 @@ php artisan test --filter=AdminAccessTest
 ```
 Expected: FAIL — route `/admin` does not exist (404 instead of the expected statuses).
 
-- [ ] **Step 3: Create the controller**
+- [x] **Step 3: Create the controller**
 
 Create `app/Http/Controllers/Admin/DashboardController.php`:
 ```php
@@ -503,7 +503,7 @@ class DashboardController extends Controller
 }
 ```
 
-- [ ] **Step 4: Create the view**
+- [x] **Step 4: Create the view**
 
 Create `resources/views/admin/dashboard.blade.php`:
 ```blade
@@ -524,7 +524,7 @@ Create `resources/views/admin/dashboard.blade.php`:
 </x-app-layout>
 ```
 
-- [ ] **Step 5: Register the route**
+- [x] **Step 5: Register the route**
 
 In `routes/web.php`, add:
 ```php
@@ -535,7 +535,7 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
 });
 ```
 
-- [ ] **Step 6: Run the tests to verify they pass**
+- [x] **Step 6: Run the tests to verify they pass**
 
 ```bash
 export PATH="/c/laragon/bin/php/php-8.3.30-Win32-vs16-x64:$PATH"
@@ -544,7 +544,7 @@ php artisan test --filter=AdminAccessTest
 ```
 Expected: all 3 tests PASS.
 
-- [ ] **Step 7: Show the Admin nav link only to admins (desktop + mobile menu)**
+- [x] **Step 7: Show the Admin nav link only to admins (desktop + mobile menu)**
 
 In `resources/views/layouts/navigation.blade.php`, immediately after the existing
 "Dashboard" `<x-nav-link>` (desktop, ~line 17) add:
@@ -558,7 +558,7 @@ In `resources/views/layouts/navigation.blade.php`, immediately after the existin
 And after the matching `<x-responsive-nav-link>` for Dashboard (mobile menu, ~line 72)
 add the same block using `<x-responsive-nav-link>` instead of `<x-nav-link>`.
 
-- [ ] **Step 8: Commit**
+- [x] **Step 8: Commit**
 
 ```bash
 cd "c:/laragon/www/DoAnMNM"
@@ -584,7 +584,7 @@ Expected: commit succeeds.
 - Produces: the persistent-memory files every future Claude/Codex session and every
   human teammate reads first
 
-- [ ] **Step 1: Create `CLAUDE.md`**
+- [x] **Step 1: Create `CLAUDE.md`**
 
 ```markdown
 # CLAUDE.md
@@ -619,7 +619,7 @@ Bạn là **supervisor** của đồ án "Website Quản lý đặt vé" (môn M
 - Plan đang chạy: `docs/superpowers/plans/`
 ```
 
-- [ ] **Step 2: Create `AGENTS.md`**
+- [x] **Step 2: Create `AGENTS.md`**
 
 ```markdown
 # AGENTS.md
@@ -651,7 +651,7 @@ Bạn (Codex) là **executor** của đồ án "Website Quản lý đặt vé" (
 - Kiến trúc sống: `docs/architecture.md`
 ```
 
-- [ ] **Step 3: Create `docs/architecture.md`**
+- [x] **Step 3: Create `docs/architecture.md`**
 
 ```markdown
 # Kiến trúc hệ thống (living doc)
@@ -675,7 +675,7 @@ Cập nhật file này mỗi khi kiến trúc thay đổi so với spec gốc. N
 bản nháp text hiện tại.)
 ```
 
-- [ ] **Step 4: Create the report deliverables folder**
+- [x] **Step 4: Create the report deliverables folder**
 
 ```bash
 cd "c:/laragon/www/DoAnMNM"
@@ -683,7 +683,7 @@ mkdir -p docs/report
 touch docs/report/.gitkeep
 ```
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 cd "c:/laragon/www/DoAnMNM"
@@ -707,7 +707,7 @@ Expected: commit succeeds.
 - Consumes: everything from Tasks 1-6
 - Produces: the pushed `main` branch on GitHub that Codex and teammates clone from
 
-- [ ] **Step 1: Full verification pass**
+- [x] **Step 1: Full verification pass**
 
 ```bash
 export PATH="/c/laragon/bin/php/php-8.3.30-Win32-vs16-x64:$PATH"
