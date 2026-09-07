@@ -3,12 +3,14 @@
         <h1 class="text-2xl font-bold mb-6">Giỏ vé của bạn</h1>
 
         @if (empty($items))
-            <p class="text-gray-500">Giỏ vé đang trống. <a href="{{ route('movies.index') }}" class="text-rose-600 font-medium">Chọn phim/sự kiện</a></p>
+            <div class="glass-panel p-6 text-gray-500">
+                Giỏ vé đang trống. <a href="{{ route('movies.index') }}" class="text-rose-600 font-medium">Chọn phim/sự kiện</a>
+            </div>
         @else
-            <div class="border rounded-lg divide-y">
+            <div class="glass-panel divide-y divide-white/50 overflow-hidden">
                 @foreach ($items as $item)
                     <div class="flex items-center gap-4 p-4">
-                        <img src="{{ $item->movie->poster_path }}" alt="" class="w-14 h-20 object-cover rounded">
+                        <img src="{{ $item->movie->poster_path }}" alt="" class="w-14 h-20 object-cover rounded-xl">
                         <div class="flex-1">
                             <p class="font-semibold">{{ $item->movie->title }}</p>
                             <p class="text-sm text-gray-500">
@@ -24,12 +26,12 @@
                 @endforeach
             </div>
 
-            <div class="flex items-center justify-between mt-6 border-t pt-6">
+            <div class="glass-panel !rounded-2xl flex items-center justify-between mt-6 p-4">
                 <span class="text-gray-600">Tổng cộng ({{ count($items) }} vé)</span>
                 <span class="text-xl font-bold text-rose-600">{{ number_format($total) }}đ</span>
             </div>
 
-            <button type="button" class="mt-6 w-full bg-rose-600 text-white font-semibold py-3 rounded-md hover:bg-rose-700">
+            <button type="button" class="glass-btn-primary mt-6 w-full font-semibold py-3">
                 Xác nhận đặt vé (mock — Phase 2 sẽ nối logic thật)
             </button>
         @endif

@@ -1,9 +1,9 @@
 <x-site-layout :title="'Trang chủ'">
-    <section class="bg-gradient-to-r from-rose-600 to-rose-500 text-white">
-        <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-            <h1 class="text-3xl sm:text-4xl font-bold">Đặt vé phim &amp; sự kiện nhanh chóng</h1>
-            <p class="mt-3 text-rose-100 max-w-xl">Chọn phim, chọn suất, chọn ghế — chỉ vài bước để có vé trong tay.</p>
-            <a href="{{ route('movies.index') }}" class="inline-block mt-6 bg-white text-rose-600 font-semibold px-6 py-3 rounded-full hover:bg-rose-50">
+    <section class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-8">
+        <div class="glass-panel px-8 sm:px-12 py-14 sm:py-16 bg-gradient-to-br from-rose-500/70 to-rose-400/50 text-white">
+            <h1 class="text-3xl sm:text-4xl font-bold drop-shadow-sm">Đặt vé phim &amp; sự kiện nhanh chóng</h1>
+            <p class="mt-3 text-rose-50 max-w-xl">Chọn phim, chọn suất, chọn ghế — chỉ vài bước để có vé trong tay.</p>
+            <a href="{{ route('movies.index') }}" class="glass-btn-secondary inline-block mt-6 font-semibold px-6 py-3 !text-rose-700 !bg-white/80 hover:!bg-white">
                 Xem tất cả phim &amp; sự kiện
             </a>
         </div>

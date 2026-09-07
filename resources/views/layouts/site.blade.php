@@ -6,9 +6,9 @@
     <title>{{ $title ?? 'Đặt Vé' }} - TicketBox Đồ Án</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
-<body class="min-h-screen bg-gray-50 text-gray-900 flex flex-col">
+<body class="min-h-screen text-gray-900 flex flex-col">
 
-    <header class="bg-white border-b border-gray-200 sticky top-0 z-10">
+    <header class="glass-nav sticky top-4 z-10 mx-4 sm:mx-6 lg:mx-8 rounded-full">
         <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex items-center justify-between h-16 gap-4">
                 <a href="{{ route('home') }}" class="text-xl font-bold text-rose-600 shrink-0">
@@ -28,7 +28,7 @@
                         name="q"
                         value="{{ request('q') }}"
                         placeholder="Tìm phim, sự kiện..."
-                        class="w-full rounded-full border-gray-300 text-sm focus:border-rose-500 focus:ring-rose-500"
+                        class="glass-input w-full text-sm border-0 focus:ring-2 focus:ring-rose-400"
                     >
                 </form>
 
@@ -43,7 +43,7 @@
                         <a href="{{ route('dashboard') }}" class="text-sm font-medium text-gray-700 hover:text-rose-600">{{ Auth::user()->name }}</a>
                     @else
                         <a href="{{ route('login') }}" class="text-sm font-medium text-gray-700 hover:text-rose-600">Đăng nhập</a>
-                        <a href="{{ route('register') }}" class="text-sm font-medium bg-rose-600 text-white px-4 py-2 rounded-full hover:bg-rose-700">Đăng ký</a>
+                        <a href="{{ route('register') }}" class="glass-btn-primary text-sm font-medium px-4 py-2">Đăng ký</a>
                     @endauth
                 </div>
             </div>
@@ -54,7 +54,7 @@
         {{ $slot }}
     </main>
 
-    <footer class="bg-gray-900 text-gray-400 text-sm mt-16">
+    <footer class="glass-nav text-gray-500 text-sm mt-16 mx-4 sm:mx-6 lg:mx-8 mb-4 !rounded-3xl">
         <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
             Đồ án môn Mã nguồn mở — Website Quản lý đặt vé (phiên bản đơn giản, dữ liệu demo).
         </div>
