@@ -9,6 +9,15 @@ Cập nhật file này mỗi khi kiến trúc thay đổi so với spec gốc. N
 - Laravel 11.56.1, PHP 8.3.30, MySQL 8.4 (DB: `doanmnm_ticket`), Pest 4, Breeze (blade),
   spatie/laravel-permission với 2 role (`admin`, `user`), route `/admin` bảo vệ bởi
   `role:admin`.
+- **UI-first pass (2026-09-07)**: 6 trang công khai đã dựng bằng dữ liệu giả —
+  `App\Support\DemoCatalog` (trả về object dùng đúng tên field như schema thật trong
+  spec mục 3). Route: `/`, `/movies`, `/movies/{slug}`, `/showtimes/{id}/seats`, `/cart`,
+  `/bookings` (auth). Layout công khai riêng: `layouts/site.blade.php` +
+  `App\View\Components\SiteLayout` (`<x-site-layout>`), tách khỏi `x-app-layout` của
+  Breeze vì trang duyệt phim/sự kiện cần dùng được cho khách chưa đăng nhập. **Khi làm
+  Phase 1 BE**: xoá `DemoCatalog`, thay lời gọi trong các controller (`HomeController`,
+  `MovieController`, `ShowtimeController`, `CartController`, `BookingController`) bằng
+  Eloquent query thật — Blade không cần sửa vì field name đã khớp sẵn.
 
 ## Thay đổi so với spec gốc
 
