@@ -35,6 +35,13 @@ spatie/laravel-permission, Node 22 (Laragon-bundled).
 - Every commit message ends with `Co-Authored-By: Claude Sonnet 5 <noreply@anthropic.com>`
 - **Do not run `git push` until Task 7's explicit confirmation step** — every earlier
   commit stays local only
+- **Composer audit gate:** Composer 2.9's new security-blocking feature refuses to
+  install `laravel/framework` at all (every version 11.31–11.56 gets flagged by 3
+  debug-mode-XSS advisories that appear to lack a recorded "fixed in" version upstream).
+  Every `composer require`/`create-project` in this plan passes `--no-security-blocking`
+  for that reason — root-caused during Task 1 execution, see
+  `docs/architecture.md` for the entry. Run `composer audit` after Phase 0 to review the
+  actual advisories and confirm none are exploitable for a local, non-debug-mode app.
 
 **Tool paths (Laragon, not on default shell PATH):**
 ```
@@ -121,10 +128,21 @@ guarantees `docs/`, `skill_agent.txt` were never touched.
 export PATH="/c/laragon/bin/php/php-8.3.30-Win32-vs16-x64:/c/laragon/bin/composer:$PATH"
 cd "c:/laragon/www/DoAnMNM"
 composer remove phpunit/phpunit --dev --no-interaction
-composer require pestphp/pest pestphp/pest-plugin-laravel --dev --with-all-dependencies --no-interaction
-php artisan pest:install --no-interaction
+composer require pestphp/pest pestphp/pest-plugin-laravel --dev --with-all-dependencies --no-interaction --no-security-blocking
+php vendor/bin/pest --init </dev/null
 ```
-Expected: `tests/Pest.php` is created; `php artisan pest:install` exits 0.
+Expected: `tests/Pest.php` is created. **Note:** `php artisan pest:install` does not exist
+in this version — the real installer is `vendor/bin/pest --init`, which is interactive
+(asks to star the repo on GitHub); redirect stdin from `/dev/null` so it takes the
+default answer instead of hanging.
+
+In the generated `tests/Pest.php`, uncomment the `RefreshDatabase` line so Feature tests
+get a clean DB each run:
+```php
+pest()->extend(TestCase::class)
+    ->use(RefreshDatabase::class)
+    ->in('Feature');
+```
 
 - [ ] **Step 6: Verify the skeleton boots and run the default test suite**
 
@@ -241,7 +259,7 @@ before continuing, do not commit it). If `.env.example` is unchanged, skip the c
 ```bash
 export PATH="/c/laragon/bin/php/php-8.3.30-Win32-vs16-x64:/c/laragon/bin/composer:$PATH"
 cd "c:/laragon/www/DoAnMNM"
-composer require laravel/breeze --dev --no-interaction
+composer require laravel/breeze --dev --no-interaction --no-security-blocking
 php artisan breeze:install blade --no-interaction
 ```
 Expected: command completes; `resources/views/auth/login.blade.php` now exists.
@@ -301,7 +319,7 @@ Expected: commit succeeds.
 ```bash
 export PATH="/c/laragon/bin/php/php-8.3.30-Win32-vs16-x64:/c/laragon/bin/composer:$PATH"
 cd "c:/laragon/www/DoAnMNM"
-composer require spatie/laravel-permission --no-interaction
+composer require spatie/laravel-permission --no-interaction --no-security-blocking
 php artisan vendor:publish --provider="Spatie\Permission\PermissionServiceProvider" --no-interaction
 php artisan migrate
 ```
