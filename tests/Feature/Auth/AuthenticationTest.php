@@ -17,7 +17,21 @@ test('users can authenticate using the login screen', function () {
     ]);
 
     $this->assertAuthenticated();
-    $response->assertRedirect(route('dashboard', absolute: false));
+    $response->assertRedirect(route('home', absolute: false));
+});
+
+test('admin is redirected to admin dashboard upon login', function () {
+    \Spatie\Permission\Models\Role::firstOrCreate(['name' => 'admin']);
+    $admin = User::factory()->create();
+    $admin->assignRole('admin');
+
+    $response = $this->post('/login', [
+        'email' => $admin->email,
+        'password' => 'password',
+    ]);
+
+    $this->assertAuthenticated();
+    $response->assertRedirect(route('admin.dashboard', absolute: false));
 });
 
 test('users can not authenticate with invalid password', function () {
@@ -38,4 +52,22 @@ test('users can logout', function () {
 
     $this->assertGuest();
     $response->assertRedirect('/');
+});
+
+test('authenticated user accessing dashboard is redirected to home', function () {
+    $user = User::factory()->create();
+
+    $response = $this->actingAs($user)->get('/dashboard');
+
+    $response->assertRedirect(route('home', absolute: false));
+});
+
+test('admin accessing dashboard is redirected to admin dashboard', function () {
+    \Spatie\Permission\Models\Role::firstOrCreate(['name' => 'admin']);
+    $admin = User::factory()->create();
+    $admin->assignRole('admin');
+
+    $response = $this->actingAs($admin)->get('/dashboard');
+
+    $response->assertRedirect(route('admin.dashboard', absolute: false));
 });

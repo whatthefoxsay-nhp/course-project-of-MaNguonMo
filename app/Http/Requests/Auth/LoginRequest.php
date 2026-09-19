@@ -50,6 +50,17 @@ class LoginRequest extends FormRequest
             ]);
         }
 
+        // Check if user account is locked
+        $user = Auth::user();
+        if (! $user->is_active) {
+            Auth::logout();
+            RateLimiter::hit($this->throttleKey());
+
+            throw ValidationException::withMessages([
+                'email' => 'Tài khoản của bạn đã bị tạm khóa bởi Quản trị viên. Vui lòng liên hệ ban quản trị để được hỗ trợ.',
+            ]);
+        }
+
         RateLimiter::clear($this->throttleKey());
     }
 

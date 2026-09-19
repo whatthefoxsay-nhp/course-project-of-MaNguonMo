@@ -1,42 +1,45 @@
-# Kiến trúc hệ thống (living doc)
+# Kiến trúc hệ thống (Living Architecture Document)
 
-Cập nhật file này mỗi khi kiến trúc thay đổi so với spec gốc. Nguồn sự thật ban đầu:
+Cập nhật file này mỗi khi kiến trúc hoặc yêu cầu dự án thay đổi so với spec gốc. Nguồn sự thật ban đầu:
 `docs/superpowers/specs/2026-09-07-ticket-booking-platform-design.md`.
 
-## Trạng thái hiện tại
-- Phase 0 (setup nền tảng): hoàn thành — xem
-  `docs/superpowers/plans/2026-09-07-phase0-project-setup.md`
-- Laravel 11.56.1, PHP 8.3.30, MySQL 8.4 (DB: `doanmnm_ticket`), Pest 4, Breeze (blade),
-  spatie/laravel-permission với 2 role (`admin`, `user`), route `/admin` bảo vệ bởi
-  `role:admin`.
-- **UI-first pass (2026-09-07)**: 6 trang công khai đã dựng bằng dữ liệu giả —
-  `App\Support\DemoCatalog` (trả về object dùng đúng tên field như schema thật trong
-  spec mục 3). Route: `/`, `/movies`, `/movies/{slug}`, `/showtimes/{id}/seats`, `/cart`,
-  `/bookings` (auth). Layout công khai riêng: `layouts/site.blade.php` +
-  `App\View\Components\SiteLayout` (`<x-site-layout>`), tách khỏi `x-app-layout` của
-  Breeze vì trang duyệt phim/sự kiện cần dùng được cho khách chưa đăng nhập. **Khi làm
-  Phase 1 BE**: xoá `DemoCatalog`, thay lời gọi trong các controller (`HomeController`,
-  `MovieController`, `ShowtimeController`, `CartController`, `BookingController`) bằng
-  Eloquent query thật — Blade không cần sửa vì field name đã khớp sẵn.
+---
 
-## Thay đổi so với spec gốc
+## 1. Trạng thái hiện tại
+- **Nền tảng**: Laravel 11.56.1, PHP 8.3 (Laragon), MySQL 8.4 (Database: `doanmnm_ticket`), Pest 4, Laravel Breeze (Blade Stack), Vite 6.
+- **Phân quyền & Bảo mật**: `spatie/laravel-permission` với 2 role (`admin`, `user`), middleware `role:admin` bảo vệ toàn bộ tuyến đường `/admin/*`.
+- **Định hướng sản phẩm**: Chuyên biệt hóa **100% cho Nền tảng Đặt vé Sự Kiện (Event Ticketing)** — bao gồm: Live Concert, Hòa Nhạc Giao Hưởng, Hội Thảo & Diễn Đàn Doanh Nghiệp (Summit/Expo), Triển Lãm Nghệ Thuật & Nhạc Kịch.
+- **Tiến độ hoàn thành**:
+  - **Database & Backend Models (Phase 1)**: Đã hoàn tất 10 migration files (`users`, `categories`, `movies`/`events`, `rooms`/`venues`, `seats`, `showtimes`, `showtime_seats`, `bookings`, `booking_items`, `comments`) cùng 10 Eloquent Models có quan hệ chặt chẽ.
+  - **Quản lý Tài khoản Người Dùng (Admin User Management)**: `UserController` xử lý tìm kiếm đa năng (Tên/Email/SĐT), lọc theo Role (Admin/User), lọc theo Trạng thái (Active/Locked), phân trang (Pagination), và AJAX Toggle Khóa/Mở khóa tài khoản bảo mật kèm hộp thoại xác nhận.
+  - **Giao diện & Trải nghiệm (Luxury Light Theme)**: Hoàn thiện hệ thống giao diện tone sáng sang trọng với bảng màu tương phản cao `#000000`, `#F5F5DC`, `#FFFFFF`, `#C08497`, `#D4AF37`, `#3A5A40`, `#CC0000`.
 
-- **2026-09-07 — Frontend CSS**: spec gốc ghi "Blade + Bootstrap 5", nhưng Phase 0 dùng
-  **Tailwind CSS + Vite** (mặc định của Laravel Breeze blade stack) thay vì Bootstrap.
-  Lý do: Breeze tự dựng Tailwind sẵn, trộn thêm Bootstrap sẽ xung đột quy ước class mà
-  không lợi gì; Node 22 đã có sẵn qua Laragon nên Vite build không thiếu phụ thuộc.
-- **2026-09-07 — Composer audit gate**: mọi `composer require`/`create-project` chạm tới
-  `laravel/framework` phải thêm `--no-security-blocking`. Composer 2.9 chặn toàn bộ dải
-  version 11.31–11.56 do 3 advisory XSS ở debug-mode dường như thiếu mốc "đã fix" trong
-  dữ liệu advisory. Cần chạy `composer audit` định kỳ để tự rà soát thủ công.
-- **2026-09-07 — Pest install**: `php artisan pest:install` không tồn tại ở phiên bản
-  này — dùng `vendor/bin/pest --init` (interactive, cần `</dev/null` để không treo shell
-  non-interactive).
+---
 
-## ERD
+## 2. Các thay đổi & Cập nhật so với Spec ban đầu
 
-Xem spec mục 3 cho schema đầy đủ (`users`, `categories`, `movies`, `rooms`, `seats`,
-`showtimes`, `showtime_seats`, `bookings`, `booking_items`, `comments`). Bảng
-`roles`/`permissions`/`model_has_roles` do `spatie/laravel-permission` tự sinh
-(migration `database/migrations/*_create_permission_tables.php`). Sơ đồ hình sẽ được
-thêm vào `docs/report/` khi Phase 1 hoàn thành schema đầy đủ.
+| Ngày | Hạng mục | Chi tiết thay đổi | Lý do kỹ thuật & Yêu cầu |
+| :--- | :--- | :--- | :--- |
+| **2026-09-07** | **Frontend CSS** | Dùng **Tailwind CSS + Vite** thay vì Bootstrap 5 | Tránh xung đột với Laravel Breeze Blade stack, tận dụng tối đa hệ sinh thái utility-first. |
+| **2026-09-18** | **Định hướng dịch vụ** | Chuyển toàn bộ sang **Vé Sự Kiện (Events / Concerts / Summits / Exhibitions)** | Chuẩn hóa thông điệp sản phẩm theo đúng đề bài đặt vé sự kiện chuyên nghiệp, loại bỏ thuật ngữ phim chiếu rạp. |
+| **2026-09-18** | **Giao diện & Màu sắc** | Áp dụng **Luxury Light Theme** (Nền trắng #FFFFFF & Beige #F5F5DC, Text đen #000000) | Tối ưu độ tương phản, chữ và các thành phần nổi bật, loại bỏ hiện tượng chìm màu trên dark theme. |
+| **2026-09-18** | **Component Layouts** | Tạo bộ proxy components trong `resources/views/components/layouts/` | Tương thích song song cả hai cú pháp Blade: `<x-admin-layout>` và `<x-layouts.admin>`. |
+| **2026-09-20** | **Database Schema & Models** | Đổi bảng `movies` thành `events`, khóa ngoại `movie_id` $\rightarrow$ `event_id` trên `showtimes` và `comments`, tạo Model `Event` và Controller `EventController` | Chuẩn hóa tầng dữ liệu 100% hướng sự kiện (Event-Centric), loại bỏ hoàn toàn dấu vết phim rạp trong schema. |
+
+---
+
+## 3. Bảng Màu & Phân Bổ Token (Design Tokens)
+
+- **`#FFFFFF` (Canvas Base)**: Nền trắng ngà chính, card bề mặt dữ liệu, modal panels, input background.
+- **`#F5F5DC` (Warm Beige / Cream)**: Khung toolbar bộ lọc, container thẻ ưu đãi, ô đăng nhập mẫu.
+- **`#000000` (Obsidian Charcoal)**: Typography tiêu đề chính đậm nét, Sidebar quản trị Admin, nút bấm chính, Mega Footer.
+- **`#C08497` (Rose Taupe)**: Nút hành động CTA "+ Đặt vé", badge nổi bật.
+- **`#D4AF37` (Antique Gold)**: Nút Lọc dữ liệu, Huy hiệu VIP, Giá vé, Rating 5 sao.
+- **`#3A5A40` (Forest Green / Sage)**: Badge & Nút "Hoạt động" / "Mở khóa tài khoản", Thông báo thành công (Success Toast).
+- **`#CC0000` (Crimson Red)**: Badge & Nút "Đã bị khóa" / "Khóa tài khoản", Cảnh báo lỗi.
+
+---
+
+## 4. Kiểm thử & Độ bao phủ (Test Suite)
+- Toàn bộ tính năng đều được kiểm thử bằng Pest PHP (`php artisan test`): **33 tests / 80 assertions (Pass 100%)**.
+- Bao gồm Feature Test cho Admin User Management: `tests/Feature/AdminUserManagementTest.php`.
