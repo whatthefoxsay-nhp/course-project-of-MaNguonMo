@@ -117,7 +117,21 @@
     </section>
 
     <!-- Main Catalog & Category Tabs Section -->
-    <section id="featured-section" class="max-w-[1440px] mx-auto px-4 sm:px-8 py-8 sm:py-12" x-data="{ currentTab: 'all' }">
+    <section id="featured-section" class="max-w-[1440px] mx-auto px-4 sm:px-8 py-8 sm:py-12" 
+        x-data="{ 
+            currentTab: 'all',
+            matchesTab(slug) {
+                if (this.currentTab === 'all') return true;
+                if (this.currentTab === 'concert') {
+                    return ['concert', 'hoa-nhac', 'festival', 'fan-meeting', 'san-khau-kich'].includes(slug);
+                }
+                if (this.currentTab === 'expo') {
+                    return ['hoi-thao', 'trien-lam', 'workshop'].includes(slug);
+                }
+                return this.currentTab === slug;
+            }
+        }"
+    >
         <div class="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-8 sm:mb-10 pb-4 border-b border-black/10">
             <div>
                 <div class="flex items-center gap-2 mb-1.5">
@@ -157,7 +171,15 @@
         <!-- Event Cards Grid -->
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
             @foreach ($movies as $event)
-                <div>
+                @php
+                    $categorySlug = $event->category->slug ?? '';
+                @endphp
+                <div 
+                    x-show="matchesTab('{{ $categorySlug }}')" 
+                    x-transition:enter="transition ease-out duration-200" 
+                    x-transition:enter-start="opacity-0 scale-95" 
+                    x-transition:enter-end="opacity-100 scale-100"
+                >
                     <x-movie-card :movie="$event" />
                 </div>
             @endforeach
