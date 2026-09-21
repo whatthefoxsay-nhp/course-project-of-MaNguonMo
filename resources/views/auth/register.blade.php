@@ -6,8 +6,10 @@
             <span class="w-1.5 h-1.5 rounded-full bg-[#C08497] animate-pulse"></span>
             Thành Viên Mới
         </span>
-        <h1 class="font-serif text-3xl font-black text-slate-900 tracking-tight">Tạo Tài Khoản</h1>
-        <p class="text-xs text-slate-500 mt-1 font-medium">Đăng ký để nhận voucher ưu đãi và quản lý vé thuận tiện</p>
+        <h1 class="font-serif text-3xl sm:text-4xl font-black text-slate-900 tracking-tight">Tạo Tài Khoản</h1>
+        <p class="text-sm sm:text-base text-slate-700 mt-2 font-medium">
+            Đăng ký để nhận <span class="font-bold text-rose-taupe">voucher ưu đãi</span> và <span class="font-bold text-slate-900">quản lý vé thuận tiện</span>
+        </p>
     </div>
 
     <!-- Global Error Messages -->

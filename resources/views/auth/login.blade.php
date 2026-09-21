@@ -2,12 +2,10 @@
     
     <!-- Header Title -->
     <div class="text-center mb-7">
-        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#C08497]/15 text-[#8F435B] border border-[#C08497]/30 text-[10px] font-black uppercase tracking-wider mb-2">
-            <span class="w-1.5 h-1.5 rounded-full bg-[#C08497] animate-pulse"></span>
-            Cổng Thành Viên &amp; Quản Trị
-        </span>
-        <h1 class="font-serif text-3xl font-black text-slate-900 tracking-tight">Đăng Nhập</h1>
-        <p class="text-xs text-slate-500 mt-1 font-medium">Chào mừng bạn quay trở lại với nền tảng vé TicketBox</p>
+        <h1 class="font-serif text-3xl sm:text-4xl font-black text-slate-900 tracking-tight">Đăng Nhập</h1>
+        <p class="text-sm sm:text-base text-slate-700 mt-2 font-medium">
+            Chào mừng bạn quay trở lại với nền tảng vé <span class="font-bold text-rose-taupe">TicketBox</span>
+        </p>
     </div>
 
     <!-- Session Status / Alert -->
