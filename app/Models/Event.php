@@ -72,6 +72,19 @@ class Event extends Model
         return (bool) $this->is_seated;
     }
 
+    /**
+     * Giá cơ bản thấp nhất trong các suất diễn (hiển thị "Từ ...₫").
+     * Controller danh sách nên gọi withMin('showtimes', 'base_price') để tránh N+1.
+     */
+    public function getBasePriceAttribute(): ?int
+    {
+        $min = array_key_exists('showtimes_min_base_price', $this->attributes)
+            ? $this->attributes['showtimes_min_base_price']
+            : $this->showtimes()->min('base_price');
+
+        return $min === null ? null : (int) $min;
+    }
+
     public function scopePublished(Builder $query): Builder
     {
         return $query->where('status', 'published');
