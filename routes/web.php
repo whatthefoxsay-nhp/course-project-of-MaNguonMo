@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\BookingController as AdminBookingController;
+use App\Http\Controllers\Admin\CategoryController as AdminCategoryController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\DiscountController as AdminDiscountController;
 use App\Http\Controllers\Admin\EventController as AdminEventController;
@@ -50,6 +51,7 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::get('/', DashboardController::class)->name('dashboard');
     Route::get('/reports', [AdminReportController::class, 'index'])->name('reports.index');
     Route::get('/reports/pdf', [AdminReportController::class, 'pdf'])->name('reports.pdf');
+    Route::resource('categories', AdminCategoryController::class)->except('show');
     Route::get('/events', [AdminEventController::class, 'index'])->name('events.index');
     Route::get('/showtimes', [AdminShowtimeController::class, 'index'])->name('showtimes.index');
     Route::get('/rooms', [AdminRoomController::class, 'index'])->name('rooms.index');

@@ -110,6 +110,18 @@
                     <div x-show="sidebarCollapsed" class="w-6 h-px bg-slate-800 mx-auto my-2"></div>
                     <div class="space-y-1">
                         <a 
+                            href="{{ route('admin.categories.index') }}" 
+                            :title="sidebarCollapsed ? 'Danh Mục' : ''"
+                            class="flex items-center gap-3 rounded-2xl transition-all {{ request()->routeIs('admin.categories.*') ? 'bg-gradient-to-r from-amber-400 to-amber-500 text-slate-950 font-black shadow-md shadow-amber-500/20' : 'text-slate-300 hover:text-white hover:bg-slate-800/60' }}"
+                            :class="sidebarCollapsed ? 'justify-center p-3' : 'px-3.5 py-2.5'"
+                        >
+                            <svg class="w-5 h-5 shrink-0 {{ request()->routeIs('admin.categories.*') ? 'text-slate-950' : 'text-amber-400' }}" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                            </svg>
+                            <span x-show="!sidebarCollapsed" x-transition class="truncate">Danh Mục</span>
+                        </a>
+
+                        <a 
                             href="{{ route('admin.events.index') }}" 
                             :title="sidebarCollapsed ? 'Quản Lý Sự Kiện' : ''"
                             class="flex items-center gap-3 rounded-2xl transition-all {{ request()->routeIs('admin.events.*') ? 'bg-gradient-to-r from-amber-400 to-amber-500 text-slate-950 font-black shadow-md shadow-amber-500/20' : 'text-slate-300 hover:text-white hover:bg-slate-800/60' }}"
