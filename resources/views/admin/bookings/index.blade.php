@@ -53,16 +53,17 @@
         <!-- Bookings Table -->
         <div class="bg-white rounded-3xl border border-black/10 overflow-hidden shadow-sm">
             <div class="overflow-x-auto">
-                <table class="w-full text-left text-xs text-black min-w-[850px]">
+                <table class="w-full text-left text-xs text-black min-w-[950px]">
                     <thead class="text-[11px] uppercase tracking-wider text-gray-600 border-b border-black/10 bg-[#FAF9F6]">
                         <tr>
                             <th class="py-4 px-6 font-bold whitespace-nowrap">Mã Đơn Vé</th>
                             <th class="py-4 px-4 font-bold whitespace-nowrap">Khách Hàng</th>
                             <th class="py-4 px-4 font-bold whitespace-nowrap">Sự Kiện &amp; Địa Điểm</th>
                             <th class="py-4 px-4 font-bold whitespace-nowrap">Suất Diễn</th>
-                            <th class="py-4 px-4 font-bold whitespace-nowrap">Vị Trí Ghế</th>
+                            <th class="py-4 px-4 font-bold whitespace-nowrap">Số Lượng</th>
                             <th class="py-4 px-4 font-bold whitespace-nowrap">Tổng Tiền</th>
-                            <th class="py-4 px-6 font-bold text-right whitespace-nowrap">Trạng Thái</th>
+                            <th class="py-4 px-4 font-bold whitespace-nowrap">Trạng Thái</th>
+                            <th class="py-4 px-6 font-bold text-right whitespace-nowrap">Thao Tác</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-black/5">
@@ -76,9 +77,9 @@
                             @endphp
                             <tr class="hover:bg-[#FAF9F6] transition-colors">
                                 <td class="py-4 px-6 whitespace-nowrap">
-                                    <span class="inline-block px-3 py-1.5 rounded-xl bg-neutral-900 text-amber-300 font-mono font-black text-xs border border-black/20 shadow-sm">
+                                    <a href="{{ route('admin.bookings.show', $booking) }}" class="inline-block px-3 py-1.5 rounded-xl bg-neutral-900 text-amber-300 font-mono font-black text-xs border border-black/20 shadow-sm hover:underline" title="Xem chi tiết đơn vé">
                                         {{ $booking->booking_code }}
-                                    </span>
+                                    </a>
                                 </td>
                                 <td class="py-4 px-4 whitespace-nowrap">
                                     <div class="flex items-center gap-2.5">
@@ -92,15 +93,15 @@
                                     </div>
                                 </td>
                                 <td class="py-4 px-4 whitespace-nowrap">
-                                    <div class="font-bold text-black text-sm">{{ $movie?->title ?? 'Sự kiện âm nhạc' }}</div>
-                                    <span class="text-[11px] font-semibold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded-lg border border-indigo-100">{{ $room?->name }}</span>
+                                    <div class="font-bold text-black text-sm">{{ $movie?->title ?? 'N/A' }}</div>
+                                    <span class="text-[11px] font-semibold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded-lg border border-indigo-100">{{ $room?->name ?? 'Chưa gán phòng' }}</span>
                                 </td>
                                 <td class="py-4 px-4 text-black whitespace-nowrap">
                                     <div class="font-bold text-black text-xs flex items-center gap-1.5">
                                         <svg class="w-3.5 h-3.5 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                                        {{ $showtime ? $showtime->start_time->format('H:i') : '19:00' }}
+                                        {{ $showtime ? $showtime->start_time->format('H:i') : 'N/A' }}
                                     </div>
-                                    <div class="text-[11px] text-gray-500 mt-0.5">{{ $showtime ? $showtime->start_time->format('d/m/Y') : 'Hôm nay' }}</div>
+                                    <div class="text-[11px] text-gray-500 mt-0.5">{{ $showtime ? $showtime->start_time->format('d/m/Y') : 'N/A' }}</div>
                                 </td>
                                 <td class="py-4 px-4 whitespace-nowrap">
                                     <span class="px-3 py-1 rounded-xl font-black text-xs bg-amber-50 text-amber-900 border border-amber-200 inline-flex items-center gap-1">
@@ -113,7 +114,7 @@
                                         {{ number_format($booking->total_price, 0, ',', '.') }}₫
                                     </span>
                                 </td>
-                                <td class="py-4 px-6 text-right whitespace-nowrap">
+                                <td class="py-4 px-4 whitespace-nowrap">
                                     @if($booking->status === 'confirmed')
                                         <span class="px-3 py-1 rounded-full font-black text-[11px] whitespace-nowrap inline-flex items-center gap-1.5 bg-emerald-50 text-emerald-800 border border-emerald-300 shadow-sm">
                                             <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
@@ -131,10 +132,28 @@
                                         </span>
                                     @endif
                                 </td>
+                                <td class="py-4 px-6 text-right whitespace-nowrap">
+                                    <div class="flex items-center justify-end gap-2">
+                                        <a href="{{ route('admin.bookings.show', $booking) }}" class="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-[#FAF9F6] border border-black/10 hover:bg-black hover:text-white transition-all">
+                                            Chi Tiết
+                                        </a>
+
+                                        @if($booking->status !== 'cancelled')
+                                            <form method="POST" action="{{ route('admin.bookings.update-status', $booking) }}" onsubmit="return confirm('Hủy đơn vé [{{ $booking->booking_code }}]? Toàn bộ ghế sẽ được giải phóng.')">
+                                                @csrf
+                                                @method('PATCH')
+                                                <input type="hidden" name="status" value="cancelled">
+                                                <button type="submit" class="px-2.5 py-1.5 rounded-xl text-xs font-bold text-[#CC0000] border border-[#CC0000]/30 hover:bg-[#CC0000] hover:text-white transition-all" title="Hủy đơn và nhả ghế">
+                                                    Hủy
+                                                </button>
+                                            </form>
+                                        @endif
+                                    </div>
+                                </td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="7" class="py-12 text-center text-gray-500">
+                                <td colspan="8" class="py-12 text-center text-gray-500">
                                     <div class="w-12 h-12 rounded-2xl bg-[#FAF9F6] border border-black/10 text-gray-400 flex items-center justify-center mx-auto mb-3">
                                         <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z"/></svg>
                                     </div>
