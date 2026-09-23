@@ -29,7 +29,7 @@
         </a>
         <div class="flex items-center gap-3">
             <button onclick="window.print()" class="btn-dark px-5 py-2.5 rounded-xl text-xs font-bold flex items-center gap-2 shadow-md">
-                <svg class="w-4 h-4 text-gold-light" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
+                <svg class="w-4 h-4 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
                 <span>In / Lưu PDF Ngay</span>
             </button>
         </div>
@@ -69,19 +69,19 @@
             <div class="p-4 rounded-2xl bg-[#FAF9F6] border border-black/10 text-center">
                 <span class="text-[10px] uppercase font-bold text-gray-500 block">Tổng Doanh Thu</span>
                 <span class="font-display font-black text-xl text-black block mt-1">
-                    {{ number_format($totalRevenue > 0 ? $totalRevenue : 128500000, 0, ',', '.') }}₫
+                    {{ number_format($totalRevenue, 0, ',', '.') }}₫
                 </span>
             </div>
             <div class="p-4 rounded-2xl bg-[#FAF9F6] border border-black/10 text-center">
                 <span class="text-[10px] uppercase font-bold text-gray-500 block">Số Vé Đã Xuất</span>
-                <span class="font-display font-black text-xl text-sage-forest block mt-1">
-                    {{ number_format($totalTicketsSold > 0 ? $totalTicketsSold : 1420, 0, ',', '.') }} Vé
+                <span class="font-display font-black text-xl text-emerald-700 block mt-1">
+                    {{ number_format($totalTicketsSold, 0, ',', '.') }} Vé
                 </span>
             </div>
             <div class="p-4 rounded-2xl bg-[#FAF9F6] border border-black/10 text-center">
                 <span class="text-[10px] uppercase font-bold text-gray-500 block">Giá Trị Đơn Trung Bình</span>
-                <span class="font-display font-black text-xl text-gold-dark block mt-1">
-                    {{ number_format($totalBookings > 0 && $totalRevenue > 0 ? round($totalRevenue / $totalBookings) : 320000, 0, ',', '.') }}₫
+                <span class="font-display font-black text-xl text-amber-700 block mt-1">
+                    {{ number_format($totalBookings > 0 ? round($totalRevenue / $totalBookings) : 0, 0, ',', '.') }}₫
                 </span>
             </div>
         </div>
@@ -103,24 +103,23 @@
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-black/5">
-                    @if(isset($eventsRevenue) && $eventsRevenue->count() > 0)
-                        @foreach($eventsRevenue as $idx => $e)
-                            @php
-                                $rev = $e['revenue'] > 0 ? $e['revenue'] : ($loop->first ? 83500000 : ($loop->iteration == 2 ? 25700000 : 19300000));
-                                $tickets = $e['tickets'] > 0 ? $e['tickets'] : ($loop->first ? 920 : ($loop->iteration == 2 ? 280 : 220));
-                                $totalAll = 128500000;
-                                $ratio = round(($rev / $totalAll) * 100, 1);
-                            @endphp
-                            <tr>
-                                <td class="py-2.5 px-3 text-gray-500 font-mono">{{ $idx + 1 }}</td>
-                                <td class="py-2.5 px-3 font-bold text-black">{{ $e['title'] }}</td>
-                                <td class="py-2.5 px-3 text-gray-600">{{ $e['category'] }}</td>
-                                <td class="py-2.5 px-3 text-center font-bold">{{ number_format($tickets, 0, ',', '.') }}</td>
-                                <td class="py-2.5 px-3 text-right font-black text-black">{{ number_format($rev, 0, ',', '.') }}₫</td>
-                                <td class="py-2.5 px-3 text-right font-bold text-gray-700">{{ $ratio }}%</td>
-                            </tr>
-                        @endforeach
-                    @endif
+                    @forelse($eventsRevenue as $idx => $e)
+                        @php
+                            $ratio = $totalRevenue > 0 ? round(($e['revenue'] / $totalRevenue) * 100, 1) : 0;
+                        @endphp
+                        <tr>
+                            <td class="py-2.5 px-3 text-gray-500 font-mono">{{ $idx + 1 }}</td>
+                            <td class="py-2.5 px-3 font-bold text-black">{{ $e['title'] }}</td>
+                            <td class="py-2.5 px-3 text-gray-600">{{ $e['category'] }}</td>
+                            <td class="py-2.5 px-3 text-center font-bold">{{ number_format($e['tickets'], 0, ',', '.') }}</td>
+                            <td class="py-2.5 px-3 text-right font-black text-black">{{ number_format($e['revenue'], 0, ',', '.') }}₫</td>
+                            <td class="py-2.5 px-3 text-right font-bold text-gray-700">{{ $ratio }}%</td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="6" class="py-4 text-center text-gray-400">Chưa có dữ liệu sự kiện.</td>
+                        </tr>
+                    @endforelse
                 </tbody>
             </table>
         </div>
@@ -131,18 +130,18 @@
                 2. Phân Bổ Theo Thể Loại Sự Kiện
             </h3>
             <div class="grid grid-cols-3 gap-3 text-xs">
-                <div class="p-3 bg-[#FAF9F6] rounded-xl border border-black/5">
-                    <span class="font-bold text-black block">Live Concert &amp; Âm Nhạc</span>
-                    <div class="text-gold-dark font-black mt-1">83.500.000₫ (65%)</div>
-                </div>
-                <div class="p-3 bg-[#FAF9F6] rounded-xl border border-black/5">
-                    <span class="font-bold text-black block">Hòa Nhạc &amp; Thính Phòng</span>
-                    <div class="text-rose-taupe font-black mt-1">25.700.000₫ (20%)</div>
-                </div>
-                <div class="p-3 bg-[#FAF9F6] rounded-xl border border-black/5">
-                    <span class="font-bold text-black block">Hội Thảo &amp; Triển Lãm</span>
-                    <div class="text-sage-forest font-black mt-1">19.300.000₫ (15%)</div>
-                </div>
+                @forelse($categoriesRevenue as $cat)
+                    @php
+                        $ratio = $totalRevenue > 0 ? round(($cat['revenue'] / $totalRevenue) * 100, 1) : 0;
+                    @endphp
+                    <div class="p-3 bg-[#FAF9F6] rounded-xl border border-black/5">
+                        <span class="font-bold text-black block">{{ $cat['name'] }}</span>
+                        <div class="text-amber-700 font-black mt-1">{{ number_format($cat['revenue'], 0, ',', '.') }}₫ ({{ $ratio }}%)</div>
+                        <span class="text-[10px] text-gray-500 block mt-0.5">{{ $cat['tickets'] }} vé đã bán</span>
+                    </div>
+                @empty
+                    <div class="col-span-3 text-center py-2 text-gray-400">Chưa có danh mục sự kiện nào.</div>
+                @endforelse
             </div>
         </div>
 

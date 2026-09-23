@@ -34,24 +34,24 @@
                     </div>
                 </div>
                 <div class="font-display font-black text-2xl text-black mt-3">
-                    {{ number_format($totalRevenue > 0 ? $totalRevenue : 128500000, 0, ',', '.') }}₫
+                    {{ number_format($totalRevenue, 0, ',', '.') }}₫
                 </div>
                 <div class="flex items-center gap-1.5 mt-2">
                     <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                    <span class="text-xs text-emerald-800 font-bold">Đã đối soát cổng thanh toán</span>
+                    <span class="text-xs text-emerald-800 font-bold">Từ các đơn hàng confirmed</span>
                 </div>
             </div>
 
             <!-- KPI 2 -->
             <div class="bg-white rounded-3xl p-6 border border-black/10 shadow-sm relative overflow-hidden group hover:border-blue-400 transition-all">
                 <div class="flex items-center justify-between">
-                    <span class="text-xs font-bold uppercase tracking-wider text-gray-500">Tổng Số Vé Xuất</span>
+                    <span class="text-xs font-bold uppercase tracking-wider text-gray-500">Tổng Số Vé Đã Bán</span>
                     <div class="w-10 h-10 rounded-2xl bg-blue-50 border border-blue-200 flex items-center justify-center text-blue-700 shadow-sm">
                         <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z"/></svg>
                     </div>
                 </div>
                 <div class="font-display font-black text-2xl text-black mt-3">
-                    {{ number_format($totalTicketsSold > 0 ? $totalTicketsSold : 1420, 0, ',', '.') }} <span class="text-sm font-bold text-gray-400">Vé</span>
+                    {{ number_format($totalTicketsSold, 0, ',', '.') }} <span class="text-sm font-bold text-gray-400">Vé</span>
                 </div>
                 <div class="flex items-center gap-1.5 mt-2">
                     <span class="text-xs text-gray-500 font-semibold">Trên toàn bộ các suất diễn</span>
@@ -67,7 +67,7 @@
                     </div>
                 </div>
                 <div class="font-display font-black text-2xl text-amber-900 mt-3">
-                    {{ number_format($totalBookings > 0 && $totalRevenue > 0 ? round($totalRevenue / $totalBookings) : 320000, 0, ',', '.') }}₫
+                    {{ number_format($totalBookings > 0 ? round($totalRevenue / $totalBookings) : 0, 0, ',', '.') }}₫
                 </div>
                 <div class="flex items-center gap-1.5 mt-2">
                     <span class="text-xs text-gray-500 font-semibold">AOV (Average Order Value)</span>
@@ -95,71 +95,50 @@
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-black/5">
-                        @if(isset($eventsRevenue) && $eventsRevenue->count() > 0)
-                            @foreach($eventsRevenue as $e)
-                                @php
-                                    $rev = $e['revenue'] > 0 ? $e['revenue'] : ($loop->first ? 83500000 : ($loop->iteration == 2 ? 25700000 : 19300000));
-                                    $tickets = $e['tickets'] > 0 ? $e['tickets'] : ($loop->first ? 920 : ($loop->iteration == 2 ? 280 : 220));
-                                    $totalAll = $totalRevenue > 0 ? $totalRevenue : 128500000;
-                                    $ratio = $totalAll > 0 ? round(($rev / $totalAll) * 100, 1) : 0;
-                                @endphp
-                                <tr class="hover:bg-[#FAF9F6] transition-colors">
-                                    <td class="py-4 px-6 whitespace-nowrap">
-                                        @if($loop->first)
-                                            <span class="w-6 h-6 rounded-full bg-gradient-to-br from-amber-400 to-yellow-500 text-black font-black text-xs inline-flex items-center justify-center shadow-sm">1</span>
-                                        @elseif($loop->iteration == 2)
-                                            <span class="w-6 h-6 rounded-full bg-slate-200 text-slate-700 font-black text-xs inline-flex items-center justify-center">2</span>
-                                        @elseif($loop->iteration == 3)
-                                            <span class="w-6 h-6 rounded-full bg-amber-100 text-amber-800 font-black text-xs inline-flex items-center justify-center">3</span>
-                                        @else
-                                            <span class="text-xs text-gray-400 font-bold ml-2">{{ $loop->iteration }}</span>
-                                        @endif
-                                    </td>
-                                    <td class="py-4 px-4 font-bold text-black text-sm whitespace-nowrap">{{ $e['title'] }}</td>
-                                    <td class="py-4 px-4 whitespace-nowrap">
-                                        <span class="px-2.5 py-1 rounded-full text-[11px] font-bold bg-purple-50 text-purple-800 border border-purple-200">
-                                            {{ $e['category'] }}
-                                        </span>
-                                    </td>
-                                    <td class="py-4 px-4 font-mono font-black text-black whitespace-nowrap">
-                                        <span class="px-2.5 py-1 rounded-xl bg-amber-50 text-amber-900 border border-amber-200 inline-block text-xs">
-                                            {{ number_format($tickets, 0, ',', '.') }} vé
-                                        </span>
-                                    </td>
-                                    <td class="py-4 px-4 font-black text-amber-900 text-sm whitespace-nowrap">{{ number_format($rev, 0, ',', '.') }}₫</td>
-                                    <td class="py-4 px-6 text-right whitespace-nowrap">
-                                        <div class="inline-flex items-center gap-2">
-                                            <span class="font-black text-black text-xs">{{ $ratio }}%</span>
-                                            <div class="w-20 h-2 bg-[#FAF9F6] rounded-full overflow-hidden border border-black/10">
-                                                <div class="h-full bg-gradient-to-r from-amber-400 to-amber-500 rounded-full" style="width: {{ min(100, $ratio) }}%"></div>
-                                            </div>
-                                        </div>
-                                    </td>
-                                </tr>
-                            @endforeach
-                        @else
+                        @forelse($eventsRevenue as $e)
+                            @php
+                                $ratio = $totalRevenue > 0 ? round(($e['revenue'] / $totalRevenue) * 100, 1) : 0;
+                            @endphp
                             <tr class="hover:bg-[#FAF9F6] transition-colors">
                                 <td class="py-4 px-6 whitespace-nowrap">
-                                    <span class="w-6 h-6 rounded-full bg-gradient-to-br from-amber-400 to-yellow-500 text-black font-black text-xs inline-flex items-center justify-center shadow-sm">1</span>
+                                    @if($loop->first)
+                                        <span class="w-6 h-6 rounded-full bg-gradient-to-br from-amber-400 to-yellow-500 text-black font-black text-xs inline-flex items-center justify-center shadow-sm">1</span>
+                                    @elseif($loop->iteration == 2)
+                                        <span class="w-6 h-6 rounded-full bg-slate-200 text-slate-700 font-black text-xs inline-flex items-center justify-center">2</span>
+                                    @elseif($loop->iteration == 3)
+                                        <span class="w-6 h-6 rounded-full bg-amber-100 text-amber-800 font-black text-xs inline-flex items-center justify-center">3</span>
+                                    @else
+                                        <span class="text-xs text-gray-400 font-bold ml-2">{{ $loop->iteration }}</span>
+                                    @endif
                                 </td>
-                                <td class="py-4 px-4 font-bold text-black text-sm whitespace-nowrap">Anh Trai Vượt Ngàn Chông Gai 2026</td>
+                                <td class="py-4 px-4 font-bold text-black text-sm whitespace-nowrap">{{ $e['title'] }}</td>
                                 <td class="py-4 px-4 whitespace-nowrap">
-                                    <span class="px-2.5 py-1 rounded-full text-[11px] font-bold bg-purple-50 text-purple-800 border border-purple-200">Live Concert</span>
+                                    <span class="px-2.5 py-1 rounded-full text-[11px] font-bold bg-purple-50 text-purple-800 border border-purple-200">
+                                        {{ $e['category'] }}
+                                    </span>
                                 </td>
                                 <td class="py-4 px-4 font-mono font-black text-black whitespace-nowrap">
-                                    <span class="px-2.5 py-1 rounded-xl bg-amber-50 text-amber-900 border border-amber-200 inline-block text-xs">920 vé</span>
+                                    <span class="px-2.5 py-1 rounded-xl bg-amber-50 text-amber-900 border border-amber-200 inline-block text-xs">
+                                        {{ number_format($e['tickets'], 0, ',', '.') }} vé
+                                    </span>
                                 </td>
-                                <td class="py-4 px-4 font-black text-amber-900 text-sm whitespace-nowrap">83.500.000₫</td>
+                                <td class="py-4 px-4 font-black text-amber-900 text-sm whitespace-nowrap">{{ number_format($e['revenue'], 0, ',', '.') }}₫</td>
                                 <td class="py-4 px-6 text-right whitespace-nowrap">
                                     <div class="inline-flex items-center gap-2">
-                                        <span class="font-black text-black text-xs">65%</span>
+                                        <span class="font-black text-black text-xs">{{ $ratio }}%</span>
                                         <div class="w-20 h-2 bg-[#FAF9F6] rounded-full overflow-hidden border border-black/10">
-                                            <div class="h-full bg-gradient-to-r from-amber-400 to-amber-500 rounded-full" style="width: 65%"></div>
+                                            <div class="h-full bg-gradient-to-r from-amber-400 to-amber-500 rounded-full" style="width: {{ min(100, $ratio) }}%"></div>
                                         </div>
                                     </div>
                                 </td>
                             </tr>
-                        @endif
+                        @empty
+                            <tr>
+                                <td colspan="6" class="py-8 text-center text-gray-400">
+                                    Chưa có dữ liệu doanh thu sự kiện.
+                                </td>
+                            </tr>
+                        @endforelse
                     </tbody>
                 </table>
             </div>
