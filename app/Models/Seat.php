@@ -34,7 +34,7 @@ class Seat extends Model
 
     public function isVip(): bool
     {
-        return $this->type === 'vip';
+        return in_array($this->type, ['vip', 'vip_gold', 'svip_diamond', 'skybox_suite'], true);
     }
 
     public function getFullCodeAttribute(): string

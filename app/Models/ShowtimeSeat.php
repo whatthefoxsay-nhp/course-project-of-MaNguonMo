@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Support\TicketTiers;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -51,9 +52,16 @@ class ShowtimeSeat extends Model
             return $this->price_override;
         }
 
-        $base = $this->showtime ? $this->showtime->base_price : 75000;
-        $vipSurcharge = ($this->seat && $this->seat->isVip()) ? 25000 : 0;
+        return TicketTiers::seatPrice($this->seat?->type ?? 'normal', $this->showtime?->base_price ?? 0);
+    }
 
-        return $base + $vipSurcharge;
+    /** Trạng thái hiển thị cho khách: ghế giữ quá hạn coi như còn trống. */
+    public function publicStatus(): string
+    {
+        if ($this->status === 'held' && $this->held_until !== null && $this->held_until->isPast()) {
+            return 'available';
+        }
+
+        return $this->status;
     }
 }
