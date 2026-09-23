@@ -26,6 +26,10 @@
         <div class="absolute bottom-[10%] left-[15%] w-[45vw] h-[45vw] rounded-full bg-[#3A5A40]/6 blur-[130px]"></div>
     </div>
 
+    @php
+        $navCartCount = auth()->check() ? \App\Models\ShowtimeSeat::heldBy(auth()->user())->count() : 0;
+    @endphp
+
     <!-- Full-Width Modern Luxury Navbar -->
     <header class="sticky top-0 z-40 w-full bg-white/95 backdrop-blur-xl border-b border-black/10 shadow-sm transition-all">
         <div class="max-w-[1440px] mx-auto px-3 sm:px-6 lg:px-8 py-2.5 sm:py-3 flex items-center justify-between gap-2 lg:gap-3 xl:gap-6">
@@ -55,13 +59,13 @@
             </div>
 
             <!-- Center: Multi-Category Event Navigation Links (Desktop) -->
-            <nav class="hidden lg:flex items-center gap-1 xl:gap-2 text-xs xl:text-sm font-semibold min-w-0">
-                <a href="{{ route('home') }}" class="px-2.5 xl:px-3.5 py-1.5 xl:py-2 rounded-full transition-colors whitespace-nowrap {{ request()->routeIs('home') ? 'bg-[#000000] text-white font-bold' : 'text-gray-700 hover:text-black hover:bg-black/5' }}">
+            <nav class="hidden lg:flex items-center gap-1 xl:gap-2 text-xs xl:text-sm font-semibold shrink-0">
+                <a href="{{ route('home') }}" class="px-2.5 xl:px-3 py-1.5 rounded-full transition-colors whitespace-nowrap {{ request()->routeIs('home') ? 'bg-[#000000] text-white font-bold' : 'text-gray-700 hover:text-black hover:bg-black/5' }}">
                     Trang chủ
                 </a>
 
                 @if (auth()->user()?->hasRole('admin'))
-                    <a href="{{ route('admin.dashboard') }}" class="px-2.5 xl:px-3.5 py-1.5 xl:py-2 rounded-full transition-colors text-gold-dark font-bold hover:text-black hover:bg-[#FFF8E1] inline-flex items-center gap-1.5 whitespace-nowrap">
+                    <a href="{{ route('admin.dashboard') }}" class="px-2.5 xl:px-3 py-1.5 rounded-full transition-colors text-gold-dark font-bold hover:text-black hover:bg-[#FFF8E1] inline-flex items-center gap-1.5 whitespace-nowrap">
                         <span>Trang Quản Trị</span>
                     </a>
                 @else
@@ -74,9 +78,9 @@
                     >
                         <button 
                             @click="open = !open"
-                            class="flex items-center gap-1 px-2.5 xl:px-3.5 py-1.5 xl:py-2 rounded-full text-gray-700 hover:text-black hover:bg-black/5 transition-colors whitespace-nowrap {{ request()->routeIs('movies.*') ? 'text-black font-bold bg-black/5' : '' }}"
+                            class="flex items-center gap-1 px-2.5 xl:px-3 py-1.5 rounded-full text-gray-700 hover:text-black hover:bg-black/5 transition-colors whitespace-nowrap {{ request()->routeIs('movies.*') ? 'text-black font-bold bg-black/5' : '' }}"
                         >
-                            <span>Khám Phá Sự Kiện</span>
+                            <span class="hidden 2xl:inline">Khám Phá </span><span>Sự Kiện</span>
                             <svg class="w-3.5 h-3.5 opacity-60 transition-transform duration-200" :class="open ? 'rotate-180' : ''" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
                             </svg>
@@ -131,18 +135,18 @@
                     </div>
 
                     <!-- Lịch Diễn & Khán Phòng -->
-                    <a href="{{ route('movies.index') }}" class="px-2.5 xl:px-3.5 py-1.5 xl:py-2 rounded-full text-gray-700 hover:text-black hover:bg-black/5 transition-colors whitespace-nowrap">
-                        Lịch Diễn &amp; Khán Phòng
+                    <a href="{{ route('movies.index') }}" class="px-2.5 xl:px-3 py-1.5 rounded-full text-gray-700 hover:text-black hover:bg-black/5 transition-colors whitespace-nowrap">
+                        <span>Lịch Diễn</span><span class="hidden 2xl:inline"> &amp; Khán Phòng</span>
                     </a>
 
                     <!-- Ưu đãi & Voucher -->
-                    <a href="#footer-offers" class="flex items-center gap-1 px-2.5 xl:px-3.5 py-1.5 xl:py-2 rounded-full text-gold-dark hover:text-black hover:bg-[#FFF8E1] transition-colors font-bold whitespace-nowrap">
+                    <a href="#footer-offers" class="flex items-center gap-1 px-2.5 xl:px-3 py-1.5 rounded-full text-gold-dark hover:text-black hover:bg-[#FFF8E1] transition-colors font-bold whitespace-nowrap">
                         <span>Ưu Đãi VIP</span>
                         <span class="badge-gold text-[9px] px-1.5 py-0.5 rounded-full font-black">SALE</span>
                     </a>
 
                     @auth
-                        <a href="{{ route('bookings.history') }}" class="relative inline-flex items-center gap-1.5 px-2.5 xl:px-3.5 py-1.5 xl:py-2 rounded-full transition-colors whitespace-nowrap {{ request()->routeIs('bookings.*') ? 'bg-[#000000] text-white font-bold' : 'text-gray-700 hover:text-black hover:bg-black/5' }}">
+                        <a href="{{ route('bookings.history') }}" class="relative hidden 2xl:inline-flex items-center gap-1.5 px-2.5 xl:px-3 py-1.5 rounded-full transition-colors whitespace-nowrap {{ request()->routeIs('bookings.*') ? 'bg-[#000000] text-white font-bold' : 'text-gray-700 hover:text-black hover:bg-black/5' }}">
                             <span>Vé của tôi</span>
                             <!-- Event Countdown / Notification Pill (12h - 24h) -->
                             <span class="flex h-2 w-2 relative" title="Có 1 sự kiện sắp diễn ra trong 12 tiếng">
@@ -160,13 +164,13 @@
                 <button 
                     type="button"
                     @click="open()" 
-                    class="bg-[#FAF9F6] hover:bg-white border border-black/10 hover:border-black/25 px-2.5 sm:px-3.5 py-1.5 sm:py-2 rounded-full text-xs flex items-center gap-2 text-gray-500 hover:text-black transition-all shadow-sm group w-28 sm:w-36 md:w-44 lg:w-36 xl:w-52 shrink min-w-0"
+                    class="bg-[#FAF9F6] hover:bg-white border border-black/10 hover:border-black/25 px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-full text-xs flex items-center gap-2 text-gray-500 hover:text-black transition-all shadow-sm group w-28 sm:w-32 lg:w-28 xl:w-36 2xl:w-48 shrink min-w-0"
                     title="Tìm kiếm sự kiện"
                 >
                     <svg class="w-3.5 h-3.5 sm:w-4 sm:h-4 text-gray-400 group-hover:text-black transition-colors shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                     </svg>
-                    <span class="truncate font-medium text-[11px] sm:text-xs">Tìm sự kiện, concert...</span>
+                    <span class="truncate font-medium text-[11px] sm:text-xs">Tìm sự kiện...</span>
                 </button>
 
                 @auth
@@ -187,12 +191,12 @@
                         <div 
                             x-show="open" 
                             @click.away="open = false" 
-                            x-transition:enter="ease-out duration-150"
-                            x-transition:enter-start="opacity-0 scale-95"
-                            x-transition:enter-end="opacity-100 scale-100"
-                            x-transition:leave="ease-in duration-100"
-                            x-transition:leave-start="opacity-100 scale-100"
-                            x-transition:leave-end="opacity-0 scale-95"
+                            x-transition:enter="ease-out duration-150" 
+                            x-transition:enter-start="opacity-0 scale-95" 
+                            x-transition:enter-end="opacity-100 scale-100" 
+                            x-transition:leave="ease-in duration-100" 
+                            x-transition:leave-start="opacity-100 scale-100" 
+                            x-transition:leave-end="opacity-0 scale-95" 
                             class="absolute right-0 top-full pt-1.5 w-80 z-50"
                             style="display: none;"
                         >
@@ -232,9 +236,11 @@
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 10.5V6a3.75 3.75 0 10-7.5 0v4.5m11.356-1.993l1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 01-1.12-1.243l1.264-12A1.125 1.125 0 015.513 7.5h12.974c.576 0 1.059.435 1.119 1.007z" />
                     </svg>
-                    <span class="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-rose-taupe text-white text-[9px] font-bold flex items-center justify-center border-2 border-white shadow-sm">
-                        1
-                    </span>
+                    @if ($navCartCount > 0)
+                        <span class="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-rose-taupe text-white text-[9px] font-bold flex items-center justify-center border-2 border-white shadow-sm">
+                            {{ $navCartCount > 9 ? '9+' : $navCartCount }}
+                        </span>
+                    @endif
                 </a>
 
                 <!-- User Account Profile / Auth -->
@@ -317,7 +323,12 @@
             @else
                 <a href="{{ route('movies.index') }}" class="block px-3 py-2 rounded-xl text-gray-700 font-medium hover:bg-[#FAF9F6]">Khám Phá Sự Kiện</a>
                 <a href="{{ route('movies.index', ['q' => 'Concert']) }}" class="block px-3 py-2 rounded-xl text-gray-700 font-medium hover:bg-[#FAF9F6]">Live Concert &amp; Đại Nhạc Hội</a>
-                <a href="{{ route('cart.index') }}" class="block px-3 py-2 rounded-xl text-gold-dark font-bold hover:bg-[#FAF9F6]">Giỏ Vé Của Bạn</a>
+                <a href="{{ route('cart.index') }}" class="flex items-center justify-between px-3 py-2 rounded-xl text-gold-dark font-bold hover:bg-[#FAF9F6]">
+                    <span>Giỏ Vé Của Bạn</span>
+                    @if ($navCartCount > 0)
+                        <span class="badge-rose text-[10px] px-2 py-0.5 rounded-full font-black">{{ $navCartCount }}</span>
+                    @endif
+                </a>
                 @auth
                     <a href="{{ route('bookings.history') }}" class="block px-3 py-2 rounded-xl text-sage-forest font-bold hover:bg-[#FAF9F6]">Vé Của Tôi (E-Ticket)</a>
                     <a href="{{ route('profile.edit') }}" class="block px-3 py-2 rounded-xl text-gray-800 font-bold hover:bg-[#FAF9F6]">Hồ Sơ Cá Nhân &amp; Cài Đặt</a>
