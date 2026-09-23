@@ -52,7 +52,7 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::get('/reports', [AdminReportController::class, 'index'])->name('reports.index');
     Route::get('/reports/pdf', [AdminReportController::class, 'pdf'])->name('reports.pdf');
     Route::resource('categories', AdminCategoryController::class)->except('show');
-    Route::get('/events', [AdminEventController::class, 'index'])->name('events.index');
+    Route::resource('events', AdminEventController::class)->except('show');
     Route::get('/showtimes', [AdminShowtimeController::class, 'index'])->name('showtimes.index');
     Route::get('/rooms', [AdminRoomController::class, 'index'])->name('rooms.index');
     Route::get('/rooms/create', [AdminRoomController::class, 'create'])->name('rooms.create');

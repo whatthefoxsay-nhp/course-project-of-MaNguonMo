@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\GeneratesUniqueSlug;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -11,7 +13,7 @@ use Illuminate\Support\Str;
 
 class Event extends Model
 {
-    use HasFactory;
+    use GeneratesUniqueSlug, HasFactory;
 
     protected $table = 'events';
 
@@ -26,11 +28,22 @@ class Event extends Model
         'duration_minutes',
         'status',
         'release_date',
+        'is_seated',
+        'details',
     ];
 
     protected $casts = [
         'release_date' => 'date',
         'duration_minutes' => 'integer',
+        'is_seated' => 'boolean',
+        'details' => 'array',
+    ];
+
+    /** Các key trong cột JSON `details`, đọc được như thuộc tính thường: $event->venue_name */
+    public const DETAIL_KEYS = [
+        'venue_name', 'venue_address', 'venue_gates', 'parking_info',
+        'participants_title', 'participants_summary', 'host_mc', 'special_guests',
+        'timeline', 'lineup', 'organizers', 'entry_policy',
     ];
 
     protected static function boot()
@@ -39,9 +52,29 @@ class Event extends Model
 
         static::creating(function ($event) {
             if (empty($event->slug)) {
-                $event->slug = Str::slug($event->title);
+                $event->slug = static::uniqueSlug($event->title);
             }
         });
+    }
+
+    public function getAttribute($key)
+    {
+        if (in_array($key, self::DETAIL_KEYS, true)) {
+            return $this->details[$key] ?? null;
+        }
+
+        return parent::getAttribute($key);
+    }
+
+    /** Tên cũ các view đang dùng. */
+    public function getIsSeatedConcertAttribute(): bool
+    {
+        return (bool) $this->is_seated;
+    }
+
+    public function scopePublished(Builder $query): Builder
+    {
+        return $query->where('status', 'published');
     }
 
     public function category(): BelongsTo
@@ -70,10 +103,5 @@ class Event extends Model
             }
         }
         return "https://picsum.photos/seed/{$this->slug}/480/720";
-    }
-
-    public function isEvent(): bool
-    {
-        return true;
     }
 }

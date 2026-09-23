@@ -24,6 +24,8 @@ class EventFactory extends Factory
             'duration_minutes' => 120,
             'status' => 'published',
             'release_date' => now()->addWeek(),
+            'is_seated' => true,
+            'details' => null,
         ];
     }
 }

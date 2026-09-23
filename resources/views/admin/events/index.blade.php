@@ -16,10 +16,10 @@
                 </div>
             </div>
             <div>
-                <button type="button" class="btn-rose px-5 py-3 rounded-2xl text-xs font-black flex items-center gap-2 shadow-md shadow-rose-500/20 transition-all hover:scale-[1.02]">
+                <a href="{{ route('admin.events.create') }}" class="btn-rose px-5 py-3 rounded-2xl text-xs font-black flex items-center gap-2 shadow-md shadow-rose-500/20 transition-all hover:scale-[1.02]">
                     <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
                     <span>Thêm Sự Kiện Mới</span>
-                </button>
+                </a>
             </div>
         </div>
 
@@ -79,7 +79,7 @@
                                 <td class="py-4 px-6 whitespace-nowrap">
                                     <div class="flex items-center gap-3.5">
                                         <div class="w-12 h-16 rounded-xl bg-black/10 overflow-hidden flex-shrink-0 border border-black/10 shadow-sm">
-                                            <img src="{{ $event->poster_path ?? 'https://picsum.photos/seed/'.$event->slug.'/120/160' }}" alt="{{ $event->title }}" class="w-full h-full object-cover">
+                                            <img src="{{ $event->poster_url }}" alt="{{ $event->title }}" class="w-full h-full object-cover">
                                         </div>
                                         <div>
                                             <div class="font-bold text-black text-sm hover:text-rose-600 transition-colors">{{ $event->title }}</div>
@@ -126,9 +126,12 @@
                                         <a href="{{ route('movies.show', $event->slug) }}" target="_blank" class="p-2 rounded-xl border border-black/10 hover:bg-[#FAF9F6] text-gray-700 hover:text-black transition-all" title="Xem trên web">
                                             <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
                                         </a>
-                                        <button type="button" class="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-[#FAF9F6] border border-black/10 hover:bg-black hover:text-white transition-all">
-                                            Sửa
-                                        </button>
+                                        <a href="{{ route('admin.events.edit', $event) }}" class="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-[#FAF9F6] border border-black/10 hover:bg-black hover:text-white transition-all">Sửa</a>
+                                        <form method="POST" action="{{ route('admin.events.destroy', $event) }}" onsubmit="return confirm('Xóa sự kiện này? Toàn bộ suất diễn chưa bán vé sẽ bị xóa theo.')">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="px-3.5 py-1.5 rounded-xl text-xs font-bold text-[#CC0000] border border-[#CC0000]/30 hover:bg-[#CC0000] hover:text-white transition-all">Xóa</button>
+                                        </form>
                                     </div>
                                 </td>
                             </tr>
