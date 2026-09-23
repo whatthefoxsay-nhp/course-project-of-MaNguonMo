@@ -29,11 +29,6 @@
                         Lịch Diễn &amp; Khán Phòng
                     </a>
 
-                    <a href="{{ route('home') }}#footer-offers" class="px-3.5 py-1.5 rounded-full text-gold-dark hover:text-black hover:bg-[#FFF8E1] transition-colors font-bold whitespace-nowrap inline-flex items-center gap-1">
-                        <span>Ưu Đãi VIP</span>
-                        <span class="badge-gold text-[9px] px-1.5 py-0.2 rounded-full font-black">SALE</span>
-                    </a>
-
                     <a href="{{ route('bookings.history') }}" class="relative inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full transition-colors whitespace-nowrap {{ request()->routeIs('bookings.*') ? 'bg-[#000000] text-white font-bold' : 'text-gray-700 hover:text-black hover:bg-black/5' }}">
                         <span>Vé của tôi</span>
                         <span class="flex h-2 w-2 relative" title="Có 1 sự kiện sắp diễn ra trong 12 tiếng">

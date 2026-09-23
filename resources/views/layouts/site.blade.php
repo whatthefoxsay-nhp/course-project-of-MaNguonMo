@@ -134,14 +134,8 @@
                     <span>Lịch Diễn</span><span class="hidden 2xl:inline"> &amp; Khán Phòng</span>
                 </a>
 
-                <!-- Ưu đãi & Voucher -->
-                <a href="#footer-offers" class="flex items-center gap-1 px-2.5 xl:px-3 py-1.5 rounded-full text-gold-dark hover:text-black hover:bg-[#FFF8E1] transition-colors font-bold whitespace-nowrap">
-                    <span>Ưu Đãi VIP</span>
-                    <span class="badge-gold text-[9px] px-1.5 py-0.5 rounded-full font-black">SALE</span>
-                </a>
-
                 @auth
-                    <a href="{{ route('bookings.history') }}" class="relative hidden 2xl:inline-flex items-center gap-1.5 px-2.5 xl:px-3 py-1.5 rounded-full transition-colors whitespace-nowrap {{ request()->routeIs('bookings.*') ? 'bg-[#000000] text-white font-bold' : 'text-gray-700 hover:text-black hover:bg-black/5' }}">
+                    <a href="{{ route('bookings.history') }}" class="relative inline-flex items-center gap-1.5 px-2.5 xl:px-3 py-1.5 rounded-full transition-colors whitespace-nowrap {{ request()->routeIs('bookings.*') ? 'bg-[#000000] text-white font-bold' : 'text-gray-700 hover:text-black hover:bg-black/5' }}">
                         <span>Vé của tôi</span>
                         <!-- Event Countdown / Notification Pill (12h - 24h) -->
                         <span class="flex h-2 w-2 relative" title="Có 1 sự kiện sắp diễn ra trong 12 tiếng">
