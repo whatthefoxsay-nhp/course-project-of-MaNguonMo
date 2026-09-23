@@ -145,15 +145,6 @@
                     </a>
                 @endauth
 
-                @if (auth()->user()?->hasRole('admin'))
-                    <a href="{{ route('admin.dashboard') }}" class="px-2.5 xl:px-3 py-1.5 rounded-full transition-colors text-gold-dark font-black hover:text-black hover:bg-[#FFF8E1] bg-[#FFF8E1]/80 border border-gold-antique/40 inline-flex items-center gap-1.5 whitespace-nowrap shadow-xs">
-                        <svg class="w-3.5 h-3.5 text-gold-dark" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                        </svg>
-                        <span>Trang Quản Trị</span>
-                    </a>
-                @endif
             </nav>
 
             <!-- Right: Search Modal Trigger + Notification Bell + Cart + Auth / Profile -->
@@ -274,16 +265,16 @@
                                         <svg class="w-4 h-4 text-gold-dark" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>
                                         Trang Quản Trị Admin
                                     </a>
-                                @else
-                                    <a href="{{ route('bookings.history') }}" class="flex items-center gap-2 px-3 py-2 rounded-xl text-gray-800 hover:bg-[#FAF9F6] font-semibold">
-                                        <svg class="w-4 h-4 text-sage-forest" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z" /></svg>
-                                        Vé đã đặt (E-Tickets)
-                                    </a>
-                                    <a href="{{ route('profile.edit') }}" class="flex items-center gap-2 px-3 py-2 rounded-xl text-gray-800 hover:bg-[#FAF9F6] font-semibold">
-                                        <svg class="w-4 h-4 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
-                                        Hồ sơ cá nhân &amp; Cài đặt
-                                    </a>
+                                    <div class="my-1 border-t border-black/5"></div>
                                 @endif
+                                <a href="{{ route('bookings.history') }}" class="flex items-center gap-2 px-3 py-2 rounded-xl text-gray-800 hover:bg-[#FAF9F6] font-semibold">
+                                    <svg class="w-4 h-4 text-sage-forest" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z" /></svg>
+                                    Vé đã đặt (E-Tickets)
+                                </a>
+                                <a href="{{ route('profile.edit') }}" class="flex items-center gap-2 px-3 py-2 rounded-xl text-gray-800 hover:bg-[#FAF9F6] font-semibold">
+                                    <svg class="w-4 h-4 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
+                                    Hồ sơ cá nhân &amp; Cài đặt
+                                </a>
                                 <div class="my-1 border-t border-black/10"></div>
                                 <form method="POST" action="{{ route('logout') }}">
                                     @csrf
