@@ -55,7 +55,7 @@ final class SeatMapPresenter
     private static function sector(string $row, bool $isStadium): array
     {
         if (! $isStadium) {
-            return ['general', "Hàng {$row}"];
+            return ['general', self::formatGeneralSectorLabel($row)];
         }
 
         return match (true) {
@@ -67,6 +67,18 @@ final class SeatMapPresenter
             str_starts_with($row, 'C') => ['left_stand', 'Khán Đài C Hàng '.substr($row, 1).' (Cánh Trái)'],
             str_starts_with($row, 'D') => ['right_stand', 'Khán Đài D Hàng '.substr($row, 1).' (Cánh Phải)'],
             default => ['general', "Hàng {$row}"],
+        };
+    }
+
+    private static function formatGeneralSectorLabel(string $row): string
+    {
+        return match (true) {
+            str_starts_with($row, 'ST') => 'Tầng Trệt VIP Stalls Hàng '.substr($row, 3),
+            str_starts_with($row, 'DC') => 'Khán Đài Dress Circle Hàng '.substr($row, 3).' (Tầng 1)',
+            str_starts_with($row, 'GL') => 'Ban Công Upper Gallery Hàng '.substr($row, 3).' (Tầng 2)',
+            str_starts_with($row, 'KN') => 'Khu Keynote VIP Hàng '.substr($row, 3),
+            str_starts_with($row, 'STD') => 'Khu Tiêu Chuẩn Hàng '.substr($row, 4),
+            default => "Hàng {$row}",
         };
     }
 }

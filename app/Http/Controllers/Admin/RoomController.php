@@ -18,6 +18,53 @@ class RoomController extends Controller
             ->latest('id')
             ->paginate(10);
 
+        $rooms->getCollection()->transform(function ($room) {
+            $groupedSeats = $room->seats
+                ->reject(fn ($s) => $s->type === 'standing_pit')
+                ->groupBy('row_label')
+                ->map(fn ($rowSeats, $rowLabel) => [
+                    'row' => $rowLabel,
+                    'seats' => $rowSeats->map(fn ($s) => [
+                        'id' => $s->id,
+                        'number' => $s->seat_number,
+                        'type' => $s->type,
+                        'type_name' => match ($s->type) {
+                            'svip_diamond' => 'SVIP Diamond',
+                            'vip_gold' => 'VIP Gold',
+                            'cat1_stand' => 'Khán Đài Cat 1',
+                            'cat2_wings' => 'Khán Đài Cánh Cat 2',
+                            'skybox_suite' => 'Skybox VIP Suite',
+                            default => 'Tiêu Chuẩn',
+                        },
+                        'color' => match ($s->type) {
+                            'svip_diamond' => '#D4AF37',
+                            'vip_gold' => '#C08497',
+                            'cat1_stand' => '#3A5A40',
+                            'cat2_wings' => '#1E293B',
+                            'skybox_suite' => '#E11D48',
+                            default => '#4B5563',
+                        },
+                    ])->values()->all(),
+                ])->values()->all();
+
+            $room->blueprint_data = [
+                'id' => $room->id,
+                'name' => $room->name,
+                'address' => $room->address ?? 'Trung tâm tổ chức sự kiện',
+                'capacity' => $room->capacity,
+                'preset' => $room->layout_preset ?? 'mega_concert',
+                'preset_label' => $room->preset_label,
+                'showtimes_count' => $room->showtimes_count ?? 0,
+                'summary' => $room->seats_summary,
+                'rows' => $groupedSeats,
+                'has_standing' => $room->seats->contains('type', 'standing_pit'),
+                'standing_count' => $room->seats->where('type', 'standing_pit')->count(),
+                'builder_url' => route('admin.rooms.builder', $room),
+            ];
+
+            return $room;
+        });
+
         return view('admin.rooms.index', compact('rooms'));
     }
 

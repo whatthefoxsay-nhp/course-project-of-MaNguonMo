@@ -36,4 +36,29 @@ class Room extends Model
     {
         return $this->hasMany(Showtime::class);
     }
+
+    public function getPresetLabelAttribute(): string
+    {
+        return match ($this->layout_preset ?? 'mega_concert') {
+            'theater_hall' => '🎭 Nhà Hát & Giao Hưởng',
+            'convention_center' => '🏢 Trung Tâm Hội Nghị & Triển Lãm',
+            'custom_grid' => '⚡ Ma Trận Tùy Chỉnh',
+            default => '🏟️ Mega Concert Arena',
+        };
+    }
+
+    public function getSeatsSummaryAttribute(): array
+    {
+        $seats = $this->seats;
+
+        return [
+            'total' => $seats->count(),
+            'svip' => $seats->where('type', 'svip_diamond')->count(),
+            'vip' => $seats->where('type', 'vip_gold')->count(),
+            'cat1' => $seats->where('type', 'cat1_stand')->count(),
+            'cat2' => $seats->where('type', 'cat2_wings')->count(),
+            'skybox' => $seats->where('type', 'skybox_suite')->count(),
+            'standing' => $seats->where('type', 'standing_pit')->count(),
+        ];
+    }
 }

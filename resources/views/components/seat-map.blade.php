@@ -42,16 +42,25 @@
         <!-- 1. SEATED CONCERT / MEGA STADIUM ARENA SEATING MAP                        -->
         <!-- ========================================================================= -->
 
+        @php
+            $venuePresetLabel = match($showtime->room->layout_preset ?? 'mega_concert') {
+                'theater_hall' => 'Nhà Hát & Giao Hưởng (Opera House)',
+                'convention_center' => 'Trung Tâm Hội Nghị (Convention Center)',
+                'custom_grid' => 'Ma Trận Tùy Chỉnh (Custom Grid)',
+                default => 'Mega Concert Arena'
+            };
+        @endphp
+
         <!-- Stadium Arena Header & Filter Bar -->
         <div class="bg-white rounded-3xl p-4 sm:p-6 border border-black/10 shadow-sm space-y-4">
             <div class="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
                 <div>
                     <div class="flex items-center gap-2">
                         <span class="badge-gold text-[10px] px-2.5 py-0.5 rounded-full font-black uppercase tracking-wider">
-                            Sơ Đồ Sân Khấu &amp; Khán Đài (Mega Concert Arena)
+                            Sơ Đồ Sân Khấu &amp; Khán Đài ({{ $venuePresetLabel }})
                         </span>
                         <span class="text-xs text-gray-500 font-semibold hidden sm:inline">
-                            Sức chứa: 20.000+ chỗ · {{ $showtime->room->name }}
+                            Sức chứa: {{ number_format($showtime->room->capacity) }} chỗ · {{ $showtime->room->name }}
                         </span>
                     </div>
                     <h3 class="font-display font-black text-xl text-black mt-1">
@@ -139,11 +148,17 @@
             <div class="absolute -top-10 right-1/4 w-48 h-96 bg-gradient-to-b from-pink-500/25 via-transparent to-transparent rotate-45 blur-2xl pointer-events-none animate-pulse" style="animation-delay: 1s;"></div>
             <div class="absolute -top-16 left-1/2 -translate-x-1/2 w-3/4 h-48 bg-gradient-to-b from-gold-antique/30 via-rose-taupe/15 to-transparent blur-3xl pointer-events-none"></div>
 
-            <!-- Stadium Entry Gates Top Indicators -->
+            <!-- Entry Gates Top Indicators -->
             <div class="relative flex items-center justify-between text-[10px] font-mono uppercase tracking-widest text-gray-400 pb-4 border-b border-white/10 z-10">
-                <span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-cyan-400 animate-ping"></span> CỔNG VÀO KHÁN ĐÀI C (NORTH GATE)</span>
-                <span class="hidden sm:inline text-gold-antique font-bold">🏟️ SÂN VẬN ĐỘNG QUỐC TẾ TICKETBOX ARENA</span>
-                <span class="flex items-center gap-1.5">CỔNG VÀO KHÁN ĐÀI D (SOUTH GATE) <span class="w-2 h-2 rounded-full bg-pink-400 animate-ping"></span></span>
+                @if ($showtime->room->layout_preset === 'mega_concert')
+                    <span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-cyan-400 animate-ping"></span> CỔNG VÀO KHÁN ĐÀI C (NORTH GATE)</span>
+                    <span class="hidden sm:inline text-gold-antique font-bold">🏟️ {{ mb_strtoupper($showtime->room->name) }}</span>
+                    <span class="flex items-center gap-1.5">CỔNG VÀO KHÁN ĐÀI D (SOUTH GATE) <span class="w-2 h-2 rounded-full bg-pink-400 animate-ping"></span></span>
+                @else
+                    <span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-gold animate-ping"></span> CỔNG SOÁT VÉ CHÍNH (MAIN ENTRANCE)</span>
+                    <span class="hidden sm:inline text-gold-antique font-bold">🏛️ {{ mb_strtoupper($showtime->room->name) }}</span>
+                    <span class="flex items-center gap-1.5">CỬA THOÁT HIỂM &amp; LỐI PHỤ (EXIT) <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span></span>
+                @endif
             </div>
 
             <!-- ZOOM CONTAINER (Có thêm khoảng đệm pb-12 để hàng ghế cuối cùng không bao giờ bị chèn/đè) -->
@@ -663,59 +678,394 @@
                 </div>
 
                 @else
-                    <!-- SƠ ĐỒ KHÁN PHÒNG THƯỜNG (nhà hát / hội nghị / lưới tùy chỉnh) -->
-                    <div class="w-full space-y-6">
-                        <div class="mx-auto w-2/3 py-3 rounded-b-[2rem] bg-gradient-to-b from-gold-antique/40 to-transparent border-t-4 border-gold-antique text-center text-[11px] font-black tracking-[0.3em] text-gold-light">
-                            SÂN KHẤU
+                    @php
+                        $roomPreset = $showtime->room->layout_preset ?? 'theater_hall';
+                        $stallsRows = $generalSeats->filter(fn ($r, $k) => str_starts_with($k, 'ST'));
+                        $circleRows = $generalSeats->filter(fn ($r, $k) => str_starts_with($k, 'DC'));
+                        $galleryRows = $generalSeats->filter(fn ($r, $k) => str_starts_with($k, 'GL'));
+                        $keynoteRows = $generalSeats->filter(fn ($r, $k) => str_starts_with($k, 'KN'));
+                        $standardRows = $generalSeats->filter(fn ($r, $k) => str_starts_with($k, 'STD'));
+                        $otherRows = $generalSeats->reject(fn ($r, $k) => 
+                            str_starts_with($k, 'ST') || str_starts_with($k, 'DC') || str_starts_with($k, 'GL') ||
+                            str_starts_with($k, 'KN') || str_starts_with($k, 'STD')
+                        );
+                    @endphp
+
+                    @if ($roomPreset === 'theater_hall' && ($stallsRows->isNotEmpty() || $circleRows->isNotEmpty()))
+                        <!-- ========================================================================= -->
+                        <!-- 2. THEATER & OPERA HOUSE BLUEPRINT (NHÀ HÁT & GIAO HƯỞNG)                -->
+                        <!-- ========================================================================= -->
+                        <div class="w-full space-y-6">
+                            <!-- OPERA PROSCENIUM STAGE -->
+                            <div class="w-full max-w-lg mx-auto p-4 bg-gradient-to-r from-red-950 via-rose-950 to-red-950 text-white text-center rounded-2xl shadow-xl border-2 border-gold-antique relative overflow-hidden">
+                                <div class="font-display font-black text-xs tracking-widest uppercase text-gold-light">
+                                    🎭 SÂN KHẤU NHÀ HÁT &amp; GIAO HƯỞNG (OPERA STAGE) 🎭
+                                </div>
+                                <span class="text-[10px] text-gray-300 font-mono">DÀN NHẠC GIAO HƯỞNG &amp; HỆ THỐNG ÂM HỌC THÍNH PHÒNG</span>
+                            </div>
+
+                            <!-- SECTION 1: TẦNG TRỆT VIP STALLS -->
+                            @if ($stallsRows->isNotEmpty())
+                                <div class="p-5 bg-gradient-to-b from-[#1E1B18] to-black rounded-3xl border-2 border-gold-antique/60 shadow-lg max-w-4xl mx-auto space-y-3">
+                                    <div class="flex items-center justify-between px-2 border-b border-gold-antique/20 pb-2">
+                                        <span class="badge-gold text-[9px] px-3 py-0.5 rounded-full font-black uppercase">
+                                            🎭 Tầng Trệt VIP Stalls (Trực Diện Sân Khấu)
+                                        </span>
+                                        <span class="text-[11px] font-bold text-gold-light font-mono">Âm thanh trung thực nhất</span>
+                                    </div>
+                                    <div class="space-y-2 pt-1">
+                                        @foreach ($stallsRows as $rowLabel => $rowSeats)
+                                            <div class="flex items-center justify-center gap-1.5 flex-wrap">
+                                                <span class="w-14 text-right pr-2 text-[10px] font-mono text-gold-antique font-bold">{{ $rowLabel }}</span>
+                                                @foreach ($rowSeats as $seat)
+                                                    @php
+                                                        $isBooked = $seat->status === 'booked';
+                                                        $isHeld = $seat->status === 'held';
+                                                        $hoverData = [
+                                                            'code' => $seat->code,
+                                                            'row' => $seat->row_label,
+                                                            'number' => (string) $seat->seat_number,
+                                                            'sector' => $seat->sector_label,
+                                                            'gate' => $seat->gate,
+                                                            'type' => $seat->type_name,
+                                                            'icon' => $seat->type_icon,
+                                                            'price' => $seat->price,
+                                                            'status' => $seat->status,
+                                                            'perks' => $seat->perks,
+                                                        ];
+                                                    @endphp
+                                                    <button
+                                                        type="button"
+                                                        @disabled($isBooked || $isHeld)
+                                                        @click="toggleSeat({{ $seat->id }}, @js((string) $seat->seat_number), @js($seat->row_label), @js($seat->type), @js($seat->type_name), @js($seat->status), {{ $seat->price }}, @js($seat->perks))"
+                                                        @mouseenter="setHoveredSeat(@js($hoverData))"
+                                                        @mouseleave="clearHoveredSeat()"
+                                                        :class="{
+                                                            'bg-gold-antique text-black font-black scale-110 z-10': isSeatSelected({{ $seat->id }}),
+                                                            @if ($isBooked)
+                                                                'bg-gray-800 text-gray-600 border-gray-700 cursor-not-allowed opacity-30': true,
+                                                            @elseif ($isHeld)
+                                                                'bg-amber-900/60 border-amber-500 text-amber-300 cursor-not-allowed': true,
+                                                            @else
+                                                                'bg-[#FFF8E1] text-black border border-gold-antique/50 hover:bg-gold hover:scale-110 cursor-pointer': !isSeatSelected({{ $seat->id }}),
+                                                            @endif
+                                                        }"
+                                                        class="w-6 h-6 sm:w-7 sm:h-7 rounded-lg text-[10px] font-black flex items-center justify-center transition-all"
+                                                        title="{{ $seat->type_name }} · {{ number_format($seat->price) }}₫"
+                                                    >
+                                                        {{ $seat->seat_number }}
+                                                    </button>
+                                                @endforeach
+                                            </div>
+                                        @endforeach
+                                    </div>
+                                </div>
+                            @endif
+
+                            <!-- SECTION 2: KHÁN ĐÀI DRESS CIRCLE (TẦNG 1) -->
+                            @if ($circleRows->isNotEmpty())
+                                <div class="p-5 bg-gradient-to-b from-[#2D1B22] to-black rounded-3xl border-2 border-rose-taupe/60 shadow-lg max-w-4xl mx-auto space-y-3">
+                                    <div class="flex items-center justify-between px-2 border-b border-rose-taupe/20 pb-2">
+                                        <span class="badge-rose text-[9px] px-3 py-0.5 rounded-full font-black uppercase">
+                                            ✨ Khán Đài Dress Circle (Tầng 1)
+                                        </span>
+                                        <span class="text-[11px] font-bold text-rose-300 font-mono">Tầm nhìn bao quát toàn khán phòng</span>
+                                    </div>
+                                    <div class="space-y-2 pt-1">
+                                        @foreach ($circleRows as $rowLabel => $rowSeats)
+                                            <div class="flex items-center justify-center gap-1.5 flex-wrap">
+                                                <span class="w-14 text-right pr-2 text-[10px] font-mono text-rose-300 font-bold">{{ $rowLabel }}</span>
+                                                @foreach ($rowSeats as $seat)
+                                                    @php
+                                                        $isBooked = $seat->status === 'booked';
+                                                        $isHeld = $seat->status === 'held';
+                                                        $hoverData = [
+                                                            'code' => $seat->code,
+                                                            'row' => $seat->row_label,
+                                                            'number' => (string) $seat->seat_number,
+                                                            'sector' => $seat->sector_label,
+                                                            'gate' => $seat->gate,
+                                                            'type' => $seat->type_name,
+                                                            'icon' => $seat->type_icon,
+                                                            'price' => $seat->price,
+                                                            'status' => $seat->status,
+                                                            'perks' => $seat->perks,
+                                                        ];
+                                                    @endphp
+                                                    <button
+                                                        type="button"
+                                                        @disabled($isBooked || $isHeld)
+                                                        @click="toggleSeat({{ $seat->id }}, @js((string) $seat->seat_number), @js($seat->row_label), @js($seat->type), @js($seat->type_name), @js($seat->status), {{ $seat->price }}, @js($seat->perks))"
+                                                        @mouseenter="setHoveredSeat(@js($hoverData))"
+                                                        @mouseleave="clearHoveredSeat()"
+                                                        :class="{
+                                                            'bg-gold-antique text-black font-black scale-110 z-10': isSeatSelected({{ $seat->id }}),
+                                                            @if ($isBooked)
+                                                                'bg-gray-800 text-gray-600 border-gray-700 cursor-not-allowed opacity-30': true,
+                                                            @elseif ($isHeld)
+                                                                'bg-amber-900/60 border-amber-500 text-amber-300 cursor-not-allowed': true,
+                                                            @else
+                                                                'bg-[#FDE8EE] text-black border border-rose-taupe/40 hover:bg-rose-200 hover:scale-110 cursor-pointer': !isSeatSelected({{ $seat->id }}),
+                                                            @endif
+                                                        }"
+                                                        class="w-6 h-6 sm:w-7 sm:h-7 rounded-lg text-[10px] font-black flex items-center justify-center transition-all"
+                                                        title="{{ $seat->type_name }} · {{ number_format($seat->price) }}₫"
+                                                    >
+                                                        {{ $seat->seat_number }}
+                                                    </button>
+                                                @endforeach
+                                            </div>
+                                        @endforeach
+                                    </div>
+                                </div>
+                            @endif
+
+                            <!-- SECTION 3: BAN CÔNG UPPER GALLERY (TẦNG 2) -->
+                            @if ($galleryRows->isNotEmpty())
+                                <div class="p-4 bg-gradient-to-b from-[#132A1C] to-black rounded-3xl border border-sage-forest/50 shadow-md max-w-4xl mx-auto space-y-3">
+                                    <div class="flex items-center justify-between px-2 border-b border-sage-forest/20 pb-2">
+                                        <span class="badge-sage text-[9px] px-3 py-0.5 rounded-full font-black uppercase">
+                                            🏛️ Ban Công Upper Gallery (Tầng 2 Trên Cao)
+                                        </span>
+                                        <span class="text-[11px] font-bold text-emerald-300 font-mono">Góc nhìn nghệ thuật từ trên cao</span>
+                                    </div>
+                                    <div class="space-y-2 pt-1">
+                                        @foreach ($galleryRows as $rowLabel => $rowSeats)
+                                            <div class="flex items-center justify-center gap-1.5 flex-wrap">
+                                                <span class="w-14 text-right pr-2 text-[10px] font-mono text-emerald-300 font-bold">{{ $rowLabel }}</span>
+                                                @foreach ($rowSeats as $seat)
+                                                    @php
+                                                        $isBooked = $seat->status === 'booked';
+                                                        $isHeld = $seat->status === 'held';
+                                                        $hoverData = [
+                                                            'code' => $seat->code,
+                                                            'row' => $seat->row_label,
+                                                            'number' => (string) $seat->seat_number,
+                                                            'sector' => $seat->sector_label,
+                                                            'gate' => $seat->gate,
+                                                            'type' => $seat->type_name,
+                                                            'icon' => $seat->type_icon,
+                                                            'price' => $seat->price,
+                                                            'status' => $seat->status,
+                                                            'perks' => $seat->perks,
+                                                        ];
+                                                    @endphp
+                                                    <button
+                                                        type="button"
+                                                        @disabled($isBooked || $isHeld)
+                                                        @click="toggleSeat({{ $seat->id }}, @js((string) $seat->seat_number), @js($seat->row_label), @js($seat->type), @js($seat->type_name), @js($seat->status), {{ $seat->price }}, @js($seat->perks))"
+                                                        @mouseenter="setHoveredSeat(@js($hoverData))"
+                                                        @mouseleave="clearHoveredSeat()"
+                                                        :class="{
+                                                            'bg-gold-antique text-black font-black scale-110 z-10': isSeatSelected({{ $seat->id }}),
+                                                            @if ($isBooked)
+                                                                'bg-gray-800 text-gray-600 border-gray-700 cursor-not-allowed opacity-30': true,
+                                                            @elseif ($isHeld)
+                                                                'bg-amber-900/60 border-amber-500 text-amber-300 cursor-not-allowed': true,
+                                                            @else
+                                                                'bg-[#EAF3EC] text-black border border-sage-forest/40 hover:bg-emerald-200 hover:scale-110 cursor-pointer': !isSeatSelected({{ $seat->id }}),
+                                                            @endif
+                                                        }"
+                                                        class="w-6 h-6 sm:w-7 sm:h-7 rounded-lg text-[10px] font-black flex items-center justify-center transition-all"
+                                                        title="{{ $seat->type_name }} · {{ number_format($seat->price) }}₫"
+                                                    >
+                                                        {{ $seat->seat_number }}
+                                                    </button>
+                                                @endforeach
+                                            </div>
+                                        @endforeach
+                                    </div>
+                                </div>
+                            @endif
                         </div>
 
-                        <div class="space-y-2">
-                            @foreach ($generalSeats as $rowLabel => $rowSeats)
-                                <div class="flex items-center justify-center gap-1.5">
-                                    <span class="w-12 text-right pr-2 text-[10px] font-mono text-gray-400 font-bold">{{ $rowLabel }}</span>
-                                    @foreach ($rowSeats as $seat)
-                                        @php
-                                            $isBooked = $seat->status === 'booked';
-                                            $isHeld = $seat->status === 'held';
-                                            $hoverData = [
-                                                'code' => $seat->code,
-                                                'row' => $seat->row_label,
-                                                'number' => (string) $seat->seat_number,
-                                                'sector' => $seat->sector_label,
-                                                'gate' => $seat->gate,
-                                                'type' => $seat->type_name,
-                                                'icon' => $seat->type_icon,
-                                                'price' => $seat->price,
-                                                'status' => $seat->status,
-                                                'perks' => $seat->perks,
-                                            ];
-                                        @endphp
-                                        <button
-                                            type="button"
-                                            @disabled($isBooked || $isHeld)
-                                            @click="toggleSeat({{ $seat->id }}, @js((string) $seat->seat_number), @js($seat->row_label), @js($seat->type), @js($seat->type_name), @js($seat->status), {{ $seat->price }}, @js($seat->perks))"
-                                            @mouseenter="setHoveredSeat(@js($hoverData))"
-                                            @mouseleave="clearHoveredSeat()"
-                                            :class="{
-                                                'bg-gold-antique text-black font-black scale-110 z-10': isSeatSelected({{ $seat->id }}),
-                                                @if ($isBooked)
-                                                    'bg-gray-800 text-gray-600 border-gray-700 cursor-not-allowed opacity-30': true,
-                                                @elseif ($isHeld)
-                                                    'bg-amber-900/60 border-amber-500 text-amber-300 cursor-not-allowed': true,
-                                                @else
-                                                    'bg-[#F0F7F2] text-black border border-[#A3C9A8] hover:bg-emerald-200 hover:scale-110 cursor-pointer': !isSeatSelected({{ $seat->id }}),
-                                                @endif
-                                            }"
-                                            class="w-6 h-6 sm:w-7 sm:h-7 rounded-lg text-[10px] font-black flex items-center justify-center transition-all"
-                                            title="{{ $seat->type_name }} · {{ number_format($seat->price) }}₫"
-                                        >
-                                            {{ $seat->seat_number }}
-                                        </button>
-                                    @endforeach
+                    @elseif ($roomPreset === 'convention_center' && ($keynoteRows->isNotEmpty() || $standardRows->isNotEmpty()))
+                        <!-- ========================================================================= -->
+                        <!-- 3. CONVENTION CENTER BLUEPRINT (TRUNG TÂM HỘI NGHỊ & TRIỂN LÃM)          -->
+                        <!-- ========================================================================= -->
+                        <div class="w-full space-y-6">
+                            <!-- KEYNOTE STAGE -->
+                            <div class="w-full max-w-lg mx-auto p-4 bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white text-center rounded-2xl shadow-xl border-2 border-cyan-400/60 relative overflow-hidden">
+                                <div class="font-display font-black text-xs tracking-widest uppercase text-cyan-300">
+                                    🏢 BỤC DIỄN GIẢ KEYNOTE &amp; MÀN HÌNH LED 8K 🏢
                                 </div>
-                            @endforeach
+                                <span class="text-[10px] text-gray-400 font-mono">KHÔNG GIAN HỘI NGHỊ DOANH NGHIỆP QUỐC TẾ</span>
+                            </div>
+
+                            <!-- KEYNOTE VIP SECTION -->
+                            @if ($keynoteRows->isNotEmpty())
+                                <div class="p-5 bg-gradient-to-b from-[#1E293B] to-black rounded-3xl border-2 border-gold-antique/60 shadow-lg max-w-4xl mx-auto space-y-3">
+                                    <div class="flex items-center justify-between px-2 border-b border-gold-antique/20 pb-2">
+                                        <span class="badge-gold text-[9px] px-3 py-0.5 rounded-full font-black uppercase">
+                                            👑 Khu Vực Keynote VIP (Doanh Nhân &amp; Diễn Giả)
+                                        </span>
+                                        <span class="text-[11px] font-bold text-gold-light font-mono">Bàn đại biểu hàng đầu</span>
+                                    </div>
+                                    <div class="space-y-2 pt-1">
+                                        @foreach ($keynoteRows as $rowLabel => $rowSeats)
+                                            <div class="flex items-center justify-center gap-1.5 flex-wrap">
+                                                <span class="w-14 text-right pr-2 text-[10px] font-mono text-gold-antique font-bold">{{ $rowLabel }}</span>
+                                                @foreach ($rowSeats as $seat)
+                                                    @php
+                                                        $isBooked = $seat->status === 'booked';
+                                                        $isHeld = $seat->status === 'held';
+                                                        $hoverData = [
+                                                            'code' => $seat->code,
+                                                            'row' => $seat->row_label,
+                                                            'number' => (string) $seat->seat_number,
+                                                            'sector' => $seat->sector_label,
+                                                            'gate' => $seat->gate,
+                                                            'type' => $seat->type_name,
+                                                            'icon' => $seat->type_icon,
+                                                            'price' => $seat->price,
+                                                            'status' => $seat->status,
+                                                            'perks' => $seat->perks,
+                                                        ];
+                                                    @endphp
+                                                    <button
+                                                        type="button"
+                                                        @disabled($isBooked || $isHeld)
+                                                        @click="toggleSeat({{ $seat->id }}, @js((string) $seat->seat_number), @js($seat->row_label), @js($seat->type), @js($seat->type_name), @js($seat->status), {{ $seat->price }}, @js($seat->perks))"
+                                                        @mouseenter="setHoveredSeat(@js($hoverData))"
+                                                        @mouseleave="clearHoveredSeat()"
+                                                        :class="{
+                                                            'bg-gold-antique text-black font-black scale-110 z-10': isSeatSelected({{ $seat->id }}),
+                                                            @if ($isBooked)
+                                                                'bg-gray-800 text-gray-600 border-gray-700 cursor-not-allowed opacity-30': true,
+                                                            @elseif ($isHeld)
+                                                                'bg-amber-900/60 border-amber-500 text-amber-300 cursor-not-allowed': true,
+                                                            @else
+                                                                'bg-[#FFF8E1] text-black border border-gold-antique/50 hover:bg-gold hover:scale-110 cursor-pointer': !isSeatSelected({{ $seat->id }}),
+                                                            @endif
+                                                        }"
+                                                        class="w-6 h-6 sm:w-7 sm:h-7 rounded-lg text-[10px] font-black flex items-center justify-center transition-all"
+                                                        title="{{ $seat->type_name }} · {{ number_format($seat->price) }}₫"
+                                                    >
+                                                        {{ $seat->seat_number }}
+                                                    </button>
+                                                @endforeach
+                                            </div>
+                                        @endforeach
+                                    </div>
+                                </div>
+                            @endif
+
+                            <!-- STANDARD CONFERENCE SECTION -->
+                            @if ($standardRows->isNotEmpty())
+                                <div class="p-5 bg-gradient-to-b from-[#0F172A] to-black rounded-3xl border border-cyan-500/30 shadow-md max-w-4xl mx-auto space-y-3">
+                                    <div class="flex items-center justify-between px-2 border-b border-cyan-500/20 pb-2">
+                                        <span class="badge-slate text-[9px] px-3 py-0.5 rounded-full font-black uppercase bg-cyan-900/30 text-cyan-300 border border-cyan-400/30">
+                                            🏢 Khu Vực Hội Nghị Tiêu Chuẩn (Standard Expo)
+                                        </span>
+                                        <span class="text-[11px] font-bold text-gray-400 font-mono">Dãy ghế đại biểu &amp; khách mời</span>
+                                    </div>
+                                    <div class="space-y-2 pt-1">
+                                        @foreach ($standardRows as $rowLabel => $rowSeats)
+                                            <div class="flex items-center justify-center gap-1.5 flex-wrap">
+                                                <span class="w-14 text-right pr-2 text-[10px] font-mono text-cyan-300 font-bold">{{ $rowLabel }}</span>
+                                                @foreach ($rowSeats as $seat)
+                                                    @php
+                                                        $isBooked = $seat->status === 'booked';
+                                                        $isHeld = $seat->status === 'held';
+                                                        $hoverData = [
+                                                            'code' => $seat->code,
+                                                            'row' => $seat->row_label,
+                                                            'number' => (string) $seat->seat_number,
+                                                            'sector' => $seat->sector_label,
+                                                            'gate' => $seat->gate,
+                                                            'type' => $seat->type_name,
+                                                            'icon' => $seat->type_icon,
+                                                            'price' => $seat->price,
+                                                            'status' => $seat->status,
+                                                            'perks' => $seat->perks,
+                                                        ];
+                                                    @endphp
+                                                    <button
+                                                        type="button"
+                                                        @disabled($isBooked || $isHeld)
+                                                        @click="toggleSeat({{ $seat->id }}, @js((string) $seat->seat_number), @js($seat->row_label), @js($seat->type), @js($seat->type_name), @js($seat->status), {{ $seat->price }}, @js($seat->perks))"
+                                                        @mouseenter="setHoveredSeat(@js($hoverData))"
+                                                        @mouseleave="clearHoveredSeat()"
+                                                        :class="{
+                                                            'bg-gold-antique text-black font-black scale-110 z-10': isSeatSelected({{ $seat->id }}),
+                                                            @if ($isBooked)
+                                                                'bg-gray-800 text-gray-600 border-gray-700 cursor-not-allowed opacity-30': true,
+                                                            @elseif ($isHeld)
+                                                                'bg-amber-900/60 border-amber-500 text-amber-300 cursor-not-allowed': true,
+                                                            @else
+                                                                'bg-[#F0F7F2] text-black border border-[#A3C9A8] hover:bg-emerald-200 hover:scale-110 cursor-pointer': !isSeatSelected({{ $seat->id }}),
+                                                            @endif
+                                                        }"
+                                                        class="w-6 h-6 sm:w-7 sm:h-7 rounded-lg text-[10px] font-black flex items-center justify-center transition-all"
+                                                        title="{{ $seat->type_name }} · {{ number_format($seat->price) }}₫"
+                                                    >
+                                                        {{ $seat->seat_number }}
+                                                    </button>
+                                                @endforeach
+                                            </div>
+                                        @endforeach
+                                    </div>
+                                </div>
+                            @endif
                         </div>
-                    </div>
+
+                    @else
+                        <!-- ========================================================================= -->
+                        <!-- 4. CUSTOM GRID & GENERAL SEATING MATRIX                                  -->
+                        <!-- ========================================================================= -->
+                        <div class="w-full space-y-6">
+                            <div class="mx-auto w-2/3 py-3 rounded-b-[2rem] bg-gradient-to-b from-gold-antique/40 to-transparent border-t-4 border-gold-antique text-center text-[11px] font-black tracking-[0.3em] text-gold-light">
+                                SÂN KHẤU
+                            </div>
+
+                            <div class="space-y-2 max-w-4xl mx-auto">
+                                @foreach ($generalSeats as $rowLabel => $rowSeats)
+                                    <div class="flex items-center justify-center gap-1.5 flex-wrap">
+                                        <span class="w-12 text-right pr-2 text-[10px] font-mono text-gray-400 font-bold">{{ $rowLabel }}</span>
+                                        @foreach ($rowSeats as $seat)
+                                            @php
+                                                $isBooked = $seat->status === 'booked';
+                                                $isHeld = $seat->status === 'held';
+                                                $hoverData = [
+                                                    'code' => $seat->code,
+                                                    'row' => $seat->row_label,
+                                                    'number' => (string) $seat->seat_number,
+                                                    'sector' => $seat->sector_label,
+                                                    'gate' => $seat->gate,
+                                                    'type' => $seat->type_name,
+                                                    'icon' => $seat->type_icon,
+                                                    'price' => $seat->price,
+                                                    'status' => $seat->status,
+                                                    'perks' => $seat->perks,
+                                                ];
+                                            @endphp
+                                            <button
+                                                type="button"
+                                                @disabled($isBooked || $isHeld)
+                                                @click="toggleSeat({{ $seat->id }}, @js((string) $seat->seat_number), @js($seat->row_label), @js($seat->type), @js($seat->type_name), @js($seat->status), {{ $seat->price }}, @js($seat->perks))"
+                                                @mouseenter="setHoveredSeat(@js($hoverData))"
+                                                @mouseleave="clearHoveredSeat()"
+                                                :class="{
+                                                    'bg-gold-antique text-black font-black scale-110 z-10': isSeatSelected({{ $seat->id }}),
+                                                    @if ($isBooked)
+                                                        'bg-gray-800 text-gray-600 border-gray-700 cursor-not-allowed opacity-30': true,
+                                                    @elseif ($isHeld)
+                                                        'bg-amber-900/60 border-amber-500 text-amber-300 cursor-not-allowed': true,
+                                                    @else
+                                                        'bg-[#F0F7F2] text-black border border-[#A3C9A8] hover:bg-emerald-200 hover:scale-110 cursor-pointer': !isSeatSelected({{ $seat->id }}),
+                                                    @endif
+                                                }"
+                                                class="w-6 h-6 sm:w-7 sm:h-7 rounded-lg text-[10px] font-black flex items-center justify-center transition-all"
+                                                title="{{ $seat->type_name }} · {{ number_format($seat->price) }}₫"
+                                            >
+                                                {{ $seat->seat_number }}
+                                            </button>
+                                        @endforeach
+                                    </div>
+                                @endforeach
+                            </div>
+                        </div>
+                    @endif
                 @endif
             </div>
 
