@@ -108,11 +108,21 @@
 
         <!-- Users Table Container -->
         <div class="bg-white rounded-3xl border border-black/10 overflow-hidden shadow-sm space-y-4">
-            <div class="p-6 pb-2 flex items-center justify-between">
+            <div class="p-6 pb-2 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
                     <h3 class="font-display font-black text-lg text-black">Danh Sách Người Dùng Hệ Thống</h3>
                     <p class="text-xs text-gray-500 mt-0.5">Quản lý trạng thái khóa / mở khóa và quyền hạn của các tài khoản</p>
                 </div>
+                <button 
+                    type="button" 
+                    @click="openCreateModal = true" 
+                    class="btn-dark px-4 py-2.5 rounded-2xl text-xs font-black inline-flex items-center gap-2 shadow-sm hover:scale-[1.02] transition-transform shrink-0"
+                >
+                    <svg class="w-4 h-4 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4" />
+                    </svg>
+                    <span>Thêm Tài Khoản Mới</span>
+                </button>
             </div>
 
             <div class="overflow-x-auto">
@@ -346,6 +356,158 @@
             </div>
         </div>
 
+        <!-- Modal: Thêm Tài Khoản Mới -->
+        <div 
+            x-show="openCreateModal" 
+            x-cloak
+            x-transition:enter="ease-out duration-200"
+            x-transition:enter-start="opacity-0"
+            x-transition:enter-end="opacity-100"
+            x-transition:leave="ease-in duration-150"
+            x-transition:leave-start="opacity-100"
+            x-transition:leave-end="opacity-0"
+            class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs"
+            style="display: none;"
+            @keydown.escape.window="openCreateModal = false"
+        >
+            <div 
+                @click.away="openCreateModal = false"
+                class="bg-white rounded-3xl p-6 sm:p-7 max-w-lg w-full border border-black/10 shadow-2xl space-y-5"
+            >
+                <div class="flex items-center justify-between border-b border-black/10 pb-4">
+                    <div>
+                        <h4 class="font-display font-black text-lg text-black">Tạo Tài Khoản Mới</h4>
+                        <p class="text-xs text-gray-500 mt-0.5">Thêm thành viên hoặc quản trị viên mới vào hệ thống</p>
+                    </div>
+                    <button 
+                        type="button" 
+                        @click="openCreateModal = false" 
+                        class="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-500 hover:text-black transition-colors"
+                    >
+                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+
+                <form method="POST" action="{{ route('admin.users.store') }}" class="space-y-4">
+                    @csrf
+
+                    <!-- Name -->
+                    <div class="space-y-1">
+                        <label for="create_name" class="block text-xs font-bold text-gray-700 uppercase tracking-wider">
+                            Họ Và Tên <span class="text-rose-600">*</span>
+                        </label>
+                        <input 
+                            id="create_name" 
+                            type="text" 
+                            name="name" 
+                            required 
+                            placeholder="Ví dụ: Nguyễn Văn Quản Trị" 
+                            class="bg-[#FAF9F6] border border-black/10 px-4 py-2.5 rounded-2xl w-full text-xs text-black font-medium focus:outline-none focus:border-black focus:ring-2 focus:ring-black/10"
+                        >
+                    </div>
+
+                    <!-- Email -->
+                    <div class="space-y-1">
+                        <label for="create_email" class="block text-xs font-bold text-gray-700 uppercase tracking-wider">
+                            Địa Chỉ Email <span class="text-rose-600">*</span>
+                        </label>
+                        <input 
+                            id="create_email" 
+                            type="email" 
+                            name="email" 
+                            required 
+                            placeholder="admin@ticketbox.vn" 
+                            class="bg-[#FAF9F6] border border-black/10 px-4 py-2.5 rounded-2xl w-full text-xs text-black font-medium focus:outline-none focus:border-black focus:ring-2 focus:ring-black/10"
+                        >
+                    </div>
+
+                    <!-- Phone -->
+                    <div class="space-y-1">
+                        <label for="create_phone" class="block text-xs font-bold text-gray-700 uppercase tracking-wider">
+                            Số Điện Thoại
+                        </label>
+                        <input 
+                            id="create_phone" 
+                            type="tel" 
+                            name="phone" 
+                            placeholder="0912 345 678 (tùy chọn)" 
+                            class="bg-[#FAF9F6] border border-black/10 px-4 py-2.5 rounded-2xl w-full text-xs text-black font-medium focus:outline-none focus:border-black focus:ring-2 focus:ring-black/10"
+                        >
+                    </div>
+
+                    <!-- Password -->
+                    <div class="space-y-1">
+                        <label for="create_password" class="block text-xs font-bold text-gray-700 uppercase tracking-wider">
+                            Mật Khẩu Khởi Tạo <span class="text-rose-600">*</span>
+                        </label>
+                        <input 
+                            id="create_password" 
+                            type="text" 
+                            name="password" 
+                            value="TicketBox@{{ date('Y') }}" 
+                            required 
+                            class="bg-[#FAF9F6] border border-black/10 px-4 py-2.5 rounded-2xl w-full text-xs text-black font-medium focus:outline-none focus:border-black focus:ring-2 focus:ring-black/10"
+                        >
+                        <p class="text-[10px] text-gray-400">Mặc định: TicketBox@{{ date('Y') }} (tối thiểu 8 ký tự, có thể đổi theo ý muốn)</p>
+                    </div>
+
+                    <!-- Role & Status -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                        <div class="space-y-1">
+                            <label for="create_role" class="block text-xs font-bold text-gray-700 uppercase tracking-wider">
+                                Vai Trò <span class="text-rose-600">*</span>
+                            </label>
+                            <select 
+                                id="create_role" 
+                                name="role" 
+                                required 
+                                class="bg-[#FAF9F6] border border-black/10 px-4 py-2.5 rounded-2xl w-full text-xs text-black font-bold focus:outline-none focus:border-black focus:ring-2 focus:ring-black/10"
+                            >
+                                <option value="user">Khách hàng (User)</option>
+                                <option value="admin">Quản trị viên (Admin)</option>
+                            </select>
+                        </div>
+
+                        <div class="space-y-1">
+                            <label for="create_status" class="block text-xs font-bold text-gray-700 uppercase tracking-wider">
+                                Trạng Thái
+                            </label>
+                            <select 
+                                id="create_status" 
+                                name="is_active" 
+                                class="bg-[#FAF9F6] border border-black/10 px-4 py-2.5 rounded-2xl w-full text-xs text-black font-bold focus:outline-none focus:border-black focus:ring-2 focus:ring-black/10"
+                            >
+                                <option value="1">Đang hoạt động</option>
+                                <option value="0">Khóa ngay</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Buttons -->
+                    <div class="flex items-center gap-3 pt-3 border-t border-black/10">
+                        <button 
+                            type="button" 
+                            @click="openCreateModal = false" 
+                            class="flex-1 py-2.5 rounded-2xl text-xs font-bold bg-[#FAF9F6] border border-black/10 text-gray-700 hover:text-black hover:bg-gray-100 transition-colors"
+                        >
+                            Hủy Bỏ
+                        </button>
+                        <button 
+                            type="submit" 
+                            class="flex-1 btn-dark py-2.5 rounded-2xl text-xs font-black shadow-sm flex items-center justify-center gap-1.5"
+                        >
+                            <svg class="w-3.5 h-3.5 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
+                            </svg>
+                            <span>Tạo Tài Khoản</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
         <!-- Global Toast Notification -->
         <div 
             x-show="showToast" 
@@ -367,6 +529,7 @@
     <script>
         document.addEventListener('alpine:init', () => {
             Alpine.data('userManagement', () => ({
+                openCreateModal: false,
                 showConfirmModal: false,
                 isSubmitting: false,
                 targetUser: { id: null, name: '', is_active: true },

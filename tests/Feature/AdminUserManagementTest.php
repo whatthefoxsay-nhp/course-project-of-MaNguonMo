@@ -115,3 +115,57 @@ test('admin can reset password of a user to default temporary password', functio
     expect(Illuminate\Support\Facades\Hash::check($tempPassword, $targetUser->fresh()->password))->toBeTrue();
 });
 
+test('admin can create a new user account with specified role and status', function () {
+    $admin = User::factory()->create();
+    $admin->assignRole('admin');
+
+    $response = $this->actingAs($admin)->post(route('admin.users.store'), [
+        'name' => 'Nguyen Staff',
+        'email' => 'staff@ticketbox.vn',
+        'phone' => '0987654321',
+        'password' => 'StaffPassword123',
+        'role' => 'admin',
+        'is_active' => '1',
+    ]);
+
+    $response->assertRedirect(route('admin.users.index'));
+    $response->assertSessionHas('success');
+
+    $newUser = User::where('email', 'staff@ticketbox.vn')->first();
+    expect($newUser)->not->toBeNull()
+        ->and($newUser->name)->toBe('Nguyen Staff')
+        ->and($newUser->phone)->toBe('0987654321')
+        ->and($newUser->is_active)->toBeTrue()
+        ->and($newUser->hasRole('admin'))->toBeTrue();
+});
+
+test('admin cannot create a user with duplicate email', function () {
+    $admin = User::factory()->create();
+    $admin->assignRole('admin');
+
+    User::factory()->create(['email' => 'existing@ticketbox.vn']);
+
+    $response = $this->actingAs($admin)->post(route('admin.users.store'), [
+        'name' => 'Duplicate Person',
+        'email' => 'existing@ticketbox.vn',
+        'password' => 'ValidPassword123',
+        'role' => 'user',
+    ]);
+
+    $response->assertSessionHasErrors(['email']);
+});
+
+test('regular user cannot create user accounts via admin endpoint', function () {
+    $regularUser = User::factory()->create();
+    $regularUser->assignRole('user');
+
+    $response = $this->actingAs($regularUser)->post(route('admin.users.store'), [
+        'name' => 'Hacker Admin',
+        'email' => 'hacker@test.vn',
+        'password' => 'Hacker12345',
+        'role' => 'admin',
+    ]);
+
+    $response->assertForbidden();
+});
+

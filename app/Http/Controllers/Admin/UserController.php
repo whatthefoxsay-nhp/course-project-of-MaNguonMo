@@ -9,6 +9,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
+use Spatie\Permission\Models\Role;
 
 class UserController extends Controller
 {
@@ -60,6 +61,37 @@ class UserController extends Controller
                 'status' => $request->input('status', ''),
             ],
         ]);
+    }
+
+    /**
+     * Store a newly created user account.
+     */
+    public function store(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class],
+            'phone' => ['nullable', 'string', 'max:20', 'regex:/^[0-9+\-\s()]*$/'],
+            'password' => ['required', 'string', 'min:8'],
+            'role' => ['required', 'string', 'in:admin,user'],
+            'is_active' => ['nullable', 'boolean'],
+        ]);
+
+        $user = User::create([
+            'name' => $validated['name'],
+            'email' => $validated['email'],
+            'phone' => $validated['phone'] ?? null,
+            'password' => $validated['password'],
+            'is_active' => $request->boolean('is_active', true),
+        ]);
+
+        Role::firstOrCreate(['name' => $validated['role'], 'guard_name' => 'web']);
+        $user->assignRole($validated['role']);
+
+        $roleText = $validated['role'] === 'admin' ? 'Quản trị viên (Admin)' : 'Khách hàng (User)';
+
+        return redirect()->route('admin.users.index')
+            ->with('success', "Đã tạo thành công tài khoản {$roleText} [{$user->name}].");
     }
 
     /**
