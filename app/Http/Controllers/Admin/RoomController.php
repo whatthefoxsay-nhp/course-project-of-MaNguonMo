@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Room;
-use App\Models\Seat;
+use App\Services\RoomSeatGenerator;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -54,13 +54,13 @@ class RoomController extends Controller
         return $this->builder($room);
     }
 
-    public function store(Request $request): RedirectResponse
+    public function store(Request $request, RoomSeatGenerator $generator): RedirectResponse
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'address' => 'nullable|string|max:500',
             'capacity' => 'required|integer|min:10|max:50000',
-            'layout_preset' => 'required|string|in:mega_concert,theater_hall,convention_center,custom_grid',
+            'layout_preset' => 'required|string|in:'.implode(',', RoomSeatGenerator::PRESETS),
             'base_price' => 'nullable|numeric|min:10000',
             'rows' => 'nullable|integer|min:2|max:26',
             'cols' => 'nullable|integer|min:4|max:40',
@@ -84,19 +84,19 @@ class RoomController extends Controller
             'seat_config' => $seatConfig,
         ]);
 
-        $this->generateSeatsForRoom($room, $validated['layout_preset'], $seatConfig);
+        $generator->generate($room, $validated['layout_preset'], $seatConfig);
 
         return redirect()->route('admin.rooms.index')
             ->with('success', "Đã tạo khán phòng [{$room->name}] và tự động sinh sơ đồ thành công!");
     }
 
-    public function update(Request $request, Room $room): RedirectResponse
+    public function update(Request $request, Room $room, RoomSeatGenerator $generator): RedirectResponse
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'address' => 'nullable|string|max:500',
             'capacity' => 'required|integer|min:10|max:50000',
-            'layout_preset' => 'required|string|in:mega_concert,theater_hall,convention_center,custom_grid',
+            'layout_preset' => 'required|string|in:'.implode(',', RoomSeatGenerator::PRESETS),
             'base_price' => 'nullable|numeric|min:10000',
             'rows' => 'nullable|integer|min:2|max:26',
             'cols' => 'nullable|integer|min:4|max:40',
@@ -112,6 +112,18 @@ class RoomController extends Controller
             'svip_ratio' => (int) ($validated['svip_ratio'] ?? 15),
         ];
 
+        if ($room->showtimes()->exists()) {
+            // Đã có suất diễn: KHÔNG sinh lại ghế (sẽ cascade xóa vé đã bán).
+            $room->update([
+                'name' => $validated['name'],
+                'address' => $validated['address'] ?? $room->address,
+                'capacity' => (int) $validated['capacity'],
+            ]);
+
+            return redirect()->route('admin.rooms.index')
+                ->with('warning', "Đã cập nhật thông tin [{$room->name}]. Khán phòng đã có suất diễn nên sơ đồ ghế được giữ nguyên.");
+        }
+
         $room->update([
             'name' => $validated['name'],
             'address' => $validated['address'] ?? $room->address,
@@ -120,7 +132,7 @@ class RoomController extends Controller
             'seat_config' => $seatConfig,
         ]);
 
-        $this->generateSeatsForRoom($room, $validated['layout_preset'], $seatConfig);
+        $generator->generate($room, $validated['layout_preset'], $seatConfig);
 
         return redirect()->route('admin.rooms.index')
             ->with('success', "Đã cập nhật khán phòng [{$room->name}] và tái tạo sơ đồ ghế thành công!");
@@ -128,111 +140,13 @@ class RoomController extends Controller
 
     public function destroy(Room $room): RedirectResponse
     {
-        $room->seats()->delete();
+        if ($room->showtimes()->exists()) {
+            return back()->with('error', 'Không thể xóa khán phòng đã có suất diễn. Hãy xóa các suất diễn trước.');
+        }
+
         $room->delete();
 
         return redirect()->route('admin.rooms.index')
             ->with('success', 'Đã xóa khán phòng thành công!');
-    }
-
-    protected function generateSeatsForRoom(Room $room, string $preset, array $config): void
-    {
-        // Re-generate seats in DB for this room
-        $room->seats()->delete();
-
-        $rowsCount = max(2, min(26, $config['rows'] ?? 10));
-        $colsCount = max(4, min(40, $config['cols'] ?? 14));
-        $alphabet = range('A', 'Z');
-
-        $seatInserts = [];
-        $now = now();
-
-        if ($preset === 'mega_concert') {
-            // Sơ đồ concert lớn
-            $sections = [
-                ['rows' => ['SVIP-A', 'SVIP-B'], 'cols' => 12, 'type' => 'svip_diamond'],
-                ['rows' => ['FL-1', 'FL-2', 'FL-3', 'FL-4'], 'cols' => 14, 'type' => 'vip_gold'],
-                ['rows' => ['A1', 'A2', 'A3'], 'cols' => 16, 'type' => 'cat1_stand'],
-                ['rows' => ['B1', 'B2'], 'cols' => 14, 'type' => 'cat1_stand'],
-                ['rows' => ['C1', 'C2'], 'cols' => 12, 'type' => 'cat2_wings'],
-                ['rows' => ['D1', 'D2'], 'cols' => 12, 'type' => 'cat2_wings'],
-                ['rows' => ['SB'], 'cols' => 8, 'type' => 'skybox_suite'],
-            ];
-
-            foreach ($sections as $sec) {
-                foreach ($sec['rows'] as $r) {
-                    for ($c = 1; $c <= $sec['cols']; $c++) {
-                        $seatInserts[] = [
-                            'room_id' => $room->id,
-                            'row_label' => $r,
-                            'seat_number' => $c,
-                            'type' => $sec['type'],
-                            'created_at' => $now,
-                            'updated_at' => $now,
-                        ];
-                    }
-                }
-            }
-        } elseif ($preset === 'theater_hall') {
-            // Nhà hát giao hưởng
-            $rows = ['ST-1', 'ST-2', 'ST-3', 'DC-1', 'DC-2', 'GL-1', 'GL-2'];
-            foreach ($rows as $idx => $r) {
-                $type = $idx < 2 ? 'vip_gold' : ($idx < 5 ? 'cat1_stand' : 'cat2_wings');
-                for ($c = 1; $c <= 16; $c++) {
-                    $seatInserts[] = [
-                        'room_id' => $room->id,
-                        'row_label' => $r,
-                        'seat_number' => $c,
-                        'type' => $type,
-                        'created_at' => $now,
-                        'updated_at' => $now,
-                    ];
-                }
-            }
-        } elseif ($preset === 'convention_center') {
-            // Trung tâm hội nghị
-            $rows = ['KN-A', 'KN-B', 'STD-1', 'STD-2', 'STD-3', 'STD-4'];
-            foreach ($rows as $idx => $r) {
-                $type = $idx < 2 ? 'svip_diamond' : 'cat1_stand';
-                for ($c = 1; $c <= 18; $c++) {
-                    $seatInserts[] = [
-                        'room_id' => $room->id,
-                        'row_label' => $r,
-                        'seat_number' => $c,
-                        'type' => $type,
-                        'created_at' => $now,
-                        'updated_at' => $now,
-                    ];
-                }
-            }
-        } else {
-            // Custom grid
-            for ($r = 0; $r < $rowsCount; $r++) {
-                $rowLabel = $alphabet[$r] ?? ('R'.($r + 1));
-                for ($c = 1; $c <= $colsCount; $c++) {
-                    $type = 'normal';
-                    if ($r < 2) {
-                        $type = 'svip_diamond';
-                    } elseif ($r < 5) {
-                        $type = 'vip_gold';
-                    } else {
-                        $type = 'cat1_stand';
-                    }
-
-                    $seatInserts[] = [
-                        'room_id' => $room->id,
-                        'row_label' => $rowLabel,
-                        'seat_number' => $c,
-                        'type' => $type,
-                        'created_at' => $now,
-                        'updated_at' => $now,
-                    ];
-                }
-            }
-        }
-
-        foreach (array_chunk($seatInserts, 100) as $chunk) {
-            Seat::insert($chunk);
-        }
     }
 }

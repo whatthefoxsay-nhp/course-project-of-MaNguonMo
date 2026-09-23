@@ -1,15 +1,6 @@
 <x-admin-layout :header="'Khán Phòng & Sơ Đồ Ghế'">
     <div class="space-y-6">
 
-        @if(session('success'))
-            <div class="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold flex items-center justify-between shadow-sm">
-                <div class="flex items-center gap-2">
-                    <svg class="w-4 h-4 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
-                    <span>{{ session('success') }}</span>
-                </div>
-            </div>
-        @endif
-
         <!-- Top Action Bar & Header Banner -->
         <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-6 rounded-3xl border border-black/10 shadow-sm">
             <div class="flex items-center gap-4">

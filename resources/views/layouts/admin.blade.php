@@ -280,6 +280,7 @@
         </header>
 
         <main class="p-6 sm:p-8 flex-1">
+            @include('admin.partials.flash')
             {{ $slot }}
         </main>
     </div>
