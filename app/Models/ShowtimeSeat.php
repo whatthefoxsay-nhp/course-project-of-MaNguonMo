@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Support\TicketTiers;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -18,6 +19,7 @@ class ShowtimeSeat extends Model
         'status',
         'held_by_user_id',
         'held_until',
+        // Giá chốt tại lúc khách giữ ghế (xóa khi nhả); booking_items.price lấy từ đây.
         'price_override',
     ];
 
@@ -63,5 +65,29 @@ class ShowtimeSeat extends Model
         }
 
         return $this->status;
+    }
+
+    /** Ghế có thể giữ: đang trống, hoặc đang giữ nhưng đã quá hạn. */
+    public function scopeHoldable(Builder $query): Builder
+    {
+        return $query->where(function (Builder $where) {
+            $where->where('showtime_seats.status', 'available')
+                ->orWhere(fn (Builder $expired) => $expired
+                    ->where('showtime_seats.status', 'held')
+                    ->where('showtime_seats.held_until', '<', now()));
+        });
+    }
+
+    /** Ghế đang nằm trong giỏ (còn hạn giữ) của user. */
+    public function scopeHeldBy(Builder $query, User $user): Builder
+    {
+        return $query->where('showtime_seats.status', 'held')
+            ->where('showtime_seats.held_by_user_id', $user->id)
+            ->where('showtime_seats.held_until', '>', now());
+    }
+
+    public function isHoldable(): bool
+    {
+        return $this->publicStatus() === 'available';
     }
 }
