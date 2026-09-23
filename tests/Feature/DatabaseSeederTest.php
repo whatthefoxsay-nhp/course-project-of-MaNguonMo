@@ -23,7 +23,7 @@ test('every showtime has one showtime seat per room seat', function () {
         expect($showtime->showtimeSeats()->count())->toBe($showtime->room->seats()->count());
     });
 
-    expect(Showtime::count())->toBeGreaterThanOrEqual(12);
+    expect(Showtime::count())->toBeGreaterThanOrEqual(11);
 });
 
 test('the concert runs in the stadium room with a standing row', function () {

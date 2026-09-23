@@ -37,10 +37,13 @@
                     >
                     <div class="space-y-1.5">
                         <div class="flex flex-wrap items-center gap-2">
+                            <span class="badge-gold text-[10px] px-2.5 py-0.5 rounded-full font-black uppercase shadow-sm">
+                                {{ $showtime->session_short_label }}
+                            </span>
                             <span class="badge-rose text-[10px] px-2.5 py-0.5 rounded-full font-bold uppercase">
                                 {{ $movie->category->name }}
                             </span>
-                            <span class="badge-gold text-[10px] px-2.5 py-0.5 rounded-full font-black uppercase">
+                            <span class="badge-slate text-[10px] px-2.5 py-0.5 rounded-full font-bold uppercase bg-gray-100 border border-gray-200 text-gray-700">
                                 {{ $showtime->room->name }}
                             </span>
                             <span class="badge-sage text-[10px] px-2.5 py-0.5 rounded-full font-bold flex items-center gap-1">
@@ -53,10 +56,14 @@
                             {{ $movie->title }}
                         </h1>
 
+                        <div class="text-xs font-bold text-gold-dark">
+                            {{ $showtime->session_label }}
+                        </div>
+
                         <div class="flex flex-wrap items-center gap-4 text-xs text-gray-600 font-semibold pt-1">
                             <span class="flex items-center gap-1.5 text-black font-bold">
                                 <svg class="w-4 h-4 text-gold-dark" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
-                                {{ $showtime->start_time->format('l, d/m/Y') }}
+                                {{ $showtime->start_time->locale('vi')->isoFormat('dddd, DD/MM/YYYY') }}
                             </span>
                             <span class="text-black/30">·</span>
                             <span class="flex items-center gap-1.5 text-rose-taupe font-bold">
@@ -86,6 +93,38 @@
                     </div>
                 </div>
             </div>
+
+            @if(isset($allShowtimes) && $allShowtimes->count() > 1)
+                <!-- Showtime Switcher Tabs for Multi-showtime Events -->
+                <div class="mt-6 pt-5 border-t border-black/10 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div class="flex items-center gap-2 text-xs font-bold text-gray-700">
+                        <svg class="w-4 h-4 text-gold-dark" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                        <span>Đổi suất diễn khác của sự kiện:</span>
+                    </div>
+
+                    <div class="flex flex-wrap items-center gap-2">
+                        @foreach($allShowtimes as $st)
+                            @if($st->id === $showtime->id)
+                                <span class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-black text-white text-xs font-bold shadow-sm">
+                                    <span class="w-2 h-2 rounded-full bg-gold"></span>
+                                    <span>{{ $st->session_short_label }} ({{ $st->start_time->format('d/m • H:i') }})</span>
+                                    <span class="text-[10px] text-gold uppercase tracking-wider font-extrabold ml-1">[Đang Chọn]</span>
+                                </span>
+                            @else
+                                <a 
+                                    href="{{ route('showtimes.seats', $st->id) }}" 
+                                    class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-[#FAF9F6] hover:bg-gold-light/20 text-gray-700 hover:text-black border border-black/10 hover:border-gold-antique text-xs font-bold transition-all shadow-xs"
+                                >
+                                    <span>{{ $st->session_short_label }} ({{ $st->start_time->format('d/m • H:i') }})</span>
+                                    <span class="text-[10px] text-rose-taupe font-semibold">&rarr; Chuyển sang</span>
+                                </a>
+                            @endif
+                        @endforeach
+                    </div>
+                </div>
+            @endif
         </div>
 
         <!-- Seat Map Interactive Component -->

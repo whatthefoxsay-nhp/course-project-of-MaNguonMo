@@ -109,19 +109,98 @@
                         </div>
                     @endif
 
-                    <!-- Direct Quick Action -->
+                    <!-- Direct Quick Action / Showtime Selection Box -->
                     @if (!empty($showtimes))
-                        <a 
-                            href="{{ route('showtimes.seats', $showtimes[0]->id) }}" 
-                            class="w-full btn-rose py-4 rounded-2xl font-black text-sm flex items-center justify-center gap-2 shadow-md hover:shadow-lg transition-all"
+                        <div 
+                            class="bg-[#FAF9F6] rounded-3xl p-5 border border-black/10 space-y-4 shadow-sm"
+                            x-data="{ 
+                                selectedShowtimeId: {{ $showtimes[0]->id }},
+                                get targetUrl() {
+                                    return '{{ url('/showtimes') }}/' + this.selectedShowtimeId + '/seats';
+                                }
+                            }"
                         >
-                            @if ($movie->is_seated_concert)
-                                <span>Chọn Ghế Khán Đài &amp; Đặt Vé Ngay</span>
+                            <div class="flex items-center justify-between pb-2 border-b border-black/10">
+                                <span class="text-[10px] font-black uppercase tracking-wider text-gold-dark">
+                                    {{ count($showtimes) > 1 ? 'Chọn Suất Diễn Để Đặt Vé' : 'Suất Diễn Chính Thức' }}
+                                </span>
+                                @if (count($showtimes) > 1)
+                                    <span class="badge-gold text-[9px] px-2 py-0.5 rounded-full font-black">
+                                        {{ count($showtimes) }} Suất Mở Bán
+                                    </span>
+                                @else
+                                    <span class="badge-rose text-[9px] px-2 py-0.5 rounded-full font-bold">
+                                        1 Suất Duy Nhất
+                                    </span>
+                                @endif
+                            </div>
+
+                            @if (count($showtimes) > 1)
+                                <!-- Multi-showtimes picker under poster -->
+                                <div class="space-y-2">
+                                    <span class="text-[11px] text-gray-500 font-medium block">
+                                        Chọn 1 trong {{ count($showtimes) }} suất diễn bạn muốn tham dự:
+                                    </span>
+                                    <div class="grid grid-cols-1 gap-2">
+                                        @foreach ($showtimes as $st)
+                                            <button 
+                                                type="button"
+                                                @click="selectedShowtimeId = {{ $st->id }}"
+                                                class="w-full text-left p-3 rounded-2xl border transition-all flex items-center justify-between gap-3 text-xs cursor-pointer"
+                                                :class="selectedShowtimeId === {{ $st->id }} ? 'bg-black text-white border-black shadow-md font-bold' : 'bg-white text-gray-800 border-black/10 hover:border-black/30 font-medium'"
+                                            >
+                                                <div class="flex items-center gap-2.5">
+                                                    <span 
+                                                        class="w-4 h-4 rounded-full flex items-center justify-center border text-[9px]"
+                                                        :class="selectedShowtimeId === {{ $st->id }} ? 'border-gold-antique bg-gold-antique text-black font-black' : 'border-gray-300'"
+                                                    >
+                                                        <span x-show="selectedShowtimeId === {{ $st->id }}">✓</span>
+                                                    </span>
+                                                    <div>
+                                                        <strong class="block text-xs" :class="selectedShowtimeId === {{ $st->id }} ? 'text-white' : 'text-slate-900'">
+                                                            {{ $st->session_label }}
+                                                        </strong>
+                                                        <span class="text-[11px]" :class="selectedShowtimeId === {{ $st->id }} ? 'text-gray-300' : 'text-gray-500'">
+                                                            {{ $st->start_time->format('H:i - d/m/Y') }}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                                <span 
+                                                    class="text-[10px] px-2 py-0.5 rounded-full font-bold uppercase"
+                                                    :class="selectedShowtimeId === {{ $st->id }} ? 'bg-white/20 text-gold-light' : 'bg-black/5 text-gray-600'"
+                                                >
+                                                    {{ number_format($st->base_price) }}₫
+                                                </span>
+                                            </button>
+                                        @endforeach
+                                    </div>
+                                </div>
                             @else
-                                <span>Đặt Vé Tham Dự Ngay</span>
+                                <!-- Single showtime summary -->
+                                <div class="bg-white p-3.5 rounded-2xl border border-black/10 text-xs space-y-1">
+                                    <div class="flex items-center justify-between text-gray-500 text-[11px]">
+                                        <span>Khán phòng:</span>
+                                        <strong class="text-black">{{ $showtimes[0]->room->name }}</strong>
+                                    </div>
+                                    <div class="flex items-center justify-between text-gray-500 text-[11px]">
+                                        <span>Thời gian:</span>
+                                        <strong class="text-rose-taupe font-bold">{{ $showtimes[0]->start_time->format('H:i - d/m/Y') }}</strong>
+                                    </div>
+                                </div>
                             @endif
-                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg>
-                        </a>
+
+                            <a 
+                                :href="targetUrl" 
+                                class="w-full btn-rose py-4 rounded-2xl font-black text-sm flex items-center justify-center gap-2 shadow-md hover:shadow-lg transition-all"
+                            >
+                                @if ($movie->is_seated_concert)
+                                    <span>Chọn Ghế Khán Đài &amp; Đặt Vé Ngay</span>
+                                @else
+                                    <span>Đặt Vé Tham Dự Ngay</span>
+                                @endif
+                                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg>
+                            </a>
+                        </div>
                     @endif
                 </div>
 
@@ -387,49 +466,72 @@
                                 <div>
                                     <span class="text-xs font-bold uppercase tracking-wider text-gold-dark">Lịch Diễn &amp; Suất Chiếu</span>
                                     <h3 class="font-display font-black text-xl text-black">
-                                        @if ($movie->is_seated_concert)
-                                            Chọn Suất Diễn Để Mở Sơ Đồ Khán Phòng Sân Vận Động
+                                        @if (count($showtimes) > 1)
+                                            Sự Kiện Có {{ count($showtimes) }} Suất Diễn — Chọn Suất Bạn Muốn Tham Dự
+                                        @elseif ($movie->is_seated_concert)
+                                            Suất Diễn Duy Nhất — Sơ Đồ Khán Phòng Sân Vận Động
                                         @else
-                                            Chọn Suất Diễn Để Đặt Vé Tham Dự Trực Tiếp
+                                            Suất Diễn Duy Nhất — Đặt Vé Tham Dự Trực Tiếp
                                         @endif
                                     </h3>
                                 </div>
-                                <span class="text-xs text-rose-taupe font-bold">Click để vào đặt vé &rarr;</span>
+                                <span class="text-xs text-rose-taupe font-bold">Chọn suất để giữ chỗ &rarr;</span>
                             </div>
 
-                            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-{{ min(count($showtimes), 3) }} gap-4">
                                 @forelse ($showtimes as $showtime)
                                     <a 
                                         href="{{ route('showtimes.seats', $showtime->id) }}"
-                                        class="group bg-white rounded-3xl p-5 border-2 border-black/10 hover:border-gold-antique hover:shadow-xl transition-all block relative overflow-hidden"
+                                        class="group bg-white rounded-3xl p-5 border-2 border-black/10 hover:border-gold-antique hover:shadow-xl transition-all block relative overflow-hidden flex flex-col justify-between"
                                     >
-                                        <div class="flex items-center justify-between mb-2">
-                                            <span class="font-display font-black text-2xl text-black group-hover:text-gold-dark transition-colors">
-                                                {{ $showtime->start_time->format('H:i') }}
-                                            </span>
-                                            <span class="badge-gold text-[10px] px-2.5 py-0.5 rounded-full font-bold uppercase">
-                                                {{ $showtime->room->name }}
-                                            </span>
+                                        <div>
+                                            <div class="flex items-center justify-between mb-3">
+                                                <span class="badge-gold text-[11px] px-3 py-1 rounded-full font-black tracking-wide uppercase shadow-sm">
+                                                    {{ $showtime->session_short_label ?? ('Suất ' . $loop->iteration) }}
+                                                </span>
+                                                <span class="text-[11px] text-gray-700 bg-gray-100 font-bold px-2.5 py-0.5 rounded-md border border-gray-200">
+                                                    {{ $showtime->room->name }}
+                                                </span>
+                                            </div>
+
+                                            <div class="mb-3">
+                                                <div class="flex items-baseline gap-2">
+                                                    <span class="font-display font-black text-3xl text-black group-hover:text-gold-dark transition-colors">
+                                                        {{ $showtime->start_time->format('H:i') }}
+                                                    </span>
+                                                    <span class="text-xs text-gray-700 font-bold">
+                                                        {{ $showtime->start_time->locale('vi')->isoFormat('dddd, DD/MM/YYYY') }}
+                                                    </span>
+                                                </div>
+                                                <div class="text-xs text-slate-800 font-semibold mt-1">
+                                                    {{ $showtime->session_label }}
+                                                </div>
+                                            </div>
+
+                                            <div class="text-xs text-gray-700 space-y-1.5 font-medium bg-[#FAF9F6] p-3 rounded-2xl border border-black/5">
+                                                <div class="flex items-center justify-between">
+                                                    <span class="text-gray-700">Giá vé khởi điểm:</span>
+                                                    <strong class="text-rose-taupe font-black text-sm">{{ number_format($showtime->base_price) }}₫</strong>
+                                                </div>
+                                                <div class="flex items-center justify-between">
+                                                    <span class="text-gray-700">Trạng thái:</span>
+                                                    <span class="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-800">
+                                                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                                                        Đang mở bán
+                                                    </span>
+                                                </div>
+                                            </div>
                                         </div>
 
-                                        <div class="text-xs text-gray-600 space-y-1 font-medium">
-                                            <div class="flex items-center justify-between">
-                                                <span>Ngày biểu diễn:</span>
-                                                <strong class="text-black">{{ $showtime->start_time->format('d/m/Y') }}</strong>
-                                            </div>
-                                            <div class="flex items-center justify-between">
-                                                <span>Giá vé chỉ từ:</span>
-                                                <strong class="text-rose-taupe font-black text-sm">{{ number_format($showtime->base_price) }}₫</strong>
-                                            </div>
-                                        </div>
-
-                                        <div class="mt-3 pt-3 border-t border-black/10 flex items-center justify-between text-xs font-black text-black group-hover:text-gold-dark">
-                                            @if ($movie->is_seated_concert)
-                                                <span>Mở Sơ Đồ Chọn Ghế Khán Đài</span>
-                                            @else
-                                                <span>Chọn Hạng Vé &amp; Số Lượng</span>
-                                            @endif
-                                            <span>&rarr;</span>
+                                        <div class="mt-4 pt-3 border-t border-black/10 flex items-center justify-between text-xs font-black text-black group-hover:text-gold-dark">
+                                            <span>
+                                                @if ($movie->is_seated_concert)
+                                                    Chọn Ghế Suất Này
+                                                @else
+                                                    Đặt Vé Suất Này
+                                                @endif
+                                            </span>
+                                            <span class="transition-transform group-hover:translate-x-1">&rarr;</span>
                                         </div>
                                     </a>
                                 @empty

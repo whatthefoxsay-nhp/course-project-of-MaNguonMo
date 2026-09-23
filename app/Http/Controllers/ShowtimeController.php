@@ -17,8 +17,15 @@ class ShowtimeController extends Controller
 
         abort_unless($event->status === 'published', 404);
 
+        $allShowtimes = $event->showtimes()
+            ->with('room')
+            ->where('start_time', '>', now())
+            ->orderBy('start_time')
+            ->get();
+
         return view('showtimes.seats', [
             'showtime' => $showtime,
+            'allShowtimes' => $allShowtimes,
             'movie' => $event,
             'seats' => $event->is_seated ? SeatMapPresenter::forShowtime($showtime) : [],
             'ticketTiers' => TicketTiers::for($showtime->base_price, $event->is_seated),

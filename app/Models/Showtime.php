@@ -49,4 +49,57 @@ class Showtime extends Model
     {
         return $this->showtimeSeats()->where('status', 'available')->count();
     }
+
+    public function getSessionLabelAttribute(): string
+    {
+        $showtimes = $this->relationLoaded('event') && $this->event && $this->event->relationLoaded('showtimes')
+            ? $this->event->showtimes->sortBy('start_time')->values()
+            : ($this->event ? $this->event->showtimes()->orderBy('start_time')->get() : collect());
+
+        $total = $showtimes->count();
+        if ($total <= 1) {
+            return 'Suất Diễn Duy Nhất';
+        }
+
+        $index = $showtimes->search(fn ($s) => $s->id === $this->id);
+        $num = ($index !== false ? $index : 0) + 1;
+
+        $categorySlug = $this->event?->category?->slug ?? '';
+        if ($categorySlug === 'concert') {
+            return $num === 1 ? 'Đêm 1 • Opening Night' : 'Đêm 2 • Grand Finale';
+        }
+        if ($categorySlug === 'trien-lam') {
+            return $num === 1 ? 'Ngày 1 • Khai Mạc Trải Nghiệm' : 'Ngày 2 • Trải Nghiệm Chính Thức';
+        }
+        if ($categorySlug === 'san-khau-kich') {
+            return $num === 1 ? 'Suất 1 • Đêm Khai Màn' : 'Suất 2 • Đêm Bế Mạc';
+        }
+
+        return "Suất Diễn {$num}";
+    }
+
+    public function getSessionShortLabelAttribute(): string
+    {
+        $showtimes = $this->relationLoaded('event') && $this->event && $this->event->relationLoaded('showtimes')
+            ? $this->event->showtimes->sortBy('start_time')->values()
+            : ($this->event ? $this->event->showtimes()->orderBy('start_time')->get() : collect());
+
+        $total = $showtimes->count();
+        if ($total <= 1) {
+            return 'Suất Duy Nhất';
+        }
+
+        $index = $showtimes->search(fn ($s) => $s->id === $this->id);
+        $num = ($index !== false ? $index : 0) + 1;
+
+        $categorySlug = $this->event?->category?->slug ?? '';
+        if ($categorySlug === 'concert') {
+            return "Đêm {$num}";
+        }
+        if ($categorySlug === 'trien-lam') {
+            return "Ngày {$num}";
+        }
+
+        return "Suất {$num}";
+    }
 }

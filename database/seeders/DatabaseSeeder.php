@@ -255,7 +255,6 @@ class DatabaseSeeder extends Seeder
         ['live-concert-anh-trai-vuot-ngan-chong-gai-2026', 'qk7', 8, '19:00', '23:00'],
         ['saigon-autumn-music-light-festival-2026', 'qk7', 4, '17:00', '23:00'],
         ['hoa-nhac-giao-huong-saigon-philharmonic', 'opera', 2, '19:30', '21:30'],
-        ['hoa-nhac-giao-huong-saigon-philharmonic', 'opera', 9, '19:30', '21:30'],
         ['nhac-kich-les-miserables-vn', 'opera', 3, '19:30', '22:15'],
         ['nhac-kich-les-miserables-vn', 'opera', 10, '19:30', '22:15'],
         ['vietnam-tech-summit-ai-expo-2026', 'secc', 5, '08:30', '17:00'],
