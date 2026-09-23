@@ -65,6 +65,10 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::get('/bookings/{booking}', [AdminBookingController::class, 'show'])->name('bookings.show');
     Route::patch('/bookings/{booking}/status', [AdminBookingController::class, 'updateStatus'])->name('bookings.update-status');
     Route::get('/discounts', [AdminDiscountController::class, 'index'])->name('discounts.index');
+    Route::post('/discounts', [AdminDiscountController::class, 'store'])->name('discounts.store');
+    Route::put('/discounts/{discount}', [AdminDiscountController::class, 'update'])->name('discounts.update');
+    Route::delete('/discounts/{discount}', [AdminDiscountController::class, 'destroy'])->name('discounts.destroy');
+    Route::patch('/discounts/{discount}/toggle-status', [AdminDiscountController::class, 'toggleStatus'])->name('discounts.toggle-status');
     Route::get('/users', [UserController::class, 'index'])->name('users.index');
     Route::patch('/users/{user}/toggle-status', [UserController::class, 'toggleStatus'])->name('users.toggle-status');
 });

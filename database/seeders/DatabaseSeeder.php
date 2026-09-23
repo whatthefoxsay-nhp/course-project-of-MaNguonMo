@@ -350,6 +350,56 @@ class DatabaseSeeder extends Seeder
             ['user_id' => $admin->id, 'event_id' => $createdEvents[0]->id],
             ['content' => 'Sân khấu quy mô khủng, hệ thống ghế ngồi khán đài được phân luồng rất khoa học.']
         );
+
+        // 10. Create Standard Discounts / Vouchers
+        $discountsData = [
+            [
+                'code' => 'TICKETBOX2026',
+                'title' => 'Ưu đãi chào mừng thành viên mới 2026',
+                'discount_type' => 'percentage',
+                'discount_value' => 20,
+                'min_order_value' => 200000,
+                'max_discount_amount' => 100000,
+                'used_count' => 14,
+                'max_uses' => 500,
+                'is_active' => true,
+                'start_date' => now()->startOfYear(),
+                'end_date' => now()->endOfYear(),
+                'applicable_to' => 'Tất cả sự kiện & concert',
+            ],
+            [
+                'code' => 'VIPCONCERT30',
+                'title' => 'Giảm 30% cho khách hàng VIP đặt vé sớm',
+                'discount_type' => 'percentage',
+                'discount_value' => 30,
+                'min_order_value' => 500000,
+                'max_discount_amount' => 300000,
+                'used_count' => 8,
+                'max_uses' => 100,
+                'is_active' => true,
+                'start_date' => now()->subMonths(1),
+                'end_date' => now()->addMonths(6),
+                'applicable_to' => 'Vé VIP & Super VIP',
+            ],
+            [
+                'code' => 'EARLYBIRD50K',
+                'title' => 'Voucher giảm 50.000đ khi đặt trước 7 ngày',
+                'discount_type' => 'fixed',
+                'discount_value' => 50000,
+                'min_order_value' => 300000,
+                'max_discount_amount' => 50000,
+                'used_count' => 32,
+                'max_uses' => 1000,
+                'is_active' => true,
+                'start_date' => now()->subMonths(2),
+                'end_date' => now()->addMonths(8),
+                'applicable_to' => 'Live Concert & Liveshow',
+            ],
+        ];
+
+        foreach ($discountsData as $d) {
+            \App\Models\Discount::firstOrCreate(['code' => $d['code']], $d);
+        }
     }
 
     private function generateSeatsForRoom(Room $room, array $rows, int $seatsPerRow, array $vipRows = []): void

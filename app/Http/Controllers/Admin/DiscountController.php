@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Discount;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
@@ -13,109 +15,120 @@ class DiscountController extends Controller
      */
     public function index(Request $request): View
     {
-        // Sample discount vouchers data
-        $discounts = collect([
-            [
-                'id' => 1,
-                'code' => 'TICKETBOX2026',
-                'title' => 'Ưu đãi chào mừng thành viên mới 2026',
-                'discount_type' => 'percentage',
-                'discount_value' => 20,
-                'min_order_value' => 200000,
-                'max_discount_amount' => 100000,
-                'used_count' => 142,
-                'max_uses' => 500,
-                'status' => 'active',
-                'start_date' => '2026-01-01',
-                'end_date' => '2026-12-31',
-                'applicable_to' => 'Tất cả sự kiện & concert',
-            ],
-            [
-                'id' => 2,
-                'code' => 'VIPCONCERT30',
-                'title' => 'Giảm 30% cho khách hàng VIP đặt vé sớm',
-                'discount_type' => 'percentage',
-                'discount_value' => 30,
-                'min_order_value' => 500000,
-                'max_discount_amount' => 300000,
-                'used_count' => 88,
-                'max_uses' => 100,
-                'status' => 'active',
-                'start_date' => '2026-03-01',
-                'end_date' => '2026-09-30',
-                'applicable_to' => 'Vé VIP & Super VIP',
-            ],
-            [
-                'id' => 3,
-                'code' => 'EARLYBIRD50K',
-                'title' => 'Voucher giảm 50.000đ khi đặt trước 7 ngày',
-                'discount_type' => 'fixed',
-                'discount_value' => 50000,
-                'min_order_value' => 300000,
-                'max_discount_amount' => 50000,
-                'used_count' => 320,
-                'max_uses' => 1000,
-                'status' => 'active',
-                'start_date' => '2026-02-15',
-                'end_date' => '2026-11-30',
-                'applicable_to' => 'Live Concert & Liveshow',
-            ],
-            [
-                'id' => 4,
-                'code' => 'TECHSALL100K',
-                'title' => 'Hội thảo & Diễn đàn công nghệ Tech Summit',
-                'discount_type' => 'fixed',
-                'discount_value' => 100000,
-                'min_order_value' => 800000,
-                'max_discount_amount' => 100000,
-                'used_count' => 64,
-                'max_uses' => 200,
-                'status' => 'active',
-                'start_date' => '2026-04-01',
-                'end_date' => '2026-10-15',
-                'applicable_to' => 'Hội Thảo & Masterclass',
-            ],
-            [
-                'id' => 5,
-                'code' => 'SUMMERFEST15',
-                'title' => 'Flash Sale Lễ Hội Âm Nhạc Mùa Hè',
-                'discount_type' => 'percentage',
-                'discount_value' => 15,
-                'min_order_value' => 250000,
-                'max_discount_amount' => 75000,
-                'used_count' => 450,
-                'max_uses' => 450,
-                'status' => 'expired',
-                'start_date' => '2026-05-01',
-                'end_date' => '2026-08-31',
-                'applicable_to' => 'Festival Âm Nhạc Ngoài Trời',
-            ],
-        ]);
+        $query = Discount::query();
 
         $search = $request->input('search');
-        $status = $request->input('status');
-
         if ($search) {
-            $discounts = $discounts->filter(function ($item) use ($search) {
-                return str_contains(strtoupper($item['code']), strtoupper($search)) ||
-                       str_contains(mb_strtolower($item['title']), mb_strtolower($search)) ||
-                       str_contains(mb_strtolower($item['applicable_to']), mb_strtolower($search));
+            $query->where(function ($q) use ($search) {
+                $q->where('code', 'like', "%{$search}%")
+                  ->orWhere('title', 'like', "%{$search}%")
+                  ->orWhere('applicable_to', 'like', "%{$search}%");
             });
         }
 
-        if ($status && in_array($status, ['active', 'expired', 'disabled'])) {
-            $discounts = $discounts->filter(function ($item) use ($status) {
-                return $item['status'] === $status;
+        $status = $request->input('status');
+        if ($status === 'active') {
+            $query->where('is_active', true);
+        } elseif ($status === 'expired') {
+            $query->where(function ($q) {
+                $q->where('is_active', false)
+                  ->orWhere(function ($sq) {
+                      $sq->whereNotNull('end_date')->where('end_date', '<', now()->toDateString());
+                  })
+                  ->orWhereRaw('used_count >= max_uses');
             });
         }
+
+        $discounts = $query->latest('id')->paginate(10)->withQueryString();
 
         $stats = [
-            'total_active' => 4,
-            'total_used' => 1064,
-            'total_discount_amount' => 128500000, // 128.5 triệu VNĐ
-            'expiring_soon' => 2,
+            'total_active' => Discount::where('is_active', true)->count(),
+            'total_used' => Discount::sum('used_count'),
+            'total_vouchers' => Discount::count(),
+            'expiring_soon' => Discount::where('is_active', true)
+                ->whereNotNull('end_date')
+                ->whereBetween('end_date', [now()->toDateString(), now()->addDays(30)->toDateString()])
+                ->count(),
         ];
 
         return view('admin.discounts.index', compact('discounts', 'stats', 'search', 'status'));
+    }
+
+    /**
+     * Store a newly created discount in storage.
+     */
+    public function store(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'code' => 'required|string|max:32|unique:discounts,code',
+            'title' => 'required|string|max:255',
+            'discount_type' => 'required|in:percentage,fixed',
+            'discount_value' => 'required|integer|min:1',
+            'min_order_value' => 'nullable|integer|min:0',
+            'max_discount_amount' => 'nullable|integer|min:0',
+            'max_uses' => 'required|integer|min:1',
+            'start_date' => 'nullable|date',
+            'end_date' => 'nullable|date|after_or_equal:start_date',
+            'applicable_to' => 'nullable|string|max:255',
+        ]);
+
+        $validated['code'] = strtoupper(trim($validated['code']));
+        $validated['min_order_value'] = $validated['min_order_value'] ?? 0;
+        $validated['applicable_to'] = $validated['applicable_to'] ?? 'Tất cả sự kiện & concert';
+        $validated['is_active'] = true;
+
+        $discount = Discount::create($validated);
+
+        return redirect()->route('admin.discounts.index')
+            ->with('success', "Đã tạo mã khuyến mãi [{$discount->code}] thành công!");
+    }
+
+    /**
+     * Update the specified discount in storage.
+     */
+    public function update(Request $request, Discount $discount): RedirectResponse
+    {
+        $validated = $request->validate([
+            'title' => 'required|string|max:255',
+            'discount_type' => 'required|in:percentage,fixed',
+            'discount_value' => 'required|integer|min:1',
+            'min_order_value' => 'nullable|integer|min:0',
+            'max_discount_amount' => 'nullable|integer|min:0',
+            'max_uses' => 'required|integer|min:1',
+            'start_date' => 'nullable|date',
+            'end_date' => 'nullable|date|after_or_equal:start_date',
+            'applicable_to' => 'nullable|string|max:255',
+        ]);
+
+        $discount->update($validated);
+
+        return redirect()->route('admin.discounts.index')
+            ->with('success', "Đã cập nhật mã khuyến mãi [{$discount->code}]!");
+    }
+
+    /**
+     * Remove the specified discount from storage.
+     */
+    public function destroy(Discount $discount): RedirectResponse
+    {
+        $code = $discount->code;
+        $discount->delete();
+
+        return redirect()->route('admin.discounts.index')
+            ->with('success', "Đã xóa mã khuyến mãi [{$code}].");
+    }
+
+    /**
+     * Toggle active status of a discount.
+     */
+    public function toggleStatus(Discount $discount): RedirectResponse
+    {
+        $discount->is_active = ! $discount->is_active;
+        $discount->save();
+
+        $statusText = $discount->is_active ? 'kích hoạt' : 'tạm dừng';
+
+        return redirect()->route('admin.discounts.index')
+            ->with('success', "Đã {$statusText} mã khuyến mãi [{$discount->code}].");
     }
 }
