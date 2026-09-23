@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
@@ -89,5 +90,39 @@ class UserController extends Controller
                 'status_label' => $user->is_active ? 'Đang hoạt động' : 'Đã bị khóa',
             ],
         ]);
+    }
+
+    /**
+     * Toggle admin / user role for an account.
+     */
+    public function toggleRole(Request $request, User $user): RedirectResponse
+    {
+        if ($user->id === Auth::id()) {
+            return back()->with('error', 'Bạn không thể tự thay đổi vai trò của chính mình.');
+        }
+
+        if ($user->hasRole('admin')) {
+            $user->removeRole('admin');
+            $user->assignRole('user');
+            $roleName = 'Khách hàng (User)';
+        } else {
+            $user->removeRole('user');
+            $user->assignRole('admin');
+            $roleName = 'Quản trị viên (Admin)';
+        }
+
+        return back()->with('success', "Đã cập nhật vai trò của tài khoản [{$user->name}] thành {$roleName}.");
+    }
+
+    /**
+     * Reset password to default temporary password.
+     */
+    public function resetPassword(Request $request, User $user): RedirectResponse
+    {
+        $tempPassword = 'TicketBox@' . date('Y');
+        $user->password = $tempPassword;
+        $user->save();
+
+        return back()->with('success', "Đã đặt lại mật khẩu cho tài khoản [{$user->name}] thành: {$tempPassword}");
     }
 }

@@ -75,3 +75,43 @@ test('admin cannot lock their own account', function () {
         'success' => false,
     ]);
 });
+
+test('admin can toggle role between user and admin', function () {
+    $admin = User::factory()->create();
+    $admin->assignRole('admin');
+
+    $targetUser = User::factory()->create();
+    $targetUser->assignRole('user');
+
+    $this->actingAs($admin)->patch(route('admin.users.toggle-role', $targetUser))
+        ->assertRedirect();
+    expect($targetUser->fresh()->hasRole('admin'))->toBeTrue();
+
+    // Toggle back
+    $this->actingAs($admin)->patch(route('admin.users.toggle-role', $targetUser))
+        ->assertRedirect();
+    expect($targetUser->fresh()->hasRole('user'))->toBeTrue();
+});
+
+test('admin cannot toggle their own role', function () {
+    $admin = User::factory()->create();
+    $admin->assignRole('admin');
+
+    $this->actingAs($admin)->patch(route('admin.users.toggle-role', $admin))
+        ->assertRedirect();
+    expect($admin->fresh()->hasRole('admin'))->toBeTrue();
+});
+
+test('admin can reset password of a user to default temporary password', function () {
+    $admin = User::factory()->create();
+    $admin->assignRole('admin');
+
+    $targetUser = User::factory()->create(['password' => 'old_secret_pwd']);
+
+    $response = $this->actingAs($admin)->post(route('admin.users.reset-password', $targetUser));
+
+    $response->assertRedirect();
+    $tempPassword = 'TicketBox@' . date('Y');
+    expect(Illuminate\Support\Facades\Hash::check($tempPassword, $targetUser->fresh()->password))->toBeTrue();
+});
+
