@@ -21,30 +21,34 @@
                         Trang chủ
                     </a>
 
+                    <a href="{{ route('movies.index') }}" class="px-3.5 py-1.5 rounded-full text-gray-700 hover:text-black hover:bg-black/5 transition-colors whitespace-nowrap {{ request()->routeIs('movies.*') ? 'bg-[#000000] text-white font-bold' : '' }}">
+                        Khám Phá Sự Kiện
+                    </a>
+
+                    <a href="{{ route('movies.index') }}" class="px-3.5 py-1.5 rounded-full text-gray-700 hover:text-black hover:bg-black/5 transition-colors whitespace-nowrap">
+                        Lịch Diễn &amp; Khán Phòng
+                    </a>
+
+                    <a href="{{ route('home') }}#footer-offers" class="px-3.5 py-1.5 rounded-full text-gold-dark hover:text-black hover:bg-[#FFF8E1] transition-colors font-bold whitespace-nowrap inline-flex items-center gap-1">
+                        <span>Ưu Đãi VIP</span>
+                        <span class="badge-gold text-[9px] px-1.5 py-0.2 rounded-full font-black">SALE</span>
+                    </a>
+
+                    <a href="{{ route('bookings.history') }}" class="relative inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full transition-colors whitespace-nowrap {{ request()->routeIs('bookings.*') ? 'bg-[#000000] text-white font-bold' : 'text-gray-700 hover:text-black hover:bg-black/5' }}">
+                        <span>Vé của tôi</span>
+                        <span class="flex h-2 w-2 relative" title="Có 1 sự kiện sắp diễn ra trong 12 tiếng">
+                            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-taupe opacity-75"></span>
+                            <span class="relative inline-flex rounded-full h-2 w-2 bg-rose-taupe"></span>
+                        </span>
+                    </a>
+
                     @if(auth()->user()?->hasRole('admin'))
-                        <a href="{{ route('admin.dashboard') }}" class="px-3.5 py-1.5 rounded-full transition-colors text-gold-dark font-bold hover:text-black hover:bg-[#FFF8E1] inline-flex items-center gap-1.5 whitespace-nowrap {{ request()->routeIs('admin.*') ? 'bg-[#FFF8E1] text-black font-black' : '' }}">
+                        <a href="{{ route('admin.dashboard') }}" class="px-3.5 py-1.5 rounded-full transition-colors text-gold-dark font-black hover:text-black hover:bg-[#FFF8E1] bg-[#FFF8E1]/80 border border-gold-antique/40 inline-flex items-center gap-1.5 whitespace-nowrap shadow-xs">
+                            <svg class="w-3.5 h-3.5 text-gold-dark" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                            </svg>
                             <span>Trang Quản Trị</span>
-                        </a>
-                    @else
-                        <a href="{{ route('movies.index') }}" class="px-3.5 py-1.5 rounded-full text-gray-700 hover:text-black hover:bg-black/5 transition-colors whitespace-nowrap {{ request()->routeIs('movies.*') ? 'bg-[#000000] text-white font-bold' : '' }}">
-                            Khám Phá Sự Kiện
-                        </a>
-
-                        <a href="{{ route('movies.index') }}" class="px-3.5 py-1.5 rounded-full text-gray-700 hover:text-black hover:bg-black/5 transition-colors whitespace-nowrap">
-                            Lịch Diễn &amp; Khán Phòng
-                        </a>
-
-                        <a href="{{ route('home') }}#footer-offers" class="px-3.5 py-1.5 rounded-full text-gold-dark hover:text-black hover:bg-[#FFF8E1] transition-colors font-bold whitespace-nowrap inline-flex items-center gap-1">
-                            <span>Ưu Đãi VIP</span>
-                            <span class="badge-gold text-[9px] px-1.5 py-0.2 rounded-full font-black">SALE</span>
-                        </a>
-
-                        <a href="{{ route('bookings.history') }}" class="relative inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full transition-colors whitespace-nowrap {{ request()->routeIs('bookings.*') ? 'bg-[#000000] text-white font-bold' : 'text-gray-700 hover:text-black hover:bg-black/5' }}">
-                            <span>Vé của tôi</span>
-                            <span class="flex h-2 w-2 relative" title="Có 1 sự kiện sắp diễn ra trong 12 tiếng">
-                                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-taupe opacity-75"></span>
-                                <span class="relative inline-flex rounded-full h-2 w-2 bg-rose-taupe"></span>
-                            </span>
                         </a>
                     @endif
                 </div>
@@ -182,22 +186,21 @@
             <x-responsive-nav-link :href="route('home')">
                 Trang chủ
             </x-responsive-nav-link>
+            <x-responsive-nav-link :href="route('movies.index')">
+                Khám Phá Sự Kiện
+            </x-responsive-nav-link>
+            <x-responsive-nav-link :href="route('movies.index')">
+                Lịch Diễn &amp; Khán Phòng
+            </x-responsive-nav-link>
+            <x-responsive-nav-link :href="route('bookings.history')">
+                <span class="flex items-center justify-between">
+                    <span>Vé của tôi</span>
+                    <span class="badge-rose text-[9px] px-2 py-0.5 rounded-full font-bold">E-Ticket</span>
+                </span>
+            </x-responsive-nav-link>
             @if(auth()->user()?->hasRole('admin'))
-                <x-responsive-nav-link :href="route('admin.dashboard')">
-                    Trang Quản Trị
-                </x-responsive-nav-link>
-            @else
-                <x-responsive-nav-link :href="route('movies.index')">
-                    Khám Phá Sự Kiện
-                </x-responsive-nav-link>
-                <x-responsive-nav-link :href="route('movies.index')">
-                    Lịch Diễn &amp; Khán Phòng
-                </x-responsive-nav-link>
-                <x-responsive-nav-link :href="route('bookings.history')">
-                    <span class="flex items-center justify-between">
-                        <span>Vé của tôi</span>
-                        <span class="badge-rose text-[9px] px-2 py-0.5 rounded-full font-bold">1 Sắp diễn ra</span>
-                    </span>
+                <x-responsive-nav-link :href="route('admin.dashboard')" class="text-gold-dark font-black bg-[#FFF8E1]">
+                    Trang Quản Trị Admin
                 </x-responsive-nav-link>
             @endif
         </div>
