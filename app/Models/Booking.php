@@ -17,6 +17,7 @@ class Booking extends Model
         'booking_code',
         'total_price',
         'status',
+        'payment_method',
     ];
 
     protected $casts = [
@@ -27,9 +28,13 @@ class Booking extends Model
     {
         parent::boot();
 
-        static::creating(function ($booking) {
+        static::creating(function (Booking $booking) {
             if (empty($booking->booking_code)) {
-                $booking->booking_code = 'TBX-' . strtoupper(Str::random(6));
+                do {
+                    $code = 'TBX-'.strtoupper(Str::random(8));
+                } while (static::where('booking_code', $code)->exists());
+
+                $booking->booking_code = $code;
             }
         });
     }
