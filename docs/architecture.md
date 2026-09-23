@@ -29,6 +29,7 @@ Cập nhật file này mỗi khi kiến trúc hoặc yêu cầu dự án thay đ
 | **2026-09-21** | **Chi tiết sự kiện** | Thêm cột `events.is_seated` (bool) và `events.details` (JSON: địa điểm, lineup, lịch trình, BTC, quy định) | Giữ nguyên giao diện chi tiết sự kiện giàu thông tin của nhóm mà không tạo thêm 5–6 bảng phụ. |
 | **2026-09-21** | **An toàn dữ liệu** | Không sinh lại ghế / không xóa khán phòng khi đã có suất diễn; không xóa danh mục còn sự kiện; không xóa sự kiện/suất diễn đã bán vé | Các FK đang `cascade` — xóa nhầm sẽ mất vé đã bán. |
 | **2026-09-21** | **Vé đứng (GA)** | Preset `mega_concert` sinh thêm hàng ghế ẩn `GA` loại `standing_pit` | Vé đứng dùng chung engine `showtime_seats`, server tự gán chỗ. |
+| **2026-09-23** | **Quản trị hệ thống** | Làm sạch dữ liệu thực trên Dashboard & Báo cáo (xóa bỏ số liệu giả lập); Hoàn thiện chi tiết đơn vé & giải phóng ghế khi hủy đơn; Khởi tạo bảng & Model `Discount` lưu trữ thật; Bổ sung đổi vai trò Admin/User và đặt lại mật khẩu | Đảm bảo phân hệ Admin vận hành 100% trên cơ sở dữ liệu thật MySQL, không còn mock/alert giả lập. |
 
 ---
 
@@ -45,5 +46,6 @@ Cập nhật file này mỗi khi kiến trúc hoặc yêu cầu dự án thay đ
 ---
 
 ## 4. Kiểm thử & Độ bao phủ (Test Suite)
-- Toàn bộ tính năng đều được kiểm thử bằng Pest PHP (`php artisan test`): **80 tests / 283 assertions (Pass 100%)**.
-- Bao gồm Feature Test cho Admin Room Safety, Locked User, Category CRUD, Event CRUD, Showtime CRUD.
+- Toàn bộ tính năng đều được kiểm thử bằng Pest PHP (`php artisan test`): **96 tests / 338 assertions (Pass 100%)**.
+- Bao gồm Feature Test cho Admin Dashboard Real Data, Booking Management & Seat Release, Discount CRUD, Room Safety, Locked User, Category CRUD, Event CRUD, Showtime CRUD, User Role & Password Management.
+
