@@ -13,6 +13,7 @@ Cập nhật file này mỗi khi kiến trúc hoặc yêu cầu dự án thay đ
   - **Database & Backend Models (Phase 1)**: Đã hoàn tất 10 migration files (`users`, `categories`, `movies`/`events`, `rooms`/`venues`, `seats`, `showtimes`, `showtime_seats`, `bookings`, `booking_items`, `comments`) cùng 10 Eloquent Models có quan hệ chặt chẽ.
   - **Quản lý Tài khoản Người Dùng (Admin User Management)**: `UserController` xử lý tìm kiếm đa năng (Tên/Email/SĐT), lọc theo Role (Admin/User), lọc theo Trạng thái (Active/Locked), phân trang (Pagination), và AJAX Toggle Khóa/Mở khóa tài khoản bảo mật kèm hộp thoại xác nhận.
   - **Admin CRUD (Plan 1)**: danh mục, sự kiện (upload poster), suất diễn (chặn trùng giờ, tự sinh ghế theo suất), bảo vệ khán phòng có vé bán ra.
+  - **Engine đặt vé (Plan 3)**: giữ ghế AJAX chống đặt trùng, giỏ vé, thanh toán giả lập, lịch sử — đã bỏ hoàn toàn dữ liệu giả DemoCatalog.
   - **Giao diện & Trải nghiệm (Luxury Light Theme)**: Hoàn thiện hệ thống giao diện tone sáng sang trọng với bảng màu tương phản cao `#000000`, `#F5F5DC`, `#FFFFFF`, `#C08497`, `#D4AF37`, `#3A5A40`, `#CC0000`.
 
 ---
@@ -29,6 +30,9 @@ Cập nhật file này mỗi khi kiến trúc hoặc yêu cầu dự án thay đ
 | **2026-09-21** | **Chi tiết sự kiện** | Thêm cột `events.is_seated` (bool) và `events.details` (JSON: địa điểm, lineup, lịch trình, BTC, quy định) | Giữ nguyên giao diện chi tiết sự kiện giàu thông tin của nhóm mà không tạo thêm 5–6 bảng phụ. |
 | **2026-09-21** | **An toàn dữ liệu** | Không sinh lại ghế / không xóa khán phòng khi đã có suất diễn; không xóa danh mục còn sự kiện; không xóa sự kiện/suất diễn đã bán vé | Các FK đang `cascade` — xóa nhầm sẽ mất vé đã bán. |
 | **2026-09-21** | **Vé đứng (GA)** | Preset `mega_concert` sinh thêm hàng ghế ẩn `GA` loại `standing_pit` | Vé đứng dùng chung engine `showtime_seats`, server tự gán chỗ. |
+| **2026-09-21** | **Engine đặt vé** | Giữ ghế = `showtime_seats.status=held` (+`held_by_user_id`, `held_until` 10 phút, `price_override` = giá chốt); khóa dòng `lockForUpdate()` trong transaction, tất cả-hoặc-không; mỗi user chỉ giữ ghế của 1 suất; tối đa 8 chỗ; lệnh `seats:release-expired` chạy mỗi phút | Đúng spec mục 3, không có bảng giỏ hàng riêng. |
+| **2026-09-21** | **Thanh toán** | Thanh toán giả lập: chọn VietQR/MoMo/ZaloPay/Thẻ, server tạo booking `confirmed`, lưu `bookings.payment_method` | Spec mục 5: không tích hợp cổng thật. |
+| **2026-09-21** | **Đồng bộ ghế** | Polling `GET /showtimes/{id}/seat-status` mỗi 15 giây | Spec mục 5: không dùng WebSocket. |
 | **2026-09-23** | **Quản trị hệ thống** | Làm sạch dữ liệu thực trên Dashboard & Báo cáo (xóa bỏ số liệu giả lập); Hoàn thiện chi tiết đơn vé & giải phóng ghế khi hủy đơn; Khởi tạo bảng & Model `Discount` lưu trữ thật; Bổ sung đổi vai trò Admin/User và đặt lại mật khẩu | Đảm bảo phân hệ Admin vận hành 100% trên cơ sở dữ liệu thật MySQL, không còn mock/alert giả lập. |
 | **2026-09-23** | **Public Catalog DB (Plan 2)** | Toàn bộ trang chủ, danh sách sự kiện, chi tiết sự kiện và sơ đồ ghế đọc trực tiếp từ MySQL; Thống nhất định giá qua `TicketTiers`; Trình bày sơ đồ ghế động qua `SeatMapPresenter`; Hỗ trợ cả Sân vận động và Khán phòng nhà hát | Loại bỏ hoàn toàn phụ thuộc vào `DemoCatalog` cho luồng xem sự kiện và sơ đồ ghế. |
 
@@ -47,8 +51,15 @@ Cập nhật file này mỗi khi kiến trúc hoặc yêu cầu dự án thay đ
 ---
 
 ## 4. Kiểm thử & Độ bao phủ (Test Suite)
-- Toàn bộ tính năng đều được kiểm thử bằng Pest PHP (`php artisan test`): **124 tests / 431 assertions (Pass 100%)**.
+- Toàn bộ tính năng đều được kiểm thử bằng Pest PHP (`php artisan test`): **161 tests / 550 assertions (Pass 100%)**.
 - Bao gồm Feature Test cho:
   - Admin: Dashboard Real Data, Booking Management & Seat Release, Discount CRUD, Room Safety, Locked User, Category CRUD, Event CRUD, Showtime CRUD, User Role & Password Management.
-  - Public: Public Catalog (Search + Category Filter + Pagination + Draft Hide), Database Seeder, Seat Map Page (Stadium & Theater Layouts, Sold Seat Booked Status, Expired Hold Release), Ticket Tiers Pricing, Seat Pricing.
+  - Public & Engine: Public Catalog, Seat Map Page, Ticket Tiers & Seat Pricing, SeatHoldService, SeatHoldHttp, Checkout, Cart & Booking History.
+
+---
+
+## 5. Chạy lịch dọn ghế hết hạn
+
+Môi trường dev: `php artisan schedule:work` (hoặc chạy tay `php artisan seats:release-expired`).
+Kể cả không chạy lịch, ghế giữ quá hạn vẫn được coi là trống khi người khác giữ — lịch chỉ để dọn dữ liệu và hiển thị đúng.
 
