@@ -15,6 +15,7 @@ use App\Http\Controllers\EventController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\MovieController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\SeatHoldController;
 use App\Http\Controllers\ShowtimeController;
 use Illuminate\Support\Facades\Route;
 
@@ -27,8 +28,13 @@ Route::get('/events/{slug}', [EventController::class, 'show'])->name('events.sho
 Route::get('/movies', [EventController::class, 'index'])->name('movies.index');
 Route::get('/movies/{slug}', [EventController::class, 'show'])->name('movies.show');
 Route::get('/showtimes/{showtime}/seats', [ShowtimeController::class, 'seats'])->name('showtimes.seats');
+Route::get('/showtimes/{showtime}/seat-status', [ShowtimeController::class, 'seatStatus'])->name('showtimes.seat-status');
 
 Route::middleware('auth')->group(function () {
+    Route::post('/showtimes/{showtime}/holds', [SeatHoldController::class, 'store'])
+        ->middleware('throttle:30,1')
+        ->name('showtimes.holds.store');
+    Route::delete('/cart/seats/{showtimeSeat}', [SeatHoldController::class, 'destroy'])->name('cart.seats.destroy');
     Route::get('/cart', [CartController::class, 'index'])->name('cart.index');
     Route::get('/bookings', [BookingController::class, 'history'])->name('bookings.history');
 });

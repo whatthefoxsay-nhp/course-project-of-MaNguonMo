@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Showtime;
 use App\Support\SeatMapPresenter;
 use App\Support\TicketTiers;
+use Illuminate\Http\JsonResponse;
 use Illuminate\View\View;
 
 class ShowtimeController extends Controller
@@ -22,5 +23,15 @@ class ShowtimeController extends Controller
             'seats' => $event->is_seated ? SeatMapPresenter::forShowtime($showtime) : [],
             'ticketTiers' => TicketTiers::for($showtime->base_price, $event->is_seated),
         ]);
+    }
+
+    public function seatStatus(Showtime $showtime): JsonResponse
+    {
+        $unavailable = $showtime->showtimeSeats()
+            ->where(fn ($query) => $query->where('status', 'booked')
+                ->orWhere(fn ($held) => $held->where('status', 'held')->where('held_until', '>', now())))
+            ->pluck('id');
+
+        return response()->json(['unavailable' => $unavailable]);
     }
 }
