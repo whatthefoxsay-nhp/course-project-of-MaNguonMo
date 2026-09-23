@@ -29,7 +29,7 @@ class DatabaseSeeder extends Seeder
         $adminRole = Role::firstOrCreate(['name' => 'admin', 'guard_name' => 'web']);
         $userRole = Role::firstOrCreate(['name' => 'user', 'guard_name' => 'web']);
 
-        // 2. Create Users & Staff
+        // 2. Create Official Demo Users (Admin & Customer)
         $admin = User::firstOrCreate(
             ['email' => 'admin@ticketbox.vn'],
             [
@@ -42,49 +42,17 @@ class DatabaseSeeder extends Seeder
         );
         $admin->syncRoles([$adminRole]);
 
-        $subAdmin = User::firstOrCreate(
-            ['email' => 'moderator@ticketbox.vn'],
+        $demoUser = User::firstOrCreate(
+            ['email' => 'user@ticketbox.vn'],
             [
-                'name' => 'Trần Quản Lý (Moderator)',
-                'phone' => '0908889999',
-                'password' => 'password',
+                'name' => 'Nguyễn Văn Khách',
+                'phone' => '0912345678',
                 'is_active' => true,
+                'password' => 'password',
                 'email_verified_at' => now(),
             ]
         );
-        $subAdmin->syncRoles([$adminRole]);
-
-        $sampleUsers = [
-            ['name' => 'Nguyễn Văn Khách', 'email' => 'user@ticketbox.vn', 'phone' => '0912345678', 'is_active' => true],
-            ['name' => 'Lê Thu Trang', 'email' => 'lethutrang@gmail.com', 'phone' => '0987654321', 'is_active' => true],
-            ['name' => 'Trần Đình Khôi', 'email' => 'trandinhkhoi@gmail.com', 'phone' => '0933112233', 'is_active' => false],
-            ['name' => 'Phạm Minh Hoàng', 'email' => 'phamminhhoang@gmail.com', 'phone' => '0944556677', 'is_active' => true],
-            ['name' => 'Hoàng Thu Thảo', 'email' => 'hoangthao@gmail.com', 'phone' => '0966778899', 'is_active' => true],
-            ['name' => 'Nguyễn Hải Đăng', 'email' => 'nguyenhaidang@gmail.com', 'phone' => '0911223344', 'is_active' => false],
-            ['name' => 'Vũ Minh Trí', 'email' => 'vuminhtri@gmail.com', 'phone' => '0977889900', 'is_active' => true],
-            ['name' => 'Đặng Thị Mai', 'email' => 'dangthimai@gmail.com', 'phone' => '0922334455', 'is_active' => true],
-            ['name' => 'Bùi Duy Khánh', 'email' => 'buiduykhanh@gmail.com', 'phone' => '0955667788', 'is_active' => true],
-            ['name' => 'Nguyễn Kim Ngân', 'email' => 'nguyenkimngan@gmail.com', 'phone' => '0933445566', 'is_active' => true],
-            ['name' => 'Đỗ Gia Huy', 'email' => 'dogiahuy@gmail.com', 'phone' => '0988990011', 'is_active' => true],
-        ];
-
-        $demoUser = null;
-        foreach ($sampleUsers as $uData) {
-            $u = User::firstOrCreate(
-                ['email' => $uData['email']],
-                [
-                    'name' => $uData['name'],
-                    'phone' => $uData['phone'],
-                    'is_active' => $uData['is_active'],
-                    'password' => 'password',
-                    'email_verified_at' => now(),
-                ]
-            );
-            $u->syncRoles([$userRole]);
-            if ($uData['email'] === 'user@ticketbox.vn') {
-                $demoUser = $u;
-            }
-        }
+        $demoUser->syncRoles([$userRole]);
 
         // 3. Create Event Categories
         $categoriesData = [
