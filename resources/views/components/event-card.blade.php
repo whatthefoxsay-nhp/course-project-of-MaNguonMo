@@ -9,7 +9,7 @@
     <!-- Poster with luxury overlay -->
     <div class="relative aspect-[16/11] sm:aspect-[4/3] w-full rounded-2xl overflow-hidden bg-[#FAF9F6]">
         <img 
-            src="{{ $item->poster_path ?? (method_exists($item, 'getPosterUrlAttribute') ? $item->poster_url : "https://picsum.photos/seed/{$item->slug}/480/720") }}" 
+            src="{{ $item->poster_url }}" 
             alt="{{ $item->title }}" 
             class="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-700 ease-out"
             loading="lazy"

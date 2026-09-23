@@ -21,7 +21,7 @@
                 <div class="lg:col-span-4 space-y-6">
                     <div class="relative group rounded-3xl overflow-hidden bg-[#FAF9F6] border border-black/10 shadow-md aspect-[3/4]">
                         <img 
-                            src="{{ $movie->poster_path }}" 
+                            src="{{ $movie->poster_url }}" 
                             alt="{{ $movie->title }}" 
                             class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
                         >

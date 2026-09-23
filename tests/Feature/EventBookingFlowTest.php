@@ -1,6 +1,8 @@
 <?php
 
-use App\Support\DemoCatalog;
+use App\Models\Event;
+
+beforeEach(fn () => $this->seed());
 
 test('events and movies index page renders successfully', function () {
     $response = $this->get(route('events.index'));
@@ -13,7 +15,7 @@ test('events and movies index page renders successfully', function () {
 });
 
 test('event details page displays real-world event business information for anh trai vuot ngan chong gai concert', function () {
-    $movie = DemoCatalog::movieBySlug('live-concert-anh-trai-vuot-ngan-chong-gai-2026');
+    $movie = Event::firstWhere('slug', 'live-concert-anh-trai-vuot-ngan-chong-gai-2026');
 
     $response = $this->get(route('movies.show', $movie->slug));
 
@@ -40,7 +42,7 @@ test('event details page displays real-world event business information for anh 
 });
 
 test('fan meeting details page displays specific cast members and fansign hosts', function () {
-    $movie = DemoCatalog::movieBySlug('fan-meeting-running-man-vn-2026');
+    $movie = Event::firstWhere('slug', 'fan-meeting-running-man-vn-2026');
 
     $response = $this->get(route('movies.show', $movie->slug));
 

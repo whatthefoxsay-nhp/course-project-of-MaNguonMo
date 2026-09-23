@@ -2,15 +2,20 @@
 
 namespace App\Http\Controllers;
 
-use App\Support\DemoCatalog;
+use App\Models\Event;
 use Illuminate\View\View;
 
 class HomeController extends Controller
 {
     public function index(): View
     {
-        return view('home', [
-            'movies' => DemoCatalog::movies(),
-        ]);
+        $events = Event::published()
+            ->with('category')
+            ->withMin('showtimes', 'base_price')
+            ->latest('release_date')
+            ->take(8)
+            ->get();
+
+        return view('home', ['movies' => $events->all()]);
     }
 }

@@ -64,7 +64,7 @@
                             
                             <div class="relative bg-white rounded-3xl p-4 sm:p-5 border border-black/10 overflow-hidden shadow-2xl">
                                 <div class="aspect-[16/10] sm:aspect-[4/3] rounded-2xl overflow-hidden bg-[#FAF9F6] relative">
-                                    <img src="{{ $leadEvent->poster_path }}" alt="{{ $leadEvent->title }}" class="w-full h-full object-cover group-hover:scale-105 transition duration-700 ease-out">
+                                    <img src="{{ $leadEvent->poster_url }}" alt="{{ $leadEvent->title }}" class="w-full h-full object-cover group-hover:scale-105 transition duration-700 ease-out">
                                     
                                     <div class="absolute inset-0 bg-gradient-to-t from-black/75 via-black/15 to-transparent"></div>
                                     

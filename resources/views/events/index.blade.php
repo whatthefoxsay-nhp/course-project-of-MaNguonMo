@@ -85,6 +85,10 @@
                     <x-event-card :event="$event" />
                 @endforeach
             </div>
+
+            <div class="mt-10">
+                {{ $eventList->links('vendor.pagination.custom') }}
+            </div>
         @endif
 
     </div>
