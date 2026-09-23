@@ -35,7 +35,7 @@
         </div>
     @endif
 
-    <form method="POST" action="{{ route('login') }}" class="space-y-4 sm:space-y-5" x-data="{ emailVal: '{{ old('email') }}', passVal: '' }">
+    <form method="POST" action="{{ route('login') }}" class="space-y-4 sm:space-y-5" x-data="{ emailVal: '{{ old('email') }}', passVal: '', showPass: false }">
         @csrf
 
         <!-- Email Address -->
