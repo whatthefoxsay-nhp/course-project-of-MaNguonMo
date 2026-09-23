@@ -55,16 +55,16 @@
         <!-- Showtimes Table -->
         <div class="bg-white rounded-3xl border border-black/10 overflow-hidden shadow-sm">
             <div class="overflow-x-auto">
-                <table class="w-full text-left text-xs text-black min-w-[850px]">
+                <table class="w-full text-left text-xs text-black">
                     <thead class="text-[11px] uppercase tracking-wider text-gray-600 border-b border-black/10 bg-[#FAF9F6]">
                         <tr>
-                            <th class="py-4 px-6 font-bold whitespace-nowrap">Mã Suất</th>
-                            <th class="py-4 px-4 font-bold whitespace-nowrap">Sự Kiện</th>
-                            <th class="py-4 px-4 font-bold whitespace-nowrap">Khán Phòng / Sân Khấu</th>
-                            <th class="py-4 px-4 font-bold whitespace-nowrap">Thời Gian Bắt Đầu</th>
-                            <th class="py-4 px-4 font-bold whitespace-nowrap">Giá Vé Cơ Bản</th>
-                            <th class="py-4 px-4 font-bold whitespace-nowrap">Tỷ Lệ Đặt Ghế</th>
-                            <th class="py-4 px-6 font-bold text-right whitespace-nowrap">Thao Tác</th>
+                            <th class="py-3 px-3.5 font-bold whitespace-nowrap">Mã Suất</th>
+                            <th class="py-3 px-3 font-bold whitespace-nowrap">Sự Kiện</th>
+                            <th class="py-3 px-3 font-bold whitespace-nowrap">Khán Phòng / Sân Khấu</th>
+                            <th class="py-3 px-3 font-bold whitespace-nowrap">Thời Gian Bắt Đầu</th>
+                            <th class="py-3 px-3 font-bold whitespace-nowrap">Giá Vé Cơ Bản</th>
+                            <th class="py-3 px-3 font-bold whitespace-nowrap">Tỷ Lệ Đặt Ghế</th>
+                            <th class="py-3 px-3.5 font-bold text-right whitespace-nowrap">Thao Tác</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-black/5">
@@ -75,53 +75,53 @@
                                 $occupancy = $totalSeats > 0 ? round(($bookedSeats / $totalSeats) * 100, 1) : 0;
                             @endphp
                             <tr class="hover:bg-[#FAF9F6] transition-colors">
-                                <td class="py-4 px-6 whitespace-nowrap">
-                                    <span class="inline-block px-2.5 py-1 rounded-xl bg-neutral-900 text-amber-300 font-mono font-black text-[11px] border border-black/20 shadow-sm">
+                                <td class="py-3 px-3.5 whitespace-nowrap">
+                                    <span class="inline-block px-2 py-0.5 rounded-lg bg-neutral-900 text-amber-300 font-mono font-black text-[11px] border border-black/20 shadow-xs">
                                         #ST-{{ $showtime->id }}
                                     </span>
                                 </td>
-                                <td class="py-4 px-4 whitespace-nowrap">
-                                    <div class="font-bold text-black text-sm">{{ $showtime->movie?->title ?? 'N/A' }}</div>
-                                    <span class="text-[11px] font-semibold text-rose-600">{{ $showtime->movie?->category?->name }}</span>
+                                <td class="py-3 px-3 whitespace-nowrap">
+                                    <div class="font-bold text-black text-xs sm:text-sm max-w-[160px] sm:max-w-[200px] truncate" title="{{ $showtime->movie?->title ?? 'N/A' }}">{{ $showtime->movie?->title ?? 'N/A' }}</div>
+                                    <span class="text-[10px] font-semibold text-rose-600">{{ $showtime->movie?->category?->name }}</span>
                                 </td>
-                                <td class="py-4 px-4 whitespace-nowrap">
-                                    <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-bold bg-indigo-50 text-indigo-900 border border-indigo-200">
-                                        <svg class="w-3.5 h-3.5 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
-                                        {{ $showtime->room?->name ?? 'Chưa gán phòng' }}
+                                <td class="py-3 px-3 whitespace-nowrap">
+                                    <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg text-xs font-bold bg-indigo-50 text-indigo-900 border border-indigo-200 max-w-[140px] truncate" title="{{ $showtime->room?->name ?? 'Chưa gán phòng' }}">
+                                        <svg class="w-3 h-3 text-indigo-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+                                        <span class="truncate">{{ $showtime->room?->name ?? 'Chưa gán phòng' }}</span>
                                     </span>
                                 </td>
-                                <td class="py-4 px-4 whitespace-nowrap">
-                                    <div class="font-bold text-black text-xs flex items-center gap-1.5">
-                                        <svg class="w-3.5 h-3.5 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                <td class="py-3 px-3 whitespace-nowrap">
+                                    <div class="font-bold text-black text-xs flex items-center gap-1">
+                                        <svg class="w-3 h-3 text-amber-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                                         {{ $showtime->start_time->format('H:i') }} - {{ $showtime->end_time ? $showtime->end_time->format('H:i') : '' }}
                                     </div>
-                                    <div class="text-[11px] text-gray-500 mt-0.5">{{ $showtime->start_time->format('d/m/Y') }}</div>
+                                    <div class="text-[10px] text-gray-500 mt-0.5">{{ $showtime->start_time->format('d/m/Y') }}</div>
                                 </td>
-                                <td class="py-4 px-4 whitespace-nowrap">
-                                    <span class="inline-block px-3 py-1 rounded-xl bg-amber-50 text-amber-900 border border-amber-200 font-black text-xs">
+                                <td class="py-3 px-3 whitespace-nowrap">
+                                    <span class="inline-block px-2.5 py-0.5 rounded-lg bg-amber-50 text-amber-900 border border-amber-200 font-black text-xs">
                                         {{ number_format($showtime->base_price, 0, ',', '.') }}₫
                                     </span>
                                 </td>
-                                <td class="py-4 px-4 whitespace-nowrap">
-                                    <div class="flex items-center gap-2">
+                                <td class="py-3 px-3 whitespace-nowrap">
+                                    <div class="flex items-center gap-1.5">
                                         <span class="font-black text-xs {{ $occupancy >= 80 ? 'text-rose-600' : ($occupancy >= 40 ? 'text-amber-600' : 'text-emerald-600') }}">{{ $occupancy }}%</span>
-                                        <span class="text-[11px] text-gray-400">({{ $bookedSeats }}/{{ $totalSeats }})</span>
+                                        <span class="text-[10px] text-gray-400">({{ $bookedSeats }}/{{ $totalSeats }})</span>
                                     </div>
-                                    <div class="w-24 h-2 bg-[#FAF9F6] rounded-full overflow-hidden border border-black/10 mt-1">
+                                    <div class="w-20 h-1.5 bg-[#FAF9F6] rounded-full overflow-hidden border border-black/10 mt-1">
                                         <div class="h-full rounded-full transition-all duration-500 {{ $occupancy >= 80 ? 'bg-rose-500' : ($occupancy >= 40 ? 'bg-amber-400' : 'bg-emerald-500') }}" style="width: {{ $occupancy }}%"></div>
                                     </div>
                                 </td>
-                                <td class="py-4 px-6 text-right whitespace-nowrap">
-                                    <div class="flex items-center justify-end gap-2">
-                                        <a href="{{ route('showtimes.seats', $showtime->id) }}" target="_blank" class="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-[#FAF9F6] border border-black/10 hover:bg-black hover:text-white transition-all inline-flex items-center gap-1.5 shadow-sm" title="Xem sơ đồ">
+                                <td class="py-3 px-3.5 text-right whitespace-nowrap">
+                                    <div class="flex items-center justify-end gap-1.5">
+                                        <a href="{{ route('showtimes.seats', $showtime->id) }}" target="_blank" class="px-2.5 py-1 rounded-xl text-xs font-bold bg-[#FAF9F6] border border-black/10 hover:bg-black hover:text-white transition-all inline-flex items-center gap-1 shadow-xs" title="Xem sơ đồ">
                                             <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
-                                            <span>Xem Sơ Đồ</span>
+                                            <span class="hidden sm:inline">Sơ Đồ</span>
                                         </a>
-                                        <a href="{{ route('admin.showtimes.edit', $showtime) }}" class="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-[#FAF9F6] border border-black/10 hover:bg-black hover:text-white transition-all">Sửa</a>
+                                        <a href="{{ route('admin.showtimes.edit', $showtime) }}" class="px-2.5 py-1 rounded-xl text-xs font-bold bg-[#FAF9F6] border border-black/10 hover:bg-black hover:text-white transition-all shadow-xs">Sửa</a>
                                         <form method="POST" action="{{ route('admin.showtimes.destroy', $showtime) }}" onsubmit="return confirm('Xóa suất diễn này?')">
                                             @csrf
                                             @method('DELETE')
-                                            <button type="submit" class="px-3.5 py-1.5 rounded-xl text-xs font-bold text-[#CC0000] border border-[#CC0000]/30 hover:bg-[#CC0000] hover:text-white transition-all">Xóa</button>
+                                            <button type="submit" class="px-2.5 py-1 rounded-xl text-xs font-bold text-[#CC0000] border border-[#CC0000]/30 hover:bg-[#CC0000] hover:text-white transition-all shadow-xs">Xóa</button>
                                         </form>
                                     </div>
                                 </td>

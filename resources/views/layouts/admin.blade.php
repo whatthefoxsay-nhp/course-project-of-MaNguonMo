@@ -23,19 +23,19 @@
             localStorage.setItem('admin_sidebar_collapsed', this.sidebarCollapsed); 
         } 
     }" 
-    class="min-h-screen bg-[#FAF9F6] text-black font-sans flex antialiased selection:bg-rose-taupe selection:text-white"
+    class="min-h-screen bg-[#FAF9F6] text-black font-sans antialiased selection:bg-rose-taupe selection:text-white"
 >
 
     <!-- Modern Luxury Collapsible Sidebar (Deep Slate-Charcoal) -->
     <aside 
         class="fixed inset-y-0 left-0 bg-[#131722] text-slate-100 border-r border-slate-800/80 z-30 flex flex-col justify-between shadow-2xl transition-all duration-300 ease-in-out"
-        :class="sidebarCollapsed ? 'w-20' : 'w-64'"
+        :class="sidebarCollapsed ? 'w-20' : 'w-60'"
     >
         <div>
             <!-- Admin Brand & Collapse Toggle -->
             <div 
                 class="h-20 flex items-center border-b border-slate-800/80 bg-[#0e121b]/80 backdrop-blur-md transition-all duration-300"
-                :class="sidebarCollapsed ? 'justify-center px-2' : 'justify-between px-6'"
+                :class="sidebarCollapsed ? 'justify-center px-2' : 'justify-between px-5'"
             >
                 <div class="flex items-center gap-3 min-w-0">
                     <div 
@@ -252,11 +252,11 @@
 
     <!-- Main Content Panel (Bright White Canvas) -->
     <div 
-        class="flex-1 flex flex-col min-w-0 bg-[#FAF9F6] transition-all duration-300 ease-in-out"
-        :class="sidebarCollapsed ? 'pl-20' : 'pl-64'"
+        class="min-h-screen flex flex-col min-w-0 bg-[#FAF9F6] transition-all duration-300 ease-in-out"
+        :class="sidebarCollapsed ? 'pl-20' : 'pl-60'"
     >
         <!-- Admin Topbar (Bright Surface) -->
-        <header class="h-20 bg-white/95 backdrop-blur-xl border-b border-black/10 px-6 sm:px-8 flex items-center justify-between sticky top-0 z-20 shadow-sm">
+        <header class="h-20 bg-white/95 backdrop-blur-xl border-b border-black/10 px-4 sm:px-6 lg:px-8 flex items-center justify-between sticky top-0 z-20 shadow-sm">
             <div class="flex items-center gap-3.5 min-w-0">
                 <!-- Topbar Toggle Button -->
                 <button 
@@ -291,7 +291,7 @@
             </div>
         </header>
 
-        <main class="p-6 sm:p-8 flex-1">
+        <main class="p-4 sm:p-6 lg:p-7 flex-1 min-w-0 w-full">
             @include('admin.partials.flash')
             {{ $slot }}
         </main>

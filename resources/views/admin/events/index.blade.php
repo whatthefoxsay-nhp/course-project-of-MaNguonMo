@@ -61,76 +61,75 @@
         <!-- Events Table -->
         <div class="bg-white rounded-3xl border border-black/10 overflow-hidden shadow-sm">
             <div class="overflow-x-auto">
-                <table class="w-full text-left text-xs text-black min-w-[850px]">
+                <table class="w-full text-left text-xs text-black">
                     <thead class="text-[11px] uppercase tracking-wider text-gray-600 border-b border-black/10 bg-[#FAF9F6]">
                         <tr>
-                            <th class="py-4 px-6 font-bold whitespace-nowrap">Sự Kiện</th>
-                            <th class="py-4 px-4 font-bold whitespace-nowrap">Thể Loại</th>
-                            <th class="py-4 px-4 font-bold whitespace-nowrap">Thời Lượng</th>
-                            <th class="py-4 px-4 font-bold whitespace-nowrap">Số Suất Diễn</th>
-                            <th class="py-4 px-4 font-bold whitespace-nowrap">Ngày Khởi Chiếu</th>
-                            <th class="py-4 px-4 font-bold whitespace-nowrap">Trạng Thái</th>
-                            <th class="py-4 px-6 font-bold text-right whitespace-nowrap">Thao Tác</th>
+                            <th class="py-3 px-3.5 font-bold whitespace-nowrap">Sự Kiện</th>
+                            <th class="py-3 px-3 font-bold whitespace-nowrap">Thể Loại</th>
+                            <th class="py-3 px-3 font-bold whitespace-nowrap">Thời Lượng</th>
+                            <th class="py-3 px-3 font-bold whitespace-nowrap">Số Suất Diễn</th>
+                            <th class="py-3 px-3 font-bold whitespace-nowrap">Ngày Khởi Chiếu</th>
+                            <th class="py-3 px-3 font-bold whitespace-nowrap">Trạng Thái</th>
+                            <th class="py-3 px-3.5 font-bold text-right whitespace-nowrap">Thao Tác</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-black/5">
                         @forelse($events as $event)
                             <tr class="hover:bg-[#FAF9F6] transition-colors">
-                                <td class="py-4 px-6 whitespace-nowrap">
-                                    <div class="flex items-center gap-3.5">
-                                        <div class="w-12 h-16 rounded-xl bg-black/10 overflow-hidden flex-shrink-0 border border-black/10 shadow-sm">
+                                <td class="py-3 px-3.5 whitespace-nowrap">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-10 h-14 rounded-xl bg-black/10 overflow-hidden flex-shrink-0 border border-black/10 shadow-xs">
                                             <img src="{{ $event->poster_url }}" alt="{{ $event->title }}" class="w-full h-full object-cover">
                                         </div>
-                                        <div>
-                                            <div class="font-bold text-black text-sm hover:text-rose-600 transition-colors">{{ $event->title }}</div>
-                                            <div class="text-gray-400 text-[11px] mt-0.5 max-w-xs truncate">{{ $event->description }}</div>
+                                        <div class="min-w-0 max-w-[170px] sm:max-w-[220px]">
+                                            <div class="font-bold text-black text-xs sm:text-sm hover:text-rose-600 transition-colors truncate" title="{{ $event->title }}">{{ $event->title }}</div>
+                                            <div class="text-gray-400 text-[10px] sm:text-[11px] mt-0.5 truncate" title="{{ $event->description }}">{{ $event->description }}</div>
                                         </div>
                                     </div>
                                 </td>
-                                <td class="py-4 px-4 whitespace-nowrap">
-                                    <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold bg-purple-50 text-purple-800 border border-purple-200">
+                                <td class="py-3 px-3 whitespace-nowrap">
+                                    <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-purple-50 text-purple-800 border border-purple-200">
                                         <span class="w-1.5 h-1.5 rounded-full bg-purple-500"></span>
                                         {{ $event->category?->name ?? 'Chưa phân loại' }}
                                     </span>
                                 </td>
-                                <td class="py-4 px-4 whitespace-nowrap">
-                                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-xs font-semibold bg-[#FAF9F6] border border-black/10 text-gray-800 font-mono">
-                                        <svg class="w-3.5 h-3.5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                                        {{ $event->duration_minutes }} phút
+                                <td class="py-3 px-3 whitespace-nowrap">
+                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-xs font-semibold bg-[#FAF9F6] border border-black/10 text-gray-800 font-mono">
+                                        <svg class="w-3 h-3 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                        {{ $event->duration_minutes }}p
                                     </span>
                                 </td>
-                                <td class="py-4 px-4 whitespace-nowrap">
-                                    <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-black bg-amber-50 text-amber-900 border border-amber-200">
-                                        <svg class="w-3.5 h-3.5 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                                <td class="py-3 px-3 whitespace-nowrap">
+                                    <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg text-xs font-black bg-amber-50 text-amber-900 border border-amber-200">
                                         {{ $event->showtimes_count ?? 0 }} suất
                                     </span>
                                 </td>
-                                <td class="py-4 px-4 text-gray-600 font-medium whitespace-nowrap">
+                                <td class="py-3 px-3 text-gray-600 font-medium whitespace-nowrap text-xs">
                                     {{ $event->release_date ? \Carbon\Carbon::parse($event->release_date)->format('d/m/Y') : 'Chưa xếp lịch' }}
                                 </td>
-                                <td class="py-4 px-4 whitespace-nowrap">
+                                <td class="py-3 px-3 whitespace-nowrap">
                                     @if($event->status === 'published')
-                                        <span class="px-3 py-1 rounded-full font-black text-[11px] whitespace-nowrap inline-flex items-center gap-1.5 bg-emerald-50 text-emerald-800 border border-emerald-300 shadow-sm">
-                                            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                                        <span class="px-2.5 py-0.5 rounded-full font-black text-[11px] whitespace-nowrap inline-flex items-center gap-1 bg-emerald-50 text-emerald-800 border border-emerald-300 shadow-xs">
+                                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
                                             <span>Đang mở bán</span>
                                         </span>
                                     @else
-                                        <span class="px-3 py-1 rounded-full font-black text-[11px] whitespace-nowrap inline-flex items-center gap-1.5 bg-amber-50 text-amber-800 border border-amber-300 shadow-sm">
-                                            <span class="w-2 h-2 rounded-full bg-amber-500"></span>
+                                        <span class="px-2.5 py-0.5 rounded-full font-black text-[11px] whitespace-nowrap inline-flex items-center gap-1 bg-amber-50 text-amber-800 border border-amber-300 shadow-xs">
+                                            <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
                                             <span>Bản nháp</span>
                                         </span>
                                     @endif
                                 </td>
-                                <td class="py-4 px-6 text-right">
-                                    <div class="flex items-center justify-end gap-2">
-                                        <a href="{{ route('events.show', $event->slug) }}" target="_blank" class="p-2 rounded-xl border border-black/10 hover:bg-[#FAF9F6] text-gray-700 hover:text-black transition-all" title="Xem trên web">
-                                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                                <td class="py-3 px-3.5 text-right whitespace-nowrap">
+                                    <div class="flex items-center justify-end gap-1.5">
+                                        <a href="{{ route('events.show', $event->slug) }}" target="_blank" class="p-1.5 rounded-lg border border-black/10 hover:bg-[#FAF9F6] text-gray-700 hover:text-black transition-all shadow-xs" title="Xem trên web">
+                                            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
                                         </a>
-                                        <a href="{{ route('admin.events.edit', $event) }}" class="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-[#FAF9F6] border border-black/10 hover:bg-black hover:text-white transition-all">Sửa</a>
+                                        <a href="{{ route('admin.events.edit', $event) }}" class="px-2.5 py-1 rounded-xl text-xs font-bold bg-[#FAF9F6] border border-black/10 hover:bg-black hover:text-white transition-all shadow-xs">Sửa</a>
                                         <form method="POST" action="{{ route('admin.events.destroy', $event) }}" onsubmit="return confirm('Xóa sự kiện này? Toàn bộ suất diễn chưa bán vé sẽ bị xóa theo.')">
                                             @csrf
                                             @method('DELETE')
-                                            <button type="submit" class="px-3.5 py-1.5 rounded-xl text-xs font-bold text-[#CC0000] border border-[#CC0000]/30 hover:bg-[#CC0000] hover:text-white transition-all">Xóa</button>
+                                            <button type="submit" class="px-2.5 py-1 rounded-xl text-xs font-bold text-[#CC0000] border border-[#CC0000]/30 hover:bg-[#CC0000] hover:text-white transition-all shadow-xs">Xóa</button>
                                         </form>
                                     </div>
                                 </td>

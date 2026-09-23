@@ -53,17 +53,17 @@
         <!-- Bookings Table -->
         <div class="bg-white rounded-3xl border border-black/10 overflow-hidden shadow-sm">
             <div class="overflow-x-auto">
-                <table class="w-full text-left text-xs text-black min-w-[950px]">
+                <table class="w-full text-left text-xs text-black">
                     <thead class="text-[11px] uppercase tracking-wider text-gray-600 border-b border-black/10 bg-[#FAF9F6]">
                         <tr>
-                            <th class="py-4 px-6 font-bold whitespace-nowrap">Mã Đơn Vé</th>
-                            <th class="py-4 px-4 font-bold whitespace-nowrap">Khách Hàng</th>
-                            <th class="py-4 px-4 font-bold whitespace-nowrap">Sự Kiện &amp; Địa Điểm</th>
-                            <th class="py-4 px-4 font-bold whitespace-nowrap">Suất Diễn</th>
-                            <th class="py-4 px-4 font-bold whitespace-nowrap">Số Lượng</th>
-                            <th class="py-4 px-4 font-bold whitespace-nowrap">Tổng Tiền</th>
-                            <th class="py-4 px-4 font-bold whitespace-nowrap">Trạng Thái</th>
-                            <th class="py-4 px-6 font-bold text-right whitespace-nowrap">Thao Tác</th>
+                            <th class="py-3 px-3.5 font-bold whitespace-nowrap">Mã Đơn Vé</th>
+                            <th class="py-3 px-3 font-bold whitespace-nowrap">Khách Hàng</th>
+                            <th class="py-3 px-3 font-bold whitespace-nowrap">Sự Kiện &amp; Địa Điểm</th>
+                            <th class="py-3 px-3 font-bold whitespace-nowrap">Suất Diễn</th>
+                            <th class="py-3 px-2.5 font-bold whitespace-nowrap text-center">Số Lượng</th>
+                            <th class="py-3 px-3 font-bold whitespace-nowrap">Tổng Tiền</th>
+                            <th class="py-3 px-3 font-bold whitespace-nowrap">Trạng Thái</th>
+                            <th class="py-3 px-3.5 font-bold text-right whitespace-nowrap">Thao Tác</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-black/5">
@@ -76,65 +76,70 @@
                                 $seatCount = $booking->items->count();
                             @endphp
                             <tr class="hover:bg-[#FAF9F6] transition-colors">
-                                <td class="py-4 px-6 whitespace-nowrap">
-                                    <a href="{{ route('admin.bookings.show', $booking) }}" class="inline-block px-3 py-1.5 rounded-xl bg-neutral-900 text-amber-300 font-mono font-black text-xs border border-black/20 shadow-sm hover:underline" title="Xem chi tiết đơn vé">
+                                <td class="py-3 px-3.5 whitespace-nowrap">
+                                    <a href="{{ route('admin.bookings.show', $booking) }}" class="inline-block px-2.5 py-1 rounded-xl bg-neutral-900 text-amber-300 font-mono font-black text-xs border border-black/20 shadow-xs hover:underline" title="Xem chi tiết đơn vé">
                                         {{ $booking->booking_code }}
                                     </a>
                                 </td>
-                                <td class="py-4 px-4 whitespace-nowrap">
-                                    <div class="flex items-center gap-2.5">
-                                        <div class="w-8 h-8 rounded-xl bg-gradient-to-br from-indigo-500 to-blue-600 text-white flex items-center justify-center font-bold text-xs shadow-sm shrink-0">
+                                <td class="py-3 px-3 whitespace-nowrap">
+                                    <div class="flex items-center gap-2">
+                                        <div class="w-7 h-7 rounded-xl bg-gradient-to-br from-indigo-500 to-blue-600 text-white flex items-center justify-center font-bold text-[10px] shadow-xs shrink-0">
                                             {{ strtoupper(substr($booking->user?->name ?? 'K', 0, 1)) }}
                                         </div>
-                                        <div>
-                                            <div class="font-bold text-black">{{ $booking->user?->name ?? 'Khách vãng lai' }}</div>
-                                            <span class="text-[11px] text-gray-400">{{ $booking->user?->email }}</span>
+                                        <div class="min-w-0 max-w-[120px] sm:max-w-[150px]">
+                                            <div class="font-bold text-black text-xs truncate" title="{{ $booking->user?->name ?? 'Khách vãng lai' }}">{{ $booking->user?->name ?? 'Khách vãng lai' }}</div>
+                                            <span class="text-[10px] text-gray-400 block truncate" title="{{ $booking->user?->email }}">{{ $booking->user?->email }}</span>
                                         </div>
                                     </div>
                                 </td>
-                                <td class="py-4 px-4 whitespace-nowrap">
-                                    <div class="font-bold text-black text-sm">{{ $movie?->title ?? 'N/A' }}</div>
-                                    <span class="text-[11px] font-semibold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded-lg border border-indigo-100">{{ $room?->name ?? 'Chưa gán phòng' }}</span>
+                                <td class="py-3 px-3">
+                                    <div class="min-w-0 max-w-[160px] sm:max-w-[200px] lg:max-w-[240px]">
+                                        <div class="font-bold text-black text-xs line-clamp-1 hover:line-clamp-none transition-all" title="{{ $movie?->title ?? 'N/A' }}">
+                                            {{ $movie?->title ?? 'N/A' }}
+                                        </div>
+                                        <span class="inline-block text-[10px] font-semibold text-indigo-700 bg-indigo-50 px-1.5 py-0.2 rounded border border-indigo-100 mt-0.5 truncate max-w-full">
+                                            {{ $room?->name ?? 'Chưa gán phòng' }}
+                                        </span>
+                                    </div>
                                 </td>
-                                <td class="py-4 px-4 text-black whitespace-nowrap">
-                                    <div class="font-bold text-black text-xs flex items-center gap-1.5">
-                                        <svg class="w-3.5 h-3.5 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                <td class="py-3 px-3 text-black whitespace-nowrap">
+                                    <div class="font-bold text-black text-xs flex items-center gap-1">
+                                        <svg class="w-3 h-3 text-amber-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                                         {{ $showtime ? $showtime->start_time->format('H:i') : 'N/A' }}
                                     </div>
-                                    <div class="text-[11px] text-gray-500 mt-0.5">{{ $showtime ? $showtime->start_time->format('d/m/Y') : 'N/A' }}</div>
+                                    <div class="text-[10px] text-gray-500 mt-0.5">{{ $showtime ? $showtime->start_time->format('d/m/Y') : 'N/A' }}</div>
                                 </td>
-                                <td class="py-4 px-4 whitespace-nowrap">
-                                    <span class="px-3 py-1 rounded-xl font-black text-xs bg-amber-50 text-amber-900 border border-amber-200 inline-flex items-center gap-1">
-                                        <svg class="w-3.5 h-3.5 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z"/></svg>
+                                <td class="py-3 px-2.5 whitespace-nowrap text-center">
+                                    <span class="px-2 py-0.5 rounded-lg font-black text-xs bg-amber-50 text-amber-900 border border-amber-200 inline-flex items-center gap-1">
                                         {{ $seatCount }} vé
                                     </span>
                                 </td>
-                                <td class="py-4 px-4 whitespace-nowrap">
-                                    <span class="font-black text-black text-sm">
+                                <td class="py-3 px-3 whitespace-nowrap">
+                                    <span class="font-black text-black text-xs sm:text-sm">
                                         {{ number_format($booking->total_price, 0, ',', '.') }}₫
                                     </span>
                                 </td>
-                                <td class="py-4 px-4 whitespace-nowrap">
+                                <td class="py-3 px-3 whitespace-nowrap">
                                     @if($booking->status === 'confirmed')
-                                        <span class="px-3 py-1 rounded-full font-black text-[11px] whitespace-nowrap inline-flex items-center gap-1.5 bg-emerald-50 text-emerald-800 border border-emerald-300 shadow-sm">
-                                            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                                        <span class="px-2.5 py-0.5 rounded-full font-black text-[11px] whitespace-nowrap inline-flex items-center gap-1 bg-emerald-50 text-emerald-800 border border-emerald-300 shadow-xs">
+                                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
                                             <span>Đã xác nhận</span>
                                         </span>
                                     @elseif($booking->status === 'cancelled')
-                                        <span class="px-3 py-1 rounded-full font-black text-[11px] whitespace-nowrap inline-flex items-center gap-1.5 bg-rose-50 text-rose-800 border border-rose-300 shadow-sm">
-                                            <span class="w-2 h-2 rounded-full bg-rose-500"></span>
+                                        <span class="px-2.5 py-0.5 rounded-full font-black text-[11px] whitespace-nowrap inline-flex items-center gap-1 bg-rose-50 text-rose-800 border border-rose-300 shadow-xs">
+                                            <span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span>
                                             <span>Đã hủy</span>
                                         </span>
                                     @else
-                                        <span class="px-3 py-1 rounded-full font-black text-[11px] whitespace-nowrap inline-flex items-center gap-1.5 bg-amber-50 text-amber-800 border border-amber-300 shadow-sm">
-                                            <span class="w-2 h-2 rounded-full bg-amber-500"></span>
+                                        <span class="px-2.5 py-0.5 rounded-full font-black text-[11px] whitespace-nowrap inline-flex items-center gap-1 bg-amber-50 text-amber-800 border border-amber-300 shadow-xs">
+                                            <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
                                             <span>Đang giữ chỗ</span>
                                         </span>
                                     @endif
                                 </td>
-                                <td class="py-4 px-6 text-right whitespace-nowrap">
-                                    <div class="flex items-center justify-end gap-2">
-                                        <a href="{{ route('admin.bookings.show', $booking) }}" class="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-[#FAF9F6] border border-black/10 hover:bg-black hover:text-white transition-all">
+                                <td class="py-3 px-3.5 text-right whitespace-nowrap">
+                                    <div class="flex items-center justify-end gap-1.5">
+                                        <a href="{{ route('admin.bookings.show', $booking) }}" class="px-2.5 py-1 rounded-xl text-xs font-bold bg-[#FAF9F6] border border-black/10 hover:bg-black hover:text-white transition-all shadow-xs">
                                             Chi Tiết
                                         </a>
 
@@ -143,7 +148,7 @@
                                                 @csrf
                                                 @method('PATCH')
                                                 <input type="hidden" name="status" value="cancelled">
-                                                <button type="submit" class="px-2.5 py-1.5 rounded-xl text-xs font-bold text-[#CC0000] border border-[#CC0000]/30 hover:bg-[#CC0000] hover:text-white transition-all" title="Hủy đơn và nhả ghế">
+                                                <button type="submit" class="px-2 py-1 rounded-xl text-xs font-bold text-[#CC0000] border border-[#CC0000]/30 hover:bg-[#CC0000] hover:text-white transition-all shadow-xs" title="Hủy đơn và nhả ghế">
                                                     Hủy
                                                 </button>
                                             </form>

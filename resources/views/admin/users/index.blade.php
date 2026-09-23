@@ -126,15 +126,15 @@
             </div>
 
             <div class="overflow-x-auto">
-                <table class="w-full text-left text-xs text-black min-w-[750px]">
+                <table class="w-full text-left text-xs text-black">
                     <thead class="text-[11px] uppercase tracking-wider text-gray-600 border-y border-black/10 bg-[#FAF9F6]">
                         <tr>
-                            <th class="py-3.5 px-6 font-bold whitespace-nowrap">Người Dùng</th>
-                            <th class="py-3.5 px-4 font-bold whitespace-nowrap">Số Điện Thoại</th>
-                            <th class="py-3.5 px-4 font-bold whitespace-nowrap">Vai Trò</th>
-                            <th class="py-3.5 px-4 font-bold whitespace-nowrap">Trạng Thái</th>
-                            <th class="py-3.5 px-4 font-bold whitespace-nowrap">Ngày Tham Gia</th>
-                            <th class="py-3.5 px-6 font-bold text-right whitespace-nowrap">Thao Tác</th>
+                            <th class="py-3 px-3.5 font-bold whitespace-nowrap">Người Dùng</th>
+                            <th class="py-3 px-3 font-bold whitespace-nowrap">Số Điện Thoại</th>
+                            <th class="py-3 px-3 font-bold whitespace-nowrap">Vai Trò</th>
+                            <th class="py-3 px-3 font-bold whitespace-nowrap">Trạng Thái</th>
+                            <th class="py-3 px-3 font-bold whitespace-nowrap">Ngày Tham Gia</th>
+                            <th class="py-3 px-3.5 font-bold text-right whitespace-nowrap">Thao Tác</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-black/5">
@@ -145,60 +145,60 @@
                             @endphp
                             <tr class="hover:bg-[#FAF9F6] transition-colors">
                                 <!-- User Info with Avatar / Initials -->
-                                <td class="py-4 px-6 whitespace-nowrap">
-                                    <div class="flex items-center gap-3">
-                                        <div class="w-10 h-10 rounded-2xl {{ $isAdmin ? 'bg-gradient-to-br from-amber-400 to-amber-600 text-black shadow-sm ring-2 ring-amber-300' : 'bg-gradient-to-br from-slate-700 to-slate-900 text-white shadow-sm' }} flex items-center justify-center font-display font-black text-sm shrink-0">
+                                <td class="py-3 px-3.5 whitespace-nowrap">
+                                    <div class="flex items-center gap-2.5">
+                                        <div class="w-8 h-8 rounded-xl {{ $isAdmin ? 'bg-gradient-to-br from-amber-400 to-amber-600 text-black shadow-xs ring-2 ring-amber-300' : 'bg-gradient-to-br from-slate-700 to-slate-900 text-white shadow-xs' }} flex items-center justify-center font-display font-black text-xs shrink-0">
                                             {{ strtoupper(substr($user->name, 0, 1)) }}
                                         </div>
-                                        <div class="min-w-0">
-                                            <div class="flex items-center gap-2">
-                                                <span class="font-bold text-black truncate">{{ $user->name }}</span>
+                                        <div class="min-w-0 max-w-[130px] sm:max-w-[160px]">
+                                            <div class="flex items-center gap-1.5">
+                                                <span class="font-bold text-black truncate" title="{{ $user->name }}">{{ $user->name }}</span>
                                                 @if ($isCurrentAdmin)
-                                                    <span class="px-2 py-0.5 rounded-full font-black text-[9px] bg-amber-100 text-amber-900 border border-amber-300">Bạn</span>
+                                                    <span class="px-1.5 py-0.2 rounded-full font-black text-[9px] bg-amber-100 text-amber-900 border border-amber-300">Bạn</span>
                                                 @endif
                                             </div>
-                                            <span class="text-[11px] text-gray-400 block truncate">{{ $user->email }}</span>
+                                            <span class="text-[10px] text-gray-400 block truncate" title="{{ $user->email }}">{{ $user->email }}</span>
                                         </div>
                                     </div>
                                 </td>
 
                                 <!-- Phone -->
-                                <td class="py-4 px-4 text-gray-700 font-medium whitespace-nowrap">
+                                <td class="py-3 px-3 text-gray-700 font-medium whitespace-nowrap text-xs">
                                     {{ $user->phone ?? 'Chưa cập nhật' }}
                                 </td>
 
                                 <!-- Role -->
-                                <td class="py-4 px-4 whitespace-nowrap">
+                                <td class="py-3 px-3 whitespace-nowrap">
                                     @if ($isAdmin)
-                                        <span class="px-3 py-1 rounded-full font-black text-[11px] whitespace-nowrap inline-flex items-center gap-1.5 bg-amber-50 text-amber-900 border border-amber-300">
-                                            <svg class="w-3.5 h-3.5 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+                                        <span class="px-2.5 py-0.5 rounded-full font-black text-[11px] whitespace-nowrap inline-flex items-center gap-1 bg-amber-50 text-amber-900 border border-amber-300">
+                                            <svg class="w-3 h-3 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
                                             Quản trị viên
                                         </span>
                                     @else
-                                        <span class="px-3 py-1 rounded-full font-bold text-[11px] whitespace-nowrap inline-flex items-center gap-1 bg-slate-100 text-slate-700 border border-slate-200">
+                                        <span class="px-2.5 py-0.5 rounded-full font-bold text-[11px] whitespace-nowrap inline-flex items-center gap-1 bg-slate-100 text-slate-700 border border-slate-200">
                                             Khách hàng
                                         </span>
                                     @endif
                                 </td>
 
                                 <!-- Status Badge -->
-                                <td class="py-4 px-4 whitespace-nowrap">
+                                <td class="py-3 px-3 whitespace-nowrap">
                                     <span 
                                         id="user-status-badge-{{ $user->id }}" 
-                                        class="{{ $user->is_active ? 'bg-emerald-50 text-emerald-800 border-emerald-300' : 'bg-rose-50 text-rose-800 border-rose-300' }} border text-[11px] px-3 py-1 rounded-full font-black whitespace-nowrap inline-flex items-center gap-1.5 shadow-sm"
+                                        class="{{ $user->is_active ? 'bg-emerald-50 text-emerald-800 border-emerald-300' : 'bg-rose-50 text-rose-800 border-rose-300' }} border text-[11px] px-2.5 py-0.5 rounded-full font-black whitespace-nowrap inline-flex items-center gap-1 shadow-xs"
                                     >
-                                        <span class="w-2 h-2 rounded-full {{ $user->is_active ? 'bg-emerald-500 animate-pulse' : 'bg-rose-500' }}"></span>
+                                        <span class="w-1.5 h-1.5 rounded-full {{ $user->is_active ? 'bg-emerald-500 animate-pulse' : 'bg-rose-500' }}"></span>
                                         {{ $user->is_active ? 'Hoạt động' : 'Đã bị khóa' }}
                                     </span>
                                 </td>
 
                                 <!-- Join Date -->
-                                <td class="py-4 px-4 text-gray-600 text-[11px] whitespace-nowrap">
+                                <td class="py-3 px-3 text-gray-600 text-[11px] whitespace-nowrap">
                                     {{ $user->created_at ? $user->created_at->format('d/m/Y H:i') : 'N/A' }}
                                 </td>
 
                                 <!-- Action Buttons -->
-                                <td class="py-4 px-6 text-right whitespace-nowrap">
+                                <td class="py-3 px-3.5 text-right whitespace-nowrap">
                                     <div class="flex items-center justify-end gap-1.5">
                                         @if ($isCurrentAdmin)
                                             <span class="text-[11px] text-gray-400 italic">Tài khoản của bạn</span>
