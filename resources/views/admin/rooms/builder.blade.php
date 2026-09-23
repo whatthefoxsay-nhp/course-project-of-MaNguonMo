@@ -19,7 +19,8 @@
             rows: {{ $rows }},
             cols: {{ $cols }},
             vipRatio: {{ $vipRatio }},
-            svipRatio: {{ $svipRatio }}
+            svipRatio: {{ $svipRatio }},
+            initialRows: @js($initialRows ?? [])
         })"
         class="space-y-6"
     >
@@ -57,6 +58,7 @@
             @endif
 
             <input type="hidden" name="layout_preset" :value="preset">
+            <input type="hidden" name="custom_layout_matrix" :value="JSON.stringify(matrixRows)">
 
             <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
                 
@@ -275,237 +277,190 @@
 
 
                 <!-- ========================================================= -->
-                <!-- RIGHT COLUMN: LIVE INTERACTIVE SEAT MAP PREVIEW (7 COLS)  -->
+                <!-- RIGHT COLUMN: LIVE INTERACTIVE SEAT MATRIX EDITOR (7 COLS)-->
                 <!-- ========================================================= -->
                 <div class="lg:col-span-7 space-y-6">
                     
-                    <!-- Live Preview Container Card -->
-                    <div class="bg-white rounded-3xl p-6 sm:p-7 border-2 border-gold-antique/60 shadow-xl space-y-6 sticky top-20">
+                    <div class="bg-white rounded-3xl p-6 sm:p-7 border-2 border-gold-antique/60 shadow-xl space-y-6 sticky top-16">
                         
-                        <!-- Top Preview Controls -->
+                        <!-- Top Header & Live Counter -->
                         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-black/10 pb-4">
                             <div>
                                 <div class="flex items-center gap-2">
                                     <span class="badge-gold text-[10px] px-3 py-0.5 rounded-full font-black uppercase tracking-wider">
-                                        Trình Xem Trước Trực Quan (Live Preview)
+                                        Trình Biên Tập Ghế Trực Quan (Live Matrix Editor)
                                     </span>
                                     <span class="badge-sage text-[10px] px-2.5 py-0.5 rounded-full font-bold">
-                                        Vibe Phía Người Dùng
+                                        Bộ Cọ Vẽ &amp; Phân Khu
                                     </span>
                                 </div>
-                                <h4 class="font-display font-black text-lg text-black mt-1" x-text="roomName || 'Xem trước sơ đồ khán đài'"></h4>
+                                <h4 class="font-display font-black text-lg text-black mt-1" x-text="roomName || 'Thiết kế sơ đồ khán đài'"></h4>
                             </div>
 
-                            <!-- Zoom buttons -->
+                            <!-- Actions & Zoom buttons -->
                             <div class="flex items-center gap-2">
-                                <span class="text-xs text-gray-500 font-bold font-mono" x-text="calculatedTotalSeats + ' Ghế mô phỏng'"></span>
-                                <div class="flex items-center bg-[#FAF9F6] border border-black/10 rounded-full p-1 shadow-sm">
-                                    <button type="button" @click="zoomOut()" class="w-7 h-7 rounded-full flex items-center justify-center text-gray-700 hover:bg-white text-xs font-bold">-</button>
-                                    <span class="px-2 text-xs font-mono font-bold" x-text="Math.round(zoomScale * 100) + '%'">100%</span>
-                                    <button type="button" @click="zoomIn()" class="w-7 h-7 rounded-full flex items-center justify-center text-gray-700 hover:bg-white text-xs font-bold">+</button>
+                                <span class="text-xs text-amber-900 bg-amber-50 border border-amber-200 px-3 py-1 rounded-full font-black font-mono" x-text="activeSeatCount + ' Ghế thực tế'"></span>
+                                <div class="flex items-center bg-[#FAF9F6] border border-black/10 rounded-full p-1 shadow-sm text-xs">
+                                    <button type="button" @click="zoomOut()" class="w-7 h-7 rounded-full flex items-center justify-center text-gray-700 hover:bg-white font-bold">&minus;</button>
+                                    <span class="px-2 font-mono font-bold text-gray-600" x-text="Math.round(zoomScale * 100) + '%'">100%</span>
+                                    <button type="button" @click="zoomIn()" class="w-7 h-7 rounded-full flex items-center justify-center text-gray-700 hover:bg-white font-bold">&#43;</button>
+                                    <button type="button" @click="resetZoom()" class="px-2 text-[10px] font-bold text-gray-500 hover:text-black border-l border-black/10">Reset</button>
                                 </div>
                             </div>
                         </div>
 
-                        <!-- SEAT MAP STAGE & ARENA BLUEPRINT CANVAS (IDENTICAL LUXURY VIBE) -->
-                        <div class="overflow-x-auto p-4 bg-[#FAF9F6] rounded-3xl border border-black/10 relative">
+                        <!-- INTERACTIVE TOOL PALETTE (BỘ CỌ VẼ HẠNG VÉ & LỐI ĐI) -->
+                        <div class="p-4 bg-[#FAF9F6] rounded-2xl border border-black/10 space-y-3">
+                            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                                <span class="text-[11px] font-black uppercase tracking-wider text-gray-700 flex items-center gap-1.5">
+                                    <span>🖌️</span>
+                                    <span>Chọn Cọ Vẽ (Click vào ghế để áp dụng):</span>
+                                </span>
+                                <div class="flex items-center gap-2">
+                                    <button 
+                                        type="button" 
+                                        @click="addRow()"
+                                        class="px-3 py-1 rounded-xl text-[11px] font-bold bg-white border border-black/15 hover:border-black text-black transition-all flex items-center gap-1 shadow-xs cursor-pointer"
+                                    >
+                                        <svg class="w-3.5 h-3.5 text-sage-forest" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
+                                        <span>+ Thêm Hàng Ghế</span>
+                                    </button>
+                                    <button 
+                                        type="button" 
+                                        @click="buildDefaultMatrix(preset)"
+                                        class="px-2.5 py-1 rounded-xl text-[11px] font-semibold text-gray-500 hover:text-rose-taupe hover:bg-rose-50 transition-all cursor-pointer"
+                                        title="Khôi phục lại sơ đồ mẫu ban đầu của preset"
+                                    >
+                                        🔄 Đặt lại mẫu
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Tool buttons -->
+                            <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2">
+                                <template x-for="tool in tools" :key="tool.id">
+                                    <button 
+                                        type="button"
+                                        @click="selectedTool = tool.id"
+                                        :class="selectedTool === tool.id ? 'ring-2 ring-black bg-white shadow-md scale-105' : 'bg-white/70 hover:bg-white border border-black/5 opacity-80 hover:opacity-100'"
+                                        class="p-2 rounded-xl text-center flex flex-col items-center justify-center gap-1 transition-all cursor-pointer"
+                                    >
+                                        <span class="text-base" x-text="tool.icon"></span>
+                                        <span class="text-[10px] font-black leading-tight truncate w-full" x-text="tool.name"></span>
+                                        <span class="w-3 h-1.5 rounded-full" :style="'background-color: ' + tool.color"></span>
+                                    </button>
+                                </template>
+                            </div>
+
+                            <p class="text-[11px] text-gray-500 italic pt-1">
+                                💡 <strong>Mẹo:</strong> Click vào tên hàng (nhãn chữ cái bên trái) để đổi màu toàn bộ hàng. Click vào cọ <strong>Lối Đi (Aisle)</strong> để khoét khoảng trống đi lại.
+                            </p>
+                        </div>
+
+                        <!-- SEAT MATRIX CANVAS (KHUNG SOẠN THẢO TRỰC QUAN) -->
+                        <div class="overflow-x-auto p-4 bg-gradient-to-b from-[#0F172A] via-[#111827] to-[#020617] rounded-3xl border border-black/20 text-white min-h-[380px]">
                             
                             <div 
-                                class="transition-transform duration-300 origin-top min-w-[560px] mx-auto space-y-6"
+                                class="transition-transform duration-200 origin-top min-w-[540px] max-w-4xl mx-auto space-y-4"
                                 :style="'transform: scale(' + zoomScale + ')'"
                             >
-                                <!-- STAGE PREVIEW -->
-                                <div class="w-full max-w-md mx-auto p-3.5 bg-gradient-to-r from-obsidian-950 via-obsidian-800 to-obsidian-950 text-white text-center rounded-2xl shadow-md border-2 border-gold-antique/80 relative overflow-hidden">
+                                <!-- STAGE BANNER -->
+                                <div class="w-full max-w-md mx-auto p-3 bg-gradient-to-r from-obsidian-950 via-obsidian-800 to-obsidian-950 text-white text-center rounded-2xl shadow-md border-2 border-gold-antique/80 relative overflow-hidden mb-6">
                                     <div class="font-display font-black text-xs tracking-widest uppercase text-gold-light">
                                         ★ SÂN KHẤU CHÍNH (MAIN STAGE) ★
                                     </div>
                                     <span class="text-[10px] text-gray-400 font-mono">DÀN ÂM THANH ÁNH SÁNG 360°</span>
                                 </div>
 
-                                <!-- PREVIEW 1: MEGA CONCERT STADIUM ARENA -->
-                                <div x-show="preset === 'mega_concert'" class="space-y-6">
-                                    <!-- Catwalk & Runway Preview -->
-                                    <div class="w-16 h-12 bg-gradient-to-b from-obsidian-800 to-rose-taupe mx-auto rounded-b-xl flex items-center justify-center text-[9px] font-black text-white shadow-sm border border-gold-antique">
-                                        RUNWAY
-                                    </div>
+                                <!-- MATRIX ROWS -->
+                                <div class="space-y-2">
+                                    <template x-for="(r, rIdx) in matrixRows" :key="rIdx">
+                                        <div class="flex items-center justify-center gap-2 group">
+                                            
+                                            <!-- Row Label Clickable (Paint Whole Row) -->
+                                            <button 
+                                                type="button" 
+                                                @click="paintRow(rIdx)"
+                                                class="w-14 text-right pr-2 text-[10px] font-mono font-bold text-gray-300 hover:text-amber-400 hover:scale-105 transition-all shrink-0 cursor-pointer"
+                                                title="Bấm để đổi toàn bộ hàng này thành cọ đang chọn"
+                                            >
+                                                <span x-text="r.row"></span>
+                                                <span class="text-[9px] text-amber-400 opacity-0 group-hover:opacity-100">🖌️</span>
+                                            </button>
 
-                                    <!-- B-Stage & SVIP Diamond -->
-                                    <div class="p-4 bg-white rounded-2xl border-2 border-gold-antique/50 max-w-lg mx-auto shadow-sm text-center space-y-3">
-                                        <div class="flex items-center justify-between px-2">
-                                            <span class="badge-gold text-[9px] px-2.5 py-0.5 rounded-full font-black">B-STAGE B-FLOOR (SVIP DIAMOND)</span>
-                                            <span class="text-[10px] font-bold text-gold-dark" x-text="formatCurrency(basePrice * 2.8)"></span>
-                                        </div>
-                                        <div class="grid grid-cols-12 gap-1.5 justify-center">
-                                            <template x-for="i in 24" :key="i">
-                                                <div class="h-6 rounded-md bg-[#D4AF37] text-black font-black text-[9px] flex items-center justify-center shadow-xs hover:scale-110 transition-transform cursor-pointer" :title="'SVIP Diamond Ghế ' + i">
-                                                    <span x-text="i"></span>
-                                                </div>
-                                            </template>
-                                        </div>
-                                    </div>
-
-                                    <!-- VIP Gold Floor -->
-                                    <div class="p-4 bg-white rounded-2xl border border-rose-taupe/40 max-w-xl mx-auto shadow-sm text-center space-y-3">
-                                        <div class="flex items-center justify-between px-2">
-                                            <span class="badge-rose text-[9px] px-2.5 py-0.5 rounded-full font-black">VIP GOLD CATWALK FLOOR</span>
-                                            <span class="text-[10px] font-bold text-rose-taupe" x-text="formatCurrency(basePrice * 1.8)"></span>
-                                        </div>
-                                        <div class="grid grid-cols-14 gap-1.5 justify-center">
-                                            <template x-for="i in 56" :key="i">
-                                                <div class="h-6 rounded-md bg-[#C08497] text-white font-bold text-[9px] flex items-center justify-center shadow-xs hover:scale-110 transition-transform cursor-pointer" :title="'VIP Gold Ghế ' + i">
-                                                    <span x-text="i"></span>
-                                                </div>
-                                            </template>
-                                        </div>
-                                    </div>
-
-                                    <!-- Khán Đài A & B -->
-                                    <div class="grid grid-cols-2 gap-4">
-                                        <!-- Khán đài A -->
-                                        <div class="p-3.5 bg-white rounded-2xl border border-sage-forest/40 text-center space-y-2">
-                                            <div class="flex items-center justify-between text-[10px] font-bold">
-                                                <span class="badge-sage text-[9px] px-2 py-0.5 rounded-full">KHÁN ĐÀI A</span>
-                                                <span class="text-sage-forest" x-text="formatCurrency(basePrice * 1.2)"></span>
-                                            </div>
-                                            <div class="grid grid-cols-8 gap-1">
-                                                <template x-for="i in 48" :key="i">
-                                                    <div class="h-5 rounded bg-[#3A5A40] text-white text-[8px] font-bold flex items-center justify-center">
-                                                        <span x-text="i"></span>
-                                                    </div>
+                                            <!-- Seats in Row -->
+                                            <div class="flex items-center gap-1 flex-wrap justify-center">
+                                                <template x-for="(s, sIdx) in r.seats" :key="sIdx">
+                                                    <button 
+                                                        type="button"
+                                                        @click="paintSeat(rIdx, sIdx)"
+                                                        @mouseenter="hoveredSeat = { row: r.row, number: s.number, type: s.type, is_aisle: s.is_aisle, is_blocked: s.is_blocked }"
+                                                        :style="s.is_aisle ? 'background-color: transparent' : ('background-color: ' + getSeatColor(s))"
+                                                        :class="{
+                                                            'border-dashed border-gray-600 text-gray-500 opacity-30 hover:opacity-100': s.is_aisle,
+                                                            'border-2 border-red-500 text-red-200': s.is_blocked,
+                                                            'border border-white/20 text-white shadow-xs hover:scale-125 hover:z-10': !s.is_aisle && !s.is_blocked
+                                                        }"
+                                                        class="w-6 h-6 sm:w-7 sm:h-7 rounded-lg text-[9px] font-black flex items-center justify-center transition-all cursor-pointer select-none"
+                                                        :title="s.is_aisle ? 'Lối đi trống (Click để khôi phục ghế)' : (s.is_blocked ? 'Ghế kỹ thuật / Khóa' : (r.row + '-' + s.number + ' · ' + s.type))"
+                                                    >
+                                                        <span x-show="!s.is_aisle && !s.is_blocked" x-text="s.number"></span>
+                                                        <span x-show="s.is_aisle" class="text-[8px] text-gray-500">·</span>
+                                                        <span x-show="s.is_blocked" class="text-[8px]">🔒</span>
+                                                    </button>
                                                 </template>
                                             </div>
-                                        </div>
 
-                                        <!-- Khán đài B -->
-                                        <div class="p-3.5 bg-white rounded-2xl border border-black/20 text-center space-y-2">
-                                            <div class="flex items-center justify-between text-[10px] font-bold">
-                                                <span class="badge-dark text-[9px] px-2 py-0.5 rounded-full">KHÁN ĐÀI B (TẦNG 2)</span>
-                                                <span class="text-black" x-text="formatCurrency(basePrice * 1.0)"></span>
+                                            <!-- Row Controls (+ seat, - seat, remove row) -->
+                                            <div class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity pl-2 shrink-0">
+                                                <button type="button" @click="addSeatToRow(rIdx)" class="w-5 h-5 rounded-md bg-white/10 hover:bg-white/20 text-white text-[10px] font-bold flex items-center justify-center cursor-pointer" title="Thêm 1 ghế vào hàng này">+</button>
+                                                <button type="button" @click="removeSeatFromRow(rIdx)" class="w-5 h-5 rounded-md bg-white/10 hover:bg-white/20 text-white text-[10px] font-bold flex items-center justify-center cursor-pointer" title="Bớt 1 ghế">&minus;</button>
+                                                <button type="button" @click="removeRow(rIdx)" class="w-5 h-5 rounded-md bg-red-500/20 hover:bg-red-500 text-red-300 hover:text-white text-[10px] font-bold flex items-center justify-center cursor-pointer" title="Xóa toàn bộ hàng này">&times;</button>
                                             </div>
-                                            <div class="grid grid-cols-7 gap-1">
-                                                <template x-for="i in 28" :key="i">
-                                                    <div class="h-5 rounded bg-[#1F2937] text-white text-[8px] font-bold flex items-center justify-center">
-                                                        <span x-text="i"></span>
-                                                    </div>
-                                                </template>
-                                            </div>
-                                        </div>
-                                    </div>
 
-                                    <!-- Skybox VIP Suites -->
-                                    <div class="p-3 bg-[#FFF8E1] rounded-2xl border border-gold-antique/40 text-center flex items-center justify-between px-4">
-                                        <span class="font-black text-xs text-gold-dark">★ SKYBOX VIP SUITES (TẦNG THƯỢNG)</span>
-                                        <div class="flex gap-2">
-                                            <template x-for="i in 8" :key="i">
-                                                <span class="px-2.5 py-1 rounded-lg bg-black text-gold-antique font-mono font-black text-[10px]" x-text="'SB-' + i"></span>
-                                            </template>
                                         </div>
-                                    </div>
-                                </div>
-
-                                <!-- PREVIEW 2: THEATER & SYMPHONY HALL -->
-                                <div x-show="preset === 'theater_hall'" class="space-y-5" style="display: none;">
-                                    <div class="p-4 bg-white rounded-2xl border border-gold-antique/50 text-center space-y-3">
-                                        <span class="badge-gold text-[9px] px-2.5 py-0.5 rounded-full font-black">TẦNG TRỆT VIP STALLS</span>
-                                        <div class="grid grid-cols-16 gap-1">
-                                            <template x-for="i in 48" :key="i">
-                                                <div class="h-6 rounded bg-[#D4AF37] text-black font-bold text-[9px] flex items-center justify-center">
-                                                    <span x-text="i"></span>
-                                                </div>
-                                            </template>
-                                        </div>
-                                    </div>
-
-                                    <div class="p-4 bg-white rounded-2xl border border-rose-taupe/40 text-center space-y-3">
-                                        <span class="badge-rose text-[9px] px-2.5 py-0.5 rounded-full font-black">KHÁN ĐÀI DRESS CIRCLE (TẦNG 1)</span>
-                                        <div class="grid grid-cols-16 gap-1">
-                                            <template x-for="i in 32" :key="i">
-                                                <div class="h-6 rounded bg-[#C08497] text-white font-bold text-[9px] flex items-center justify-center">
-                                                    <span x-text="i"></span>
-                                                </div>
-                                            </template>
-                                        </div>
-                                    </div>
-
-                                    <div class="p-4 bg-white rounded-2xl border border-sage-forest/40 text-center space-y-3">
-                                        <span class="badge-sage text-[9px] px-2.5 py-0.5 rounded-full font-black">BAN CÔNG UPPER GALLERY (TẦNG 2)</span>
-                                        <div class="grid grid-cols-16 gap-1">
-                                            <template x-for="i in 32" :key="i">
-                                                <div class="h-6 rounded bg-[#3A5A40] text-white font-bold text-[9px] flex items-center justify-center">
-                                                    <span x-text="i"></span>
-                                                </div>
-                                            </template>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- PREVIEW 3: CONVENTION & EXPO -->
-                                <div x-show="preset === 'convention_center'" class="space-y-5" style="display: none;">
-                                    <div class="p-4 bg-white rounded-2xl border border-gold-antique/50 text-center space-y-3">
-                                        <span class="badge-gold text-[9px] px-2.5 py-0.5 rounded-full font-black">KHU VỰC KEYNOTE VIP</span>
-                                        <div class="grid grid-cols-18 gap-1">
-                                            <template x-for="i in 36" :key="i">
-                                                <div class="h-6 rounded bg-[#D4AF37] text-black font-bold text-[9px] flex items-center justify-center">
-                                                    <span x-text="i"></span>
-                                                </div>
-                                            </template>
-                                        </div>
-                                    </div>
-
-                                    <div class="p-4 bg-white rounded-2xl border border-sage-forest/40 text-center space-y-3">
-                                        <span class="badge-sage text-[9px] px-2.5 py-0.5 rounded-full font-black">KHU VỰC HỘI NGHỊ TIÊU CHUẨN</span>
-                                        <div class="grid grid-cols-18 gap-1">
-                                            <template x-for="i in 72" :key="i">
-                                                <div class="h-6 rounded bg-[#3A5A40] text-white font-bold text-[9px] flex items-center justify-center">
-                                                    <span x-text="i"></span>
-                                                </div>
-                                            </template>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- PREVIEW 4: CUSTOM GRID -->
-                                <div x-show="preset === 'custom_grid'" class="space-y-4" style="display: none;">
-                                    <div class="p-4 bg-white rounded-2xl border border-black/10 text-center space-y-3">
-                                        <span class="badge-dark text-[9px] px-2.5 py-0.5 rounded-full font-black">MA TRẬN GHẾ TỰ SINH</span>
-                                        <div class="space-y-1.5">
-                                            <template x-for="r in parseInt(rows || 6)" :key="r">
-                                                <div class="flex items-center justify-center gap-1">
-                                                    <span class="w-5 text-[10px] font-mono font-bold text-gray-500" x-text="String.fromCharCode(64 + r)"></span>
-                                                    <template x-for="c in parseInt(cols || 10)" :key="c">
-                                                        <div 
-                                                            class="w-6 h-6 rounded-md font-bold text-[9px] flex items-center justify-center shadow-xs"
-                                                            :class="r <= 2 ? 'bg-[#D4AF37] text-black' : (r <= 4 ? 'bg-[#C08497] text-white' : 'bg-[#3A5A40] text-white')"
-                                                        >
-                                                            <span x-text="c"></span>
-                                                        </div>
-                                                    </template>
-                                                </div>
-                                            </template>
-                                        </div>
-                                    </div>
+                                    </template>
                                 </div>
 
                             </div>
                         </div>
 
-                        <!-- Legend & Status Indicators -->
-                        <div class="flex flex-wrap items-center justify-center gap-4 text-xs font-semibold pt-2 border-t border-black/10">
+                        <!-- LIVE HOVER INSPECTOR BAR -->
+                        <div class="p-3 bg-[#FAF9F6] rounded-2xl border border-black/10 flex items-center justify-between text-xs">
+                            <div class="flex items-center gap-2">
+                                <span class="font-bold text-gray-500">Đang trỏ vào:</span>
+                                <span class="font-black text-black" x-text="hoveredSeat ? (hoveredSeat.is_aisle ? '🚫 Khoảng trống Lối đi' : (hoveredSeat.is_blocked ? '🔒 Ghế Khóa / Kỹ thuật' : (hoveredSeat.row + '-' + hoveredSeat.number + ' (' + hoveredSeat.type + ')'))) : 'Rê chuột vào bất kỳ ghế nào'"></span>
+                            </div>
+                            <span class="text-[11px] text-gold-dark font-mono font-bold" x-text="'Cọ đang dùng: ' + selectedTool"></span>
+                        </div>
+
+                        <!-- REALTIME MATRIX STATISTICS -->
+                        <div class="flex flex-wrap items-center justify-between gap-4 text-xs font-semibold pt-2 border-t border-black/10">
                             <div class="flex items-center gap-1.5">
                                 <span class="w-3 h-3 rounded-full bg-[#D4AF37]"></span>
-                                <span>SVIP Diamond</span>
+                                <span>SVIP: <strong x-text="matrixStats.svip"></strong></span>
                             </div>
                             <div class="flex items-center gap-1.5">
                                 <span class="w-3 h-3 rounded-full bg-[#C08497]"></span>
-                                <span>VIP Gold</span>
+                                <span>VIP: <strong x-text="matrixStats.vip"></strong></span>
                             </div>
                             <div class="flex items-center gap-1.5">
                                 <span class="w-3 h-3 rounded-full bg-[#3A5A40]"></span>
-                                <span>Khán Đài A / Tiêu Chuẩn</span>
+                                <span>Cat 1: <strong x-text="matrixStats.cat1"></strong></span>
                             </div>
                             <div class="flex items-center gap-1.5">
-                                <span class="w-3 h-3 rounded-full bg-[#1F2937]"></span>
-                                <span>Khán Đài B</span>
+                                <span class="w-3 h-3 rounded-full bg-[#1E293B]"></span>
+                                <span>Cat 2: <strong x-text="matrixStats.cat2"></strong></span>
+                            </div>
+                            <div class="flex items-center gap-1.5">
+                                <span class="w-3 h-3 rounded-full bg-[#E11D48]"></span>
+                                <span>Skybox: <strong x-text="matrixStats.skybox"></strong></span>
+                            </div>
+                            <div class="flex items-center gap-1.5 text-gray-500">
+                                <span>Lối đi: <strong x-text="matrixStats.aisles"></strong></span>
+                            </div>
+                            <div class="flex items-center gap-1.5 text-red-600">
+                                <span>Khóa: <strong x-text="matrixStats.blocked"></strong></span>
                             </div>
                         </div>
 

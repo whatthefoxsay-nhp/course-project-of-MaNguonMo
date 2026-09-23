@@ -74,7 +74,7 @@ class RoomController extends Controller
             'room' => new Room([
                 'name' => '',
                 'address' => '',
-                'capacity' => 200,
+                'capacity' => 20000,
                 'layout_preset' => 'mega_concert',
                 'seat_config' => [
                     'base_price' => 250000,
@@ -84,14 +84,32 @@ class RoomController extends Controller
                     'svip_ratio' => 15,
                 ],
             ]),
+            'initialRows' => [],
             'isEdit' => false,
         ]);
     }
 
     public function builder(Room $room): View
     {
+        $initialRows = $room->seats()
+            ->where('type', '!=', 'standing_pit')
+            ->orderBy('id')
+            ->get()
+            ->groupBy('row_label')
+            ->map(fn ($rowSeats, $rowLabel) => [
+                'row' => $rowLabel,
+                'seats' => $rowSeats->map(fn ($s) => [
+                    'id' => $s->id,
+                    'number' => $s->seat_number,
+                    'type' => $s->type,
+                    'is_aisle' => false,
+                    'is_blocked' => false,
+                ])->values()->all(),
+            ])->values()->all();
+
         return view('admin.rooms.builder', [
             'room' => $room,
+            'initialRows' => $initialRows,
             'isEdit' => true,
         ]);
     }
@@ -113,7 +131,16 @@ class RoomController extends Controller
             'cols' => 'nullable|integer|min:4|max:40',
             'vip_ratio' => 'nullable|integer|min:0|max:100',
             'svip_ratio' => 'nullable|integer|min:0|max:100',
+            'custom_layout_matrix' => 'nullable|string',
         ]);
+
+        $customMatrix = null;
+        if (! empty($validated['custom_layout_matrix'])) {
+            $decoded = json_decode($validated['custom_layout_matrix'], true);
+            if (is_array($decoded) && ! empty($decoded)) {
+                $customMatrix = $decoded;
+            }
+        }
 
         $seatConfig = [
             'base_price' => (float) ($validated['base_price'] ?? 250000),
@@ -123,6 +150,10 @@ class RoomController extends Controller
             'svip_ratio' => (int) ($validated['svip_ratio'] ?? 15),
         ];
 
+        if ($customMatrix) {
+            $seatConfig['matrix'] = $customMatrix;
+        }
+
         $room = Room::create([
             'name' => $validated['name'],
             'address' => $validated['address'] ?? 'Trung tâm Tổ chức Sự kiện',
@@ -131,10 +162,14 @@ class RoomController extends Controller
             'seat_config' => $seatConfig,
         ]);
 
-        $generator->generate($room, $validated['layout_preset'], $seatConfig);
+        if ($customMatrix) {
+            $generator->generateFromMatrix($room, $customMatrix, $validated['layout_preset']);
+        } else {
+            $generator->generate($room, $validated['layout_preset'], $seatConfig);
+        }
 
         return redirect()->route('admin.rooms.index')
-            ->with('success', "Đã tạo khán phòng [{$room->name}] và tự động sinh sơ đồ thành công!");
+            ->with('success', "Đã tạo khán phòng [{$room->name}] và lưu sơ đồ tùy chỉnh thành công!");
     }
 
     public function update(Request $request, Room $room, RoomSeatGenerator $generator): RedirectResponse
@@ -149,7 +184,16 @@ class RoomController extends Controller
             'cols' => 'nullable|integer|min:4|max:40',
             'vip_ratio' => 'nullable|integer|min:0|max:100',
             'svip_ratio' => 'nullable|integer|min:0|max:100',
+            'custom_layout_matrix' => 'nullable|string',
         ]);
+
+        $customMatrix = null;
+        if (! empty($validated['custom_layout_matrix'])) {
+            $decoded = json_decode($validated['custom_layout_matrix'], true);
+            if (is_array($decoded) && ! empty($decoded)) {
+                $customMatrix = $decoded;
+            }
+        }
 
         $seatConfig = [
             'base_price' => (float) ($validated['base_price'] ?? 250000),
@@ -158,6 +202,10 @@ class RoomController extends Controller
             'vip_ratio' => (int) ($validated['vip_ratio'] ?? 30),
             'svip_ratio' => (int) ($validated['svip_ratio'] ?? 15),
         ];
+
+        if ($customMatrix) {
+            $seatConfig['matrix'] = $customMatrix;
+        }
 
         if ($room->showtimes()->exists()) {
             // Đã có suất diễn: KHÔNG sinh lại ghế (sẽ cascade xóa vé đã bán).
@@ -168,7 +216,7 @@ class RoomController extends Controller
             ]);
 
             return redirect()->route('admin.rooms.index')
-                ->with('warning', "Đã cập nhật thông tin [{$room->name}]. Khán phòng đã có suất diễn nên sơ đồ ghế được giữ nguyên.");
+                ->with('warning', "Đã cập nhật thông tin [{$room->name}]. Khán phòng đã có suất diễn nên sơ đồ ghế được giữ nguyên. Hãy dùng nút Nhân Bản nếu muốn tạo phiên bản sơ đồ mới!");
         }
 
         $room->update([
@@ -179,10 +227,42 @@ class RoomController extends Controller
             'seat_config' => $seatConfig,
         ]);
 
-        $generator->generate($room, $validated['layout_preset'], $seatConfig);
+        if ($customMatrix) {
+            $generator->generateFromMatrix($room, $customMatrix, $validated['layout_preset']);
+        } else {
+            $generator->generate($room, $validated['layout_preset'], $seatConfig);
+        }
 
         return redirect()->route('admin.rooms.index')
             ->with('success', "Đã cập nhật khán phòng [{$room->name}] và tái tạo sơ đồ ghế thành công!");
+    }
+
+    public function duplicate(Room $room): RedirectResponse
+    {
+        $newRoom = $room->replicate(['id', 'created_at', 'updated_at']);
+        $newRoom->name = $room->name.' (Bản Sao '.now()->format('d/m H:i').')';
+        $newRoom->save();
+
+        // Sao chép toàn bộ ghế sang khán phòng mới
+        $now = now();
+        $seatInserts = [];
+        foreach ($room->seats as $seat) {
+            $seatInserts[] = [
+                'room_id' => $newRoom->id,
+                'row_label' => $seat->row_label,
+                'seat_number' => $seat->seat_number,
+                'type' => $seat->type,
+                'created_at' => $now,
+                'updated_at' => $now,
+            ];
+        }
+
+        foreach (array_chunk($seatInserts, 200) as $chunk) {
+            \App\Models\Seat::insert($chunk);
+        }
+
+        return redirect()->route('admin.rooms.index')
+            ->with('success', "Đã nhân bản khán phòng [{$room->name}] thành [{$newRoom->name}] thành công! Bạn có thể chỉnh sửa sơ đồ mới mà không ảnh hưởng phòng gốc.");
     }
 
     public function destroy(Room $room): RedirectResponse

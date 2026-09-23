@@ -116,9 +116,19 @@
                                 <span>Xem Sơ Đồ</span>
                             </button>
 
-                            <a href="{{ route('admin.rooms.builder', $room) }}" class="px-4 py-2.5 rounded-2xl text-xs font-bold bg-[#FAF9F6] border border-black/10 hover:bg-neutral-100 text-black transition-all text-center">
+                            <a href="{{ route('admin.rooms.builder', $room) }}" class="px-3.5 py-2.5 rounded-2xl text-xs font-bold bg-[#FAF9F6] border border-black/10 hover:bg-neutral-100 text-black transition-all text-center">
                                 Sửa
                             </a>
+
+                            <!-- Duplicate Venue Button -->
+                            <form method="POST" action="{{ route('admin.rooms.duplicate', $room) }}" onsubmit="return confirm('Bạn có muốn nhân bản khán phòng [{{ addslashes($room->name) }}] thành một sơ đồ mới để tùy chỉnh không?')">
+                                @csrf
+                                <button type="submit" class="p-2.5 rounded-2xl text-xs font-bold text-indigo-700 bg-indigo-50 border border-indigo-200 hover:bg-indigo-600 hover:text-white transition-all flex items-center justify-center cursor-pointer" title="Nhân bản khán phòng & sơ đồ này">
+                                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2" />
+                                    </svg>
+                                </button>
+                            </form>
 
                             <form method="POST" action="{{ route('admin.rooms.destroy', $room) }}" onsubmit="return confirm('Bạn có chắc muốn xóa khán phòng [{{ addslashes($room->name) }}]?')">
                                 @csrf

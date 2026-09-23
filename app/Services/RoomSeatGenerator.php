@@ -46,6 +46,68 @@ class RoomSeatGenerator
     }
 
     /**
+     * Sinh ghế từ ma trận tùy chỉnh do Admin thiết kế trực tiếp.
+     */
+    public function generateFromMatrix(Room $room, array $matrixRows, string $preset = 'mega_concert'): int
+    {
+        $room->seats()->delete();
+
+        $now = now();
+        $inserts = [];
+        $validTypes = ['svip_diamond', 'vip_gold', 'cat1_stand', 'cat2_wings', 'skybox_suite', 'standing_pit'];
+
+        foreach ($matrixRows as $r) {
+            $rowLabel = trim((string) ($r['row'] ?? ''));
+            if ($rowLabel === '') {
+                continue;
+            }
+
+            $seats = (array) ($r['seats'] ?? []);
+            foreach ($seats as $s) {
+                $isAisle = ! empty($s['is_aisle']) || ($s['type'] ?? '') === 'aisle';
+                if ($isAisle) {
+                    continue; // Bỏ qua ô lối đi
+                }
+
+                $type = (string) ($s['type'] ?? 'cat1_stand');
+                if (! in_array($type, $validTypes, true)) {
+                    $type = 'cat1_stand';
+                }
+
+                $inserts[] = [
+                    'room_id' => $room->id,
+                    'row_label' => $rowLabel,
+                    'seat_number' => (int) ($s['number'] ?? 1),
+                    'type' => $type,
+                    'created_at' => $now,
+                    'updated_at' => $now,
+                ];
+            }
+        }
+
+        // Nếu là mega_concert mà chưa có hàng GA Standing, tự động thêm GA Standing row
+        $hasGa = collect($inserts)->contains('row_label', self::STANDING_ROW);
+        if ($preset === 'mega_concert' && ! $hasGa) {
+            for ($num = 1; $num <= self::STANDING_CAPACITY; $num++) {
+                $inserts[] = [
+                    'room_id' => $room->id,
+                    'row_label' => self::STANDING_ROW,
+                    'seat_number' => $num,
+                    'type' => 'standing_pit',
+                    'created_at' => $now,
+                    'updated_at' => $now,
+                ];
+            }
+        }
+
+        foreach (array_chunk($inserts, 200) as $chunk) {
+            Seat::insert($chunk);
+        }
+
+        return count($inserts);
+    }
+
+    /**
      * @return list<array{0: string, 1: int, 2: string}> [row_label, số ghế, loại ghế]
      */
     private function rows(string $preset, array $config): array

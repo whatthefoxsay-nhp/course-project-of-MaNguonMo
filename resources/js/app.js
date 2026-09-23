@@ -932,6 +932,213 @@ Alpine.data('adminSeatMapBuilder', (config = {}) => ({
     activeZoneFilter: 'all',
     hoveredSeat: null,
     zoomScale: 1,
+    selectedTool: 'svip_diamond',
+    matrixRows: (config.initialRows && config.initialRows.length) ? JSON.parse(JSON.stringify(config.initialRows)) : [],
+
+    tools: [
+        { id: 'svip_diamond', name: 'SVIP Diamond', color: '#D4AF37', icon: '💎', border: 'border-amber-400' },
+        { id: 'vip_gold', name: 'VIP Gold', color: '#C08497', icon: '⭐', border: 'border-pink-300' },
+        { id: 'cat1_stand', name: 'Khán Đài Cat 1', color: '#3A5A40', icon: '✨', border: 'border-emerald-400' },
+        { id: 'cat2_wings', name: 'Cánh Cat 2', color: '#1E293B', icon: '🟦', border: 'border-blue-400' },
+        { id: 'skybox_suite', name: 'Skybox VIP', color: '#E11D48', icon: '🥂', border: 'border-rose-400' },
+        { id: 'aisle', name: 'Lối Đi (Aisle)', color: '#374151', icon: '🚫', border: 'border-dashed border-gray-400' },
+        { id: 'blocked', name: 'Ghế Khóa/Kỹ Thuật', color: '#4B5563', icon: '🛠️', border: 'border-red-400' },
+    ],
+
+    init() {
+        if (!this.matrixRows || this.matrixRows.length === 0) {
+            this.buildDefaultMatrix(this.preset);
+        }
+    },
+
+    buildDefaultMatrix(preset) {
+        if (preset === 'mega_concert') {
+            const defs = [
+                ['SVIP-A', 12, 'svip_diamond'], ['SVIP-B', 12, 'svip_diamond'],
+                ['FL-1', 14, 'vip_gold'], ['FL-2', 14, 'vip_gold'], ['FL-3', 14, 'vip_gold'], ['FL-4', 14, 'vip_gold'],
+                ['A1', 16, 'cat1_stand'], ['A2', 16, 'cat1_stand'], ['A3', 16, 'cat1_stand'],
+                ['B1', 14, 'cat1_stand'], ['B2', 14, 'cat1_stand'],
+                ['C1', 12, 'cat2_wings'], ['C2', 12, 'cat2_wings'],
+                ['D1', 12, 'cat2_wings'], ['D2', 12, 'cat2_wings'],
+                ['SB', 8, 'skybox_suite'],
+            ];
+            this.matrixRows = defs.map(([label, count, type]) => ({
+                row: label,
+                seats: Array.from({ length: count }, (_, i) => ({
+                    number: i + 1,
+                    type: type,
+                    is_aisle: false,
+                    is_blocked: false,
+                }))
+            }));
+        } else if (preset === 'theater_hall') {
+            const defs = [
+                ['ST-1', 16, 'vip_gold'], ['ST-2', 16, 'vip_gold'],
+                ['ST-3', 16, 'cat1_stand'], ['DC-1', 16, 'cat1_stand'], ['DC-2', 16, 'cat1_stand'],
+                ['GL-1', 16, 'cat2_wings'], ['GL-2', 16, 'cat2_wings'],
+            ];
+            this.matrixRows = defs.map(([label, count, type]) => ({
+                row: label,
+                seats: Array.from({ length: count }, (_, i) => ({
+                    number: i + 1,
+                    type: type,
+                    is_aisle: false,
+                    is_blocked: false,
+                }))
+            }));
+        } else if (preset === 'convention_center') {
+            const defs = [
+                ['KN-A', 18, 'svip_diamond'], ['KN-B', 18, 'svip_diamond'],
+                ['STD-1', 18, 'cat1_stand'], ['STD-2', 18, 'cat1_stand'],
+                ['STD-3', 18, 'cat1_stand'], ['STD-4', 18, 'cat1_stand'],
+            ];
+            this.matrixRows = defs.map(([label, count, type]) => ({
+                row: label,
+                seats: Array.from({ length: count }, (_, i) => ({
+                    number: i + 1,
+                    type: type,
+                    is_aisle: false,
+                    is_blocked: false,
+                }))
+            }));
+        } else {
+            const rCount = Math.max(2, Math.min(26, parseInt(this.rows) || 10));
+            const cCount = Math.max(4, Math.min(40, parseInt(this.cols) || 14));
+            this.matrixRows = [];
+            for (let r = 0; r < rCount; r++) {
+                const label = String.fromCharCode(65 + r);
+                const type = r < 2 ? 'svip_diamond' : (r < 5 ? 'vip_gold' : 'cat1_stand');
+                this.matrixRows.push({
+                    row: label,
+                    seats: Array.from({ length: cCount }, (_, i) => ({
+                        number: i + 1,
+                        type: type,
+                        is_aisle: false,
+                        is_blocked: false,
+                    }))
+                });
+            }
+        }
+    },
+
+    selectPreset(p) {
+        this.preset = p;
+        if (this.presetsMeta[p]) {
+            this.capacity = this.presetsMeta[p].capacityDefault;
+        }
+        this.buildDefaultMatrix(p);
+    },
+
+    paintSeat(rowIdx, seatIdx) {
+        const seat = this.matrixRows[rowIdx]?.seats[seatIdx];
+        if (!seat) return;
+
+        if (this.selectedTool === 'aisle') {
+            seat.is_aisle = !seat.is_aisle;
+        } else if (this.selectedTool === 'blocked') {
+            seat.is_blocked = !seat.is_blocked;
+            if (seat.is_blocked) seat.is_aisle = false;
+        } else {
+            seat.is_aisle = false;
+            seat.is_blocked = false;
+            seat.type = this.selectedTool;
+        }
+    },
+
+    paintRow(rowIdx) {
+        const row = this.matrixRows[rowIdx];
+        if (!row) return;
+
+        row.seats.forEach(seat => {
+            if (this.selectedTool === 'aisle') {
+                seat.is_aisle = true;
+            } else if (this.selectedTool === 'blocked') {
+                seat.is_blocked = true;
+                seat.is_aisle = false;
+            } else {
+                seat.is_aisle = false;
+                seat.is_blocked = false;
+                seat.type = this.selectedTool;
+            }
+        });
+    },
+
+    addRow() {
+        const nextIdx = this.matrixRows.length;
+        const label = nextIdx < 26 ? String.fromCharCode(65 + nextIdx) : 'R' + (nextIdx + 1);
+        const colCount = this.matrixRows.length > 0 ? this.matrixRows[0].seats.length : 14;
+        this.matrixRows.push({
+            row: label,
+            seats: Array.from({ length: colCount }, (_, i) => ({
+                number: i + 1,
+                type: this.selectedTool === 'aisle' || this.selectedTool === 'blocked' ? 'cat1_stand' : this.selectedTool,
+                is_aisle: false,
+                is_blocked: false,
+            }))
+        });
+    },
+
+    removeRow(rowIdx) {
+        if (this.matrixRows.length <= 1) return;
+        this.matrixRows.splice(rowIdx, 1);
+    },
+
+    addSeatToRow(rowIdx) {
+        const row = this.matrixRows[rowIdx];
+        if (!row) return;
+        const newNumber = row.seats.length + 1;
+        row.seats.push({
+            number: newNumber,
+            type: this.selectedTool === 'aisle' || this.selectedTool === 'blocked' ? 'cat1_stand' : this.selectedTool,
+            is_aisle: false,
+            is_blocked: false,
+        });
+    },
+
+    removeSeatFromRow(rowIdx) {
+        const row = this.matrixRows[rowIdx];
+        if (!row || row.seats.length <= 1) return;
+        row.seats.pop();
+    },
+
+    getSeatColor(seat) {
+        if (seat.is_aisle) return 'transparent';
+        if (seat.is_blocked) return '#4B5563';
+        const colors = {
+            svip_diamond: '#D4AF37',
+            vip_gold: '#C08497',
+            cat1_stand: '#3A5A40',
+            cat2_wings: '#1E293B',
+            skybox_suite: '#E11D48',
+        };
+        return colors[seat.type] || '#4B5563';
+    },
+
+    get activeSeatCount() {
+        let total = 0;
+        this.matrixRows.forEach(r => {
+            r.seats.forEach(s => {
+                if (!s.is_aisle) total++;
+            });
+        });
+        return total;
+    },
+
+    get matrixStats() {
+        const stats = { svip: 0, vip: 0, cat1: 0, cat2: 0, skybox: 0, aisles: 0, blocked: 0 };
+        this.matrixRows.forEach(r => {
+            r.seats.forEach(s => {
+                if (s.is_aisle) stats.aisles++;
+                else if (s.is_blocked) stats.blocked++;
+                else if (s.type === 'svip_diamond') stats.svip++;
+                else if (s.type === 'vip_gold') stats.vip++;
+                else if (s.type === 'cat1_stand') stats.cat1++;
+                else if (s.type === 'cat2_wings') stats.cat2++;
+                else if (s.type === 'skybox_suite') stats.skybox++;
+            });
+        });
+        return stats;
+    },
 
     presetsMeta: {
         mega_concert: {
@@ -961,13 +1168,6 @@ Alpine.data('adminSeatMapBuilder', (config = {}) => ({
             capacityDefault: 300,
             icon: '⚡',
             badge: 'badge-dark',
-        }
-    },
-
-    selectPreset(p) {
-        this.preset = p;
-        if (this.presetsMeta[p]) {
-            this.capacity = this.presetsMeta[p].capacityDefault;
         }
     },
 

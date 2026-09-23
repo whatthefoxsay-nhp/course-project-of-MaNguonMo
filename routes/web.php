@@ -70,6 +70,7 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::get('/rooms/{room}/builder', [AdminRoomController::class, 'builder'])->name('rooms.builder');
     Route::get('/rooms/{room}/edit', [AdminRoomController::class, 'edit'])->name('rooms.edit');
     Route::put('/rooms/{room}', [AdminRoomController::class, 'update'])->name('rooms.update');
+    Route::post('/rooms/{room}/duplicate', [AdminRoomController::class, 'duplicate'])->name('rooms.duplicate');
     Route::delete('/rooms/{room}', [AdminRoomController::class, 'destroy'])->name('rooms.destroy');
     Route::get('/bookings', [AdminBookingController::class, 'index'])->name('bookings.index');
     Route::get('/bookings/{booking}', [AdminBookingController::class, 'show'])->name('bookings.show');
