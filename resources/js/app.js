@@ -3,6 +3,13 @@ import Alpine from 'alpinejs';
 
 window.Alpine = Alpine;
 
+// Header chuẩn cho request AJAX tới Laravel (CSRF + nhận JSON)
+const jsonHeaders = () => ({
+    'Content-Type': 'application/json',
+    'Accept': 'application/json',
+    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content ?? '',
+});
+
 // Global Multi-Tier Seat Map & Ticket Booking Alpine Component
 Alpine.data('seatBookingManager', (config = {}) => ({
     selectedSeats: [],
@@ -13,11 +20,13 @@ Alpine.data('seatBookingManager', (config = {}) => ({
     hoveredSeat: null,
     zoomScale: 1,
     standingCount: 0,
-    standingPrice: (config.basePrice || 180000) - 30000 > 0 ? (config.basePrice || 180000) - 30000 : 150000,
+    standingPrice: config.standingPrice || 0,
     notificationMessage: '',
     notificationType: 'info',
     showToast: false,
     toastTimeout: null,
+    isSubmitting: false,
+    unavailableIds: [],
 
     init() {
         if (config.tiers) {
@@ -25,6 +34,9 @@ Alpine.data('seatBookingManager', (config = {}) => ({
                 this.tierQuantities[k] = 0;
                 this.tierMeta[k] = config.tiers[k];
             });
+        }
+        if (config.pollStatus && config.statusUrl) {
+            setInterval(() => this.refreshSeatStatus(), 15000);
         }
     },
 
@@ -37,6 +49,11 @@ Alpine.data('seatBookingManager', (config = {}) => ({
 
         if (status === 'held') {
             this.notify(`Ghế ${rowLabel}${seatNumber} đang có người giữ chỗ trong 10 phút.`, 'warning');
+            return;
+        }
+
+        if (this.unavailableIds.includes(seatId)) {
+            this.notify(`Ghế ${rowLabel}${seatNumber} vừa có người giữ. Vui lòng chọn ghế khác!`, 'warning');
             return;
         }
 
@@ -195,6 +212,62 @@ Alpine.data('seatBookingManager', (config = {}) => ({
         return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(val);
     },
 
+    // Đồng bộ trạng thái ghế mỗi 15 giây (spec: AJAX polling, không realtime)
+    async refreshSeatStatus() {
+        try {
+            const response = await fetch(config.statusUrl, { headers: { 'Accept': 'application/json' } });
+            if (!response.ok) return;
+            const { unavailable } = await response.json();
+            this.unavailableIds = unavailable;
+
+            const lost = this.selectedSeats.filter(seat => unavailable.includes(seat.id));
+            if (lost.length > 0) {
+                this.selectedSeats = this.selectedSeats.filter(seat => !unavailable.includes(seat.id));
+                this.notify(`Ghế ${lost.map(seat => seat.row + seat.number).join(', ')} vừa được người khác giữ.`, 'warning');
+            }
+        } catch (error) {
+            // mất mạng tạm thời: bỏ qua, lần sau thử lại
+        }
+    },
+
+    // Gửi ghế/hạng vé đang chọn lên server để giữ chỗ 10 phút
+    async confirmHold() {
+        if (this.totalTicketCount === 0 || this.isSubmitting) return;
+        this.isSubmitting = true;
+
+        const tiers = {};
+        Object.entries(this.tierQuantities).forEach(([key, quantity]) => {
+            if (quantity > 0) tiers[key] = quantity;
+        });
+        if (this.standingCount > 0) tiers.standing_pit = this.standingCount;
+
+        try {
+            const response = await fetch(config.holdUrl, {
+                method: 'POST',
+                headers: jsonHeaders(),
+                body: JSON.stringify({ seat_ids: this.selectedSeats.map(seat => seat.id), tiers }),
+            });
+
+            if (response.status === 401) {
+                window.location.href = config.loginUrl;
+                return;
+            }
+
+            const data = await response.json();
+            if (!response.ok) {
+                this.notify(data.message || 'Không thể giữ chỗ, vui lòng thử lại.', 'error');
+                if (config.pollStatus) this.refreshSeatStatus();
+                return;
+            }
+
+            window.location.href = data.redirect;
+        } catch (error) {
+            this.notify('Mất kết nối tới máy chủ, vui lòng thử lại.', 'error');
+        } finally {
+            this.isSubmitting = false;
+        }
+    },
+
     notify(msg, type = 'info') {
         this.notificationMessage = msg;
         this.notificationType = type;
@@ -241,8 +314,8 @@ Alpine.data('searchModal', () => ({
 }));
 
 // Countdown timer component for cart
-Alpine.data('countdownTimer', (initialMinutes = 10) => ({
-    totalSeconds: initialMinutes * 60,
+Alpine.data('countdownTimer', (initialMinutes = 10, initialSeconds = null) => ({
+    totalSeconds: initialSeconds ?? initialMinutes * 60,
     timerInterval: null,
     expired: false,
 
@@ -250,9 +323,13 @@ Alpine.data('countdownTimer', (initialMinutes = 10) => ({
         this.timerInterval = setInterval(() => {
             if (this.totalSeconds > 0) {
                 this.totalSeconds--;
-            } else {
-                this.expired = true;
-                clearInterval(this.timerInterval);
+                return;
+            }
+            this.expired = true;
+            clearInterval(this.timerInterval);
+            // Giỏ vé thật: hết hạn giữ ghế thì tải lại để server trả giỏ trống
+            if (initialSeconds !== null && initialSeconds > 0) {
+                window.location.reload();
             }
         }, 1000);
     },
@@ -384,19 +461,52 @@ Alpine.data('ticketPaymentManager', (config = {}) => ({
         window.scrollTo({ top: 0, behavior: 'smooth' });
     },
 
-    simulatePaymentSuccess() {
+    async simulatePaymentSuccess() {
         if (this.isProcessingPayment || this.paymentSuccess) return;
 
         this.isProcessingPayment = true;
         this.notify('Đang kiểm tra và xác nhận giao dịch thanh toán...');
 
-        setTimeout(() => {
-            this.isProcessingPayment = false;
+        try {
+            const response = await fetch(config.checkoutUrl, {
+                method: 'POST',
+                headers: jsonHeaders(),
+                body: JSON.stringify({ payment_method: this.selectedMethod }),
+            });
+            const data = await response.json();
+
+            if (!response.ok) {
+                this.notify(data.message || 'Thanh toán thất bại, vui lòng thử lại.');
+                return;
+            }
+
+            this.orderCode = data.booking_code;
             this.paymentSuccess = true;
             this.step = 'e_ticket';
             window.scrollTo({ top: 0, behavior: 'smooth' });
-            this.notify('Thanh toán thành công! Vé điện tử E-Ticket đã được phát hành.');
-        }, 700);
+            this.notify(data.message);
+        } catch (error) {
+            this.notify('Mất kết nối tới máy chủ, vui lòng thử lại.');
+        } finally {
+            this.isProcessingPayment = false;
+        }
+    },
+
+    async removeItem(showtimeSeatId) {
+        try {
+            const response = await fetch(config.removeUrl.replace('__ID__', showtimeSeatId), {
+                method: 'DELETE',
+                headers: jsonHeaders(),
+            });
+            const data = await response.json();
+            if (!response.ok) {
+                this.notify(data.message || 'Không thể bỏ vé này.');
+                return;
+            }
+            window.location.reload();
+        } catch (error) {
+            this.notify('Mất kết nối tới máy chủ, vui lòng thử lại.');
+        }
     },
 
     formatCurrency(val) {

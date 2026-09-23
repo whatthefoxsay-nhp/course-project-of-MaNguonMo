@@ -26,9 +26,14 @@
 @endphp
 
 <div 
-    x-data="seatBookingManager({ 
+    x-data="seatBookingManager({
         basePrice: {{ $basePrice }},
-        tiers: {{ json_encode($ticketTiers) }}
+        tiers: {{ json_encode($ticketTiers) }},
+        standingPrice: {{ (int) ($ticketTiers['standing_pit']['price'] ?? 0) }},
+        holdUrl: @js(route('showtimes.holds.store', $showtime->id)),
+        statusUrl: @js(route('showtimes.seat-status', $showtime->id)),
+        loginUrl: @js(route('login')),
+        pollStatus: @js((bool) $isSeatedConcert),
     })"
     class="w-full space-y-8"
 >
@@ -978,15 +983,17 @@
                 <span class="font-display font-black text-2xl sm:text-3xl text-black" x-text="formattedTotalPrice">0 ₫</span>
             </div>
 
-            <a 
-                href="{{ route('cart.index') }}" 
+            <button
+                type="button"
+                @click="confirmHold()"
+                :disabled="totalTicketCount === 0 || isSubmitting"
                 class="btn-rose px-8 py-3.5 rounded-full font-black text-sm flex items-center gap-2.5 shadow-lg hover:shadow-xl transition-all"
-                :class="{ 'opacity-50 pointer-events-none grayscale': totalTicketCount === 0 }"
+                :class="{ 'opacity-50 pointer-events-none grayscale': totalTicketCount === 0 || isSubmitting }"
             >
-                <span>Xác Nhận Giữ Chỗ</span>
-                <span x-show="totalTicketCount > 0" x-text="'(' + totalTicketCount + ' vé)'"></span>
+                <span x-text="isSubmitting ? 'Đang giữ chỗ...' : 'Xác Nhận Giữ Chỗ'">Xác Nhận Giữ Chỗ</span>
+                <span x-show="totalTicketCount > 0 && !isSubmitting" x-text="'(' + totalTicketCount + ' vé)'"></span>
                 <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg>
-            </a>
+            </button>
         </div>
     </div>
 
