@@ -18,6 +18,7 @@ Alpine.data('seatBookingManager', (config = {}) => ({
     basePrice: config.basePrice || 180000,
     activeZoneFilter: 'all',
     hoveredSeat: null,
+    hoverTimeout: null,
     zoomScale: 1,
     standingCount: 0,
     standingPrice: config.standingPrice || 0,
@@ -151,11 +152,20 @@ Alpine.data('seatBookingManager', (config = {}) => ({
     },
 
     setHoveredSeat(seatData) {
+        if (this.hoverTimeout) {
+            clearTimeout(this.hoverTimeout);
+            this.hoverTimeout = null;
+        }
         this.hoveredSeat = seatData;
     },
 
     clearHoveredSeat() {
-        this.hoveredSeat = null;
+        if (this.hoverTimeout) {
+            clearTimeout(this.hoverTimeout);
+        }
+        this.hoverTimeout = setTimeout(() => {
+            this.hoveredSeat = null;
+        }, 120);
     },
 
     zoomIn() {

@@ -146,10 +146,10 @@
                 <span class="flex items-center gap-1.5">CỔNG VÀO KHÁN ĐÀI D (SOUTH GATE) <span class="w-2 h-2 rounded-full bg-pink-400 animate-ping"></span></span>
             </div>
 
-            <!-- ZOOM CONTAINER -->
+            <!-- ZOOM CONTAINER (Có thêm khoảng đệm pb-12 để hàng ghế cuối cùng không bao giờ bị chèn/đè) -->
             <div 
                 :style="`transform: scale(${zoomScale}); transform-origin: top center; transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);`"
-                class="mt-6 space-y-10 min-w-max mx-auto flex flex-col items-center"
+                class="mt-6 pb-12 space-y-10 min-w-max mx-auto flex flex-col items-center"
             >
 
                 @if ($isStadiumLayout)
@@ -719,39 +719,85 @@
                 @endif
             </div>
 
-            <!-- LIVE FLOATING SEAT & SECTOR DETAIL INSPECTOR -->
-            <div 
-                x-show="hoveredSeat !== null"
-                x-transition:enter="ease-out duration-200"
-                x-transition:enter-start="opacity-0 translate-y-3"
-                x-transition:enter-end="opacity-100 translate-y-0"
-                class="max-w-lg mx-auto mt-8 bg-black/90 backdrop-blur-md text-white p-4 rounded-3xl shadow-2xl border border-gold-antique/50 text-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 relative z-30"
-                style="display: none;"
-            >
-                <div class="flex items-center gap-3">
-                    <div class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-gold-dark to-yellow-300 text-black flex items-center justify-center font-display font-black text-lg shadow-md shrink-0">
-                        <span x-text="hoveredSeat?.code">A1</span>
-                    </div>
-                    <div class="space-y-0.5">
-                        <div class="flex items-center gap-2">
-                            <h5 class="font-display font-black text-white text-sm" x-text="hoveredSeat?.type">SVIP Sân Khấu</h5>
-                            <span class="badge-gold text-[9px] px-2 py-0.2 rounded-full font-bold" x-text="hoveredSeat?.gate">Cổng VIP 1</span>
-                        </div>
-                        <p class="text-[11px] text-gray-300">
-                            Khu vực: <strong class="text-gold-light" x-text="hoveredSeat?.sector">Sân Khấu</strong>
-                        </p>
-                        <template x-if="hoveredSeat?.perks && hoveredSeat?.perks.length > 0">
-                            <div class="text-[10px] text-emerald-400 font-semibold flex items-center gap-1">
-                                <span>✓</span>
-                                <span x-text="hoveredSeat?.perks.join(' · ')"></span>
+            <!-- DEDICATED FIXED-HEIGHT SEAT & SECTOR DETAIL INSPECTOR STATION (Chừa riêng 1 khoảng cố định, không co giật layout) -->
+            <div class="w-full max-w-2xl mx-auto mt-8 pt-4 border-t border-white/10 relative z-30 pointer-events-none">
+                <div class="bg-black/85 backdrop-blur-md rounded-2xl border border-white/15 p-3.5 sm:p-4 text-xs shadow-2xl min-h-[92px] sm:min-h-[82px] flex items-center transition-all duration-150">
+                    
+                    <!-- 1. Idle Placeholder (Khi chưa hover ghế nào: Chiếm sẵn diện tích, máy yếu lướt qua mượt mà không bị giật trang) -->
+                    <div 
+                        x-show="hoveredSeat === null"
+                        x-transition:enter="transition-opacity duration-150"
+                        x-transition:enter-start="opacity-0"
+                        x-transition:enter-end="opacity-100"
+                        class="flex items-center justify-between w-full text-gray-400 gap-3 select-none"
+                    >
+                        <div class="flex items-center gap-3">
+                            <div class="w-11 h-11 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-gold-antique shrink-0">
+                                <svg class="w-5 h-5 animate-pulse text-gold" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122" />
+                                </svg>
                             </div>
-                        </template>
+                            <div class="space-y-0.5">
+                                <div class="flex items-center gap-2">
+                                    <span class="text-xs font-black text-white uppercase tracking-wider">Thông Tin Hàng Ghế &amp; Hạng Vé</span>
+                                    <span class="text-[9px] text-gold-light font-bold bg-gold-dark/20 px-2 py-0.5 rounded-full border border-gold-antique/30">Live Inspector</span>
+                                </div>
+                                <p class="text-[11px] text-gray-400 leading-tight">
+                                    Rê chuột hoặc chạm vào ghế trên sơ đồ để xem vị trí hàng, cổng soát vé và giá vé chính thức.
+                                </p>
+                            </div>
+                        </div>
+                        <div class="hidden md:flex flex-col items-end text-right shrink-0">
+                            <span class="text-[9px] text-gray-500 font-mono uppercase">Trạng Thái Sơ Đồ</span>
+                            <span class="text-[11px] font-bold text-emerald-400 flex items-center gap-1.5 mt-0.5">
+                                <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+                                Sẵn sàng chọn ghế
+                            </span>
+                        </div>
                     </div>
-                </div>
 
-                <div class="text-left sm:text-right shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-white/10 w-full sm:w-auto">
-                    <span class="text-[10px] text-gray-400 block uppercase font-bold">Giá vé chính thức</span>
-                    <span class="font-display font-black text-base text-gold-antique" x-text="formatCurrency(hoveredSeat?.price || 0)">0₫</span>
+                    <!-- 2. Active Hover State (Khi đang hover vào ghế: Thay đổi nội dung êm ái mà không co giãn layout) -->
+                    <div 
+                        x-show="hoveredSeat !== null"
+                        x-transition:enter="transition-opacity duration-150"
+                        x-transition:enter-start="opacity-0"
+                        x-transition:enter-end="opacity-100"
+                        class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 w-full"
+                        style="display: none;"
+                    >
+                        <div class="flex items-center gap-3">
+                            <div class="w-11 h-11 rounded-xl bg-gradient-to-tr from-gold-dark to-yellow-300 text-black flex items-center justify-center font-display font-black text-base shadow-md shrink-0">
+                                <span x-text="hoveredSeat?.code">A1</span>
+                            </div>
+                            <div class="space-y-0.5">
+                                <div class="flex items-center gap-2">
+                                    <h5 class="font-display font-black text-white text-sm" x-text="hoveredSeat?.type">SVIP Sân Khấu</h5>
+                                    <span class="badge-gold text-[9px] px-2 py-0.2 rounded-full font-bold uppercase" x-text="hoveredSeat?.gate">Cổng VIP 1</span>
+                                    <template x-if="hoveredSeat?.status === 'booked'">
+                                        <span class="bg-red-900/80 text-red-200 border border-red-500/50 text-[9px] px-2 py-0.5 rounded-full font-bold">Đã bán</span>
+                                    </template>
+                                    <template x-if="hoveredSeat?.status === 'held'">
+                                        <span class="bg-amber-900/80 text-amber-200 border border-amber-500/50 text-[9px] px-2 py-0.5 rounded-full font-bold">Đang giữ chỗ</span>
+                                    </template>
+                                </div>
+                                <p class="text-[11px] text-gray-300">
+                                    Khu vực: <strong class="text-gold-light" x-text="hoveredSeat?.sector">Sân Khấu</strong> · Hàng: <strong class="text-white" x-text="hoveredSeat?.row">A</strong> · Ghế số: <strong class="text-white" x-text="hoveredSeat?.number">1</strong>
+                                </p>
+                                <template x-if="hoveredSeat?.perks && hoveredSeat?.perks.length > 0">
+                                    <div class="text-[10px] text-emerald-400 font-semibold flex items-center gap-1">
+                                        <span>✓</span>
+                                        <span x-text="hoveredSeat?.perks.join(' · ')"></span>
+                                    </div>
+                                </template>
+                            </div>
+                        </div>
+
+                        <div class="text-left sm:text-right shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-white/10 w-full sm:w-auto">
+                            <span class="text-[9px] text-gray-400 block uppercase font-bold tracking-wider">Giá vé chính thức</span>
+                            <span class="font-display font-black text-base sm:text-lg text-gold-antique" x-text="formatCurrency(hoveredSeat?.price || 0)">0₫</span>
+                        </div>
+                    </div>
+
                 </div>
             </div>
 
