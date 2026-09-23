@@ -4,21 +4,25 @@
     $basePrice = $showtime->base_price ?? 180000;
     $isSeatedConcert = $movie->is_seated_concert ?? true;
     if (empty($ticketTiers)) {
-        $ticketTiers = \App\Support\DemoCatalog::ticketTiers($basePrice, $isSeatedConcert);
+        $ticketTiers = \App\Support\TicketTiers::for($basePrice, $isSeatedConcert);
     }
     $seatsCollection = collect($seats);
     $totalAvailable = $seatsCollection->where('status', 'available')->count();
     $totalBooked = $seatsCollection->where('status', 'booked')->count();
     $totalHeld = $seatsCollection->where('status', 'held')->count();
 
-    // Group seats by stadium sector (for seated concerts)
-    $svipSeats = $seatsCollection->where('type', 'svip_diamond');
-    $vipFloorSeats = $seatsCollection->where('type', 'vip_gold')->groupBy('row_label');
+    // Sân vận động (preset mega_concert): nhóm theo khu
+    $svipSeats = $seatsCollection->where('sector', 'floor')->where('type', 'svip_diamond');
+    $vipFloorSeats = $seatsCollection->where('sector', 'floor')->where('type', 'vip_gold')->groupBy('row_label');
     $standASeats = $seatsCollection->where('sector', 'center_stand')->groupBy('row_label');
     $standBSeats = $seatsCollection->where('sector', 'upper_stand')->groupBy('row_label');
     $standCSeats = $seatsCollection->where('sector', 'left_stand');
     $standDSeats = $seatsCollection->where('sector', 'right_stand');
     $skyboxSeats = $seatsCollection->where('sector', 'skybox');
+
+    // Khán phòng thường (nhà hát / hội nghị / lưới tùy chỉnh): vẽ lưới theo hàng
+    $generalSeats = $seatsCollection->where('sector', 'general')->groupBy('row_label');
+    $isStadiumLayout = $generalSeats->isEmpty();
 @endphp
 
 <div 
@@ -143,6 +147,7 @@
                 class="mt-6 space-y-10 min-w-max mx-auto flex flex-col items-center"
             >
 
+                @if ($isStadiumLayout)
                 <!-- 1. MAIN STAGE + EXTENDED T-CATWALK RUNWAY -->
                 <div class="relative w-full max-w-3xl mx-auto text-center z-20">
                     <div class="relative bg-gradient-to-r from-[#1F2937] via-[#111827] to-[#1F2937] border-2 border-gold-antique/80 rounded-3xl p-5 shadow-[0_0_50px_rgba(212,175,55,0.4)] flex flex-col items-center justify-center">
@@ -631,7 +636,7 @@
                                     price: {{ $seatPrice }},
                                     status: '{{ $seat->status }}',
                                     perks: {{ $seatPerks }}
-                                } vulnerability)"
+                                })"
                                 @mouseleave="clearHoveredSeat()"
                                 :class="{
                                     'bg-gradient-to-r from-pink-500 to-rose-600 text-white ring-4 ring-white font-black scale-105 z-10 shadow-2xl': isSeatSelected({{ $seat->id }}),
@@ -652,6 +657,61 @@
                     </div>
                 </div>
 
+                @else
+                    <!-- SƠ ĐỒ KHÁN PHÒNG THƯỜNG (nhà hát / hội nghị / lưới tùy chỉnh) -->
+                    <div class="w-full space-y-6">
+                        <div class="mx-auto w-2/3 py-3 rounded-b-[2rem] bg-gradient-to-b from-gold-antique/40 to-transparent border-t-4 border-gold-antique text-center text-[11px] font-black tracking-[0.3em] text-gold-light">
+                            SÂN KHẤU
+                        </div>
+
+                        <div class="space-y-2">
+                            @foreach ($generalSeats as $rowLabel => $rowSeats)
+                                <div class="flex items-center justify-center gap-1.5">
+                                    <span class="w-12 text-right pr-2 text-[10px] font-mono text-gray-400 font-bold">{{ $rowLabel }}</span>
+                                    @foreach ($rowSeats as $seat)
+                                        @php
+                                            $isBooked = $seat->status === 'booked';
+                                            $isHeld = $seat->status === 'held';
+                                            $hoverData = [
+                                                'code' => $seat->code,
+                                                'row' => $seat->row_label,
+                                                'number' => (string) $seat->seat_number,
+                                                'sector' => $seat->sector_label,
+                                                'gate' => $seat->gate,
+                                                'type' => $seat->type_name,
+                                                'icon' => $seat->type_icon,
+                                                'price' => $seat->price,
+                                                'status' => $seat->status,
+                                                'perks' => $seat->perks,
+                                            ];
+                                        @endphp
+                                        <button
+                                            type="button"
+                                            @disabled($isBooked || $isHeld)
+                                            @click="toggleSeat({{ $seat->id }}, @js((string) $seat->seat_number), @js($seat->row_label), @js($seat->type), @js($seat->type_name), @js($seat->status), {{ $seat->price }}, @js($seat->perks))"
+                                            @mouseenter="setHoveredSeat(@js($hoverData))"
+                                            @mouseleave="clearHoveredSeat()"
+                                            :class="{
+                                                'bg-gold-antique text-black font-black scale-110 z-10': isSeatSelected({{ $seat->id }}),
+                                                @if ($isBooked)
+                                                    'bg-gray-800 text-gray-600 border-gray-700 cursor-not-allowed opacity-30': true,
+                                                @elseif ($isHeld)
+                                                    'bg-amber-900/60 border-amber-500 text-amber-300 cursor-not-allowed': true,
+                                                @else
+                                                    'bg-[#F0F7F2] text-black border border-[#A3C9A8] hover:bg-emerald-200 hover:scale-110 cursor-pointer': !isSeatSelected({{ $seat->id }}),
+                                                @endif
+                                            }"
+                                            class="w-6 h-6 sm:w-7 sm:h-7 rounded-lg text-[10px] font-black flex items-center justify-center transition-all"
+                                            title="{{ $seat->type_name }} · {{ number_format($seat->price) }}₫"
+                                        >
+                                            {{ $seat->seat_number }}
+                                        </button>
+                                    @endforeach
+                                </div>
+                            @endforeach
+                        </div>
+                    </div>
+                @endif
             </div>
 
             <!-- LIVE FLOATING SEAT & SECTOR DETAIL INSPECTOR -->

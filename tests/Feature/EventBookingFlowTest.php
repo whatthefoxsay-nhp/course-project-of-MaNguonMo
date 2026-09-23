@@ -56,8 +56,8 @@ test('fan meeting details page displays specific cast members and fansign hosts'
 });
 
 test('seat map page displays concert stadium arena blueprint for seated concerts', function () {
-    $movie = DemoCatalog::movieBySlug('live-concert-anh-trai-vuot-ngan-chong-gai-2026');
-    $showtime = DemoCatalog::showtimesForMovie($movie->id)[0];
+    $movie = Event::firstWhere('slug', 'live-concert-anh-trai-vuot-ngan-chong-gai-2026');
+    $showtime = $movie->showtimes()->orderBy('start_time')->first();
 
     $response = $this->get(route('showtimes.seats', $showtime->id));
 
@@ -74,8 +74,8 @@ test('seat map page displays concert stadium arena blueprint for seated concerts
 });
 
 test('ticket selection page renders direct tier selector for non-concert events', function () {
-    $movie = DemoCatalog::movieBySlug('vietnam-tech-summit-ai-expo-2026');
-    $showtime = DemoCatalog::showtimesForMovie($movie->id)[0];
+    $movie = Event::firstWhere('slug', 'vietnam-tech-summit-ai-expo-2026');
+    $showtime = $movie->showtimes()->orderBy('start_time')->first();
 
     $response = $this->get(route('showtimes.seats', $showtime->id));
 

@@ -31,7 +31,7 @@
                 <!-- Left: Poster + Core Info -->
                 <div class="flex items-center gap-5">
                     <img 
-                        src="{{ $movie->poster_path }}" 
+                        src="{{ $movie->poster_url }}" 
                         alt="{{ $movie->title }}" 
                         class="w-20 h-28 sm:w-24 sm:h-32 object-cover rounded-2xl bg-[#FAF9F6] border border-black/10 shadow-md shrink-0"
                     >
