@@ -4,12 +4,12 @@
             return [
                 'movie_title' => $item->movie->title,
                 'category_name' => $item->movie->category->name ?? 'Sự Kiện',
-                'poster_path' => $item->movie->poster_path,
+                'poster_path' => $item->movie->poster_url,
                 'showtime_str' => $item->showtime->start_time->format('H:i - d/m/Y'),
                 'room_name' => $item->showtime->room->name ?? 'Khán Phòng Sự Kiện',
                 'row_label' => $item->seat->row_label ?? '',
                 'seat_number' => $item->seat->seat_number ?? '',
-                'seat_type' => strtoupper($item->seat->type ?? 'STANDARD'),
+                'seat_type' => $item->seat->type ?? 'Tiêu chuẩn',
                 'price' => $item->price,
             ];
         }, $items);
@@ -28,7 +28,9 @@
             items: {{ Js::from($jsItems) }},
             userName: '{{ addslashes($userName) }}',
             userEmail: '{{ addslashes($userEmail) }}',
-            userPhone: '{{ addslashes($userPhone) }}'
+            userPhone: '{{ addslashes($userPhone) }}',
+            checkoutUrl: @js(route('checkout.store')),
+            removeUrl: @js(route('cart.seats.destroy', '__ID__')),
         })"
     >
         <!-- Floating Toast Notification -->
@@ -98,7 +100,7 @@
 
             <!-- Countdown Timer Component -->
             <div 
-                x-data="countdownTimer(10)" 
+                x-data="countdownTimer(0, {{ $expiresInSeconds }})" 
                 class="bg-[#FFF8E1] rounded-2xl px-4 py-2 border border-[#FFE082] flex items-center gap-2.5 shrink-0"
             >
                 <div class="w-2 h-2 rounded-full bg-gold-dark animate-ping"></div>
@@ -150,7 +152,7 @@
                                 @foreach ($items as $item)
                                     <div class="p-4 rounded-2xl bg-[#FAF9F6] border border-black/10 flex flex-col sm:flex-row items-start sm:items-center gap-4 relative group hover:border-gold-antique transition-all">
                                         <!-- Poster Thumbnail -->
-                                        <img src="{{ $item->movie->poster_path }}" alt="{{ $item->movie->title }}" class="w-16 h-20 object-cover rounded-xl shrink-0 bg-white border border-black/10">
+                                        <img src="{{ $item->movie->poster_url }}" alt="{{ $item->movie->title }}" class="w-16 h-20 object-cover rounded-xl shrink-0 bg-white border border-black/10">
 
                                         <!-- Item Info -->
                                         <div class="flex-1 min-w-0">
@@ -170,7 +172,7 @@
                                             </p>
                                             <div class="mt-2 flex items-center gap-2">
                                                 <span class="badge-gold text-xs px-2.5 py-0.5 rounded-lg font-bold">
-                                                    Vị trí: {{ $item->seat->row_label }}{{ $item->seat->seat_number }} ({{ strtoupper($item->seat->type) }})
+                                                    Vị trí: {{ $item->seat->row_label }}{{ $item->seat->seat_number }} ({{ $item->seat->type }})
                                                 </span>
                                             </div>
                                         </div>
@@ -180,7 +182,14 @@
                                             <span class="font-display font-black text-black text-lg">
                                                 {{ number_format($item->price) }}₫
                                             </span>
-                                            <div class="text-[11px] text-sage-forest font-bold mt-0.5">E-Ticket QR</div>
+                                            <button
+                                                type="button"
+                                                x-show="step === 'cart'"
+                                                @click="removeItem({{ $item->id }})"
+                                                class="mt-1 text-[11px] font-bold text-[#CC0000] hover:underline block"
+                                            >
+                                                Bỏ vé
+                                            </button>
                                         </div>
                                     </div>
                                 @endforeach
@@ -1118,7 +1127,7 @@
                             <!-- Event Details -->
                             <div class="flex flex-col sm:flex-row gap-5 items-start">
                                 @if ($firstItem)
-                                    <img src="{{ $firstItem->movie->poster_path }}" alt="{{ $firstItem->movie->title }}" class="w-24 h-32 object-cover rounded-2xl shrink-0 bg-[#FAF9F6] border border-black/10 shadow-sm">
+                                    <img src="{{ $firstItem->movie->poster_url }}" alt="{{ $firstItem->movie->title }}" class="w-24 h-32 object-cover rounded-2xl shrink-0 bg-[#FAF9F6] border border-black/10 shadow-sm">
                                 @endif
 
                                 <div class="flex-1 min-w-0">

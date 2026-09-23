@@ -43,7 +43,7 @@
                             
                             <!-- Left: Event Poster & Main Details (7 Cols) -->
                             <div class="md:col-span-7 p-6 sm:p-7 flex flex-col sm:flex-row gap-5 border-b md:border-b-0 md:border-r border-dashed border-slate-200/90 relative">
-                                <img src="{{ $booking->movie->poster_path }}" alt="{{ $booking->movie->title }}" class="w-20 h-28 sm:w-28 sm:h-40 object-cover rounded-2xl bg-[#FAF9F6] shrink-0 border border-slate-200/80 shadow-xs">
+                                <img src="{{ $booking->movie->poster_url }}" alt="{{ $booking->movie->title }}" class="w-20 h-28 sm:w-28 sm:h-40 object-cover rounded-2xl bg-[#FAF9F6] shrink-0 border border-slate-200/80 shadow-xs">
 
                                 <div class="flex-1 flex flex-col justify-between min-w-0">
                                     <div>

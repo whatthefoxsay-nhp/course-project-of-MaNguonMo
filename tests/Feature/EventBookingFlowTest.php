@@ -96,6 +96,8 @@ test('unauthenticated guest is redirected to login when accessing cart', functio
 
 test('cart page renders checkout flow with multi-method payment and e-ticket pass for authenticated user', function () {
     $user = \App\Models\User::factory()->create();
+    $showtime = Event::firstWhere('slug', 'hoa-nhac-giao-huong-saigon-philharmonic')->showtimes()->orderBy('start_time')->first();
+    app(\App\Services\SeatHoldService::class)->hold($user, $showtime, [$showtime->showtimeSeats()->where('status', 'available')->value('id')]);
 
     $response = $this->actingAs($user)->get(route('cart.index'));
 
@@ -116,7 +118,7 @@ test('cart page renders checkout flow with multi-method payment and e-ticket pas
 });
 
 test('booking history page displays e-ticket passes and png download button for authenticated user', function () {
-    $user = \App\Models\User::factory()->create();
+    $user = \App\Models\User::firstWhere('email', 'user@ticketbox.vn');
 
     $response = $this->actingAs($user)->get(route('bookings.history'));
 
