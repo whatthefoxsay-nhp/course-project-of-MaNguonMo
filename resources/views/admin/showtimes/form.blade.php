@@ -1,9 +1,20 @@
 @php $isEdit = $showtime->exists; @endphp
 
-<x-admin-layout :header="$isEdit ? 'Sửa Suất Diễn' : 'Thêm Suất Diễn'">
+<x-admin-layout 
+    :header="$isEdit ? 'Sửa Suất Diễn' : 'Thêm Suất Diễn'"
+    :subtitle="$isEdit ? 'Cập nhật thời gian bắt đầu, kết thúc và giá vé cho suất diễn #' . $showtime->id : 'Thiết lập khung giờ và khán phòng mở bán vé cho sự kiện'"
+>
+    <x-slot:breadcrumb>
+        <span class="text-gray-400">Tổng quan</span>
+        <span class="text-gray-300">›</span>
+        <a href="{{ route('admin.showtimes.index') }}" class="text-gray-400 hover:text-black">Lịch diễn</a>
+        <span class="text-gray-300">›</span>
+        <span class="text-[#123D22] font-black">{{ $isEdit ? 'Chỉnh sửa' : 'Thêm mới' }}</span>
+    </x-slot:breadcrumb>
+
     <form method="POST"
           action="{{ $isEdit ? route('admin.showtimes.update', $showtime) : route('admin.showtimes.store') }}"
-          class="max-w-3xl bg-white p-6 rounded-3xl border border-black/10 shadow-sm space-y-5">
+          class="max-w-3xl bg-white p-6 sm:p-7 rounded-3xl border border-[#E3EAE4] shadow-sm space-y-5">
         @csrf
         @if ($isEdit)
             @method('PUT')
@@ -38,8 +49,14 @@
         </div>
 
         <div class="flex items-center gap-3 pt-2">
-            <button type="submit" class="btn-rose px-6 py-3 rounded-2xl text-xs font-black">{{ $isEdit ? 'Lưu thay đổi' : 'Tạo suất diễn' }}</button>
-            <a href="{{ route('admin.showtimes.index') }}" class="px-6 py-3 rounded-2xl text-xs font-bold border border-black/10">Hủy</a>
+            <button 
+                type="submit" 
+                class="px-6 py-3 rounded-2xl text-xs font-black text-white shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all"
+                style="background: linear-gradient(135deg, #123D22 0%, #1e662e 100%);"
+            >
+                {{ $isEdit ? 'Lưu thay đổi' : 'Tạo suất diễn' }}
+            </button>
+            <a href="{{ route('admin.showtimes.index') }}" class="px-6 py-3 rounded-2xl text-xs font-bold text-gray-600 bg-gray-100 hover:bg-gray-200 transition-colors">Hủy</a>
         </div>
     </form>
 </x-admin-layout>

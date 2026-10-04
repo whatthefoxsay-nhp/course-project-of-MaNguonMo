@@ -13,13 +13,73 @@ class CategoryController extends Controller
 {
     public function index(Request $request): View
     {
-        $categories = Category::withCount('events')
-            ->when($request->filled('search'), fn ($query) => $query->where('name', 'like', '%'.$request->input('search').'%'))
-            ->orderBy('name')
-            ->paginate(10)
-            ->withQueryString();
+        $sort = $request->input('sort', 'name_asc');
+        $perPage = (int) $request->input('per_page', 10);
+        if (!in_array($perPage, [10, 20, 50])) {
+            $perPage = 10;
+        }
 
-        return view('admin.categories.index', compact('categories'));
+        $query = Category::withCount('events')
+            ->when($request->filled('search'), function ($q) use ($request) {
+                $search = $request->input('search');
+                $q->where(function ($sub) use ($search) {
+                    $sub->where('name', 'like', '%'.$search.'%')
+                        ->orWhere('slug', 'like', '%'.$search.'%')
+                        ->orWhere('description', 'like', '%'.$search.'%');
+                });
+            });
+
+        match ($sort) {
+            'events_desc' => $query->orderByDesc('events_count')->orderBy('name'),
+            'events_asc' => $query->orderBy('events_count')->orderBy('name'),
+            'latest' => $query->latest('id'),
+            default => $query->orderBy('name'),
+        };
+
+        $categories = $query->paginate($perPage)->withQueryString();
+
+        // Calculate summary statistics
+        $allCategories = Category::withCount('events')->get();
+        $totalEvents = (int) $allCategories->sum('events_count');
+        $topCategory = $allCategories->sortByDesc('events_count')->first();
+        $emptyCategoriesCount = $allCategories->where('events_count', 0)->count();
+
+        $stats = [
+            'total_categories' => $allCategories->count(),
+            'total_events' => $totalEvents,
+            'top_category' => $topCategory,
+            'empty_categories_count' => $emptyCategoriesCount,
+        ];
+
+        return view('admin.categories.index', compact('categories', 'stats', 'totalEvents', 'sort', 'perPage'));
+    }
+
+    public function bulkDestroy(Request $request): RedirectResponse
+    {
+        $ids = $request->input('ids', []);
+        if (empty($ids) || !is_array($ids)) {
+            return back()->with('error', 'Vui lòng chọn ít nhất một danh mục để xóa.');
+        }
+
+        $categories = Category::withCount('events')->whereIn('id', $ids)->get();
+        $deletedCount = 0;
+        $blockedNames = [];
+
+        foreach ($categories as $cat) {
+            if ($cat->events_count > 0) {
+                $blockedNames[] = $cat->name;
+            } else {
+                $cat->delete();
+                $deletedCount++;
+            }
+        }
+
+        $msg = "Đã xóa {$deletedCount} danh mục hợp lệ.";
+        if (!empty($blockedNames)) {
+            $msg .= ' Không thể xóa: ' . implode(', ', $blockedNames) . ' (do vẫn còn sự kiện).';
+        }
+
+        return redirect()->route('admin.categories.index')->with($deletedCount > 0 ? 'success' : 'error', $msg);
     }
 
     public function create(): View

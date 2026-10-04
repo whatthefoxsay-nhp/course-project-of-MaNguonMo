@@ -1,9 +1,20 @@
-<x-admin-layout :header="'Quản Lý Tài Khoản Khách Hàng & Quản Trị'">
+<x-admin-layout 
+    :header="'Quản Lý Tài Khoản Khách Hàng & Quản Trị'"
+    :subtitle="'Quản lý vai trò, trạng thái khóa / mở khóa và quyền hạn của các tài khoản.'"
+>
+    <x-slot:breadcrumb>
+        <span class="text-gray-400">Tổng quan</span>
+        <span class="text-gray-300">›</span>
+        <span class="text-gray-400">Hệ thống</span>
+        <span class="text-gray-300">›</span>
+        <span class="text-[#123D22] font-black">Quản lý tài khoản</span>
+    </x-slot:breadcrumb>
+
     <div x-data="userManagement" class="space-y-6">
         <!-- KPI Mini Stat Cards Row -->
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
             <!-- Stat 1: Total Users -->
-            <div class="bg-white rounded-3xl p-5 border border-black/10 shadow-sm flex items-center justify-between">
+            <div class="bg-white rounded-3xl p-5 border border-[#E3EAE4] shadow-sm flex items-center justify-between">
                 <div>
                     <span class="text-xs font-bold uppercase tracking-wider text-gray-500">Tổng Tài Khoản</span>
                     <span class="font-display font-black text-2xl text-black block mt-1">{{ number_format($stats['total']) }}</span>
@@ -16,7 +27,7 @@
             </div>
 
             <!-- Stat 2: Active Users -->
-            <div class="bg-white rounded-3xl p-5 border border-black/10 shadow-sm flex items-center justify-between">
+            <div class="bg-white rounded-3xl p-5 border border-[#E3EAE4] shadow-sm flex items-center justify-between">
                 <div>
                     <span class="text-xs font-bold uppercase tracking-wider text-emerald-700">Đang Hoạt Động</span>
                     <span class="font-display font-black text-2xl text-emerald-800 block mt-1">{{ number_format($stats['active']) }}</span>
@@ -29,7 +40,7 @@
             </div>
 
             <!-- Stat 3: Locked Users -->
-            <div class="bg-white rounded-3xl p-5 border border-black/10 shadow-sm flex items-center justify-between">
+            <div class="bg-white rounded-3xl p-5 border border-[#E3EAE4] shadow-sm flex items-center justify-between">
                 <div>
                     <span class="text-xs font-bold uppercase tracking-wider text-rose-700">Đã Bị Khóa</span>
                     <span class="font-display font-black text-2xl text-rose-700 block mt-1">{{ number_format($stats['locked']) }}</span>
@@ -42,7 +53,7 @@
             </div>
 
             <!-- Stat 4: Admins -->
-            <div class="bg-white rounded-3xl p-5 border border-black/10 shadow-sm flex items-center justify-between">
+            <div class="bg-white rounded-3xl p-5 border border-[#E3EAE4] shadow-sm flex items-center justify-between">
                 <div>
                     <span class="text-xs font-bold uppercase tracking-wider text-amber-800">Quản Trị Viên</span>
                     <span class="font-display font-black text-2xl text-amber-900 block mt-1">{{ number_format($stats['admins']) }}</span>
@@ -56,7 +67,7 @@
         </div>
 
         <!-- Filter & Search Toolbar -->
-        <div class="bg-white rounded-3xl p-5 sm:p-6 border border-black/10 shadow-sm">
+        <div class="bg-white rounded-3xl p-5 sm:p-6 border border-[#E3EAE4] shadow-sm">
             <form action="{{ route('admin.users.index') }}" method="GET" class="flex flex-col md:flex-row items-stretch md:items-center gap-3">
                 <!-- Search Input -->
                 <div class="relative flex-1">
@@ -68,13 +79,13 @@
                         name="q" 
                         value="{{ $filters['q'] }}" 
                         placeholder="Tìm kiếm theo Tên, Email hoặc Số điện thoại..." 
-                        class="bg-[#FAF9F6] border border-black/10 pl-11 pr-4 py-2.5 rounded-2xl w-full text-xs text-black placeholder-gray-400 focus:outline-none focus:border-black focus:ring-2 focus:ring-black/10 font-medium"
+                        class="bg-[#FAF9F6] border border-gray-200 pl-11 pr-4 py-2.5 rounded-2xl w-full text-xs text-black placeholder-gray-400 focus:outline-none focus:border-amber-400 focus:ring-2 focus:ring-amber-400/20 font-medium"
                     >
                 </div>
 
                 <!-- Role Filter -->
                 <div class="w-full md:w-48">
-                    <select name="role" class="bg-[#FAF9F6] border border-black/10 px-4 py-2.5 rounded-2xl w-full text-xs text-black font-medium focus:outline-none focus:border-black focus:ring-2 focus:ring-black/10">
+                    <select name="role" class="bg-[#FAF9F6] border border-gray-200 px-4 py-2.5 rounded-2xl w-full text-xs text-black font-medium focus:outline-none focus:border-amber-400 focus:ring-2 focus:ring-amber-400/20 cursor-pointer">
                         <option value="">Tất cả vai trò</option>
                         <option value="admin" @selected($filters['role'] === 'admin')>Quản trị viên (Admin)</option>
                         <option value="user" @selected($filters['role'] === 'user')>Khách hàng (User)</option>
@@ -83,7 +94,7 @@
 
                 <!-- Status Filter -->
                 <div class="w-full md:w-48">
-                    <select name="status" class="bg-[#FAF9F6] border border-black/10 px-4 py-2.5 rounded-2xl w-full text-xs text-black font-medium focus:outline-none focus:border-black focus:ring-2 focus:ring-black/10">
+                    <select name="status" class="bg-[#FAF9F6] border border-gray-200 px-4 py-2.5 rounded-2xl w-full text-xs text-black font-medium focus:outline-none focus:border-amber-400 focus:ring-2 focus:ring-amber-400/20 cursor-pointer">
                         <option value="">Tất cả trạng thái</option>
                         <option value="active" @selected($filters['status'] === 'active')>Đang hoạt động</option>
                         <option value="locked" @selected($filters['status'] === 'locked')>Đã bị khóa</option>
@@ -92,13 +103,17 @@
 
                 <!-- Submit and Reset Buttons -->
                 <div class="flex items-center gap-2 shrink-0">
-                    <button type="submit" class="btn-dark px-5 py-2.5 rounded-2xl text-xs font-black flex items-center justify-center gap-1.5 shadow-sm">
+                    <button 
+                        type="submit" 
+                        class="px-5 py-2.5 rounded-2xl text-xs font-black text-white flex items-center justify-center gap-1.5 shadow-sm hover:opacity-90 transition-all"
+                        style="background: #123D22;"
+                    >
                         <svg class="w-3.5 h-3.5 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" /></svg>
                         <span>Lọc</span>
                     </button>
 
                     @if (!empty($filters['q']) || !empty($filters['role']) || $filters['status'] !== '')
-                        <a href="{{ route('admin.users.index') }}" class="px-4 py-2.5 rounded-2xl text-xs font-bold bg-[#FAF9F6] border border-black/10 text-gray-700 hover:text-black" title="Xóa bộ lọc">
+                        <a href="{{ route('admin.users.index') }}" class="px-4 py-2.5 rounded-2xl text-xs font-bold bg-[#FAF9F6] border border-gray-200 text-gray-700 hover:text-black transition-colors" title="Xóa bộ lọc">
                             Xóa lọc
                         </a>
                     @endif
@@ -107,7 +122,7 @@
         </div>
 
         <!-- Users Table Container -->
-        <div class="bg-white rounded-3xl border border-black/10 overflow-hidden shadow-sm space-y-4">
+        <div class="bg-white rounded-3xl border border-[#E3EAE4] overflow-hidden shadow-sm space-y-4">
             <div class="p-6 pb-2 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
                     <h3 class="font-display font-black text-lg text-black">Danh Sách Người Dùng Hệ Thống</h3>
@@ -116,7 +131,8 @@
                 <button 
                     type="button" 
                     @click="openCreateModal = true" 
-                    class="btn-dark px-4 py-2.5 rounded-2xl text-xs font-black inline-flex items-center gap-2 shadow-sm hover:scale-[1.02] transition-transform shrink-0"
+                    class="px-5 py-2.5 rounded-2xl text-xs font-black text-white inline-flex items-center gap-2 shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all shrink-0 cursor-pointer"
+                    style="background: linear-gradient(135deg, #123D22 0%, #1e662e 100%);"
                 >
                     <svg class="w-4 h-4 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4" />
@@ -127,14 +143,14 @@
 
             <div class="overflow-x-auto">
                 <table class="w-full text-left text-xs text-black">
-                    <thead class="text-[11px] uppercase tracking-wider text-gray-600 border-y border-black/10 bg-[#FAF9F6]">
+                    <thead class="text-[11px] uppercase tracking-[0.06em] text-neutral-600 border-y border-[#E3EAE4] bg-[#F6F8F6]">
                         <tr>
-                            <th class="py-3 px-3.5 font-bold whitespace-nowrap">Người Dùng</th>
-                            <th class="py-3 px-3 font-bold whitespace-nowrap">Số Điện Thoại</th>
-                            <th class="py-3 px-3 font-bold whitespace-nowrap">Vai Trò</th>
-                            <th class="py-3 px-3 font-bold whitespace-nowrap">Trạng Thái</th>
-                            <th class="py-3 px-3 font-bold whitespace-nowrap">Ngày Tham Gia</th>
-                            <th class="py-3 px-3.5 font-bold text-right whitespace-nowrap">Thao Tác</th>
+                            <th class="py-3.5 px-4 font-bold whitespace-nowrap">Người Dùng</th>
+                            <th class="py-3.5 px-3 font-bold whitespace-nowrap">Số Điện Thoại</th>
+                            <th class="py-3.5 px-3 font-bold whitespace-nowrap">Vai Trò</th>
+                            <th class="py-3.5 px-3 font-bold whitespace-nowrap">Trạng Thái</th>
+                            <th class="py-3.5 px-3 font-bold whitespace-nowrap">Ngày Tham Gia</th>
+                            <th class="py-3.5 px-4 font-bold text-right whitespace-nowrap">Thao Tác</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-black/5">
@@ -143,7 +159,7 @@
                                 $isCurrentAdmin = ($user->id === Auth::id());
                                 $isAdmin = $user->hasRole('admin');
                             @endphp
-                            <tr class="hover:bg-[#FAF9F6] transition-colors">
+                            <tr class="hover:bg-[#F2F8F4] border-l-[3px] border-l-transparent hover:border-l-amber-500 transition-all">
                                 <!-- User Info with Avatar / Initials -->
                                 <td class="py-3 px-3.5 whitespace-nowrap">
                                     <div class="flex items-center gap-2.5">
@@ -496,7 +512,8 @@
                         </button>
                         <button 
                             type="submit" 
-                            class="flex-1 btn-dark py-2.5 rounded-2xl text-xs font-black shadow-sm flex items-center justify-center gap-1.5"
+                            class="flex-1 py-2.5 rounded-2xl text-xs font-black text-white shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                            style="background: linear-gradient(135deg, #123D22 0%, #1e662e 100%);"
                         >
                             <svg class="w-3.5 h-3.5 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />

@@ -1,21 +1,34 @@
-<x-admin-layout :header="'Báo Cáo & Thống Kê Tổng Quan'">
+<x-admin-layout 
+    :header="'Báo Cáo & Thống Kê Tổng Quan'"
+    :subtitle="'Theo dõi dữ liệu doanh thu bán vé, sức chứa khán đài và xếp hạng show diễn trực tiếp.'"
+>
+    <x-slot:breadcrumb>
+        <span class="text-gray-400">Tổng quan</span>
+        <span class="text-gray-300">›</span>
+        <span class="text-[#123D22] font-black">Giám sát hệ thống</span>
+    </x-slot:breadcrumb>
+
     <div class="space-y-8">
         
         <!-- Header Subtitle & Quick Filter Info -->
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-6 sm:p-7 rounded-3xl border border-black/10 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.03)]">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-6 sm:p-7 rounded-3xl border border-[#E3EAE4] shadow-sm">
             <div>
                 <div class="flex items-center gap-2 mb-1">
-                    <span class="w-2 h-2 rounded-full bg-amber-500"></span>
-                    <span class="text-xs font-black uppercase tracking-wider text-amber-600">Trung Tâm Quản Trị &amp; Giám Sát Thời Gian Thực</span>
+                    <span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
+                    <span class="text-xs font-black uppercase tracking-wider text-amber-700">Trung Tâm Quản Trị &amp; Giám Sát Thời Gian Thực</span>
                 </div>
-                <h2 class="font-display font-black text-2xl text-black">Tổng Quan Hiệu Suất Hệ Thống</h2>
+                <h2 class="font-display font-black text-2xl text-slate-900">Tổng Quan Hiệu Suất Hệ Thống</h2>
                 <p class="text-xs text-gray-500 mt-1 font-medium">Theo dõi dữ liệu doanh thu bán vé, sức chứa khán đài và xếp hạng show diễn trực tiếp.</p>
             </div>
             <div class="flex items-center gap-3">
-                <span class="text-xs font-semibold text-gray-500 bg-[#FAF9F6] px-3.5 py-2 rounded-xl border border-black/10">
-                    Cập nhật: <strong class="text-black">{{ now()->format('H:i d/m/Y') }}</strong>
+                <span class="text-xs font-semibold text-gray-500 bg-[#FAF9F6] px-3.5 py-2 rounded-xl border border-gray-200">
+                    Cập nhật: <strong class="text-slate-900">{{ now()->format('H:i d/m/Y') }}</strong>
                 </span>
-                <a href="{{ route('admin.reports.index') }}" class="btn-rose px-5 py-2.5 rounded-xl text-xs font-black flex items-center gap-2 shadow-sm hover:shadow-md transition-all">
+                <a 
+                    href="{{ route('admin.reports.index') }}" 
+                    class="px-5 py-2.5 rounded-xl text-xs font-black text-white flex items-center gap-2 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all"
+                    style="background: linear-gradient(135deg, #123D22 0%, #1e662e 100%);"
+                >
                     <svg class="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                     </svg>

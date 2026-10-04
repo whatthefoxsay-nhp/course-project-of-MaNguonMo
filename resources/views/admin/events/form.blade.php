@@ -4,7 +4,18 @@
     $timelineText = collect($event->timeline ?? [])->map(fn ($row) => implode(' | ', array_values($row)))->implode("\n");
 @endphp
 
-<x-admin-layout :header="$isEdit ? 'Sửa Sự Kiện' : 'Thêm Sự Kiện'">
+<x-admin-layout 
+    :header="$isEdit ? 'Sửa Sự Kiện' : 'Thêm Sự Kiện'"
+    :subtitle="$isEdit ? 'Cập nhật thông tin chi tiết, nghệ sĩ và hình ảnh cho [' . $event->title . ']' : 'Tạo mới chương trình sự kiện / liveshow trên hệ thống TicketAdmin'"
+>
+    <x-slot:breadcrumb>
+        <span class="text-gray-400">Tổng quan</span>
+        <span class="text-gray-300">›</span>
+        <a href="{{ route('admin.events.index') }}" class="text-gray-400 hover:text-black">Sự kiện</a>
+        <span class="text-gray-300">›</span>
+        <span class="text-[#123D22] font-black">{{ $isEdit ? 'Chỉnh sửa' : 'Thêm mới' }}</span>
+    </x-slot:breadcrumb>
+
     <form method="POST" enctype="multipart/form-data"
           action="{{ $isEdit ? route('admin.events.update', $event) : route('admin.events.store') }}"
           class="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -13,7 +24,7 @@
             @method('PUT')
         @endif
 
-        <div class="lg:col-span-2 bg-white p-6 rounded-3xl border border-black/10 shadow-sm space-y-5">
+        <div class="lg:col-span-2 bg-white p-6 sm:p-7 rounded-3xl border border-[#E3EAE4] shadow-sm space-y-5">
             <h3 class="font-display font-black text-lg">Thông tin chính</h3>
 
             <x-admin.field label="Tên sự kiện" name="title" :value="$event->title" required />
@@ -74,9 +85,15 @@
                 <x-admin.field label="Tải ảnh mới" name="poster" type="file" accept="image/jpeg,image/png,image/webp" hint="JPG/PNG/WEBP, tối đa 2MB." />
             </div>
 
-            <div class="bg-white p-6 rounded-3xl border border-black/10 shadow-sm flex flex-col gap-3">
-                <button type="submit" class="btn-rose px-6 py-3 rounded-2xl text-xs font-black">{{ $isEdit ? 'Lưu thay đổi' : 'Tạo sự kiện' }}</button>
-                <a href="{{ route('admin.events.index') }}" class="text-center px-6 py-3 rounded-2xl text-xs font-bold border border-black/10">Hủy</a>
+            <div class="bg-white p-6 rounded-3xl border border-[#E3EAE4] shadow-sm flex flex-col gap-3">
+                <button 
+                    type="submit" 
+                    class="w-full py-3.5 rounded-2xl text-xs font-black text-white shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200"
+                    style="background: linear-gradient(135deg, #123D22 0%, #1e662e 100%);"
+                >
+                    {{ $isEdit ? 'Lưu thay đổi' : 'Tạo sự kiện' }}
+                </button>
+                <a href="{{ route('admin.events.index') }}" class="text-center py-3 rounded-2xl text-xs font-bold text-gray-600 bg-gray-100 hover:bg-gray-200 transition-colors">Hủy</a>
             </div>
         </div>
     </form>

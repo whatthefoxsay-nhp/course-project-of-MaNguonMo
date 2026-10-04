@@ -1,19 +1,35 @@
-<x-admin-layout :header="'Chi Tiết Đơn Đặt Vé #' . $booking->booking_code">
+<x-admin-layout 
+    :header="'Chi Tiết Đơn Đặt Vé #' . $booking->booking_code"
+    :subtitle="'Thông tin chi tiết lượt đặt vé, danh sách ghế ngồi và trạng thái thanh toán.'"
+>
+    <x-slot:breadcrumb>
+        <span class="text-gray-400">Tổng quan</span>
+        <span class="text-gray-300">›</span>
+        <a href="{{ route('admin.bookings.index') }}" class="text-gray-400 hover:text-black">Bán vé</a>
+        <span class="text-gray-300">›</span>
+        <span class="text-[#123D22] font-black">Đơn #{{ $booking->booking_code }}</span>
+    </x-slot:breadcrumb>
+
     <div class="space-y-6">
 
         <!-- Top Header & Back Action -->
-        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-6 rounded-3xl border border-black/10 shadow-sm">
-            <div class="flex items-center gap-4">
-                <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-500 to-cyan-500 text-white flex items-center justify-center shadow-md shadow-blue-500/20 shrink-0">
+        <div class="relative bg-gradient-to-r from-white via-white to-[#F1F8F2] p-6 rounded-3xl border border-[#E3EAE4] shadow-sm overflow-hidden flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <!-- Decorative SVG Watermark -->
+            <svg class="absolute right-4 -bottom-8 w-44 h-44 text-[#123D22] opacity-[0.06] pointer-events-none transform -rotate-12" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z" />
+            </svg>
+
+            <div class="relative z-10 flex items-center gap-4">
+                <div class="w-12 h-12 rounded-2xl bg-emerald-50 border border-emerald-200/80 text-[#123D22] flex items-center justify-center shadow-xs shrink-0">
                     <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z" />
                     </svg>
                 </div>
                 <div>
-                    <span class="text-[11px] font-black uppercase tracking-wider text-blue-800 bg-blue-50 border border-blue-200 px-2.5 py-0.5 rounded-full inline-block mb-1">
+                    <span class="text-[11px] font-black uppercase tracking-wider text-[#123D22] bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 rounded-full inline-block mb-1">
                         Chi Tiết Vé Điện Tử
                     </span>
-                    <h2 class="font-display font-black text-xl text-black flex items-center gap-2">
+                    <h2 class="font-display font-black text-xl text-slate-900 flex items-center gap-2">
                         <span>Đơn Vé: {{ $booking->booking_code }}</span>
                         @if($booking->status === 'confirmed')
                             <span class="px-2.5 py-0.5 rounded-full font-bold text-xs bg-emerald-50 text-emerald-800 border border-emerald-300">Đã xác nhận</span>
@@ -27,8 +43,8 @@
                 </div>
             </div>
 
-            <div class="flex items-center gap-3">
-                <a href="{{ route('admin.bookings.index') }}" class="px-4 py-2.5 rounded-2xl text-xs font-bold bg-[#FAF9F6] border border-black/10 text-gray-700 hover:text-black hover:bg-neutral-100 transition-all flex items-center gap-1.5">
+            <div class="relative z-10 flex items-center gap-3">
+                <a href="{{ route('admin.bookings.index') }}" class="px-4 py-2.5 rounded-2xl text-xs font-bold bg-[#FAF9F6] border border-gray-200 text-gray-700 hover:text-black hover:bg-neutral-100 transition-all flex items-center gap-1.5">
                     <span>&larr;</span> Quay lại danh sách
                 </a>
 
@@ -49,8 +65,12 @@
                         @csrf
                         @method('PATCH')
                         <input type="hidden" name="status" value="confirmed">
-                        <button type="submit" class="btn-dark px-4 py-2.5 rounded-2xl text-xs font-black flex items-center gap-1.5 shadow-sm">
-                            <svg class="w-4 h-4 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+                        <button 
+                            type="submit" 
+                            class="px-4 py-2.5 rounded-2xl text-xs font-black text-white flex items-center gap-1.5 shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all"
+                            style="background: linear-gradient(135deg, #123D22 0%, #1e662e 100%);"
+                        >
+                            <svg class="w-4 h-4 text-emerald-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
                             <span>Xác Nhận Đơn</span>
                         </button>
                     </form>

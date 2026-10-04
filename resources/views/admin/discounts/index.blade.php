@@ -1,27 +1,44 @@
-<x-admin-layout :header="'Quản Lý Mã Giảm Giá & Ưu Đãi'">
+<x-admin-layout 
+    :header="'Quản Lý Mã Giảm Giá & Ưu Đãi'"
+    :subtitle="'Tạo mới, phân bổ mã khuyến mãi và theo dõi hiệu quả sử dụng voucher ưu đãi đặt vé.'"
+>
+    <x-slot:breadcrumb>
+        <span class="text-gray-400">Tổng quan</span>
+        <span class="text-gray-300">›</span>
+        <span class="text-gray-400">Bán vé</span>
+        <span class="text-gray-300">›</span>
+        <span class="text-[#123D22] font-black">Mã giảm giá &amp; Voucher</span>
+    </x-slot:breadcrumb>
+
     <div class="space-y-6" x-data="{ createModalOpen: false, copyNotice: '' }">
 
         <!-- Top Action Bar & Header Banner -->
-        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-6 rounded-3xl border border-black/10 shadow-sm">
-            <div class="flex items-center gap-4">
-                <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-amber-500 to-orange-600 text-white flex items-center justify-center shadow-md shadow-amber-500/20 shrink-0">
+        <div class="relative bg-gradient-to-r from-white via-white to-[#F1F8F2] p-6 rounded-3xl border border-[#E3EAE4] shadow-sm overflow-hidden flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <!-- Decorative SVG Watermark -->
+            <svg class="absolute right-4 -bottom-8 w-44 h-44 text-[#123D22] opacity-[0.06] pointer-events-none transform -rotate-12" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+            </svg>
+
+            <div class="relative z-10 flex items-center gap-4">
+                <div class="w-12 h-12 rounded-2xl bg-emerald-50 border border-emerald-200/80 text-[#123D22] flex items-center justify-center shadow-xs shrink-0">
                     <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
                     </svg>
                 </div>
                 <div>
-                    <span class="text-[11px] font-black uppercase tracking-wider text-amber-700 bg-amber-50 border border-amber-200/80 px-2.5 py-0.5 rounded-full inline-block mb-1">Marketing &amp; Khuyến Mãi</span>
-                    <h2 class="font-display font-black text-xl text-black">Chương Trình Mã Giảm Giá &amp; Voucher</h2>
+                    <span class="text-[11px] font-black uppercase tracking-wider text-[#123D22] bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 rounded-full inline-block mb-1">Marketing &amp; Khuyến Mãi</span>
+                    <h2 class="font-display font-black text-xl text-slate-900">Chương Trình Mã Giảm Giá &amp; Voucher</h2>
                     <p class="text-xs text-gray-500 mt-0.5">Tạo mới, phân bổ mã khuyến mãi và theo dõi hiệu quả sử dụng voucher ưu đãi đặt vé.</p>
                 </div>
             </div>
-            <div>
+            <div class="relative z-10">
                 <button 
                     type="button" 
                     @click="createModalOpen = true"
-                    class="bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-black font-black px-5 py-3 rounded-2xl text-xs flex items-center gap-2 shadow-md shadow-amber-500/20 transition-all hover:scale-[1.02]"
+                    class="px-5 py-3 rounded-2xl text-xs font-black text-white flex items-center gap-2 shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all"
+                    style="background: linear-gradient(135deg, #123D22 0%, #1e662e 100%);"
                 >
-                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
+                    <svg class="w-4 h-4 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
                     <span>Tạo Mã Giảm Mới</span>
                 </button>
             </div>
@@ -29,7 +46,7 @@
 
         <!-- Metric KPI Cards -->
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <div class="bg-white p-5 rounded-3xl border border-black/10 shadow-sm flex items-center gap-4">
+            <div class="bg-white p-5 rounded-3xl border border-[#E3EAE4] shadow-sm flex items-center gap-4">
                 <div class="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold shrink-0">
                     <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                 </div>
@@ -39,7 +56,7 @@
                 </div>
             </div>
 
-            <div class="bg-white p-5 rounded-3xl border border-black/10 shadow-sm flex items-center gap-4">
+            <div class="bg-white p-5 rounded-3xl border border-[#E3EAE4] shadow-sm flex items-center gap-4">
                 <div class="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center font-bold shrink-0">
                     <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
                 </div>
@@ -49,7 +66,7 @@
                 </div>
             </div>
 
-            <div class="bg-white p-5 rounded-3xl border border-black/10 shadow-sm flex items-center gap-4">
+            <div class="bg-white p-5 rounded-3xl border border-[#E3EAE4] shadow-sm flex items-center gap-4">
                 <div class="w-12 h-12 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center font-bold shrink-0">
                     <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" /></svg>
                 </div>
@@ -59,7 +76,7 @@
                 </div>
             </div>
 
-            <div class="bg-white p-5 rounded-3xl border border-black/10 shadow-sm flex items-center gap-4">
+            <div class="bg-white p-5 rounded-3xl border border-[#E3EAE4] shadow-sm flex items-center gap-4">
                 <div class="w-12 h-12 rounded-2xl bg-rose-50 text-rose-600 flex items-center justify-center font-bold shrink-0">
                     <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                 </div>
@@ -71,7 +88,7 @@
         </div>
 
         <!-- Filter Controls -->
-        <div class="bg-white p-5 rounded-3xl border border-black/10 shadow-sm">
+        <div class="bg-white p-5 rounded-3xl border border-[#E3EAE4] shadow-sm">
             <form method="GET" action="{{ route('admin.discounts.index') }}" class="grid grid-cols-1 sm:grid-cols-12 gap-3">
                 <div class="sm:col-span-7 relative">
                     <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-gray-400">
@@ -82,12 +99,12 @@
                         name="search" 
                         value="{{ request('search') }}" 
                         placeholder="Tìm theo mã voucher (VD: TICKETBOX2026), tiêu đề khuyến mãi..." 
-                        class="w-full bg-[#FAF9F6] border border-black/10 rounded-2xl pl-10 pr-4 py-2.5 text-xs text-black placeholder-gray-400 focus:outline-none focus:border-black focus:ring-2 focus:ring-black/10 font-medium"
+                        class="w-full bg-[#FAF9F6] border border-gray-200 rounded-2xl pl-10 pr-4 py-2.5 text-xs text-black placeholder-gray-400 focus:outline-none focus:border-amber-400 focus:ring-2 focus:ring-amber-400/20 font-medium"
                     >
                 </div>
 
                 <div class="sm:col-span-3">
-                    <select name="status" class="w-full bg-[#FAF9F6] border border-black/10 rounded-2xl px-4 py-2.5 text-xs text-black focus:outline-none focus:border-black focus:ring-2 focus:ring-black/10 font-medium">
+                    <select name="status" class="w-full bg-[#FAF9F6] border border-gray-200 rounded-2xl px-4 py-2.5 text-xs text-black focus:outline-none focus:border-amber-400 focus:ring-2 focus:ring-amber-400/20 font-medium cursor-pointer">
                         <option value="">-- Tất cả trạng thái --</option>
                         <option value="active" {{ request('status') == 'active' ? 'selected' : '' }}>Đang áp dụng</option>
                         <option value="expired" {{ request('status') == 'expired' ? 'selected' : '' }}>Hết hạn / Tạm dừng</option>
@@ -95,7 +112,11 @@
                 </div>
 
                 <div class="sm:col-span-2 flex gap-2">
-                    <button type="submit" class="flex-1 bg-black text-white font-bold py-2.5 px-4 rounded-2xl text-xs hover:bg-black/80 transition-colors">
+                    <button 
+                        type="submit" 
+                        class="flex-1 text-white font-bold py-2.5 px-4 rounded-2xl text-xs transition-all hover:opacity-90 shadow-sm"
+                        style="background: #123D22;"
+                    >
                         Lọc
                     </button>
                     @if(request('search') || request('status'))
@@ -114,10 +135,10 @@
         </div>
 
         <!-- Table of Discount Codes -->
-        <div class="bg-white rounded-3xl border border-black/10 shadow-sm overflow-hidden">
+        <div class="bg-white rounded-3xl border border-[#E3EAE4] shadow-sm overflow-hidden">
             <div class="overflow-x-auto">
                 <table class="w-full text-left text-xs">
-                    <thead class="bg-[#FAF9F6] text-gray-500 uppercase tracking-wider font-bold border-b border-black/10">
+                    <thead class="bg-[#F6F8F6] text-neutral-600 uppercase tracking-[0.06em] font-bold border-b border-[#E3EAE4]">
                         <tr>
                             <th class="py-3.5 px-5">Mã Voucher</th>
                             <th class="py-3.5 px-5">Thông Tin &amp; Mức Giảm</th>
@@ -133,7 +154,7 @@
                             @php
                                 $percent = $discount->max_uses > 0 ? min(100, round(($discount->used_count / $discount->max_uses) * 100)) : 0;
                             @endphp
-                            <tr class="hover:bg-amber-50/30 transition-colors">
+                            <tr class="hover:bg-[#F2F8F4] border-l-[3px] border-l-transparent hover:border-l-amber-500 transition-all">
                                 <td class="py-4 px-5">
                                     <div class="flex items-center gap-2">
                                         <span class="font-mono font-black text-xs px-3 py-1.5 rounded-xl bg-amber-100 text-amber-900 border border-amber-300/80 shadow-xs tracking-wider">

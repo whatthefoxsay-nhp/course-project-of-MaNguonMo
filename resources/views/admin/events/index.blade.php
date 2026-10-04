@@ -1,22 +1,42 @@
-<x-admin-layout :header="'Quản Lý Sự Kiện & Liveshow'">
+<x-admin-layout 
+    :header="'Quản Lý Sự Kiện & Liveshow'"
+    :subtitle="'Quản lý các chương trình ca nhạc, concert, hội nghị và triển lãm mở bán trên hệ thống.'"
+>
+    <x-slot:breadcrumb>
+        <span class="text-gray-400">Tổng quan</span>
+        <span class="text-gray-300">›</span>
+        <span class="text-gray-400">Nội dung</span>
+        <span class="text-gray-300">›</span>
+        <span class="text-[#123D22] font-black">Sự kiện &amp; Liveshow</span>
+    </x-slot:breadcrumb>
+
     <div class="space-y-6">
 
         <!-- Top Action Bar & Header Banner -->
-        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-6 rounded-3xl border border-black/10 shadow-sm">
-            <div class="flex items-center gap-4">
-                <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-rose-500 to-pink-600 text-white flex items-center justify-center shadow-md shadow-rose-500/20 shrink-0">
+        <div class="relative bg-gradient-to-r from-white via-white to-[#F1F8F2] p-6 rounded-3xl border border-[#E3EAE4] shadow-sm overflow-hidden flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <!-- Decorative SVG Watermark -->
+            <svg class="absolute right-4 -bottom-8 w-44 h-44 text-[#123D22] opacity-[0.06] pointer-events-none transform -rotate-12" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z" />
+            </svg>
+
+            <div class="relative z-10 flex items-center gap-4">
+                <div class="w-12 h-12 rounded-2xl bg-emerald-50 border border-emerald-200/80 text-[#123D22] flex items-center justify-center shadow-xs shrink-0">
                     <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z" />
                     </svg>
                 </div>
                 <div>
-                    <span class="text-[11px] font-black uppercase tracking-wider text-rose-600 bg-rose-50 border border-rose-200/80 px-2.5 py-0.5 rounded-full inline-block mb-1">Danh Mục Sự Kiện</span>
-                    <h2 class="font-display font-black text-xl text-black">Danh Sách Sự Kiện &amp; Đêm Diễn</h2>
+                    <span class="text-[11px] font-black uppercase tracking-wider text-[#123D22] bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 rounded-full inline-block mb-1">Kho Sự Kiện &amp; Show Diễn</span>
+                    <h2 class="font-display font-black text-xl text-slate-900">Danh Sách Sự Kiện &amp; Đêm Diễn</h2>
                     <p class="text-xs text-gray-500 mt-0.5">Quản lý các chương trình ca nhạc, concert, hội nghị và triển lãm mở bán trên hệ thống.</p>
                 </div>
             </div>
-            <div>
-                <a href="{{ route('admin.events.create') }}" class="btn-rose px-5 py-3 rounded-2xl text-xs font-black flex items-center gap-2 shadow-md shadow-rose-500/20 transition-all hover:scale-[1.02]">
+            <div class="relative z-10">
+                <a 
+                    href="{{ route('admin.events.create') }}" 
+                    class="px-5 py-3 rounded-2xl text-xs font-black text-white flex items-center gap-2 shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all"
+                    style="background: linear-gradient(135deg, #123D22 0%, #1e662e 100%);"
+                >
                     <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
                     <span>Thêm Sự Kiện Mới</span>
                 </a>
@@ -24,17 +44,17 @@
         </div>
 
         <!-- Filter Controls -->
-        <div class="bg-white p-5 rounded-3xl border border-black/10 shadow-sm">
+        <div class="bg-white p-5 rounded-3xl border border-[#E3EAE4] shadow-sm">
             <form method="GET" action="{{ route('admin.events.index') }}" class="grid grid-cols-1 sm:grid-cols-12 gap-3">
                 <div class="sm:col-span-6 relative">
                     <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-gray-400">
                         <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
                     </div>
-                    <input type="text" name="search" value="{{ request('search') }}" placeholder="Tìm kiếm theo tên sự kiện, nghệ sĩ, diễn viên..." class="w-full bg-[#FAF9F6] border border-black/10 rounded-2xl pl-10 pr-4 py-2.5 text-xs text-black placeholder-gray-400 focus:outline-none focus:border-black focus:ring-2 focus:ring-black/10 font-medium">
+                    <input type="text" name="search" value="{{ request('search') }}" placeholder="Tìm kiếm theo tên sự kiện, nghệ sĩ, diễn viên..." class="w-full bg-[#FAF9F6] border border-gray-200 rounded-2xl pl-10 pr-4 py-2.5 text-xs text-black placeholder-gray-400 focus:outline-none focus:border-amber-400 focus:ring-2 focus:ring-amber-400/20 font-medium">
                 </div>
 
                 <div class="sm:col-span-3">
-                    <select name="category_id" class="w-full bg-[#FAF9F6] border border-black/10 rounded-2xl px-4 py-2.5 text-xs text-black focus:outline-none focus:border-black focus:ring-2 focus:ring-black/10 font-medium">
+                    <select name="category_id" class="w-full bg-[#FAF9F6] border border-gray-200 rounded-2xl px-4 py-2.5 text-xs text-black focus:outline-none focus:border-amber-400 focus:ring-2 focus:ring-amber-400/20 font-medium cursor-pointer">
                         <option value="">-- Tất cả thể loại --</option>
                         @foreach($categories as $cat)
                             <option value="{{ $cat->id }}" {{ request('category_id') == $cat->id ? 'selected' : '' }}>{{ $cat->name }}</option>
@@ -43,7 +63,7 @@
                 </div>
 
                 <div class="sm:col-span-2">
-                    <select name="status" class="w-full bg-[#FAF9F6] border border-black/10 rounded-2xl px-4 py-2.5 text-xs text-black focus:outline-none focus:border-black focus:ring-2 focus:ring-black/10 font-medium">
+                    <select name="status" class="w-full bg-[#FAF9F6] border border-gray-200 rounded-2xl px-4 py-2.5 text-xs text-black focus:outline-none focus:border-amber-400 focus:ring-2 focus:ring-amber-400/20 font-medium cursor-pointer">
                         <option value="">-- Trạng thái --</option>
                         <option value="published" {{ request('status') === 'published' ? 'selected' : '' }}>Đang mở bán</option>
                         <option value="draft" {{ request('status') === 'draft' ? 'selected' : '' }}>Bản nháp</option>
@@ -51,7 +71,11 @@
                 </div>
 
                 <div class="sm:col-span-1 flex gap-2">
-                    <button type="submit" class="w-full btn-dark rounded-2xl text-xs font-black flex items-center justify-center shadow-sm">
+                    <button 
+                        type="submit" 
+                        class="w-full text-white rounded-2xl text-xs font-black flex items-center justify-center shadow-sm py-2.5 transition-all hover:opacity-90"
+                        style="background: #123D22;"
+                    >
                         <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
                     </button>
                 </div>
@@ -59,23 +83,23 @@
         </div>
 
         <!-- Events Table -->
-        <div class="bg-white rounded-3xl border border-black/10 overflow-hidden shadow-sm">
+        <div class="bg-white rounded-3xl border border-[#E3EAE4] overflow-hidden shadow-sm">
             <div class="overflow-x-auto">
                 <table class="w-full text-left text-xs text-black">
-                    <thead class="text-[11px] uppercase tracking-wider text-gray-600 border-b border-black/10 bg-[#FAF9F6]">
+                    <thead class="text-[11px] uppercase tracking-[0.06em] text-neutral-600 border-b border-[#E3EAE4] bg-[#F6F8F6]">
                         <tr>
-                            <th class="py-3 px-3.5 font-bold whitespace-nowrap">Sự Kiện</th>
-                            <th class="py-3 px-3 font-bold whitespace-nowrap">Thể Loại</th>
-                            <th class="py-3 px-3 font-bold whitespace-nowrap">Thời Lượng</th>
-                            <th class="py-3 px-3 font-bold whitespace-nowrap">Số Suất Diễn</th>
-                            <th class="py-3 px-3 font-bold whitespace-nowrap">Ngày Khởi Chiếu</th>
-                            <th class="py-3 px-3 font-bold whitespace-nowrap">Trạng Thái</th>
-                            <th class="py-3 px-3.5 font-bold text-right whitespace-nowrap">Thao Tác</th>
+                            <th class="py-3.5 px-4 font-bold whitespace-nowrap">Sự Kiện</th>
+                            <th class="py-3.5 px-3 font-bold whitespace-nowrap">Thể Loại</th>
+                            <th class="py-3.5 px-3 font-bold whitespace-nowrap">Thời Lượng</th>
+                            <th class="py-3.5 px-3 font-bold whitespace-nowrap">Số Suất Diễn</th>
+                            <th class="py-3.5 px-3 font-bold whitespace-nowrap">Ngày Khởi Chiếu</th>
+                            <th class="py-3.5 px-3 font-bold whitespace-nowrap">Trạng Thái</th>
+                            <th class="py-3.5 px-4 font-bold text-right whitespace-nowrap">Thao Tác</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-black/5">
                         @forelse($events as $event)
-                            <tr class="hover:bg-[#FAF9F6] transition-colors">
+                            <tr class="hover:bg-[#F2F8F4] border-l-[3px] border-l-transparent hover:border-l-amber-500 transition-all">
                                 <td class="py-3 px-3.5 whitespace-nowrap">
                                     <div class="flex items-center gap-3">
                                         <div class="w-10 h-14 rounded-xl bg-black/10 overflow-hidden flex-shrink-0 border border-black/10 shadow-xs">

@@ -1,4 +1,15 @@
-<x-admin-layout :header="$isEdit ? 'Chỉnh Sửa & Tái Tạo Sơ Đồ Khán Phòng' : 'Tạo Mới & Thiết Kế Sơ Đồ Khán Đài'">
+<x-admin-layout 
+    :header="$isEdit ? 'Chỉnh Sửa & Tái Tạo Sơ Đồ Khán Phòng' : 'Tạo Mới & Thiết Kế Sơ Đồ Khán Đài'"
+    :subtitle="$isEdit ? 'Cấu hình và tái tạo sơ đồ ghế ngồi cho [' . $room->name . ']' : 'Thiết kế sơ đồ khán đài và cấu hình phân vùng giá vé cho khán phòng mới'"
+>
+    <x-slot:breadcrumb>
+        <span class="text-gray-400">Tổng quan</span>
+        <span class="text-gray-300">›</span>
+        <a href="{{ route('admin.rooms.index') }}" class="text-gray-400 hover:text-black">Khán phòng</a>
+        <span class="text-gray-300">›</span>
+        <span class="text-[#123D22] font-black">{{ $isEdit ? 'Chỉnh sửa' : 'Tạo mới' }}</span>
+    </x-slot:breadcrumb>
+
     @php
         $preset = $room->layout_preset ?? 'mega_concert';
         $config = $room->seat_config ?? [];
@@ -25,18 +36,23 @@
         class="space-y-6"
     >
         <!-- Header Banner -->
-        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-6 rounded-3xl border border-black/10 shadow-sm">
-            <div class="flex items-center gap-4">
-                <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-amber-500 to-rose-600 text-white flex items-center justify-center shadow-md shadow-amber-500/20 shrink-0">
+        <div class="relative bg-gradient-to-r from-white via-white to-[#F1F8F2] p-6 rounded-3xl border border-[#E3EAE4] shadow-sm overflow-hidden flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <!-- Decorative SVG Watermark -->
+            <svg class="absolute right-4 -bottom-8 w-44 h-44 text-[#123D22] opacity-[0.06] pointer-events-none transform -rotate-12" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+            </svg>
+
+            <div class="relative z-10 flex items-center gap-4">
+                <div class="w-12 h-12 rounded-2xl bg-emerald-50 border border-emerald-200/80 text-[#123D22] flex items-center justify-center shadow-xs shrink-0">
                     <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
                     </svg>
                 </div>
                 <div>
-                    <span class="text-[11px] font-black uppercase tracking-wider text-gold-dark bg-[#FFF8E1] border border-[#FFE082] px-2.5 py-0.5 rounded-full inline-block mb-1">
+                    <span class="text-[11px] font-black uppercase tracking-wider text-[#123D22] bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 rounded-full inline-block mb-1">
                         Trình Sinh Sơ Đồ &amp; Hạng Vé Tự Động
                     </span>
-                    <h2 class="font-display font-black text-xl text-black">
+                    <h2 class="font-display font-black text-xl text-slate-900">
                         {{ $isEdit ? 'Cấu Hình & Tái Tạo Sơ Đồ: ' . $room->name : 'Thiết Kế & Sinh Sơ Đồ Khán Đài Mới' }}
                     </h2>
                     <p class="text-xs text-gray-500 mt-0.5">
@@ -45,7 +61,7 @@
                 </div>
             </div>
 
-            <a href="{{ route('admin.rooms.index') }}" class="btn-ghost-light px-5 py-2.5 rounded-2xl text-xs font-bold flex items-center gap-1.5 self-start md:self-auto">
+            <a href="{{ route('admin.rooms.index') }}" class="relative z-10 px-5 py-2.5 rounded-2xl text-xs font-bold text-gray-600 bg-gray-100 hover:bg-gray-200 transition-colors flex items-center gap-1.5 self-start md:self-auto">
                 <span>&larr;</span>
                 <span>Quay lại danh sách</span>
             </a>
@@ -266,9 +282,10 @@
                     <div class="pt-2">
                         <button 
                             type="submit" 
-                            class="btn-rose w-full py-4 rounded-2xl font-black text-sm shadow-xl flex items-center justify-center gap-2 hover:scale-[1.01] transition-all cursor-pointer"
+                            class="w-full py-4 rounded-2xl font-black text-sm text-white shadow-xl flex items-center justify-center gap-2 hover:scale-[1.01] hover:shadow-2xl transition-all cursor-pointer"
+                            style="background: linear-gradient(135deg, #123D22 0%, #1e662e 100%);"
                         >
-                            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" /></svg>
+                            <svg class="w-5 h-5 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" /></svg>
                             <span>{{ $isEdit ? 'Cập Nhật & Tái Tạo Sơ Đồ Khán Đài' : 'Lưu Khán Phòng & Tự Động Sinh Sơ Đồ Ghế' }}</span>
                         </button>
                     </div>

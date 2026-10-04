@@ -1,4 +1,15 @@
-<x-admin-layout :header="'Khán Phòng & Sơ Đồ Ghế'">
+<x-admin-layout 
+    :header="'Khán Phòng & Sơ Đồ Ghế'"
+    :subtitle="'Hệ thống tự động sinh sơ đồ ghế trực quan và phân vùng giá vé cho từng địa điểm tổ chức sự kiện.'"
+>
+    <x-slot:breadcrumb>
+        <span class="text-gray-400">Tổng quan</span>
+        <span class="text-gray-300">›</span>
+        <span class="text-gray-400">Địa điểm</span>
+        <span class="text-gray-300">›</span>
+        <span class="text-[#123D22] font-black">Khán phòng &amp; Sơ đồ ghế</span>
+    </x-slot:breadcrumb>
+
     <div 
         x-data="{
             showModal: false,
@@ -30,21 +41,30 @@
     >
 
         <!-- Top Action Bar & Header Banner -->
-        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-6 rounded-3xl border border-black/10 shadow-sm">
-            <div class="flex items-center gap-4">
-                <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 text-white flex items-center justify-center shadow-md shadow-indigo-500/20 shrink-0">
+        <div class="relative bg-gradient-to-r from-white via-white to-[#F1F8F2] p-6 rounded-3xl border border-[#E3EAE4] shadow-sm overflow-hidden flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <!-- Decorative SVG Watermark -->
+            <svg class="absolute right-4 -bottom-8 w-44 h-44 text-[#123D22] opacity-[0.06] pointer-events-none transform -rotate-12" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+            </svg>
+
+            <div class="relative z-10 flex items-center gap-4">
+                <div class="w-12 h-12 rounded-2xl bg-emerald-50 border border-emerald-200/80 text-[#123D22] flex items-center justify-center shadow-xs shrink-0">
                     <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                     </svg>
                 </div>
                 <div>
-                    <span class="text-[11px] font-black uppercase tracking-wider text-indigo-800 bg-indigo-50 border border-indigo-200 px-2.5 py-0.5 rounded-full inline-block mb-1">Địa Điểm &amp; Sân Khấu</span>
-                    <h2 class="font-display font-black text-xl text-black">Quản Lý Khán Phòng &amp; Sơ Đồ Khán Đài</h2>
+                    <span class="text-[11px] font-black uppercase tracking-wider text-[#123D22] bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 rounded-full inline-block mb-1">Địa Điểm &amp; Sân Khấu</span>
+                    <h2 class="font-display font-black text-xl text-slate-900">Quản Lý Khán Phòng &amp; Sơ Đồ Khán Đài</h2>
                     <p class="text-xs text-gray-500 mt-0.5">Hệ thống tự động sinh sơ đồ ghế trực quan và phân vùng giá vé cho từng địa điểm tổ chức sự kiện.</p>
                 </div>
             </div>
-            <div>
-                <a href="{{ route('admin.rooms.create') }}" class="btn-dark px-5 py-3 rounded-2xl text-xs font-black flex items-center gap-2 shadow-md hover:scale-[1.02] transition-all">
+            <div class="relative z-10">
+                <a 
+                    href="{{ route('admin.rooms.create') }}" 
+                    class="px-5 py-3 rounded-2xl text-xs font-black text-white flex items-center gap-2 shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all"
+                    style="background: linear-gradient(135deg, #123D22 0%, #1e662e 100%);"
+                >
                     <svg class="w-4 h-4 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
                     <span>Thêm &amp; Thiết Kế Sơ Đồ Mới</span>
                 </a>
@@ -64,7 +84,7 @@
                     $blueprintJson = json_encode($room->blueprint_data ?? []);
                 @endphp
 
-                <div class="bg-white rounded-3xl p-6 border border-black/10 shadow-sm flex flex-col justify-between space-y-6 group hover:border-indigo-400 hover:shadow-md transition-all">
+                <div class="bg-white rounded-3xl p-6 border border-[#E3EAE4] shadow-sm flex flex-col justify-between space-y-6 group hover:border-[#123D22] hover:shadow-md transition-all">
                     <div>
                         <div class="flex items-center justify-between">
                             <span class="text-[10px] px-3 py-1 rounded-full font-black bg-indigo-50 text-indigo-900 border border-indigo-200 inline-flex items-center gap-1.5">
@@ -322,7 +342,8 @@
                         <div class="flex items-center gap-3 w-full sm:w-auto">
                             <a 
                                 :href="activeRoom?.builder_url" 
-                                class="btn-dark flex-1 sm:flex-initial px-5 py-2.5 rounded-2xl text-xs font-black flex items-center justify-center gap-1.5"
+                                class="flex-1 sm:flex-initial px-5 py-2.5 rounded-2xl text-xs font-black text-white shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all flex items-center justify-center gap-1.5"
+                                style="background: linear-gradient(135deg, #123D22 0%, #1e662e 100%);"
                             >
                                 <svg class="w-4 h-4 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
                                 <span>Mở Trình Sửa &amp; Tái Tạo Sơ Đồ</span>

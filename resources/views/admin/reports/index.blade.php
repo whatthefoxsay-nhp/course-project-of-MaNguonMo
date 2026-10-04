@@ -1,22 +1,43 @@
-<x-admin-layout :header="'Báo Cáo Doanh Thu & Tài Chính'">
+<x-admin-layout 
+    :header="'Báo Cáo Doanh Thu & Tài Chính'"
+    :subtitle="'Báo cáo doanh thu phân bổ theo sự kiện, thể loại và tốc độ bán vé.'"
+>
+    <x-slot:breadcrumb>
+        <span class="text-gray-400">Tổng quan</span>
+        <span class="text-gray-300">›</span>
+        <span class="text-gray-400">Báo cáo &amp; Thống kê</span>
+        <span class="text-gray-300">›</span>
+        <span class="text-[#123D22] font-black">Báo cáo doanh thu</span>
+    </x-slot:breadcrumb>
+
     <div class="space-y-6">
 
         <!-- Report Header Summary -->
-        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-6 rounded-3xl border border-black/10 shadow-sm">
-            <div class="flex items-center gap-4">
-                <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-amber-400 to-yellow-500 text-black flex items-center justify-center shadow-md shadow-amber-500/20 shrink-0">
+        <div class="relative bg-gradient-to-r from-white via-white to-[#F1F8F2] p-6 rounded-3xl border border-[#E3EAE4] shadow-sm overflow-hidden flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <!-- Decorative SVG Watermark -->
+            <svg class="absolute right-4 -bottom-8 w-44 h-44 text-[#123D22] opacity-[0.06] pointer-events-none transform -rotate-12" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+            </svg>
+
+            <div class="relative z-10 flex items-center gap-4">
+                <div class="w-12 h-12 rounded-2xl bg-emerald-50 border border-emerald-200/80 text-[#123D22] flex items-center justify-center shadow-xs shrink-0">
                     <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                     </svg>
                 </div>
                 <div>
-                    <span class="text-[11px] font-black uppercase tracking-wider text-amber-800 bg-amber-50 border border-amber-200 px-2.5 py-0.5 rounded-full inline-block mb-1">Báo Cáo Tài Chính</span>
-                    <h2 class="font-display font-black text-xl text-black">Phân Tích Doanh Số Bán Vé Sự Kiện</h2>
+                    <span class="text-[11px] font-black uppercase tracking-wider text-[#123D22] bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 rounded-full inline-block mb-1">Báo Cáo Tài Chính</span>
+                    <h2 class="font-display font-black text-xl text-slate-900">Phân Tích Doanh Số Bán Vé Sự Kiện</h2>
                     <p class="text-xs text-gray-500 mt-0.5">Báo cáo doanh thu phân bổ theo sự kiện, thể loại và tốc độ bán vé.</p>
                 </div>
             </div>
-            <div class="flex items-center gap-3">
-                <a href="{{ route('admin.reports.pdf') }}" target="_blank" class="btn-dark px-5 py-3 rounded-2xl text-xs font-black flex items-center gap-2 shadow-md hover:scale-[1.02] transition-all">
+            <div class="relative z-10 flex items-center gap-3">
+                <a 
+                    href="{{ route('admin.reports.pdf') }}" 
+                    target="_blank" 
+                    class="px-5 py-3 rounded-2xl text-xs font-black text-white flex items-center gap-2 shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all"
+                    style="background: linear-gradient(135deg, #123D22 0%, #1e662e 100%);"
+                >
                     <svg class="w-4 h-4 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
                     <span>Xuất &amp; In Báo Cáo PDF</span>
                 </a>
@@ -26,7 +47,7 @@
         <!-- Top KPIs -->
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
             <!-- KPI 1 -->
-            <div class="bg-white rounded-3xl p-6 border border-black/10 shadow-sm relative overflow-hidden group hover:border-amber-400 transition-all">
+            <div class="bg-white rounded-3xl p-6 border border-[#E3EAE4] shadow-sm relative overflow-hidden group hover:border-amber-400 transition-all">
                 <div class="flex items-center justify-between">
                     <span class="text-xs font-bold uppercase tracking-wider text-gray-500">Tổng Doanh Thu</span>
                     <div class="w-10 h-10 rounded-2xl bg-amber-50 border border-amber-200 flex items-center justify-center text-amber-700 shadow-sm">
@@ -43,7 +64,7 @@
             </div>
 
             <!-- KPI 2 -->
-            <div class="bg-white rounded-3xl p-6 border border-black/10 shadow-sm relative overflow-hidden group hover:border-blue-400 transition-all">
+            <div class="bg-white rounded-3xl p-6 border border-[#E3EAE4] shadow-sm relative overflow-hidden group hover:border-blue-400 transition-all">
                 <div class="flex items-center justify-between">
                     <span class="text-xs font-bold uppercase tracking-wider text-gray-500">Tổng Số Vé Đã Bán</span>
                     <div class="w-10 h-10 rounded-2xl bg-blue-50 border border-blue-200 flex items-center justify-center text-blue-700 shadow-sm">
@@ -59,7 +80,7 @@
             </div>
 
             <!-- KPI 3 -->
-            <div class="bg-white rounded-3xl p-6 border border-black/10 shadow-sm relative overflow-hidden group hover:border-purple-400 transition-all">
+            <div class="bg-white rounded-3xl p-6 border border-[#E3EAE4] shadow-sm relative overflow-hidden group hover:border-purple-400 transition-all">
                 <div class="flex items-center justify-between">
                     <span class="text-xs font-bold uppercase tracking-wider text-gray-500">Giá Trị Đơn Trung Bình</span>
                     <div class="w-10 h-10 rounded-2xl bg-purple-50 border border-purple-200 flex items-center justify-center text-purple-700 shadow-sm">
@@ -76,7 +97,7 @@
         </div>
 
         <!-- Revenue by Event Table -->
-        <div class="bg-white rounded-3xl border border-black/10 overflow-hidden shadow-sm space-y-4">
+        <div class="bg-white rounded-3xl border border-[#E3EAE4] overflow-hidden shadow-sm space-y-4">
             <div class="p-6 pb-2">
                 <h3 class="font-display font-black text-lg text-black">Bảng Kê Doanh Thu Chi Tiết Theo Sự Kiện</h3>
                 <p class="text-xs text-gray-500 mt-0.5">Bảng tổng hợp doanh thu và số lượng vé bán ra theo từng chương trình</p>
@@ -84,14 +105,14 @@
 
             <div class="overflow-x-auto">
                 <table class="w-full text-left text-xs text-black">
-                    <thead class="text-[11px] uppercase tracking-wider text-gray-600 border-y border-black/10 bg-[#FAF9F6]">
+                    <thead class="text-[11px] uppercase tracking-[0.06em] text-neutral-600 border-y border-[#E3EAE4] bg-[#F6F8F6]">
                         <tr>
-                            <th class="py-3 px-3.5 font-bold whitespace-nowrap">Hạng</th>
-                            <th class="py-3 px-3 font-bold whitespace-nowrap">Tên Sự Kiện / Show Diễn</th>
-                            <th class="py-3 px-3 font-bold whitespace-nowrap">Thể Loại</th>
-                            <th class="py-3 px-3 font-bold whitespace-nowrap">Vé Đã Bán</th>
-                            <th class="py-3 px-3 font-bold whitespace-nowrap">Doanh Thu Thu Được</th>
-                            <th class="py-3 px-3.5 font-bold text-right whitespace-nowrap">Tỷ Trọng Đóng Góp</th>
+                            <th class="py-3.5 px-4 font-bold whitespace-nowrap">Hạng</th>
+                            <th class="py-3.5 px-3 font-bold whitespace-nowrap">Tên Sự Kiện / Show Diễn</th>
+                            <th class="py-3.5 px-3 font-bold whitespace-nowrap">Thể Loại</th>
+                            <th class="py-3.5 px-3 font-bold whitespace-nowrap">Vé Đã Bán</th>
+                            <th class="py-3.5 px-3 font-bold whitespace-nowrap">Doanh Thu Thu Được</th>
+                            <th class="py-3.5 px-4 font-bold text-right whitespace-nowrap">Tỷ Trọng Đóng Góp</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-black/5">
@@ -99,7 +120,7 @@
                             @php
                                 $ratio = $totalRevenue > 0 ? round(($e['revenue'] / $totalRevenue) * 100, 1) : 0;
                             @endphp
-                            <tr class="hover:bg-[#FAF9F6] transition-colors">
+                            <tr class="hover:bg-[#F2F8F4] border-l-[3px] border-l-transparent hover:border-l-amber-500 transition-all">
                                 <td class="py-3 px-3.5 whitespace-nowrap">
                                     @if($loop->first)
                                         <span class="w-5 h-5 rounded-full bg-gradient-to-br from-amber-400 to-yellow-500 text-black font-black text-[11px] inline-flex items-center justify-center shadow-xs">1</span>

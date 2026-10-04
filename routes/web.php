@@ -61,6 +61,7 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::get('/', DashboardController::class)->name('dashboard');
     Route::get('/reports', [AdminReportController::class, 'index'])->name('reports.index');
     Route::get('/reports/pdf', [AdminReportController::class, 'pdf'])->name('reports.pdf');
+    Route::post('categories/bulk-destroy', [AdminCategoryController::class, 'bulkDestroy'])->name('categories.bulk-destroy');
     Route::resource('categories', AdminCategoryController::class)->except('show');
     Route::resource('events', AdminEventController::class)->except('show');
     Route::resource('showtimes', AdminShowtimeController::class)->except('show');
