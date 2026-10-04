@@ -16,9 +16,9 @@
         $totalPrice = array_sum(array_map(fn ($item) => $item->price, $items));
         $firstItem = !empty($items) ? $items[0] : null;
         $currentUser = auth()->user();
-        $userName = $currentUser->name ?? 'Nguyễn Văn Kiên';
-        $userEmail = $currentUser->email ?? 'kien.nguyen@example.com';
-        $userPhone = $currentUser->phone ?? '0988 123 456';
+        $userName = $currentUser?->name ?? '';
+        $userEmail = $currentUser?->email ?? '';
+        $userPhone = $currentUser?->phone ?? '';
     @endphp
 
     <div 

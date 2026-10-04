@@ -364,13 +364,13 @@ Alpine.data('ticketPaymentManager', (config = {}) => ({
     totalAmount: config.totalAmount || 500000,
     items: config.items || [],
     buyerInfo: {
-        fullName: config.userName || 'Nguyễn Văn Kiên',
-        phone: config.userPhone || '0988 123 456',
-        email: config.userEmail || 'kien.nguyen@example.com',
-        idCard: '001201008899',
-        city: 'Hà Nội',
-        address: 'Số 18 Hoàng Diệu, Ba Đình',
-        notes: 'Gửi vé qua Email và SMS',
+        fullName: config.userName || '',
+        phone: config.userPhone || '',
+        email: config.userEmail || '',
+        idCard: '',
+        city: '',
+        address: '',
+        notes: '',
     },
     banks: {
         TCB: {
