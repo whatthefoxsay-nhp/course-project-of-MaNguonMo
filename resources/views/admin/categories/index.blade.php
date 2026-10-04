@@ -11,24 +11,26 @@
     </x-slot:breadcrumb>
 
     @php
-        function getCategoryVisual($name) {
-            $lower = mb_strtolower($name);
-            if (str_contains($lower, 'concert') || str_contains($lower, 'ca nhạc')) {
-                return ['bg' => 'bg-purple-50 text-purple-700 border-purple-200/80', 'chip' => 'bg-purple-100 text-purple-800', 'accent' => '#8B5CF6', 'icon' => 'music'];
-            } elseif (str_contains($lower, 'fan') || str_contains($lower, 'meeting')) {
-                return ['bg' => 'bg-pink-50 text-pink-700 border-pink-200/80', 'chip' => 'bg-pink-100 text-pink-800', 'accent' => '#EC4899', 'icon' => 'heart'];
-            } elseif (str_contains($lower, 'festival') || str_contains($lower, 'lễ hội')) {
-                return ['bg' => 'bg-orange-50 text-orange-700 border-orange-200/80', 'chip' => 'bg-orange-100 text-orange-800', 'accent' => '#F97316', 'icon' => 'sparkles'];
-            } elseif (str_contains($lower, 'hòa nhạc') || str_contains($lower, 'giao hưởng')) {
-                return ['bg' => 'bg-blue-50 text-blue-700 border-blue-200/80', 'chip' => 'bg-blue-100 text-blue-800', 'accent' => '#3B82F6', 'icon' => 'disc'];
-            } elseif (str_contains($lower, 'hội thảo') || str_contains($lower, 'workshop') || str_contains($lower, 'talkshow')) {
-                return ['bg' => 'bg-emerald-50 text-emerald-700 border-emerald-200/80', 'chip' => 'bg-emerald-100 text-emerald-800', 'accent' => '#10B981', 'icon' => 'presentation'];
-            } elseif (str_contains($lower, 'triển lãm') || str_contains($lower, 'nghệ thuật')) {
-                return ['bg' => 'bg-amber-50 text-amber-700 border-amber-200/80', 'chip' => 'bg-amber-100 text-amber-800', 'accent' => '#F59E0B', 'icon' => 'palette'];
-            } elseif (str_contains($lower, 'thể thao') || str_contains($lower, 'sport') || str_contains($lower, 'giải đấu')) {
-                return ['bg' => 'bg-cyan-50 text-cyan-700 border-cyan-200/80', 'chip' => 'bg-cyan-100 text-cyan-800', 'accent' => '#06B6D4', 'icon' => 'trophy'];
-            } else {
-                return ['bg' => 'bg-teal-50 text-teal-700 border-teal-200/80', 'chip' => 'bg-teal-100 text-teal-800', 'accent' => '#14B8A6', 'icon' => 'tag'];
+        if (! function_exists('getCategoryVisual')) {
+            function getCategoryVisual($name) {
+                $lower = mb_strtolower($name);
+                if (str_contains($lower, 'concert') || str_contains($lower, 'ca nhạc')) {
+                    return ['bg' => 'bg-purple-50 text-purple-700 border-purple-200/80', 'chip' => 'bg-purple-100 text-purple-800', 'accent' => '#8B5CF6', 'icon' => 'music'];
+                } elseif (str_contains($lower, 'fan') || str_contains($lower, 'meeting')) {
+                    return ['bg' => 'bg-pink-50 text-pink-700 border-pink-200/80', 'chip' => 'bg-pink-100 text-pink-800', 'accent' => '#EC4899', 'icon' => 'heart'];
+                } elseif (str_contains($lower, 'festival') || str_contains($lower, 'lễ hội')) {
+                    return ['bg' => 'bg-orange-50 text-orange-700 border-orange-200/80', 'chip' => 'bg-orange-100 text-orange-800', 'accent' => '#F97316', 'icon' => 'sparkles'];
+                } elseif (str_contains($lower, 'hòa nhạc') || str_contains($lower, 'giao hưởng')) {
+                    return ['bg' => 'bg-blue-50 text-blue-700 border-blue-200/80', 'chip' => 'bg-blue-100 text-blue-800', 'accent' => '#3B82F6', 'icon' => 'disc'];
+                } elseif (str_contains($lower, 'hội thảo') || str_contains($lower, 'workshop') || str_contains($lower, 'talkshow')) {
+                    return ['bg' => 'bg-emerald-50 text-emerald-700 border-emerald-200/80', 'chip' => 'bg-emerald-100 text-emerald-800', 'accent' => '#10B981', 'icon' => 'presentation'];
+                } elseif (str_contains($lower, 'triển lãm') || str_contains($lower, 'nghệ thuật')) {
+                    return ['bg' => 'bg-amber-50 text-amber-700 border-amber-200/80', 'chip' => 'bg-amber-100 text-amber-800', 'accent' => '#F59E0B', 'icon' => 'palette'];
+                } elseif (str_contains($lower, 'thể thao') || str_contains($lower, 'sport') || str_contains($lower, 'giải đấu')) {
+                    return ['bg' => 'bg-cyan-50 text-cyan-700 border-cyan-200/80', 'chip' => 'bg-cyan-100 text-cyan-800', 'accent' => '#06B6D4', 'icon' => 'trophy'];
+                } else {
+                    return ['bg' => 'bg-teal-50 text-teal-700 border-teal-200/80', 'chip' => 'bg-teal-100 text-teal-800', 'accent' => '#14B8A6', 'icon' => 'tag'];
+                }
             }
         }
     @endphp

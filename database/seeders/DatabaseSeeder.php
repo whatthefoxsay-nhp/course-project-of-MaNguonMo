@@ -26,8 +26,9 @@ class DatabaseSeeder extends Seeder
     public function run(RoomSeatGenerator $roomSeats, ShowtimeSeatGenerator $showtimeSeats): void
     {
         // 1. Setup Spatie Roles
-        $adminRole = Role::firstOrCreate(['name' => 'admin', 'guard_name' => 'web']);
-        $userRole = Role::firstOrCreate(['name' => 'user', 'guard_name' => 'web']);
+        $this->call(RoleSeeder::class);
+        $adminRole = Role::where('name', 'admin')->first();
+        $userRole = Role::where('name', 'user')->first();
 
         // 2. Create Official Demo Users (Admin & Customer)
         $admin = User::firstOrCreate(
@@ -285,6 +286,7 @@ class DatabaseSeeder extends Seeder
             'booking_code' => $code,
             'total_price' => $prices->sum(),
             'status' => $status,
+            'payment_method' => 'vietqr',
         ]);
 
         foreach ($seats as $showtimeSeat) {
