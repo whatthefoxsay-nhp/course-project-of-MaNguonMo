@@ -1,4 +1,4 @@
-<x-admin-layout 
+<x-admin-layout
     :header="'Lịch Diễn & Suất Diễn'"
     :subtitle="'Sắp xếp khung giờ biểu diễn, gán khán phòng và thiết lập giá vé tiêu chuẩn.'"
 >
@@ -32,13 +32,13 @@
                 </div>
             </div>
             <div class="relative z-10">
-                <a 
-                    href="{{ route('admin.showtimes.create') }}" 
+                <a
+                    href="{{ route('admin.showtimes.create') }}"
                     class="px-5 py-3 rounded-2xl text-xs font-black text-white flex items-center gap-2 shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all"
                     style="background: linear-gradient(135deg, #123D22 0%, #1e662e 100%);"
                 >
                     <svg class="w-4 h-4 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
-                    <span>+ Mở Thêm Suất Diễn</span>
+                    <span>Mở Thêm Suất Diễn</span>
                 </a>
             </div>
         </div>
@@ -65,8 +65,8 @@
                 </div>
 
                 <div class="sm:col-span-1 flex gap-2">
-                    <button 
-                        type="submit" 
+                    <button
+                        type="submit"
                         class="w-full text-white rounded-2xl text-xs font-black flex items-center justify-center shadow-sm py-2.5 transition-all hover:opacity-90"
                         style="background: #123D22;"
                     >
