@@ -1,4 +1,4 @@
-@props(['showtime', 'movie', 'seats', 'ticketTiers' => []])
+@props(['showtime', 'movie', 'seats', 'ticketTiers' => [], 'venueZones' => []])
 
 @php
     $basePrice = $showtime->base_price ?? 180000;
@@ -7,6 +7,7 @@
         $ticketTiers = \App\Support\TicketTiers::for($basePrice, $isSeatedConcert);
     }
     $seatsCollection = collect($seats);
+    $isZonedVenue = $showtime->room->isZoned();
     $totalAvailable = $seatsCollection->where('status', 'available')->count();
     $totalBooked = $seatsCollection->where('status', 'booked')->count();
     $totalHeld = $seatsCollection->where('status', 'held')->count();
@@ -124,11 +125,13 @@
     x-data="seatBookingManager({
         basePrice: {{ $basePrice }},
         tiers: {{ json_encode($ticketTiers) }},
+        zones: @js($venueZones),
+        seatInventory: @js($seatsCollection->groupBy('zone_id')->map(fn ($zoneSeats) => $zoneSeats->values())->all()),
         standingPrice: {{ (int) ($ticketTiers['standing_pit']['price'] ?? 0) }},
         holdUrl: @js(route('showtimes.holds.store', $showtime->id)),
         statusUrl: @js(route('showtimes.seat-status', $showtime->id)),
         loginUrl: @js(route('login')),
-        pollStatus: @js((bool) $isSeatedConcert),
+        pollStatus: @js((bool) ($isSeatedConcert || $isZonedVenue)),
         defaultViewMode: 'zone',
         availableSeatsByZone: {
             @foreach ($ticketTiers as $key => $tier)
@@ -147,7 +150,9 @@
     })"
     class="w-full space-y-8"
 >
-    @if ($isSeatedConcert)
+    @if ($isZonedVenue)
+        @include('components.seat-map-zoned')
+    @elseif ($isSeatedConcert)
         <!-- ========================================================================= -->
         <!-- 1. SEATED CONCERT / MEGA STADIUM ARENA SEATING MAP                        -->
         <!-- ========================================================================= -->

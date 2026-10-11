@@ -27,7 +27,8 @@ class ShowtimeController extends Controller
             'showtime' => $showtime,
             'allShowtimes' => $allShowtimes,
             'movie' => $event,
-            'seats' => $event->is_seated ? SeatMapPresenter::forShowtime($showtime) : [],
+            'seats' => ($event->is_seated || $showtime->room->isZoned()) ? SeatMapPresenter::forShowtime($showtime) : [],
+            'venueZones' => $showtime->room->isZoned() ? SeatMapPresenter::zonesForShowtime($showtime) : [],
             'ticketTiers' => TicketTiers::for($showtime->base_price, $event->is_seated),
         ]);
     }
@@ -39,6 +40,9 @@ class ShowtimeController extends Controller
                 ->orWhere(fn ($held) => $held->where('status', 'held')->where('held_until', '>', now())))
             ->pluck('id');
 
-        return response()->json(['unavailable' => $unavailable]);
+        return response()->json([
+            'unavailable' => $unavailable,
+            'zones_available' => collect(SeatMapPresenter::zonesForShowtime($showtime))->pluck('available', 'id'),
+        ]);
     }
 }

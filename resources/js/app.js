@@ -15,6 +15,8 @@ Alpine.data('seatBookingManager', (config = {}) => ({
     selectedSeats: [],
     tierQuantities: {},
     tierMeta: {},
+    zoneQuantities: {},
+    zoneMeta: {},
     basePrice: config.basePrice || 180000,
     activeZoneFilter: 'all',
     hoveredSeat: null,
@@ -33,6 +35,7 @@ Alpine.data('seatBookingManager', (config = {}) => ({
     selectedZone: 'svip_diamond',
     hoveredZone: null,
     availableSeatsByZone: config.availableSeatsByZone || {},
+    seatInventory: config.seatInventory || {},
 
     init() {
         if (config.tiers) {
@@ -41,6 +44,10 @@ Alpine.data('seatBookingManager', (config = {}) => ({
                 this.tierMeta[k] = config.tiers[k];
             });
         }
+        (config.zones || []).forEach(zone => {
+            this.zoneQuantities[zone.id] = 0;
+            this.zoneMeta[zone.id] = zone;
+        });
         if (config.pollStatus && config.statusUrl) {
             setInterval(() => this.refreshSeatStatus(), 15000);
         }
@@ -78,8 +85,32 @@ Alpine.data('seatBookingManager', (config = {}) => ({
     },
 
     getZoneSelectedCount(zoneKey) {
+        if (this.zoneQuantities[zoneKey] !== undefined) return this.zoneQuantities[zoneKey] || 0;
         if (zoneKey === 'standing_pit') return this.standingCount;
         return this.selectedSeats.filter(s => s.type === zoneKey).length;
+    },
+
+    incrementZone(zoneId) {
+        const zone = this.zoneMeta[zoneId];
+        if (!zone || this.totalTicketCount >= 8 || this.zoneQuantities[zoneId] >= zone.available) return;
+        this.zoneQuantities[zoneId]++;
+    },
+
+    decrementZone(zoneId) {
+        if (this.zoneQuantities[zoneId] > 0) this.zoneQuantities[zoneId]--;
+    },
+
+    toggleTable(zoneId, rowLabel) {
+        const rowSeats = (this.seatInventory[zoneId] || []).filter(seat => (seat.row ?? seat.row_label) === rowLabel && seat.status === 'available' && !this.unavailableIds.includes(seat.id));
+        if (!rowSeats.length) return;
+        const selected = rowSeats.filter(seat => this.isSeatSelected(seat.id));
+        if (selected.length === rowSeats.length) {
+            selected.forEach(seat => this.removeSeat(seat.id));
+            return;
+        }
+        rowSeats.filter(seat => !this.isSeatSelected(seat.id)).forEach(seat => {
+            if (this.totalTicketCount < 8) this.toggleSeat(seat.id, seat.number ?? seat.seat_number, seat.row ?? seat.row_label, seat.type, seat.typeName ?? seat.type_name, seat.status, seat.price, seat.perks);
+        });
     },
 
     quickPickSeatFromZone(zoneKey) {
@@ -290,7 +321,11 @@ Alpine.data('seatBookingManager', (config = {}) => ({
     },
 
     get totalPrice() {
-        return this.totalSeatPrice + this.totalStandingPrice + this.totalTierPrice;
+        return this.totalSeatPrice + this.totalStandingPrice + this.totalTierPrice + this.totalZonePrice;
+    },
+
+    get totalZonePrice() {
+        return Object.entries(this.zoneQuantities).reduce((sum, [id, quantity]) => sum + quantity * (this.zoneMeta[id]?.price || 0), 0);
     },
 
     get totalTierCount() {
@@ -298,7 +333,7 @@ Alpine.data('seatBookingManager', (config = {}) => ({
     },
 
     get totalTicketCount() {
-        return this.selectedSeats.length + this.standingCount + this.totalTierCount;
+        return this.selectedSeats.length + this.standingCount + this.totalTierCount + Object.values(this.zoneQuantities).reduce((sum, count) => sum + count, 0);
     },
 
     get formattedTotalPrice() {
@@ -314,8 +349,11 @@ Alpine.data('seatBookingManager', (config = {}) => ({
         try {
             const response = await fetch(config.statusUrl, { headers: { 'Accept': 'application/json' } });
             if (!response.ok) return;
-            const { unavailable } = await response.json();
+            const { unavailable, zones_available: zonesAvailable = {} } = await response.json();
             this.unavailableIds = unavailable;
+            Object.entries(zonesAvailable).forEach(([id, available]) => {
+                if (this.zoneMeta[id]) this.zoneMeta[id].available = available;
+            });
 
             const lost = this.selectedSeats.filter(seat => unavailable.includes(seat.id));
             if (lost.length > 0) {
@@ -337,12 +375,14 @@ Alpine.data('seatBookingManager', (config = {}) => ({
             if (quantity > 0) tiers[key] = quantity;
         });
         if (this.standingCount > 0) tiers.standing_pit = this.standingCount;
+        const zones = {};
+        Object.entries(this.zoneQuantities).forEach(([id, quantity]) => { if (quantity > 0) zones[id] = quantity; });
 
         try {
             const response = await fetch(config.holdUrl, {
                 method: 'POST',
                 headers: jsonHeaders(),
-                body: JSON.stringify({ seat_ids: this.selectedSeats.map(seat => seat.id), tiers }),
+                body: JSON.stringify({ seat_ids: this.selectedSeats.map(seat => seat.id), tiers, zones }),
             });
 
             if (response.status === 401) {
@@ -589,9 +629,10 @@ Alpine.data('ticketPaymentManager', (config = {}) => ({
         }
     },
 
-    async removeItem(showtimeSeatId) {
+    async removeItem(item) {
         try {
-            const response = await fetch(config.removeUrl.replace('__ID__', showtimeSeatId), {
+            const removeUrl = item.isZoneTicket ? config.removeZoneUrl : config.removeUrl;
+            const response = await fetch(removeUrl.replace('__ID__', item.id), {
                 method: 'DELETE',
                 headers: jsonHeaders(),
             });
@@ -615,7 +656,7 @@ Alpine.data('ticketPaymentManager', (config = {}) => ({
         const movieTitle = firstItem.movie_title || 'Live Concert TicketBox 2026';
         const showtime = firstItem.showtime_str || '19:30 - 25/10/2026';
         const venue = firstItem.room_name || 'Sân Khấu Sự Kiện';
-        const seats = this.items.map(i => (i.row_label ? i.row_label + i.seat_number : i.seat_type)).join(', ') || 'Ghế C4, C5';
+        const seats = this.items.map(i => i.is_zone_ticket ? i.seat_type : (i.row_label ? i.row_label + i.seat_number : i.seat_type)).join(', ') || 'Ghế C4, C5';
 
         const canvas = document.createElement('canvas');
         canvas.width = 1200;

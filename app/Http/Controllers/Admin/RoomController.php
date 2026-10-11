@@ -15,8 +15,8 @@ class RoomController extends Controller
 {
     public function index(Request $request): View
     {
-        $rooms = Room::withCount(['seats', 'showtimes'])
-            ->with(['seats'])
+        $rooms = Room::withCount(['seats', 'showtimes', 'zones'])
+            ->with(['seats', 'zones'])
             ->latest('id')
             ->paginate(10);
 
@@ -58,6 +58,12 @@ class RoomController extends Controller
                 'preset_label' => $room->preset_label,
                 'showtimes_count' => $room->showtimes_count ?? 0,
                 'summary' => $room->seats_summary,
+                'zones' => $room->zones->map(fn ($zone) => [
+                    'code' => $zone->code,
+                    'name' => $zone->name,
+                    'kind' => $zone->kind,
+                    'capacity' => $zone->effectiveCapacity(),
+                ])->values()->all(),
                 'rows' => $groupedSeats,
                 'has_standing' => $room->seats->contains('type', 'standing_pit'),
                 'standing_count' => $room->seats->where('type', 'standing_pit')->count(),
@@ -301,12 +307,19 @@ class RoomController extends Controller
 
         $allowedKinds = ['seated', 'standing', 'table', 'admission'];
         foreach ($zones as $index => $zone) {
-            if (! is_array($zone) || empty($zone['code']) || empty($zone['name']) || ! in_array($zone['kind'] ?? '', $allowedKinds, true)) {
+            if (! is_array($zone) || empty($zone['code']) || strlen((string) $zone['code']) > 6 || empty($zone['name']) || mb_strlen((string) $zone['name']) > 100 || ! in_array($zone['kind'] ?? '', $allowedKinds, true)) {
                 return back()->withInput()->withErrors(['zones' => 'Thông tin mã, tên hoặc loại khu vực chưa hợp lệ.']);
+            }
+            if (! in_array($zone['seat_type'] ?? '', ['svip_diamond', 'vip_gold', 'cat1_stand', 'cat2_wings', 'skybox_suite', 'standing_pit'], true)) {
+                return back()->withInput()->withErrors(['zones' => 'Hạng vé của khu vực chưa hợp lệ.']);
             }
             if (in_array($zone['kind'], ['standing', 'admission'], true) && (int) ($zone['capacity'] ?? 0) < 1) {
                 return back()->withInput()->withErrors(['zones' => "Khu {$zone['name']} cần sức chứa lớn hơn 0."]);
             }
+        }
+
+        if ($room?->showtimes()->exists()) {
+            return redirect()->route('admin.rooms.index')->with('warning', "Khán phòng [{$room->name}] đã có suất diễn nên không thể sửa khu vực. Hãy nhân bản phòng để tạo sơ đồ mới.");
         }
 
         $room ??= new Room;
@@ -331,8 +344,16 @@ class RoomController extends Controller
     {
         $newRoom = $room->replicate(['id', 'created_at', 'updated_at']);
         $newRoom->name = $room->name.' (Bản Sao '.now()->format('d/m H:i').')';
-        $newRoom->capacity = $room->seats()->count();
+        $newRoom->capacity = $room->capacity;
         $newRoom->save();
+
+        $zoneIdMap = [];
+        foreach ($room->zones as $zone) {
+            $copy = $zone->replicate(['id', 'created_at', 'updated_at']);
+            $copy->room_id = $newRoom->id;
+            $copy->save();
+            $zoneIdMap[$zone->id] = $copy->id;
+        }
 
         // Sao chép toàn bộ ghế sang khán phòng mới
         $now = now();
@@ -340,6 +361,7 @@ class RoomController extends Controller
         foreach ($room->seats as $seat) {
             $seatInserts[] = [
                 'room_id' => $newRoom->id,
+                'zone_id' => $zoneIdMap[$seat->zone_id] ?? null,
                 'row_label' => $seat->row_label,
                 'seat_number' => $seat->seat_number,
                 'type' => $seat->type,
@@ -351,9 +373,13 @@ class RoomController extends Controller
         foreach (array_chunk($seatInserts, 200) as $chunk) {
             \App\Models\Seat::insert($chunk);
         }
+        // Zone model hooks run while zones are copied, before their seats are inserted.
+        $copiedCapacity = $newRoom->zones()->get()->sum(fn ($zone) => $zone->hasSeats() ? $zone->seats()->count() : (int) $zone->capacity)
+            + $newRoom->seats()->whereNull('zone_id')->count();
+        Room::whereKey($newRoom->id)->update(['capacity' => $copiedCapacity]);
 
         return redirect()->route('admin.rooms.index')
-            ->with('success', "Đã nhân bản khán phòng [{$room->name}] thành [{$newRoom->name}] thành công! Bạn có thể chỉnh sửa sơ đồ mới mà không ảnh hưởng phòng gốc.");
+            ->with('success', "Đã nhân bản khán phòng [{$room->name}] thành [{$newRoom->name}] thành công ({$copiedCapacity} chỗ)! Bạn có thể chỉnh sửa sơ đồ mới mà không ảnh hưởng phòng gốc.");
     }
 
     public function destroy(Room $room): RedirectResponse

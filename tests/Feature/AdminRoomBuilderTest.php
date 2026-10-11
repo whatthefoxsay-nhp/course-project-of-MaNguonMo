@@ -162,3 +162,21 @@ test('new room builder shows zone kinds and calculated capacity', function () {
         ->assertSee('Vé đứng theo số lượng')
         ->assertSee('Sức chứa tổng (tính tự động)');
 });
+
+test('duplicating a zoned room preserves zones seats and non-seat capacity', function () {
+    $admin = User::factory()->create();
+    $admin->assignRole('admin');
+    $room = Room::create(['name' => 'Phòng gốc theo khu', 'capacity' => 0, 'layout_preset' => 'outdoor_concert']);
+    app(\App\Services\ZoneLayoutGenerator::class)->generate($room, [
+        ['code' => 'A', 'name' => 'Ghế A', 'kind' => 'seated', 'seat_type' => 'cat1_stand', 'rows' => 2, 'cols' => 2],
+        ['code' => 'GA', 'name' => 'Khu đứng', 'kind' => 'standing', 'seat_type' => 'standing_pit', 'capacity' => 10],
+    ]);
+
+    $response = $this->actingAs($admin)->post(route('admin.rooms.duplicate', $room))->assertRedirect(route('admin.rooms.index'));
+
+    $copy = Room::where('name', 'like', 'Phòng gốc theo khu (Bản Sao%')->firstOrFail();
+    expect($copy->zones)->toHaveCount(2)
+        ->and($copy->seats)->toHaveCount(4)
+        ->and($copy->seats->every(fn ($seat) => $seat->zone_id === $copy->zones->firstWhere('code', 'A')->id))->toBeTrue()
+        ->and($copy->capacity)->toBe(14);
+});

@@ -133,6 +133,7 @@
             :movie="$movie" 
             :seats="$seats" 
             :ticketTiers="$ticketTiers"
+            :venueZones="$venueZones ?? []"
         />
 
     </div>
