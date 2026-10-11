@@ -10,6 +10,8 @@ class Room extends Model
 {
     use HasFactory;
 
+    public const ZONED_PRESET = 'zoned';
+
     protected $fillable = [
         'name',
         'address',
@@ -37,9 +39,21 @@ class Room extends Model
         return $this->hasMany(Showtime::class);
     }
 
+    public function zones(): HasMany
+    {
+        return $this->hasMany(RoomZone::class)->orderBy('sort_order')->orderBy('id');
+    }
+
+    /** Phòng dựng theo mô hình khu vực (sức chứa = tổng các khu). */
+    public function isZoned(): bool
+    {
+        return $this->layout_preset === self::ZONED_PRESET;
+    }
+
     public function getPresetLabelAttribute(): string
     {
         return match ($this->layout_preset ?? 'mega_concert') {
+            self::ZONED_PRESET => '🗺️ Sơ Đồ Theo Khu Vực',
             'theater_hall' => '🎭 Nhà Hát & Giao Hưởng',
             'convention_center' => '🏢 Trung Tâm Hội Nghị & Triển Lãm',
             'custom_grid' => '⚡ Ma Trận Tùy Chỉnh',

@@ -13,6 +13,7 @@ class Seat extends Model
 
     protected $fillable = [
         'room_id',
+        'zone_id',
         'row_label',
         'seat_number',
         'type',
@@ -25,6 +26,11 @@ class Seat extends Model
     public function room(): BelongsTo
     {
         return $this->belongsTo(Room::class);
+    }
+
+    public function zone(): BelongsTo
+    {
+        return $this->belongsTo(RoomZone::class, 'zone_id');
     }
 
     public function showtimeSeats(): HasMany
