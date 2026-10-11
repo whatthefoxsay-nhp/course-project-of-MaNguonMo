@@ -7,7 +7,7 @@ use App\Models\Seat;
 
 class RoomSeatGenerator
 {
-    public const PRESETS = ['mega_concert', 'sayhi_concert', 'sayhi_concert_d2', 'theater_hall', 'convention_center', 'custom_grid'];
+    public const PRESETS = ['mega_concert', 'sayhi_concert', 'sayhi_concert_d2', 'theater_hall', 'convention_center', 'custom_grid', 'zoned'];
 
     /** Hàng ghế ẩn dùng cho vé đứng (GA) — không vẽ trên sơ đồ, server tự gán. */
     public const STANDING_ROW = 'GA';

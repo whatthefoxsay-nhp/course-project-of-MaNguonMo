@@ -66,7 +66,12 @@ class Room extends Model
     public function getPresetLabelAttribute(): string
     {
         return match ($this->layout_preset ?? 'mega_concert') {
-            self::ZONED_PRESET => '🗺️ Sơ Đồ Theo Khu Vực',
+            self::ZONED_PRESET => '🗺️ Khán Phòng Theo Khu Vực',
+            'outdoor_concert' => '🏟️ Sân khấu ngoài trời',
+            'theater' => '🎭 Nhà hát',
+            'fixed_hall' => '🏢 Hội trường ghế cố định',
+            'conference_tables' => '🪑 Hội nghị theo bàn',
+            'admission_only' => '🎫 Vé vào cửa',
             'sayhi_concert' => '🎤 Live Concert Anh Trai Say Hi',
             'sayhi_concert_d2' => '🎤 Live Concert Anh Trai Say Hi - Đêm 2 (Y-Stage Runway)',
             'theater_hall' => '🎭 Nhà Hát & Giao Hưởng',
