@@ -116,16 +116,32 @@
                                 </select>
                             </label>
                         </div>
-                        <div x-show="selectedZone.kind === 'seated'" class="grid gap-3 md:grid-cols-3 rounded-xl bg-gray-50 p-3">
-                            <p class="md:col-span-3 text-xs font-bold text-gray-600">Sơ đồ ghế ngồi — có thể chỉnh số hàng và số ghế mỗi hàng.</p>
-                            <label class="text-xs font-bold">Số hàng<input type="number" min="1" max="26" x-model.number="selectedZone.rows" class="mt-1 w-full rounded-lg border-gray-300"></label>
-                            <label class="text-xs font-bold">Ghế mỗi hàng<input type="number" min="1" max="40" x-model.number="selectedZone.cols" class="mt-1 w-full rounded-lg border-gray-300"></label>
-                            <p class="self-end text-sm">Số ghế: <strong x-text="seatCapacity(selectedZone)"></strong></p>
-                        </div>
-                        <div x-show="selectedZone.kind === 'table'" class="grid gap-3 md:grid-cols-3 rounded-xl bg-gray-50 p-3">
-                            <label class="text-xs font-bold">Số bàn<input type="number" min="1" max="100" x-model.number="selectedZone.tables" class="mt-1 w-full rounded-lg border-gray-300"></label>
-                            <label class="text-xs font-bold">Chỗ mỗi bàn<input type="number" min="1" max="20" x-model.number="selectedZone.seats_per_table" class="mt-1 w-full rounded-lg border-gray-300"></label>
-                            <p class="self-end text-sm">Số chỗ: <strong x-text="seatCapacity(selectedZone)"></strong></p>
+                        <div x-show="selectedZone.kind === 'seated' || selectedZone.kind === 'table'" class="rounded-xl bg-gray-50 p-3 space-y-3">
+                            <div class="flex flex-wrap items-center justify-between gap-2">
+                                <div>
+                                    <p class="text-xs font-bold text-gray-700" x-text="selectedZone.kind === 'table' ? 'Sơ đồ bàn — chỉnh số chỗ cho từng bàn.' : 'Sơ đồ ghế — thêm hoặc bớt ghế riêng theo từng hàng.'"></p>
+                                    <p class="mt-1 text-xs text-gray-500">Sức chứa đang chỉnh: <strong x-text="seatCapacity(selectedZone)"></strong> chỗ</p>
+                                </div>
+                                <button type="button" @click="addSeatRow()" :disabled="selectedZone.layout.length >= (selectedZone.kind === 'table' ? 100 : 26)" class="rounded-lg bg-slate-900 px-3 py-2 text-xs font-bold text-white disabled:opacity-40" x-text="selectedZone.kind === 'table' ? '+ Thêm bàn' : '+ Thêm hàng'"></button>
+                            </div>
+                            <div class="max-h-[55vh] space-y-2 overflow-auto rounded-xl bg-slate-950 p-3 text-white">
+                                <template x-for="(row, rowIndex) in selectedZone.layout" :key="row.row">
+                                    <div class="flex items-center gap-2 rounded-lg bg-white/5 p-2">
+                                        <span class="w-12 shrink-0 text-right text-[10px] font-black text-amber-300" x-text="row.row"></span>
+                                        <div class="flex min-h-8 flex-1 flex-wrap items-center gap-1">
+                                            <template x-for="seat in row.seats" :key="seat.number">
+                                                <span class="flex h-7 min-w-7 items-center justify-center rounded-md bg-emerald-700 px-1 text-[10px] font-black" x-text="seat.number"></span>
+                                            </template>
+                                            <span x-show="row.seats.length === 0" class="text-[10px] text-white/50">Chưa có ghế</span>
+                                        </div>
+                                        <div class="flex shrink-0 items-center gap-1">
+                                            <button type="button" @click="addSeatToRow(rowIndex)" class="h-7 w-7 rounded-md bg-white/15 text-sm font-black hover:bg-white/25" :aria-label="selectedZone.kind === 'table' ? 'Thêm chỗ vào bàn' : 'Thêm ghế vào hàng'">+</button>
+                                            <button type="button" @click="removeSeatFromRow(rowIndex)" :disabled="row.seats.length <= 1" class="h-7 w-7 rounded-md bg-white/15 text-sm font-black hover:bg-white/25 disabled:opacity-30" :aria-label="selectedZone.kind === 'table' ? 'Bớt chỗ khỏi bàn' : 'Bớt ghế khỏi hàng'">−</button>
+                                            <button type="button" @click="removeSeatRow(rowIndex)" :disabled="selectedZone.layout.length <= 1" class="h-7 w-7 rounded-md bg-red-500/20 text-sm font-black text-red-200 hover:bg-red-500/40 disabled:opacity-30" :aria-label="selectedZone.kind === 'table' ? 'Xóa bàn' : 'Xóa hàng'">×</button>
+                                        </div>
+                                    </div>
+                                </template>
+                            </div>
                         </div>
                         <div x-show="selectedZone.kind === 'standing' || selectedZone.kind === 'admission'" class="rounded-xl bg-amber-50 p-3">
                             <label class="text-xs font-bold">Sức chứa tối đa<input type="number" min="1" x-model.number="selectedZone.capacity" class="mt-1 w-full rounded-lg border-gray-300 md:max-w-xs"></label>
@@ -151,6 +167,15 @@
                 ticket_tier: zone.ticket_tier ?? '', capacity: Number(zone.capacity ?? 0),
                 rows: Number(zone.rows ?? 6), cols: Number(zone.cols ?? 10),
                 tables: Number(zone.tables ?? 10), seats_per_table: Number(zone.seats_per_table ?? 8),
+                layout: Array.isArray(zone.layout) && zone.layout.length
+                    ? zone.layout.map((row, rowIndex) => ({
+                        row: row.row ?? (zone.kind === 'table' ? `T${String(rowIndex + 1).padStart(2, '0')}` : String.fromCharCode(65 + rowIndex)),
+                        seats: (row.seats ?? []).map((seat, seatIndex) => ({ number: Number(seat.number ?? seatIndex + 1), type: seat.type ?? zone.seat_type ?? 'cat1_stand' })),
+                    }))
+                    : Array.from({ length: Number(zone.kind === 'table' ? zone.tables ?? 10 : zone.rows ?? 6) }, (_, rowIndex) => ({
+                        row: zone.kind === 'table' ? `T${String(rowIndex + 1).padStart(2, '0')}` : String.fromCharCode(65 + rowIndex),
+                        seats: Array.from({ length: Number(zone.kind === 'table' ? zone.seats_per_table ?? 8 : zone.cols ?? 10) }, (_, seatIndex) => ({ number: seatIndex + 1, type: zone.seat_type ?? 'cat1_stand' })),
+                    })),
                 sort_order: index,
             });
             return {
@@ -184,6 +209,40 @@
                     this.selectedZoneKey = this.zones[Math.min(index, this.zones.length - 1)]?._key ?? null;
                     this.syncSortOrder();
                 },
+                addSeatRow() {
+                    const layout = this.selectedZone?.layout;
+                    if (!layout || layout.length >= (this.selectedZone.kind === 'table' ? 100 : 26)) return;
+                    const labels = layout.map(row => row.row);
+                    let label;
+                    if (this.selectedZone.kind === 'table') {
+                        let number = 1;
+                        while (labels.includes(`T${String(number).padStart(2, '0')}`)) number++;
+                        label = `T${String(number).padStart(2, '0')}`;
+                    } else {
+                        label = [...'ABCDEFGHIJKLMNOPQRSTUVWXYZ'].find(candidate => !labels.includes(candidate));
+                    }
+                    if (!label) return;
+                    const template = layout[layout.length - 1];
+                    const count = Math.max(1, template?.seats.length ?? 10);
+                    layout.push({
+                        row: label,
+                        seats: Array.from({ length: count }, (_, index) => ({ number: index + 1, type: this.selectedZone.seat_type })),
+                    });
+                },
+                removeSeatRow(rowIndex) {
+                    if (!this.selectedZone || this.selectedZone.layout.length <= 1) return;
+                    this.selectedZone.layout.splice(rowIndex, 1);
+                },
+                addSeatToRow(rowIndex) {
+                    const row = this.selectedZone?.layout[rowIndex];
+                    if (!row) return;
+                    const nextNumber = Math.max(0, ...row.seats.map(seat => Number(seat.number) || 0)) + 1;
+                    row.seats.push({ number: nextNumber, type: this.selectedZone.seat_type });
+                },
+                removeSeatFromRow(rowIndex) {
+                    const seats = this.selectedZone?.layout[rowIndex]?.seats;
+                    if (seats?.length > 1) seats.pop();
+                },
                 startZoneDrag(key, event) {
                     this.draggedZoneKey = key;
                     event.dataTransfer.effectAllowed = 'move';
@@ -209,7 +268,10 @@
                     const query = this.zoneSearch.trim().toLocaleLowerCase();
                     return query ? this.zones.filter(zone => `${zone.code} ${zone.name}`.toLocaleLowerCase().includes(query)) : this.zones;
                 },
-                seatCapacity(zone) { return Math.max(0, Number(zone.kind === 'table' ? zone.tables * zone.seats_per_table : zone.rows * zone.cols) || 0); },
+                seatCapacity(zone) {
+                    if (Array.isArray(zone.layout)) return zone.layout.reduce((count, row) => count + row.seats.length, 0);
+                    return Math.max(0, Number(zone.kind === 'table' ? zone.tables * zone.seats_per_table : zone.rows * zone.cols) || 0);
+                },
                 previewPalette(index) {
                     return ['border-rose-400 bg-rose-100 text-rose-950', 'border-amber-400 bg-amber-100 text-amber-950', 'border-sky-400 bg-sky-100 text-sky-950', 'border-emerald-400 bg-emerald-100 text-emerald-950', 'border-violet-400 bg-violet-100 text-violet-950', 'border-orange-400 bg-orange-100 text-orange-950'][index % 6];
                 },

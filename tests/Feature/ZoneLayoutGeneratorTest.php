@@ -20,6 +20,28 @@ test('zone generator creates physical seats only for seated zones and recalculat
         ->and($room->fresh()->capacity)->toBe(520);
 });
 
+test('zone generator preserves custom per-row seat counts', function () {
+    $room = Room::factory()->create();
+
+    $seatCount = app(ZoneLayoutGenerator::class)->generate($room, [
+        [
+            'code' => 'VIP',
+            'name' => 'VIP cánh trái',
+            'kind' => 'seated',
+            'seat_type' => 'vip_gold',
+            'layout' => [
+                ['row' => 'A', 'seats' => [['number' => 1], ['number' => 2], ['number' => 3]]],
+                ['row' => 'C', 'seats' => [['number' => 1], ['number' => 2]]],
+            ],
+        ],
+    ]);
+
+    expect($seatCount)->toBe(5)
+        ->and($room->seats()->where('zone_id', $room->zones()->first()->id)->count())->toBe(5)
+        ->and($room->seats()->pluck('row_label')->unique()->sort()->values()->all())->toBe(['VIP-A', 'VIP-C'])
+        ->and($room->fresh()->capacity)->toBe(5);
+});
+
 test('zone generator refuses to replace a room that has showtimes', function () {
     $room = Room::factory()->create();
     Showtime::factory()->for($room)->create();

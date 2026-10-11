@@ -175,6 +175,8 @@ test('new room builder shows zone kinds and calculated capacity', function () {
         ->assertSee('kéo thả khu ngay trên mặt bằng')
         ->assertSee('Tìm nhanh theo mã hoặc tên khu')
         ->assertSee('Chỉnh sửa khu đang chọn')
+        ->assertSee('Thêm ghế vào hàng')
+        ->assertSee('Bớt ghế khỏi hàng')
         ->assertSee('Sức chứa tổng (tính tự động)');
 });
 

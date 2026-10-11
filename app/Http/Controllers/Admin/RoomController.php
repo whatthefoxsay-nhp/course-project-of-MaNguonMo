@@ -129,6 +129,14 @@ class RoomController extends Controller
                     'cols' => max(1, (int) $zone->seats->groupBy('row_label')->map->count()->max()),
                     'tables' => max(1, $zone->seats->groupBy('row_label')->count()),
                     'seats_per_table' => max(1, (int) $zone->seats->groupBy('row_label')->map->count()->max()),
+                    'layout' => $zone->seats->groupBy('row_label')->map(function ($rowSeats, $rowLabel) use ($zone) {
+                        $prefix = $zone->code.'-';
+
+                        return [
+                            'row' => str_starts_with($rowLabel, $prefix) ? substr($rowLabel, strlen($prefix)) : $rowLabel,
+                            'seats' => $rowSeats->map(fn ($seat) => ['number' => $seat->seat_number, 'type' => $seat->type])->values()->all(),
+                        ];
+                    })->values()->all(),
                     'sort_order' => $zone->sort_order,
                 ])->values()->all(),
                 'presetOptions' => VenuePresets::PRESETS,
