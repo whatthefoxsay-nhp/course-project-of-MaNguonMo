@@ -182,26 +182,12 @@
                 <!-- View Mode Switcher & Controls -->
                 <div class="flex flex-wrap items-center gap-2 self-start lg:self-auto text-xs">
                     @if ($isStadiumLayout)
-                        <!-- DUAL VIEW MODE SWITCHER TABS (Ticketbox Standard) -->
-                        <div class="flex items-center bg-[#F3F4F6] p-1 rounded-2xl border border-black/10 shadow-inner">
-                            <button 
-                                type="button"
-                                @click="switchViewMode('zone')"
-                                :class="concertViewMode === 'zone' ? 'bg-black text-white shadow-md font-black' : 'text-gray-700 hover:text-black font-semibold'"
-                                class="px-3.5 py-1.5 rounded-xl text-xs transition-all flex items-center gap-1.5"
-                            >
-                                <span>🏟️</span>
-                                <span>Sơ Đồ Phân Khu SVĐ</span>
-                            </button>
-                            <button 
-                                type="button"
-                                @click="switchViewMode('seat')"
-                                :class="concertViewMode === 'seat' ? 'bg-black text-white shadow-md font-black' : 'text-gray-700 hover:text-black font-semibold'"
-                                class="px-3.5 py-1.5 rounded-xl text-xs transition-all flex items-center gap-1.5"
-                            >
-                                <span>💺</span>
-                                <span>Chi Tiết Từng Ghế</span>
-                            </button>
+                        <!-- DUAL VIEW MODE SWITCHER TABS (Ticketbox Standard: Sự kiện lớn chọn theo khu vực) -->
+                        <div class="flex items-center gap-2 bg-gradient-to-r from-amber-50 to-amber-100/60 px-4 py-2 rounded-2xl border border-amber-300 shadow-xs">
+                            <span class="w-2.5 h-2.5 rounded-full bg-amber-500 animate-ping"></span>
+                            <span class="text-xs font-black text-amber-950">
+                                🎫 Chọn Khu Vực Ngồi &amp; Số Lượng Vé (Zone Selection)
+                            </span>
                         </div>
                     @endif
 
@@ -614,14 +600,10 @@
                             <span class="w-2 h-2 rounded-full bg-gold-antique animate-pulse"></span>
                             <span>Click vào bất kỳ phân khu nào trên sơ đồ để xem đặc quyền &amp; đặt vé</span>
                         </span>
-                        <button 
-                            type="button" 
-                            @click="switchViewMode('seat')" 
-                            class="text-gold-light hover:underline font-bold flex items-center gap-1"
-                        >
-                            <span>Xem sơ đồ vị trí từng số ghế</span>
-                            <span>&rarr;</span>
-                        </button>
+                        <span class="text-amber-300 font-bold flex items-center gap-1">
+                            <span>★</span>
+                            <span>Hệ thống tự động phân bổ vị trí đẹp nhất trong khu vực cho bạn</span>
+                        </span>
                     </div>
                 </div>
 
@@ -720,17 +702,9 @@
                                         </button>
                                     </div>
 
-                                    @if ($zKey !== 'standing_pit')
-                                        <!-- Nút chuyển sang tự chọn ghế chi tiết của khu này -->
-                                        <button 
-                                            type="button" 
-                                            @click="focusZoneInSeatGrid('{{ $zKey }}')" 
-                                            class="w-full py-2.5 rounded-xl bg-black text-white hover:bg-gray-800 text-xs font-bold transition-all flex items-center justify-center gap-2 shadow-sm"
-                                        >
-                                            <span>🔍 Tự Chọn Ghế Cụ Thể Trong Khu Này</span>
-                                            <span>&rarr;</span>
-                                        </button>
-                                    @endif
+                                    <div class="p-2.5 rounded-xl bg-amber-500/10 border border-amber-400/30 text-amber-900 text-center text-[11px] font-semibold">
+                                        ✨ Vé sẽ được tự động xếp vào các vị trí đẹp nhất trong phân khu này khi bạn xác nhận giữ chỗ.
+                                    </div>
                                 </div>
 
                             </div>

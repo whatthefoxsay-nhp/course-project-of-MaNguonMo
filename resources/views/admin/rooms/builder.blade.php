@@ -503,21 +503,70 @@
                             <!-- Actions & Zoom buttons -->
                             <div class="flex items-center gap-2">
                                 <span class="text-xs text-amber-900 bg-amber-50 border border-amber-200 px-3 py-1 rounded-full font-black font-mono" x-text="activeSeatCount + ' Ghế thực tế'"></span>
-                                <div class="flex items-center bg-[#FAF9F6] border border-black/10 rounded-full p-1 shadow-sm text-xs">
-                                    <button type="button" @click="zoomOut()" class="w-7 h-7 rounded-full flex items-center justify-center text-gray-700 hover:bg-white font-bold">&minus;</button>
-                                    <span class="px-2 font-mono font-bold text-gray-600" x-text="Math.round(zoomScale * 100) + '%'">100%</span>
-                                    <button type="button" @click="zoomIn()" class="w-7 h-7 rounded-full flex items-center justify-center text-gray-700 hover:bg-white font-bold">&#43;</button>
-                                    <button type="button" @click="resetZoom()" class="px-2 text-[10px] font-bold text-gray-500 hover:text-black border-l border-black/10">Reset</button>
+                                                      </div>
+
+                        <!-- LARGE EVENT ZONE-BASED BOOKING MODE BANNER -->
+                        <div x-show="['mega_concert', 'sayhi_concert', 'sayhi_concert_d2'].includes(preset)" class="p-4 bg-gradient-to-r from-amber-500/10 via-amber-500/5 to-transparent rounded-2xl border border-amber-300/60 flex items-start gap-3">
+                            <span class="text-2xl">🏟️</span>
+                            <div class="flex-1 text-xs">
+                                <div class="flex items-center gap-2">
+                                    <span class="font-display font-black text-amber-950 text-sm">Mô Hình Quản Lý Theo Phân Khu (Zone &amp; Quota Mode)</span>
+                                    <span class="badge-gold text-[9px] px-2 py-0.2 rounded-full font-bold">Sự kiện quy mô lớn</span>
                                 </div>
+                                <p class="text-gray-600 mt-1 leading-relaxed">
+                                    Đối với sự kiện quy mô lớn (Live Concert / Sân vận động), khán giả sẽ <strong>chọn khu vực ngồi / khu vực đứng (Zone)</strong> và <strong>số lượng vé</strong> thay vì chọn từng ghế chi tiết để tối ưu hiệu năng và tránh nghẽn vé. Toàn bộ cấu hình sàn catwalk, số lượng vé đứng Fanzone và phân bổ hạng vé được quản lý tại bảng bên trái.
+                                </p>
                             </div>
                         </div>
 
-                        <!-- INTERACTIVE TOOL PALETTE (BỘ CỌ VẼ HẠNG VÉ & LỐI ĐI) -->
-                        <div class="p-4 bg-[#FAF9F6] rounded-2xl border border-black/10 space-y-3">
+                        <!-- THEATER & CONVENTION DETAILED SEAT GRID BANNER -->
+                        <div x-show="['theater_hall', 'convention_center', 'custom_grid'].includes(preset)" class="p-4 bg-gradient-to-r from-emerald-500/10 via-emerald-500/5 to-transparent rounded-2xl border border-emerald-300/60 flex items-start gap-3">
+                            <span class="text-2xl">🎭</span>
+                            <div class="flex-1 text-xs">
+                                <div class="flex items-center gap-2">
+                                    <span class="font-display font-black text-emerald-950 text-sm">Chế Độ Chỉnh Sửa Ghế Chi Tiết (Detailed Seat Matrix)</span>
+                                    <span class="badge-sage text-[9px] px-2 py-0.2 rounded-full font-bold">Hòa nhạc &amp; Hội thảo</span>
+                                </div>
+                                <p class="text-gray-600 mt-1 leading-relaxed">
+                                    Dành cho Hòa nhạc thính phòng, Nhà hát nghệ thuật &amp; Hội nghị: Sự kiện yêu cầu khán giả <strong>chọn chính xác từng số ghế cụ thể</strong> (Hàng - Số ghế). Bạn có toàn quyền dùng cọ vẽ hạng vé, thêm/bớt hàng, chỉnh từng ghế, đục lối đi hoặc khóa ghế kỹ thuật bên dưới.
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- ZONE SUMMARY CARDS FOR LARGE CONCERTS -->
+                        <div x-show="['mega_concert', 'sayhi_concert', 'sayhi_concert_d2'].includes(preset)" class="p-4 bg-[#FAF9F6] rounded-2xl border border-black/10 space-y-3">
+                            <div class="flex items-center justify-between border-b border-black/10 pb-2">
+                                <span class="text-[11px] font-black uppercase tracking-wider text-gray-700 flex items-center gap-1.5">
+                                    <span>🎫</span>
+                                    <span>Danh Sách Phân Khu Ngồi &amp; Vé Đứng (Khách Hàng Chọn Theo Khu)</span>
+                                </span>
+                                <span class="text-[10px] text-amber-800 font-bold bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200">
+                                    Bán theo Zone Quota
+                                </span>
+                            </div>
+
+                            <div class="grid grid-cols-2 sm:grid-cols-3 gap-2.5 text-xs">
+                                <template x-for="tier in generatedTiers" :key="tier.key">
+                                    <div class="p-3 rounded-xl bg-white border border-black/10 shadow-xs flex flex-col justify-between space-y-1.5">
+                                        <div class="flex items-center justify-between gap-1">
+                                            <span class="font-black text-[11px] truncate text-black" x-text="tier.name"></span>
+                                            <span class="w-2.5 h-2.5 rounded-full shrink-0" :style="'background-color: ' + tier.color"></span>
+                                        </div>
+                                        <div class="flex items-center justify-between text-[10px]">
+                                            <span class="font-bold text-gray-500" x-text="tier.gate"></span>
+                                            <span class="font-mono font-black text-crimson" x-text="formatCurrency(tier.price)"></span>
+                                        </div>
+                                    </div>
+                                </template>
+                            </div>
+                        </div>
+
+                        <!-- INTERACTIVE TOOL PALETTE (CHỈ DÀNH CHO HÒA NHẠC, HỘI THẢO & GRID TÙY CHỈNH) -->
+                        <div x-show="['theater_hall', 'convention_center', 'custom_grid'].includes(preset)" class="p-4 bg-[#FAF9F6] rounded-2xl border border-black/10 space-y-3">
                             <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                                 <span class="text-[11px] font-black uppercase tracking-wider text-gray-700 flex items-center gap-1.5">
                                     <span>🖌️</span>
-                                    <span>Chọn Cọ Vẽ (Click vào ghế để áp dụng):</span>
+                                    <span>Bộ Cọ Vẽ Ghế (Click vào ghế để áp dụng):</span>
                                 </span>
                                 <div class="flex items-center gap-2">
                                     <button 
@@ -543,7 +592,7 @@
                             <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2">
                                 <template x-for="tool in tools" :key="tool.id">
                                     <button 
-                                        type="button"
+                                        type="button" 
                                         @click="selectedTool = tool.id"
                                         :class="selectedTool === tool.id ? 'ring-2 ring-black bg-white shadow-md scale-105' : 'bg-white/70 hover:bg-white border border-black/5 opacity-80 hover:opacity-100'"
                                         class="p-2 rounded-xl text-center flex flex-col items-center justify-center gap-1 transition-all cursor-pointer"
@@ -561,15 +610,7 @@
 
                             <!-- QUICK SMART GENERATORS (CÔNG CỤ TẠO NHANH BỐ CỤC) -->
                             <div class="pt-2 border-t border-black/10 flex flex-wrap items-center gap-1.5">
-                                <span class="text-[10px] font-black uppercase text-gray-500 mr-1">Tạo Nhanh Bố Cục:</span>
-                                <button 
-                                    type="button" 
-                                    @click="generateYStageCutout()"
-                                    class="px-2.5 py-1 rounded-lg text-[10px] font-bold bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 transition-all flex items-center gap-1 cursor-pointer"
-                                    title="Tự động khoét rãnh sân khấu Catwalk chữ Y ở các hàng ghế đầu"
-                                >
-                                    <span>🔱 Khoét Runway Chữ Y</span>
-                                </button>
+                                <span class="text-[10px] font-black uppercase text-gray-500 mr-1">Tạo Nhanh Lối Đi:</span>
                                 <button 
                                     type="button" 
                                     @click="generateCenterAisle()"
