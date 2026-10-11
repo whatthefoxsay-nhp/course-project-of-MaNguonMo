@@ -47,7 +47,8 @@ class Room extends Model
     /** Phòng dựng theo mô hình khu vực (sức chứa = tổng các khu). */
     public function isZoned(): bool
     {
-        return in_array($this->layout_preset, array_merge([self::ZONED_PRESET], \App\Support\VenuePresets::PRESETS), true);
+        return in_array($this->layout_preset, array_merge([self::ZONED_PRESET], \App\Support\VenuePresets::PRESETS), true)
+            || $this->zones()->exists();
     }
 
     public function recalculateCapacity(): int

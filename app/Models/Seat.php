@@ -13,8 +13,8 @@ class Seat extends Model
 
     protected static function booted(): void
     {
-        static::saved(fn (self $seat) => $seat->room?->recalculateCapacity());
-        static::deleted(fn (self $seat) => $seat->room?->recalculateCapacity());
+        static::saved(fn (self $seat) => $seat->zone_id ? $seat->room?->recalculateCapacity() : null);
+        static::deleted(fn (self $seat) => $seat->zone_id ? $seat->room?->recalculateCapacity() : null);
     }
 
     protected $fillable = [
