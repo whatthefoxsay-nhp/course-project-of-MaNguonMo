@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Room;
 use App\Services\RoomSeatGenerator;
+use App\Services\ZoneLayoutGenerator;
+use App\Support\VenuePresets;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -70,27 +72,42 @@ class RoomController extends Controller
 
     public function create(): View
     {
-        return view('admin.rooms.builder', [
+        return view('admin.rooms.zoned-builder', [
             'room' => new Room([
                 'name' => '',
                 'address' => '',
-                'capacity' => 252,
-                'layout_preset' => 'mega_concert',
-                'seat_config' => [
-                    'base_price' => 250000,
-                    'rows' => 10,
-                    'cols' => 14,
-                    'vip_ratio' => 30,
-                    'svip_ratio' => 15,
-                ],
+                'capacity' => 0,
+                'layout_preset' => 'outdoor_concert',
             ]),
-            'initialRows' => [],
+            'initialZones' => VenuePresets::zones('outdoor_concert'),
+            'presetOptions' => VenuePresets::PRESETS,
             'isEdit' => false,
         ]);
     }
 
     public function builder(Room $room): View
     {
+        if ($room->isZoned() || $room->zones()->exists()) {
+            return view('admin.rooms.zoned-builder', [
+                'room' => $room->load('zones.seats'),
+                'initialZones' => $room->zones->map(fn ($zone) => [
+                    'code' => $zone->code,
+                    'name' => $zone->name,
+                    'kind' => $zone->kind,
+                    'seat_type' => $zone->seat_type,
+                    'ticket_tier' => $zone->ticket_tier,
+                    'capacity' => $zone->capacity,
+                    'rows' => max(1, $zone->seats->groupBy('row_label')->count()),
+                    'cols' => max(1, (int) $zone->seats->groupBy('row_label')->map->count()->max()),
+                    'tables' => max(1, $zone->seats->groupBy('row_label')->count()),
+                    'seats_per_table' => max(1, (int) $zone->seats->groupBy('row_label')->map->count()->max()),
+                    'sort_order' => $zone->sort_order,
+                ])->values()->all(),
+                'presetOptions' => VenuePresets::PRESETS,
+                'isEdit' => true,
+            ]);
+        }
+
         $initialRows = $room->seats()
             ->where('type', '!=', 'standing_pit')
             ->orderBy('id')
@@ -121,6 +138,11 @@ class RoomController extends Controller
 
     public function store(Request $request, RoomSeatGenerator $generator): RedirectResponse
     {
+        $preset = (string) $request->input('layout_preset', '');
+        if ($request->filled('zones') && (in_array($preset, VenuePresets::PRESETS, true) || $preset === Room::ZONED_PRESET)) {
+            return $this->storeZoned($request, $generator, null);
+        }
+
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'address' => 'nullable|string|max:500',
@@ -185,6 +207,11 @@ class RoomController extends Controller
 
     public function update(Request $request, Room $room, RoomSeatGenerator $generator): RedirectResponse
     {
+        $preset = (string) $request->input('layout_preset', '');
+        if ($request->filled('zones') && (in_array($preset, VenuePresets::PRESETS, true) || $preset === Room::ZONED_PRESET)) {
+            return $this->storeZoned($request, $generator, $room);
+        }
+
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'address' => 'nullable|string|max:500',
@@ -257,6 +284,47 @@ class RoomController extends Controller
 
         return redirect()->route('admin.rooms.index')
             ->with('success', "Đã cập nhật khán phòng [{$room->name}] và tái tạo sơ đồ ghế thành công ({$room->capacity} chỗ)!");
+    }
+
+    private function storeZoned(Request $request, RoomSeatGenerator $generator, ?Room $room): RedirectResponse
+    {
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'address' => 'nullable|string|max:500',
+            'layout_preset' => 'required|string|in:'.implode(',', array_merge(VenuePresets::PRESETS, [Room::ZONED_PRESET])),
+            'zones' => 'required|json',
+        ]);
+        $zones = json_decode($validated['zones'], true);
+        if (! is_array($zones) || count($zones) < 1) {
+            return back()->withInput()->withErrors(['zones' => 'Khán phòng cần ít nhất một khu vực.']);
+        }
+
+        $allowedKinds = ['seated', 'standing', 'table', 'admission'];
+        foreach ($zones as $index => $zone) {
+            if (! is_array($zone) || empty($zone['code']) || empty($zone['name']) || ! in_array($zone['kind'] ?? '', $allowedKinds, true)) {
+                return back()->withInput()->withErrors(['zones' => 'Thông tin mã, tên hoặc loại khu vực chưa hợp lệ.']);
+            }
+            if (in_array($zone['kind'], ['standing', 'admission'], true) && (int) ($zone['capacity'] ?? 0) < 1) {
+                return back()->withInput()->withErrors(['zones' => "Khu {$zone['name']} cần sức chứa lớn hơn 0."]);
+            }
+        }
+
+        $room ??= new Room;
+        $room->fill([
+            'name' => $validated['name'],
+            'address' => $validated['address'] ?? 'Trung tâm Tổ chức Sự kiện',
+            'layout_preset' => $validated['layout_preset'] === Room::ZONED_PRESET ? 'outdoor_concert' : $validated['layout_preset'],
+            'seat_config' => ['base_price' => 250000],
+        ]);
+        $room->save();
+
+        try {
+            app(ZoneLayoutGenerator::class)->generate($room, $zones);
+        } catch (\Illuminate\Validation\ValidationException $exception) {
+            throw $exception;
+        }
+
+        return redirect()->route('admin.rooms.index')->with('success', "Đã lưu khán phòng [{$room->name}] với sức chứa {$room->fresh()->capacity} chỗ.");
     }
 
     public function duplicate(Room $room): RedirectResponse

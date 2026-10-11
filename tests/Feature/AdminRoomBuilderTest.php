@@ -131,3 +131,34 @@ test('admin can create room with sayhi concert preset and auto-generate seats', 
     expect($room->seats()->where('type', 'svip_diamond')->count())->toBe(24);
     expect($room->seats()->where('type', 'standing_pit')->count())->toBe(40);
 });
+
+test('admin can create zoned venue with assigned seats and quantity inventory capacity', function () {
+    $admin = User::factory()->create();
+    $admin->assignRole('admin');
+
+    $this->actingAs($admin)->post(route('admin.rooms.store'), [
+        'name' => 'Nhà thi đấu theo khu',
+        'address' => 'TP.HCM',
+        'layout_preset' => 'outdoor_concert',
+        'zones' => json_encode([
+            ['code' => 'A', 'name' => 'Khán đài A', 'kind' => 'seated', 'seat_type' => 'cat1_stand', 'rows' => 2, 'cols' => 10],
+            ['code' => 'GA', 'name' => 'Khu đứng', 'kind' => 'standing', 'seat_type' => 'standing_pit', 'capacity' => 500],
+        ]),
+    ])->assertRedirect(route('admin.rooms.index'))->assertSessionHas('success');
+
+    $room = Room::where('name', 'Nhà thi đấu theo khu')->firstOrFail();
+    expect($room->capacity)->toBe(520)
+        ->and($room->seats()->count())->toBe(20)
+        ->and($room->zones()->where('kind', 'standing')->first()->capacity)->toBe(500);
+});
+
+test('new room builder shows zone kinds and calculated capacity', function () {
+    $admin = User::factory()->create();
+    $admin->assignRole('admin');
+
+    $this->actingAs($admin)->get(route('admin.rooms.create'))
+        ->assertOk()
+        ->assertSee('Các khu trong khán phòng')
+        ->assertSee('Vé đứng theo số lượng')
+        ->assertSee('Sức chứa tổng (tính tự động)');
+});
