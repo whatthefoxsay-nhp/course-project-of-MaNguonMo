@@ -503,7 +503,14 @@
                             <!-- Actions & Zoom buttons -->
                             <div class="flex items-center gap-2">
                                 <span class="text-xs text-amber-900 bg-amber-50 border border-amber-200 px-3 py-1 rounded-full font-black font-mono" x-text="activeSeatCount + ' Ghế thực tế'"></span>
-                                                      </div>
+                                <div class="flex items-center bg-[#FAF9F6] border border-black/10 rounded-full p-1 shadow-sm text-xs">
+                                    <button type="button" @click="zoomOut()" class="w-7 h-7 rounded-full flex items-center justify-center text-gray-700 hover:bg-white font-bold">&minus;</button>
+                                    <span class="px-2 font-mono font-bold text-gray-600" x-text="Math.round(zoomScale * 100) + '%'">100%</span>
+                                    <button type="button" @click="zoomIn()" class="w-7 h-7 rounded-full flex items-center justify-center text-gray-700 hover:bg-white font-bold">&#43;</button>
+                                    <button type="button" @click="resetZoom()" class="px-2 text-[10px] font-bold text-gray-500 hover:text-black border-l border-black/10">Reset</button>
+                                </div>
+                            </div>
+                        </div>
 
                         <!-- LARGE EVENT ZONE-BASED BOOKING MODE BANNER -->
                         <div x-show="['mega_concert', 'sayhi_concert', 'sayhi_concert_d2'].includes(preset)" class="p-4 bg-gradient-to-r from-amber-500/10 via-amber-500/5 to-transparent rounded-2xl border border-amber-300/60 flex items-start gap-3">
