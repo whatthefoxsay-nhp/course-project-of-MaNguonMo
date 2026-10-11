@@ -111,14 +111,24 @@ class DatabaseSeeder extends Seeder
         foreach (self::VENUES as $key => $venue) {
             $rooms[$key] = Room::updateOrCreate(['name' => $venue['name']], $venue);
             if ($rooms[$key]->seats()->doesntExist() && $rooms[$key]->zones()->doesntExist()) {
-                $definitions = $key === 'secc'
-                    ? [[
-                        'code' => 'EXPO', 'name' => 'Vé vào khu triển lãm', 'kind' => RoomZone::KIND_ADMISSION,
-                        'seat_type' => 'cat1_stand', 'ticket_tier' => 'standard_pass', 'capacity' => $venue['capacity'],
-                    ]]
-                    : $this->zoneDefinitionsForPreset($roomSeats, $venue['layout_preset']);
-                $zoneLayouts->generate($rooms[$key], $definitions);
+                $isZoneMode = $key === 'secc' || in_array($venue['layout_preset'], ['mega_concert', 'sayhi_concert', 'sayhi_concert_d2', 'outdoor_concert'], true);
+                if ($isZoneMode) {
+                    $definitions = $key === 'secc'
+                        ? [[
+                            'code' => 'EXPO', 'name' => 'Vé vào khu triển lãm', 'kind' => RoomZone::KIND_ADMISSION,
+                            'seat_type' => 'cat1_stand', 'ticket_tier' => 'standard_pass', 'capacity' => $venue['capacity'],
+                        ]]
+                        : $this->zoneDefinitionsForPreset($roomSeats, $venue['layout_preset']);
+                    $zoneLayouts->generate($rooms[$key], $definitions);
+                } else {
+                    $roomSeats->generate($rooms[$key], $venue['layout_preset'], $rooms[$key]->seat_config ?? []);
+                }
             }
+            $rooms[$key]->forceFill([
+                'diagram_mode' => $key === 'secc' || in_array($venue['layout_preset'], ['mega_concert', 'sayhi_concert', 'sayhi_concert_d2', 'outdoor_concert'], true)
+                    ? Room::MODE_ZONES
+                    : Room::MODE_SEATS,
+            ])->saveQuietly();
         }
 
         // 5. Sự kiện (nội dung chuyển từ DemoCatalog)

@@ -20,6 +20,8 @@ class RoomSeatGenerator
      */
     public function generate(Room $room, string $preset, array $config): int
     {
+        $room->zones()->delete();
+        $room->forceFill(['diagram_mode' => Room::MODE_SEATS])->saveQuietly();
         $room->seats()->delete();
 
         $now = now();
@@ -56,6 +58,8 @@ class RoomSeatGenerator
      */
     public function generateFromMatrix(Room $room, array $matrixRows, string $preset = 'mega_concert', array $seatConfig = []): int
     {
+        $room->zones()->delete();
+        $room->forceFill(['diagram_mode' => Room::MODE_SEATS])->saveQuietly();
         $room->seats()->delete();
 
         $now = now();

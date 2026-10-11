@@ -17,6 +17,7 @@
         <form method="POST" action="{{ $isEdit ? route('admin.rooms.update', $room) : route('admin.rooms.store') }}" class="space-y-5">
             @csrf
             @if($isEdit) @method('PUT') @endif
+            <input type="hidden" name="diagram_mode" value="zones">
             <input type="hidden" name="layout_preset" :value="preset">
             <input type="hidden" name="zones" :value="JSON.stringify(zones)">
 

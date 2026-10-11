@@ -58,12 +58,12 @@ class RoomController extends Controller
                 'preset_label' => $room->preset_label,
                 'showtimes_count' => $room->showtimes_count ?? 0,
                 'summary' => $room->seats_summary,
-                'zones' => $room->zones->map(fn ($zone) => [
+                'zones' => $room->isZoned() ? $room->zones->map(fn ($zone) => [
                     'code' => $zone->code,
                     'name' => $zone->name,
                     'kind' => $zone->kind,
                     'capacity' => $zone->effectiveCapacity(),
-                ])->values()->all(),
+                ])->values()->all() : [],
                 'rows' => $groupedSeats,
                 'has_standing' => $room->seats->contains('type', 'standing_pit'),
                 'standing_count' => $room->seats->where('type', 'standing_pit')->count(),
@@ -76,15 +76,31 @@ class RoomController extends Controller
         return view('admin.rooms.index', compact('rooms'));
     }
 
-    public function create(): View
+    public function create(Request $request): View
     {
+        $mode = $request->query('mode');
+        if (! in_array($mode, [Room::MODE_SEATS, Room::MODE_ZONES], true)) {
+            return view('admin.rooms.choose-layout');
+        }
+
+        $room = new Room([
+            'name' => '',
+            'address' => '',
+            'capacity' => 0,
+            'layout_preset' => $mode === Room::MODE_ZONES ? 'outdoor_concert' : 'mega_concert',
+            'diagram_mode' => $mode,
+        ]);
+
+        if ($mode === Room::MODE_SEATS) {
+            return view('admin.rooms.builder', [
+                'room' => $room,
+                'initialRows' => [],
+                'isEdit' => false,
+            ]);
+        }
+
         return view('admin.rooms.zoned-builder', [
-            'room' => new Room([
-                'name' => '',
-                'address' => '',
-                'capacity' => 0,
-                'layout_preset' => 'outdoor_concert',
-            ]),
+            'room' => $room,
             'initialZones' => VenuePresets::zones('outdoor_concert'),
             'presetOptions' => VenuePresets::PRESETS,
             'isEdit' => false,
@@ -93,7 +109,7 @@ class RoomController extends Controller
 
     public function builder(Room $room): View
     {
-        if ($room->isZoned() || $room->zones()->exists()) {
+        if ($room->isZoned()) {
             return view('admin.rooms.zoned-builder', [
                 'room' => $room->load('zones.seats'),
                 'initialZones' => $room->zones->map(fn ($zone) => [
@@ -144,8 +160,7 @@ class RoomController extends Controller
 
     public function store(Request $request, RoomSeatGenerator $generator): RedirectResponse
     {
-        $preset = (string) $request->input('layout_preset', '');
-        if ($request->filled('zones') && (in_array($preset, VenuePresets::PRESETS, true) || $preset === Room::ZONED_PRESET)) {
+        if ($request->input('diagram_mode') === Room::MODE_ZONES || ($request->exists('zones') && $request->input('diagram_mode') !== Room::MODE_SEATS)) {
             return $this->storeZoned($request, $generator, null);
         }
 
@@ -198,6 +213,7 @@ class RoomController extends Controller
             'address' => $validated['address'] ?? 'Trung tâm Tổ chức Sự kiện',
             'capacity' => (int) $validated['capacity'],
             'layout_preset' => $validated['layout_preset'],
+            'diagram_mode' => Room::MODE_SEATS,
             'seat_config' => $seatConfig,
         ]);
 
@@ -213,8 +229,7 @@ class RoomController extends Controller
 
     public function update(Request $request, Room $room, RoomSeatGenerator $generator): RedirectResponse
     {
-        $preset = (string) $request->input('layout_preset', '');
-        if ($request->filled('zones') && (in_array($preset, VenuePresets::PRESETS, true) || $preset === Room::ZONED_PRESET)) {
+        if ($request->input('diagram_mode') === Room::MODE_ZONES || ($request->exists('zones') && $request->input('diagram_mode') !== Room::MODE_SEATS)) {
             return $this->storeZoned($request, $generator, $room);
         }
 
@@ -279,6 +294,7 @@ class RoomController extends Controller
             'address' => $validated['address'] ?? $room->address,
             'capacity' => (int) $validated['capacity'],
             'layout_preset' => $validated['layout_preset'],
+            'diagram_mode' => Room::MODE_SEATS,
             'seat_config' => $seatConfig,
         ]);
 
@@ -327,6 +343,7 @@ class RoomController extends Controller
             'name' => $validated['name'],
             'address' => $validated['address'] ?? 'Trung tâm Tổ chức Sự kiện',
             'layout_preset' => $validated['layout_preset'] === Room::ZONED_PRESET ? 'outdoor_concert' : $validated['layout_preset'],
+            'diagram_mode' => Room::MODE_ZONES,
             'seat_config' => ['base_price' => 250000],
         ]);
         $room->save();
@@ -348,7 +365,7 @@ class RoomController extends Controller
         $newRoom->save();
 
         $zoneIdMap = [];
-        foreach ($room->zones as $zone) {
+        foreach ($room->isZoned() ? $room->zones : [] as $zone) {
             $copy = $zone->replicate(['id', 'created_at', 'updated_at']);
             $copy->room_id = $newRoom->id;
             $copy->save();
@@ -361,7 +378,7 @@ class RoomController extends Controller
         foreach ($room->seats as $seat) {
             $seatInserts[] = [
                 'room_id' => $newRoom->id,
-                'zone_id' => $zoneIdMap[$seat->zone_id] ?? null,
+                'zone_id' => $room->isZoned() ? ($zoneIdMap[$seat->zone_id] ?? null) : null,
                 'row_label' => $seat->row_label,
                 'seat_number' => $seat->seat_number,
                 'type' => $seat->type,
@@ -374,7 +391,7 @@ class RoomController extends Controller
             \App\Models\Seat::insert($chunk);
         }
         // Zone model hooks run while zones are copied, before their seats are inserted.
-        $copiedCapacity = $zoneIdMap === []
+        $copiedCapacity = ! $room->isZoned()
             ? (int) $room->capacity
             : $newRoom->zones()->get()->sum(fn ($zone) => $zone->hasSeats() ? $zone->seats()->count() : (int) $zone->capacity)
                 + $newRoom->seats()->whereNull('zone_id')->count();

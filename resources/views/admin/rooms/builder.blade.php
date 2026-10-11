@@ -83,6 +83,7 @@
                 @method('PUT')
             @endif
 
+            <input type="hidden" name="diagram_mode" value="seats">
             <input type="hidden" name="layout_preset" :value="preset">
             <input type="hidden" name="stage_type" :value="stageType">
             <input type="hidden" name="standing_zones" :value="JSON.stringify(standingZones)">

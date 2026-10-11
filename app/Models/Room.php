@@ -11,6 +11,8 @@ class Room extends Model
     use HasFactory;
 
     public const ZONED_PRESET = 'zoned';
+    public const MODE_SEATS = 'seats';
+    public const MODE_ZONES = 'zones';
 
     protected $fillable = [
         'name',
@@ -19,6 +21,7 @@ class Room extends Model
         'longitude',
         'capacity',
         'layout_preset',
+        'diagram_mode',
         'seat_config',
     ];
 
@@ -47,8 +50,7 @@ class Room extends Model
     /** Phòng dựng theo mô hình khu vực (sức chứa = tổng các khu). */
     public function isZoned(): bool
     {
-        return in_array($this->layout_preset, array_merge([self::ZONED_PRESET], \App\Support\VenuePresets::PRESETS), true)
-            || $this->zones()->exists();
+        return $this->diagram_mode === self::MODE_ZONES;
     }
 
     public function recalculateCapacity(): int

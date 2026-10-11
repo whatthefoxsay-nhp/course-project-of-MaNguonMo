@@ -14,8 +14,15 @@ test('admin can access room builder creation page', function () {
     $admin->assignRole('admin');
 
     $response = $this->actingAs($admin)->get(route('admin.rooms.create'));
-    $response->assertStatus(200);
-    $response->assertSee('Thiết Kế & Sinh Sơ Đồ Khán Đài Mới');
+    $response->assertStatus(200)
+        ->assertSee('Sơ đồ ghế ngồi')
+        ->assertSee('Sơ đồ khu');
+
+    $this->actingAs($admin)->get(route('admin.rooms.create', ['mode' => 'seats']))
+        ->assertOk()->assertSee('Thiết Kế & Sinh Sơ Đồ Khán Đài Mới');
+
+    $this->actingAs($admin)->get(route('admin.rooms.create', ['mode' => 'zones']))
+        ->assertOk()->assertSee('Các khu trong khán phòng');
 });
 
 test('admin can create room with mega concert preset and auto-generate seats', function () {
@@ -36,6 +43,7 @@ test('admin can create room with mega concert preset and auto-generate seats', f
     $room = Room::where('name', 'Sân Vận Động Quốc Tế Mỹ Đình')->first();
     expect($room)->not->toBeNull()
         ->and($room->layout_preset)->toBe('mega_concert')
+        ->and($room->diagram_mode)->toBe(Room::MODE_SEATS)
         ->and($room->capacity)->toBe(40000);
 
     // Verify seats were auto-generated
@@ -140,6 +148,7 @@ test('admin can create zoned venue with assigned seats and quantity inventory ca
         'name' => 'Nhà thi đấu theo khu',
         'address' => 'TP.HCM',
         'layout_preset' => 'outdoor_concert',
+        'diagram_mode' => Room::MODE_ZONES,
         'zones' => json_encode([
             ['code' => 'A', 'name' => 'Khán đài A', 'kind' => 'seated', 'seat_type' => 'cat1_stand', 'rows' => 2, 'cols' => 10],
             ['code' => 'GA', 'name' => 'Khu đứng', 'kind' => 'standing', 'seat_type' => 'standing_pit', 'capacity' => 500],
@@ -148,6 +157,7 @@ test('admin can create zoned venue with assigned seats and quantity inventory ca
 
     $room = Room::where('name', 'Nhà thi đấu theo khu')->firstOrFail();
     expect($room->capacity)->toBe(520)
+        ->and($room->diagram_mode)->toBe(Room::MODE_ZONES)
         ->and($room->seats()->count())->toBe(20)
         ->and($room->zones()->where('kind', 'standing')->first()->capacity)->toBe(500);
 });
@@ -156,7 +166,7 @@ test('new room builder shows zone kinds and calculated capacity', function () {
     $admin = User::factory()->create();
     $admin->assignRole('admin');
 
-    $this->actingAs($admin)->get(route('admin.rooms.create'))
+    $this->actingAs($admin)->get(route('admin.rooms.create', ['mode' => 'zones']))
         ->assertOk()
         ->assertSee('Các khu trong khán phòng')
         ->assertSee('Xem trước mặt bằng')

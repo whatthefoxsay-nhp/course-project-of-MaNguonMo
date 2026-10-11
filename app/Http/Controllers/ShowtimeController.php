@@ -17,7 +17,7 @@ class ShowtimeController extends Controller
 
         abort_unless($event->status === 'published', 404);
 
-        $useZoneMap = $event->category?->slug === 'concert' && $showtime->room->isZoned();
+        $useZoneMap = $showtime->room->isZoned();
 
         $allShowtimes = $event->showtimes()
             ->with('room')

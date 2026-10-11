@@ -56,11 +56,11 @@ test('an expired hold is offered as available', function () {
 test('non seated events show the ticket tier selector', function () {
     $this->get(route('showtimes.seats', firstShowtimeOf('vietnam-tech-summit-ai-expo-2026')))
         ->assertOk()
-        ->assertSee('Vé Tiêu Chuẩn (Standard Pass)')
-        ->assertSee('Số lượng')
-        ->assertDontSee('Chọn khu vé trên sơ đồ')
+        ->assertSee('Vé vào khu triển lãm')
+        ->assertSee('Số vé')
+        ->assertSee('Chọn khu vé trên sơ đồ')
         ->assertViewHas('seats', [])
-        ->assertViewHas('useZoneMap', false);
+        ->assertViewHas('useZoneMap', true);
 });
 
 test('showtimes of unpublished events are hidden', function () {

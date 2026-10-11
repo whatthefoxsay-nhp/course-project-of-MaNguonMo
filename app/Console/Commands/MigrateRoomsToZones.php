@@ -89,6 +89,11 @@ class MigrateRoomsToZones extends Command
                 }
 
                 $newCapacity = $room->recalculateCapacity();
+                $room->forceFill([
+                    'diagram_mode' => in_array($room->layout_preset, ['outdoor_concert', 'mega_concert', 'sayhi_concert', 'sayhi_concert_d2'], true)
+                        ? Room::MODE_ZONES
+                        : Room::MODE_SEATS,
+                ])->saveQuietly();
                 $rows[] = [
                     $room->name,
                     $oldCapacity,

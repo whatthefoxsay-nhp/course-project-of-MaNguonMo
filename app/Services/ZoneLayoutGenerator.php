@@ -19,6 +19,7 @@ class ZoneLayoutGenerator
         }
 
         return DB::transaction(function () use ($room, $zoneDefinitions) {
+            $room->forceFill(['diagram_mode' => Room::MODE_ZONES])->saveQuietly();
             $room->seats()->delete();
             $room->zones()->delete();
             $seatCount = 0;
