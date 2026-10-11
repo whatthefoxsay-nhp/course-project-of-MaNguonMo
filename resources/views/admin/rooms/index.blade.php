@@ -265,7 +265,7 @@
                     <div class="p-6 overflow-y-auto flex-1 bg-gradient-to-b from-[#0F172A] via-[#111827] to-[#020617] text-white">
                         
                         <!-- STAGE BANNER -->
-                        <div class="w-full max-w-md mx-auto p-3 bg-gradient-to-r from-obsidian-950 via-obsidian-800 to-obsidian-950 text-white text-center rounded-2xl shadow-md border-2 border-gold-antique/80 relative overflow-hidden mb-8">
+                        <div x-show="activeRoom?.diagram_mode !== 'zones'" class="w-full max-w-md mx-auto p-3 bg-gradient-to-r from-obsidian-950 via-obsidian-800 to-obsidian-950 text-white text-center rounded-2xl shadow-md border-2 border-gold-antique/80 relative overflow-hidden mb-8">
                             <div class="font-display font-black text-xs tracking-widest uppercase text-gold-light">
                                 ★ SÂN KHẤU CHÍNH (MAIN STAGE) ★
                             </div>
@@ -275,12 +275,13 @@
                         <!-- ZONE MAP: zoned venues show areas instead of a misleading flat seat grid. -->
                         <template x-if="activeRoom?.diagram_mode === 'zones'">
                             <div class="mx-auto max-w-4xl">
-                                <p class="mb-4 text-center text-xs font-bold text-slate-300">Sơ đồ phân khu · chọn một khu để xem sức chứa và loại hình</p>
-                                <div class="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4" :style="'transform: scale(' + zoomScale + '); transform-origin: top center'">
+                                <p class="mb-4 text-center text-xs font-bold text-slate-300">Mặt bằng theo vị trí và hình dạng từng khu</p>
+                                <div class="relative mx-auto aspect-[16/10] w-full overflow-hidden rounded-3xl border border-white/10 bg-white/5" :style="'transform: scale(' + zoomScale + '); transform-origin: top center'">
+                                    <div class="absolute z-10 flex items-center justify-center border-b-4 border-amber-400 bg-slate-950 text-[10px] font-black uppercase tracking-widest text-white" style="left:35%;top:3%;width:30%;height:11%;border-radius:50% 50% 12px 12px / 45% 45% 12px 12px">Sân khấu</div>
                                     <template x-for="zone in activeRoom?.zones || []" :key="zone.id">
                                         <button type="button" @click="activeZoneId = activeZoneId === zone.id ? null : zone.id"
-                                            class="min-h-32 rounded-2xl border-2 p-4 text-left shadow-lg transition hover:-translate-y-1"
-                                            :style="'border-color:' + zone.color + '; background:linear-gradient(145deg,' + zone.color + '33,#0f172a 75%)'"
+                                            class="absolute flex flex-col items-center justify-center overflow-hidden border-2 p-2 text-center shadow-lg transition hover:brightness-110"
+                                            :style="{left:zone.canvas.x+'%',top:zone.canvas.y+'%',width:zone.canvas.width+'%',height:zone.canvas.height+'%',borderColor:zone.color,background:'linear-gradient(145deg,'+zone.color+'66,#0f172a 85%)',borderRadius:zone.canvas.shape==='ellipse'?'50%':(zone.canvas.shape==='rounded'?'1rem':'0.25rem'),clipPath:zone.canvas.shape==='trapezoid'?'polygon(12% 0,88% 0,100% 100%,0 100%)':(zone.canvas.shape==='polygon'?'polygon('+zone.canvas.points.map(point=>point.x+'% '+point.y+'%').join(',')+')':'none')}"
                                             :class="activeZoneId === zone.id ? 'ring-4 ring-white/70' : ''">
                                             <span class="inline-flex rounded-full px-2.5 py-1 text-[10px] font-black uppercase text-slate-950" :style="'background-color:' + zone.color" x-text="zone.code"></span>
                                             <strong class="mt-3 block text-sm font-black text-white" x-text="zone.name"></strong>
@@ -291,7 +292,7 @@
                                 </div>
                                 <div x-show="activeZoneId" x-cloak class="mx-auto mt-5 max-w-xl rounded-2xl border border-white/15 bg-black/50 p-4 text-center">
                                     <p class="text-sm font-black text-white" x-text="(activeRoom?.zones || []).find(zone => zone.id === activeZoneId)?.name"></p>
-                                    <p class="mt-1 text-xs text-slate-300">Khu vực được quản lý riêng. Dùng trình sửa để đổi tên, sức chứa, hạng vé hoặc thứ tự khu.</p>
+                                    <p class="mt-1 text-xs text-slate-300">Khu vực được quản lý riêng. Dùng trình sửa để kéo vị trí, đổi kích thước, hình dạng, sức chứa hoặc hạng vé.</p>
                                 </div>
                             </div>
                         </template>

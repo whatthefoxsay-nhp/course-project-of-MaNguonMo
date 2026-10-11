@@ -60,7 +60,7 @@ final class SeatMapPresenter
         $showtime->loadMissing('room.zones.seats');
         $tiers = TicketTiers::for($showtime->base_price, (bool) $showtime->event?->is_seated);
 
-        return $showtime->room->zones->map(function ($zone) use ($showtime, $tiers) {
+        return $showtime->room->zones->values()->map(function ($zone, $index) use ($showtime, $tiers) {
             $seatTypes = $zone->seats->pluck('type')->unique();
             $seatCount = $zone->seats->count();
             $availableSeats = $showtime->showtimeSeats()->whereHas('seat', fn ($query) => $query->where('zone_id', $zone->id))
@@ -86,6 +86,7 @@ final class SeatMapPresenter
                 'ticket_tier' => $tierKey,
                 'seat_type' => $zone->seat_type,
                 'type_names' => $seatTypes->values()->all(),
+                'canvas' => ZoneCanvas::normalize($zone->meta, $index, $showtime->room->zones->count()),
             ];
         })->values()->all();
     }

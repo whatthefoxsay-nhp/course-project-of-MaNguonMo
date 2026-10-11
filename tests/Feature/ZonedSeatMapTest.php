@@ -30,7 +30,9 @@ test('seated event renders physical seats alongside quantity based venue zones',
         ->assertSee('Fanzone')
         ->assertSee('Chọn cả bàn')
         ->assertViewHas('seats', fn (array $seats) => count($seats) === 10 && $seats[0]->zone_id !== null)
-        ->assertViewHas('venueZones', fn (array $zones) => count($zones) === 3 && $zones[2]['available'] === 30);
+        ->assertViewHas('venueZones', fn (array $zones) => count($zones) === 3
+            && $zones[2]['available'] === 30
+            && isset($zones[0]['canvas']['x'], $zones[0]['canvas']['shape']));
 });
 
 test('admission only venue renders quantity inventory without physical seats', function () {

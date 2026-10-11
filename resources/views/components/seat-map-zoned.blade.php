@@ -17,26 +17,30 @@
             <p class="text-xs text-gray-500">Chọn một khu để xem ghế hoặc số vé còn</p>
         </div>
         <div class="mx-auto mt-6 max-w-4xl rounded-[2rem] bg-[#F7F6F2] p-3 sm:p-6">
-            <div class="mx-auto mb-5 max-w-sm rounded-t-[50%] border-b-4 border-amber-400 bg-slate-900 px-8 py-3 text-center text-xs font-black uppercase tracking-[0.3em] text-white shadow-lg">Sân khấu</div>
-            <div class="grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-3">
+            <div class="relative mx-auto aspect-[16/10] min-h-[220px] overflow-hidden rounded-2xl border border-black/5 bg-white/40">
+                <div class="absolute z-10 flex items-center justify-center border-b-4 border-amber-400 bg-slate-900 px-2 text-center text-[9px] font-black uppercase tracking-[0.2em] text-white shadow sm:text-xs"
+                    style="left:35%;top:3%;width:30%;height:11%;border-radius:50% 50% 12px 12px / 45% 45% 12px 12px">Sân khấu</div>
                 @foreach($venueZones as $index => $zone)
                     @php
-                        $zonePalette = [
-                            ['bg' => 'bg-rose-100', 'border' => 'border-rose-400', 'text' => 'text-rose-950', 'dot' => 'bg-rose-500'],
-                            ['bg' => 'bg-amber-100', 'border' => 'border-amber-400', 'text' => 'text-amber-950', 'dot' => 'bg-amber-500'],
-                            ['bg' => 'bg-sky-100', 'border' => 'border-sky-400', 'text' => 'text-sky-950', 'dot' => 'bg-sky-500'],
-                            ['bg' => 'bg-emerald-100', 'border' => 'border-emerald-400', 'text' => 'text-emerald-950', 'dot' => 'bg-emerald-500'],
-                            ['bg' => 'bg-violet-100', 'border' => 'border-violet-400', 'text' => 'text-violet-950', 'dot' => 'bg-violet-500'],
-                            ['bg' => 'bg-orange-100', 'border' => 'border-orange-400', 'text' => 'text-orange-950', 'dot' => 'bg-orange-500'],
-                        ][$index % 6];
+                        $zoneColors = ['#fda4af', '#fbbf24', '#38bdf8', '#34d399', '#a78bfa', '#fb923c'];
+                        $zoneColor = $zoneColors[$index % count($zoneColors)];
+                        $canvas = $zone['canvas'] ?? ['x' => 5 + ($index % 4) * 23, 'y' => 20 + intdiv($index, 4) * 23, 'width' => 21, 'height' => 19, 'shape' => 'rounded'];
+                        $shapeStyle = match ($canvas['shape'] ?? 'rounded') {
+                            'ellipse' => 'border-radius:50%;',
+                            'trapezoid' => 'clip-path:polygon(12% 0,88% 0,100% 100%,0 100%);',
+                            'polygon' => 'clip-path:polygon('.collect($canvas['points'] ?? [])->map(fn ($point) => $point['x'].'% '.$point['y'].'%')->join(',').');',
+                            'rectangle' => 'border-radius:4px;',
+                            default => 'border-radius:1rem;',
+                        };
                     @endphp
                     <button type="button"
                         @click="focusVenueZone({{ $zone['id'] }})"
                         :class="activeVenueZone === {{ $zone['id'] }} ? 'ring-4 ring-slate-900 ring-offset-2' : ''"
-                        class="group min-h-24 rounded-2xl border-2 {{ $zonePalette['border'] }} {{ $zonePalette['bg'] }} p-3 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-emerald-700 sm:min-h-28 sm:p-4">
-                        <span class="flex items-center gap-2 text-[10px] font-black uppercase tracking-wider {{ $zonePalette['text'] }}"><span class="h-2.5 w-2.5 rounded-full {{ $zonePalette['dot'] }}"></span>{{ $zone['code'] }}</span>
-                        <strong class="mt-2 block text-sm font-black leading-tight {{ $zonePalette['text'] }} sm:text-base">{{ $zone['name'] }}</strong>
-                        <span class="mt-2 block text-[11px] font-semibold {{ $zonePalette['text'] }}">{{ number_format($zone['price']) }}₫ · còn {{ number_format($zone['available']) }}</span>
+                        class="group absolute z-0 flex flex-col items-center justify-center overflow-hidden border-2 p-1 text-center shadow-sm transition hover:z-20 hover:brightness-95 focus:outline-none focus:ring-2 focus:ring-emerald-700 sm:p-3"
+                        style="left:{{ $canvas['x'] }}%;top:{{ $canvas['y'] }}%;width:{{ $canvas['width'] }}%;height:{{ $canvas['height'] }}%;border-color:{{ $zoneColor }};background-color:{{ $zoneColor }}33;{{ $shapeStyle }}">
+                        <span class="text-[8px] font-black uppercase tracking-wider text-slate-900 sm:text-[10px]">{{ $zone['code'] }}</span>
+                        <strong class="mt-0.5 block max-w-full text-[9px] font-black leading-tight text-slate-950 sm:mt-1 sm:text-sm">{{ $zone['name'] }}</strong>
+                        <span class="mt-0.5 block text-[8px] font-semibold text-slate-800 sm:mt-1 sm:text-[10px]">{{ number_format($zone['price']) }}₫ · còn {{ number_format($zone['available']) }}</span>
                     </button>
                 @endforeach
             </div>

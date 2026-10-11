@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Room;
 use App\Services\RoomSeatGenerator;
 use App\Services\ZoneLayoutGenerator;
+use App\Support\ZoneCanvas;
 use App\Support\VenuePresets;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -59,12 +60,13 @@ class RoomController extends Controller
                 'preset_label' => $room->preset_label,
                 'showtimes_count' => $room->showtimes_count ?? 0,
                 'summary' => $room->seats_summary,
-                'zones' => $room->isZoned() ? $room->zones->map(fn ($zone) => [
+                'zones' => $room->isZoned() ? $room->zones->values()->map(fn ($zone, $index) => [
                     'id' => $zone->id,
                     'code' => $zone->code,
                     'name' => $zone->name,
                     'kind' => $zone->kind,
                     'capacity' => $zone->effectiveCapacity(),
+                    'canvas' => ZoneCanvas::normalize($zone->meta, $index, $room->zones->count()),
                     'color' => match ($zone->sort_order % 6) {
                         0 => '#d4af37', 1 => '#c08497', 2 => '#3a5a40',
                         3 => '#2563eb', 4 => '#e11d48', default => '#7c3aed',
@@ -125,6 +127,7 @@ class RoomController extends Controller
                     'seat_type' => $zone->seat_type,
                     'ticket_tier' => $zone->ticket_tier,
                     'capacity' => $zone->capacity,
+                    'meta' => $zone->meta,
                     'rows' => max(1, $zone->seats->groupBy('row_label')->count()),
                     'cols' => max(1, (int) $zone->seats->groupBy('row_label')->map->count()->max()),
                     'tables' => max(1, $zone->seats->groupBy('row_label')->count()),

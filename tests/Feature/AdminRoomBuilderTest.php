@@ -150,7 +150,7 @@ test('admin can create zoned venue with assigned seats and quantity inventory ca
         'layout_preset' => 'outdoor_concert',
         'diagram_mode' => Room::MODE_ZONES,
         'zones' => json_encode([
-            ['code' => 'A', 'name' => 'Khán đài A', 'kind' => 'seated', 'seat_type' => 'cat1_stand', 'rows' => 2, 'cols' => 10],
+            ['code' => 'A', 'name' => 'Khán đài A', 'kind' => 'seated', 'seat_type' => 'cat1_stand', 'rows' => 2, 'cols' => 10, 'meta' => ['canvas' => ['x' => 17.5, 'y' => 25, 'width' => 34, 'height' => 20, 'shape' => 'trapezoid']]],
             ['code' => 'GA', 'name' => 'Khu đứng', 'kind' => 'standing', 'seat_type' => 'standing_pit', 'capacity' => 500],
         ]),
     ])->assertRedirect(route('admin.rooms.index'))->assertSessionHas('success');
@@ -159,7 +159,8 @@ test('admin can create zoned venue with assigned seats and quantity inventory ca
     expect($room->capacity)->toBe(520)
         ->and($room->diagram_mode)->toBe(Room::MODE_ZONES)
         ->and($room->seats()->count())->toBe(20)
-        ->and($room->zones()->where('kind', 'standing')->first()->capacity)->toBe(500);
+        ->and($room->zones()->where('kind', 'standing')->first()->capacity)->toBe(500)
+        ->and($room->zones()->where('code', 'A')->first()->meta['canvas']['shape'])->toBe('trapezoid');
 });
 
 test('new room builder shows zone kinds and calculated capacity', function () {
@@ -172,7 +173,10 @@ test('new room builder shows zone kinds and calculated capacity', function () {
         ->assertSee('Xem trước mặt bằng')
         ->assertSee('Bố cục các khu vé')
         ->assertSee('Vé đứng theo số lượng')
-        ->assertSee('kéo thả khu ngay trên mặt bằng')
+        ->assertSee('Kéo khu để đặt vị trí')
+        ->assertSee('Hình dạng')
+        ->assertSee('Đa giác tự do')
+        ->assertSee('Thêm đỉnh')
         ->assertSee('Tìm nhanh theo mã hoặc tên khu')
         ->assertSee('Chỉnh sửa khu đang chọn')
         ->assertSee('Thêm ghế vào hàng')
@@ -196,9 +200,10 @@ test('admin room preview exposes zone map mode for zoned concert venues', functi
     $this->actingAs($admin)->get(route('admin.rooms.index'))
         ->assertOk()
         ->assertSee("activeRoom?.diagram_mode === 'zones'", false)
-        ->assertSee('Sơ đồ phân khu')
+        ->assertSee('Mặt bằng theo vị trí và hình dạng từng khu')
         ->assertViewHas('rooms', fn ($rooms) => $rooms->firstWhere('id', $room->id)?->blueprint_data['diagram_mode'] === Room::MODE_ZONES
-            && count($rooms->firstWhere('id', $room->id)->blueprint_data['zones']) === 2);
+            && count($rooms->firstWhere('id', $room->id)->blueprint_data['zones']) === 2
+            && $rooms->firstWhere('id', $room->id)->blueprint_data['zones'][0]['canvas']['x'] === 5.0);
 });
 
 test('duplicating a zoned room preserves zones seats and non-seat capacity', function () {
