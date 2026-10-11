@@ -51,70 +51,84 @@
                 <div>
                     <p class="text-xs font-black uppercase tracking-[0.18em] text-emerald-800">Xem trước mặt bằng</p>
                     <h2 class="mt-1 font-black text-lg">Bố cục các khu vé</h2>
-                    <p class="text-sm text-gray-500">Bản phác thảo giúp kiểm tra các khu đã được tách riêng trước khi lưu.</p>
+                    <p class="text-sm text-gray-500">Bấm khu để chỉnh nhanh bên dưới; kéo thả khu ngay trên mặt bằng để đổi thứ tự.</p>
+                </div>
+                <div class="flex flex-wrap items-center justify-between gap-3">
+                    <input type="search" x-model="zoneSearch" placeholder="Tìm nhanh theo mã hoặc tên khu..." class="w-full rounded-xl border-gray-300 text-sm sm:max-w-sm">
+                    <span class="text-xs font-semibold text-gray-500" x-text="`${filteredZones.length} / ${zones.length} khu`"></span>
                 </div>
                 <div class="mx-auto max-w-3xl rounded-3xl bg-[#F7F6F2] p-4 sm:p-6">
                     <div class="mx-auto mb-4 max-w-xs rounded-t-[50%] border-b-4 border-amber-400 bg-slate-900 px-6 py-2 text-center text-[10px] font-black uppercase tracking-[0.3em] text-white">Sân khấu</div>
-                    <div class="grid grid-cols-2 gap-2 sm:grid-cols-3">
-                        <template x-for="(zone, index) in zones" :key="'preview-' + zone._key">
-                            <div class="flex min-h-20 flex-col justify-between rounded-2xl border-2 p-3 shadow-sm"
-                                :class="previewPalette(index)"
+                    <div class="max-h-[55vh] overflow-y-auto p-2">
+                    <div class="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4">
+                        <template x-for="(zone, index) in filteredZones" :key="'preview-' + zone._key">
+                            <button type="button" draggable="true"
+                                @click="selectedZoneKey = zone._key"
+                                @dragstart="startZoneDrag(zone._key, $event)"
+                                @dragover.prevent="dragOverZoneKey = zone._key"
+                                @dragleave="if (dragOverZoneKey === zone._key) dragOverZoneKey = null"
+                                @drop.prevent="dropZone(zone._key)"
+                                @dragend="clearZoneDrag()"
+                                class="flex min-h-24 flex-col justify-between rounded-2xl border-2 p-3 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-md cursor-grab active:cursor-grabbing"
+                                :class="previewPalette(index) + ' ' + (selectedZoneKey === zone._key ? 'ring-4 ring-slate-900 ring-offset-2' : (dragOverZoneKey === zone._key ? 'scale-105 ring-4 ring-emerald-500 ring-offset-2' : ''))"
                                 :title="zone.name + ' · ' + zone.kind">
                                 <span class="text-[10px] font-black uppercase tracking-wider" x-text="zone.code || ('KHU ' + (index + 1))"></span>
                                 <strong class="text-sm leading-tight" x-text="zone.name || ('Khu ' + (index + 1))"></strong>
                                 <span class="text-[10px] font-semibold" x-text="zoneSummary(zone)"></span>
-                            </div>
+                            </button>
                         </template>
-                        <p x-show="zones.length === 0" class="col-span-full rounded-xl bg-amber-50 p-4 text-sm text-amber-900">Thêm khu để xem sơ đồ.</p>
+                        <p x-show="filteredZones.length === 0" class="col-span-full rounded-xl bg-amber-50 p-4 text-sm text-amber-900" x-text="zones.length ? 'Không tìm thấy khu phù hợp.' : 'Thêm khu để xem sơ đồ.'"></p>
+                    </div>
                     </div>
                 </div>
             </section>
 
             <section class="rounded-2xl border border-gray-200 bg-white p-5 space-y-4">
-                <div class="flex items-center justify-between gap-3">
-                    <div><h2 class="font-black text-lg">Các khu trong khán phòng</h2><p class="text-sm text-gray-500">Mỗi khu có sơ đồ ghế hoặc tồn kho vé riêng.</p></div>
+                <div class="flex flex-wrap items-center justify-between gap-3">
+                    <div><h2 class="font-black text-lg">Chỉnh sửa khu đang chọn</h2><p class="text-sm text-gray-500">Chọn một khu trên mặt bằng để chỉnh; không cần cuộn qua toàn bộ danh sách.</p></div>
                     <button type="button" @click="addZone()" class="rounded-xl bg-emerald-800 px-4 py-2 text-sm font-bold text-white">+ Thêm khu</button>
                 </div>
-                <template x-for="(zone, index) in zones" :key="zone._key">
-                    <article class="rounded-2xl border border-gray-200 p-4 space-y-4">
-                        <div class="flex items-start justify-between gap-3">
-                            <h3 class="font-black" x-text="'Khu ' + (index + 1)"></h3>
-                            <div class="flex gap-2">
-                                <button type="button" @click="move(index, -1)" :disabled="index === 0" class="rounded-lg border px-3 py-1 text-sm disabled:opacity-30" aria-label="Di chuyển lên">↑</button>
-                                <button type="button" @click="move(index, 1)" :disabled="index === zones.length - 1" class="rounded-lg border px-3 py-1 text-sm disabled:opacity-30" aria-label="Di chuyển xuống">↓</button>
-                                <button type="button" @click="removeZone(index)" class="rounded-lg border border-red-200 px-3 py-1 text-sm text-red-700">Xóa khu</button>
+                <template x-if="selectedZone">
+                    <article class="rounded-2xl border border-emerald-200 bg-emerald-50/40 p-4 space-y-4">
+                        <div class="flex flex-wrap items-center justify-between gap-3">
+                            <div class="flex items-center gap-3">
+                                <h3 class="font-black" x-text="'Khu ' + (selectedZoneIndex + 1) + ' / ' + zones.length"></h3>
+                                <select x-model="selectedZoneKey" class="rounded-lg border-gray-300 py-1.5 text-xs font-bold" aria-label="Chuyển nhanh đến khu">
+                                    <template x-for="(zone, index) in zones" :key="'select-' + zone._key"><option :value="zone._key" x-text="zone.code + ' · ' + zone.name"></option></template>
+                                </select>
                             </div>
+                            <button type="button" @click="removeSelectedZone()" class="rounded-lg border border-red-200 bg-white px-3 py-1.5 text-sm font-bold text-red-700">Xóa khu này</button>
                         </div>
                         <div class="grid gap-3 md:grid-cols-4">
-                            <label class="text-xs font-bold">Mã khu<input x-model="zone.code" maxlength="6" class="mt-1 w-full rounded-lg border-gray-300"></label>
-                            <label class="text-xs font-bold">Tên khu<input x-model="zone.name" maxlength="100" class="mt-1 w-full rounded-lg border-gray-300"></label>
+                            <label class="text-xs font-bold">Mã khu<input x-model="selectedZone.code" maxlength="6" class="mt-1 w-full rounded-lg border-gray-300"></label>
+                            <label class="text-xs font-bold">Tên khu<input x-model="selectedZone.name" maxlength="100" class="mt-1 w-full rounded-lg border-gray-300"></label>
                             <label class="text-xs font-bold">Cách bán vé
-                                <select x-model="zone.kind" class="mt-1 w-full rounded-lg border-gray-300">
+                                <select x-model="selectedZone.kind" class="mt-1 w-full rounded-lg border-gray-300">
                                     <option value="seated">Chọn ghế</option><option value="table">Theo bàn</option>
                                     <option value="standing">Vé đứng theo số lượng</option><option value="admission">Vé vào cửa theo số lượng</option>
                                 </select>
                             </label>
                             <label class="text-xs font-bold">Hạng ghế / vé
-                                <select x-model="zone.seat_type" class="mt-1 w-full rounded-lg border-gray-300">
+                                <select x-model="selectedZone.seat_type" class="mt-1 w-full rounded-lg border-gray-300">
                                     <option value="svip_diamond">SVIP</option><option value="vip_gold">VIP</option>
                                     <option value="cat1_stand">Cat 1</option><option value="cat2_wings">Cat 2</option>
                                     <option value="skybox_suite">Skybox</option><option value="standing_pit">Vé đứng</option>
                                 </select>
                             </label>
                         </div>
-                        <div x-show="zone.kind === 'seated'" class="grid gap-3 md:grid-cols-3 rounded-xl bg-gray-50 p-3">
+                        <div x-show="selectedZone.kind === 'seated'" class="grid gap-3 md:grid-cols-3 rounded-xl bg-gray-50 p-3">
                             <p class="md:col-span-3 text-xs font-bold text-gray-600">Sơ đồ ghế ngồi — có thể chỉnh số hàng và số ghế mỗi hàng.</p>
-                            <label class="text-xs font-bold">Số hàng<input type="number" min="1" max="26" x-model.number="zone.rows" class="mt-1 w-full rounded-lg border-gray-300"></label>
-                            <label class="text-xs font-bold">Ghế mỗi hàng<input type="number" min="1" max="40" x-model.number="zone.cols" class="mt-1 w-full rounded-lg border-gray-300"></label>
-                            <p class="self-end text-sm">Số ghế: <strong x-text="seatCapacity(zone)"></strong></p>
+                            <label class="text-xs font-bold">Số hàng<input type="number" min="1" max="26" x-model.number="selectedZone.rows" class="mt-1 w-full rounded-lg border-gray-300"></label>
+                            <label class="text-xs font-bold">Ghế mỗi hàng<input type="number" min="1" max="40" x-model.number="selectedZone.cols" class="mt-1 w-full rounded-lg border-gray-300"></label>
+                            <p class="self-end text-sm">Số ghế: <strong x-text="seatCapacity(selectedZone)"></strong></p>
                         </div>
-                        <div x-show="zone.kind === 'table'" class="grid gap-3 md:grid-cols-3 rounded-xl bg-gray-50 p-3">
-                            <label class="text-xs font-bold">Số bàn<input type="number" min="1" max="100" x-model.number="zone.tables" class="mt-1 w-full rounded-lg border-gray-300"></label>
-                            <label class="text-xs font-bold">Chỗ mỗi bàn<input type="number" min="1" max="20" x-model.number="zone.seats_per_table" class="mt-1 w-full rounded-lg border-gray-300"></label>
-                            <p class="self-end text-sm">Số chỗ: <strong x-text="seatCapacity(zone)"></strong></p>
+                        <div x-show="selectedZone.kind === 'table'" class="grid gap-3 md:grid-cols-3 rounded-xl bg-gray-50 p-3">
+                            <label class="text-xs font-bold">Số bàn<input type="number" min="1" max="100" x-model.number="selectedZone.tables" class="mt-1 w-full rounded-lg border-gray-300"></label>
+                            <label class="text-xs font-bold">Chỗ mỗi bàn<input type="number" min="1" max="20" x-model.number="selectedZone.seats_per_table" class="mt-1 w-full rounded-lg border-gray-300"></label>
+                            <p class="self-end text-sm">Số chỗ: <strong x-text="seatCapacity(selectedZone)"></strong></p>
                         </div>
-                        <div x-show="zone.kind === 'standing' || zone.kind === 'admission'" class="rounded-xl bg-amber-50 p-3">
-                            <label class="text-xs font-bold">Sức chứa tối đa<input type="number" min="1" x-model.number="zone.capacity" class="mt-1 w-full rounded-lg border-gray-300 md:max-w-xs"></label>
+                        <div x-show="selectedZone.kind === 'standing' || selectedZone.kind === 'admission'" class="rounded-xl bg-amber-50 p-3">
+                            <label class="text-xs font-bold">Sức chứa tối đa<input type="number" min="1" x-model.number="selectedZone.capacity" class="mt-1 w-full rounded-lg border-gray-300 md:max-w-xs"></label>
                             <p class="mt-1 text-xs text-gray-600">Vé được quản lý theo số lượng; không sinh ghế ảo.</p>
                         </div>
                     </article>
@@ -142,15 +156,58 @@
             return {
                 preset: config.preset,
                 zones: (config.zones ?? []).map(normalize),
+                selectedZoneKey: null,
+                draggedZoneKey: null,
+                dragOverZoneKey: null,
+                zoneSearch: '',
                 templates: config.templates,
-                init() { if (!this.zones.length) this.loadPreset(); },
-                loadPreset() { this.zones = (this.templates[this.preset] ?? []).map(normalize); },
-                addZone() { this.zones.push(normalize({}, this.zones.length)); },
-                removeZone(index) { this.zones.splice(index, 1); },
-                move(index, direction) {
-                    const next = index + direction;
-                    if (next < 0 || next >= this.zones.length) return;
-                    [this.zones[index], this.zones[next]] = [this.zones[next], this.zones[index]];
+                init() {
+                    if (!this.zones.length) this.loadPreset();
+                    else this.selectedZoneKey = this.zones[0]._key;
+                    this.syncSortOrder();
+                },
+                loadPreset() {
+                    this.zones = (this.templates[this.preset] ?? []).map(normalize);
+                    this.selectedZoneKey = this.zones[0]?._key ?? null;
+                    this.syncSortOrder();
+                },
+                addZone() {
+                    const zone = normalize({}, this.zones.length);
+                    this.zones.push(zone);
+                    this.selectedZoneKey = zone._key;
+                    this.syncSortOrder();
+                },
+                removeSelectedZone() {
+                    const index = this.selectedZoneIndex;
+                    if (index < 0) return;
+                    this.zones.splice(index, 1);
+                    this.selectedZoneKey = this.zones[Math.min(index, this.zones.length - 1)]?._key ?? null;
+                    this.syncSortOrder();
+                },
+                startZoneDrag(key, event) {
+                    this.draggedZoneKey = key;
+                    event.dataTransfer.effectAllowed = 'move';
+                    event.dataTransfer.setData('text/plain', key);
+                },
+                dropZone(targetKey) {
+                    const sourceKey = this.draggedZoneKey;
+                    const from = this.zones.findIndex(zone => zone._key === sourceKey);
+                    const to = this.zones.findIndex(zone => zone._key === targetKey);
+                    if (from >= 0 && to >= 0 && from !== to) {
+                        const [zone] = this.zones.splice(from, 1);
+                        this.zones.splice(to, 0, zone);
+                        this.selectedZoneKey = zone._key;
+                        this.syncSortOrder();
+                    }
+                    this.clearZoneDrag();
+                },
+                clearZoneDrag() { this.draggedZoneKey = null; this.dragOverZoneKey = null; },
+                syncSortOrder() { this.zones.forEach((zone, index) => { zone.sort_order = index; }); },
+                get selectedZone() { return this.zones.find(zone => zone._key === this.selectedZoneKey) ?? null; },
+                get selectedZoneIndex() { return this.zones.findIndex(zone => zone._key === this.selectedZoneKey); },
+                get filteredZones() {
+                    const query = this.zoneSearch.trim().toLocaleLowerCase();
+                    return query ? this.zones.filter(zone => `${zone.code} ${zone.name}`.toLocaleLowerCase().includes(query)) : this.zones;
                 },
                 seatCapacity(zone) { return Math.max(0, Number(zone.kind === 'table' ? zone.tables * zone.seats_per_table : zone.rows * zone.cols) || 0); },
                 previewPalette(index) {

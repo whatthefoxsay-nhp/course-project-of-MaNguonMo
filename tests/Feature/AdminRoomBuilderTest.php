@@ -22,7 +22,7 @@ test('admin can access room builder creation page', function () {
         ->assertOk()->assertSee('Thiết Kế & Sinh Sơ Đồ Khán Đài Mới');
 
     $this->actingAs($admin)->get(route('admin.rooms.create', ['mode' => 'zones']))
-        ->assertOk()->assertSee('Các khu trong khán phòng');
+        ->assertOk()->assertSee('Chỉnh sửa khu đang chọn');
 });
 
 test('admin can create room with mega concert preset and auto-generate seats', function () {
@@ -168,10 +168,13 @@ test('new room builder shows zone kinds and calculated capacity', function () {
 
     $this->actingAs($admin)->get(route('admin.rooms.create', ['mode' => 'zones']))
         ->assertOk()
-        ->assertSee('Các khu trong khán phòng')
+        ->assertSee('Chỉnh sửa khu đang chọn')
         ->assertSee('Xem trước mặt bằng')
         ->assertSee('Bố cục các khu vé')
         ->assertSee('Vé đứng theo số lượng')
+        ->assertSee('kéo thả khu ngay trên mặt bằng')
+        ->assertSee('Tìm nhanh theo mã hoặc tên khu')
+        ->assertSee('Chỉnh sửa khu đang chọn')
         ->assertSee('Sức chứa tổng (tính tự động)');
 });
 
