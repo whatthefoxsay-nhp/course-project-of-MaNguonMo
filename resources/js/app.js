@@ -33,6 +33,7 @@ Alpine.data('seatBookingManager', (config = {}) => ({
 
     concertViewMode: config.defaultViewMode || 'zone',
     selectedZone: 'svip_diamond',
+    activeVenueZone: null,
     hoveredZone: null,
     availableSeatsByZone: config.availableSeatsByZone || {},
     seatInventory: config.seatInventory || {},
@@ -48,6 +49,7 @@ Alpine.data('seatBookingManager', (config = {}) => ({
             this.zoneQuantities[zone.id] = 0;
             this.zoneMeta[zone.id] = zone;
         });
+        this.activeVenueZone = (config.zones || []).find(zone => ['seated', 'table'].includes(zone.kind))?.id ?? null;
         if (config.pollStatus && config.statusUrl) {
             setInterval(() => this.refreshSeatStatus(), 15000);
         }
@@ -75,6 +77,10 @@ Alpine.data('seatBookingManager', (config = {}) => ({
 
     clearHoveredZone() {
         this.hoveredZone = null;
+    },
+
+    focusVenueZone(zoneId) {
+        this.activeVenueZone = zoneId;
     },
 
     focusZoneInSeatGrid(zoneKey) {

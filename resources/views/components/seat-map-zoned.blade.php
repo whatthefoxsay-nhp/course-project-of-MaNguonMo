@@ -7,7 +7,8 @@
         <p class="mt-2 text-center text-[10px] font-black uppercase tracking-[0.35em] text-white/70">Sân khấu / khu vực sự kiện</p>
     </div>
 
-    <article class="overflow-hidden rounded-3xl border border-black/10 bg-white p-5 shadow-sm sm:p-7">
+    <div class="grid items-start gap-5 lg:grid-cols-12">
+    <article class="overflow-hidden rounded-3xl border border-black/10 bg-white p-5 shadow-sm sm:p-7 lg:sticky lg:top-24 lg:col-span-7">
         <div class="flex flex-wrap items-end justify-between gap-3">
             <div>
                 <p class="text-xs font-black uppercase tracking-[0.18em] text-emerald-800">Sơ đồ chọn khu</p>
@@ -30,7 +31,8 @@
                         ][$index % 6];
                     @endphp
                     <button type="button"
-                        @click="document.getElementById('zone-card-{{ $zone['id'] }}')?.scrollIntoView({ behavior: 'smooth', block: 'center' })"
+                        @click="focusVenueZone({{ $zone['id'] }})"
+                        :class="activeVenueZone === {{ $zone['id'] }} ? 'ring-4 ring-slate-900 ring-offset-2' : ''"
                         class="group min-h-24 rounded-2xl border-2 {{ $zonePalette['border'] }} {{ $zonePalette['bg'] }} p-3 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-emerald-700 sm:min-h-28 sm:p-4">
                         <span class="flex items-center gap-2 text-[10px] font-black uppercase tracking-wider {{ $zonePalette['text'] }}"><span class="h-2.5 w-2.5 rounded-full {{ $zonePalette['dot'] }}"></span>{{ $zone['code'] }}</span>
                         <strong class="mt-2 block text-sm font-black leading-tight {{ $zonePalette['text'] }} sm:text-base">{{ $zone['name'] }}</strong>
@@ -44,13 +46,18 @@
         </div>
     </article>
 
-    <div class="grid gap-4 lg:grid-cols-2">
+    <aside class="space-y-3 lg:col-span-5">
+        <div class="rounded-2xl border border-black/10 bg-white p-4 shadow-sm">
+            <p class="text-xs font-black uppercase tracking-[0.18em] text-emerald-800">Hạng vé</p>
+            <h3 class="mt-1 text-xl font-black">Chọn khu và loại vé</h3>
+            <p class="mt-1 text-xs text-gray-500">Chọn khu trên sơ đồ hoặc xem từng hạng vé bên dưới.</p>
+        </div>
         @foreach($venueZones as $zone)
             @php
                 $zoneSeats = $seatsCollection->where('zone_id', $zone['id']);
                 $zoneRows = $zoneSeats->groupBy('row_label');
             @endphp
-            <article id="zone-card-{{ $zone['id'] }}" class="scroll-mt-24 rounded-3xl border border-black/10 bg-white p-5 shadow-sm">
+            <article id="zone-card-{{ $zone['id'] }}" :class="activeVenueZone === {{ $zone['id'] }} ? 'border-slate-900 ring-2 ring-slate-900/10' : 'border-black/10'" class="scroll-mt-24 rounded-3xl border bg-white p-4 shadow-sm transition sm:p-5">
                 <div class="flex items-start justify-between gap-4 border-b border-black/10 pb-4">
                     <div>
                         <span class="rounded-full bg-emerald-50 px-2.5 py-1 text-[10px] font-black uppercase text-emerald-900">{{ $zone['code'] }}</span>
@@ -66,11 +73,14 @@
                     <div class="text-right">
                         <strong class="block text-lg">{{ number_format($zone['price']) }}₫</strong>
                         <span class="text-[10px] font-bold uppercase text-gray-500">{{ in_array($zone['kind'], ['seated', 'table'], true) ? 'Chọn chỗ' : 'Theo số lượng' }}</span>
+                        @if(in_array($zone['kind'], ['seated', 'table'], true))
+                            <button type="button" @click="focusVenueZone({{ $zone['id'] }})" class="mt-2 block rounded-full bg-slate-900 px-3 py-1.5 text-[10px] font-black text-white">Chọn ghế khu này</button>
+                        @endif
                     </div>
                 </div>
 
                 @if(in_array($zone['kind'], ['seated', 'table'], true))
-                    <div class="mt-4 space-y-3">
+                    <div x-show="activeVenueZone === {{ $zone['id'] }}" x-cloak class="mt-4 max-h-[48vh] space-y-3 overflow-y-auto pr-1">
                         @forelse($zoneRows as $rowLabel => $rowSeats)
                             <div class="rounded-xl bg-[#FAF9F6] p-3">
                                 <div class="mb-2 flex items-center justify-between gap-2">
@@ -107,6 +117,7 @@
                 @endif
             </article>
         @endforeach
+    </aside>
     </div>
 
     <div class="sticky bottom-3 flex flex-col gap-4 rounded-3xl border border-black/10 bg-white/95 p-4 shadow-xl backdrop-blur sm:flex-row sm:items-center sm:justify-between">
