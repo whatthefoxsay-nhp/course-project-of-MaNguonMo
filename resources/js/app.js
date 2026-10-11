@@ -1023,10 +1023,13 @@ Alpine.data('adminSeatMapBuilder', (config = {}) => ({
 
     selectPreset(p) {
         this.preset = p;
-        if (this.presetsMeta[p]) {
-            this.capacity = this.presetsMeta[p].capacityDefault;
-        }
         this.buildDefaultMatrix(p);
+        this.syncCapacity();
+    },
+
+    syncCapacity() {
+        const standing = (this.preset === 'mega_concert') ? 40 : 0;
+        this.capacity = this.activeSeatCount + standing;
     },
 
     paintSeat(rowIdx, seatIdx) {
@@ -1043,6 +1046,7 @@ Alpine.data('adminSeatMapBuilder', (config = {}) => ({
             seat.is_blocked = false;
             seat.type = this.selectedTool;
         }
+        this.syncCapacity();
     },
 
     paintRow(rowIdx) {
@@ -1061,6 +1065,7 @@ Alpine.data('adminSeatMapBuilder', (config = {}) => ({
                 seat.type = this.selectedTool;
             }
         });
+        this.syncCapacity();
     },
 
     addRow() {
@@ -1076,11 +1081,13 @@ Alpine.data('adminSeatMapBuilder', (config = {}) => ({
                 is_blocked: false,
             }))
         });
+        this.syncCapacity();
     },
 
     removeRow(rowIdx) {
         if (this.matrixRows.length <= 1) return;
         this.matrixRows.splice(rowIdx, 1);
+        this.syncCapacity();
     },
 
     addSeatToRow(rowIdx) {
@@ -1093,12 +1100,14 @@ Alpine.data('adminSeatMapBuilder', (config = {}) => ({
             is_aisle: false,
             is_blocked: false,
         });
+        this.syncCapacity();
     },
 
     removeSeatFromRow(rowIdx) {
         const row = this.matrixRows[rowIdx];
         if (!row || row.seats.length <= 1) return;
         row.seats.pop();
+        this.syncCapacity();
     },
 
     getSeatColor(seat) {
@@ -1143,29 +1152,29 @@ Alpine.data('adminSeatMapBuilder', (config = {}) => ({
     presetsMeta: {
         mega_concert: {
             name: 'Mega Concert Stadium Arena',
-            subtitle: 'Sân vận động siêu quy mô (20.000+ chỗ, Catwalk Runway, B-Stage, GA Standing)',
-            capacityDefault: 20000,
+            subtitle: 'Sân vận động siêu quy mô (252 chỗ: 212 ghế khán đài + 40 vé đứng GA Fanzone)',
+            capacityDefault: 252,
             icon: '🏟️',
             badge: 'badge-gold',
         },
         theater_hall: {
             name: 'Nhà Hát & Giao Hưởng (Theater Hall)',
-            subtitle: 'Khán phòng nghệ thuật (Tầng Trệt Stalls, Dress Circle, Gallery, VIP Boxes)',
-            capacityDefault: 1200,
+            subtitle: 'Khán phòng nghệ thuật (112 chỗ: Tầng Trệt Stalls, Dress Circle, Gallery)',
+            capacityDefault: 112,
             icon: '🎭',
             badge: 'badge-rose',
         },
         convention_center: {
             name: 'Trung Tâm Hội Nghị & Expo',
-            subtitle: 'Hội trường diễn đàn (Khu Keynote VIP, Standard, Bàn tròn VIP Business)',
-            capacityDefault: 800,
+            subtitle: 'Hội trường diễn đàn (108 chỗ: Khu Keynote VIP, Standard Expo)',
+            capacityDefault: 108,
             icon: '🏢',
             badge: 'badge-sage',
         },
         custom_grid: {
             name: 'Ma Trận Tùy Chỉnh (Custom Grid)',
             subtitle: 'Tự do cấu hình số hàng, số cột và tỷ lệ phân bổ hạng vé theo yêu cầu',
-            capacityDefault: 300,
+            capacityDefault: 140,
             icon: '⚡',
             badge: 'badge-dark',
         }

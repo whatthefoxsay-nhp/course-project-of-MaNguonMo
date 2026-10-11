@@ -35,6 +35,7 @@ Cập nhật file này mỗi khi kiến trúc hoặc yêu cầu dự án thay đ
 | **2026-09-21** | **Đồng bộ ghế** | Polling `GET /showtimes/{id}/seat-status` mỗi 15 giây | Spec mục 5: không dùng WebSocket. |
 | **2026-09-23** | **Quản trị hệ thống** | Làm sạch dữ liệu thực trên Dashboard & Báo cáo (xóa bỏ số liệu giả lập); Hoàn thiện chi tiết đơn vé & giải phóng ghế khi hủy đơn; Khởi tạo bảng & Model `Discount` lưu trữ thật; Bổ sung đổi vai trò Admin/User và đặt lại mật khẩu | Đảm bảo phân hệ Admin vận hành 100% trên cơ sở dữ liệu thật MySQL, không còn mock/alert giả lập. |
 | **2026-09-23** | **Public Catalog DB (Plan 2)** | Toàn bộ trang chủ, danh sách sự kiện, chi tiết sự kiện và sơ đồ ghế đọc trực tiếp từ MySQL; Thống nhất định giá qua `TicketTiers`; Trình bày sơ đồ ghế động qua `SeatMapPresenter`; Hỗ trợ cả Sân vận động và Khán phòng nhà hát | Loại bỏ hoàn toàn phụ thuộc vào `DemoCatalog` cho luồng xem sự kiện và sơ đồ ghế. |
+| **2026-10-11** | **Đồng bộ Sức chứa & Sơ đồ** | Đồng bộ 100% Sức chứa khán phòng (`capacity`) với số ghế thực tế trên sơ đồ (252, 112, 108); Admin Builder tự động tính sức chứa theo số ghế vẽ; cập nhật Seeder & Database | Xóa bỏ hoàn toàn tình trạng sức chứa 20.000 nhưng sơ đồ 252 ghế; đảm bảo tính chân thực và nhất quán giữa số liệu và sơ đồ đặt vé. |
 
 ---
 

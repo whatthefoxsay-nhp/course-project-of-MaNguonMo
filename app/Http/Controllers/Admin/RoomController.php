@@ -74,7 +74,7 @@ class RoomController extends Controller
             'room' => new Room([
                 'name' => '',
                 'address' => '',
-                'capacity' => 20000,
+                'capacity' => 252,
                 'layout_preset' => 'mega_concert',
                 'seat_config' => [
                     'base_price' => 250000,
@@ -163,13 +163,13 @@ class RoomController extends Controller
         ]);
 
         if ($customMatrix) {
-            $generator->generateFromMatrix($room, $customMatrix, $validated['layout_preset']);
+            $seatCount = $generator->generateFromMatrix($room, $customMatrix, $validated['layout_preset']);
         } else {
-            $generator->generate($room, $validated['layout_preset'], $seatConfig);
+            $seatCount = $generator->generate($room, $validated['layout_preset'], $seatConfig);
         }
 
         return redirect()->route('admin.rooms.index')
-            ->with('success', "Đã tạo khán phòng [{$room->name}] và lưu sơ đồ tùy chỉnh thành công!");
+            ->with('success', "Đã tạo khán phòng [{$room->name}] và lưu sơ đồ tùy chỉnh thành công ({$room->capacity} chỗ)!");
     }
 
     public function update(Request $request, Room $room, RoomSeatGenerator $generator): RedirectResponse
@@ -228,19 +228,20 @@ class RoomController extends Controller
         ]);
 
         if ($customMatrix) {
-            $generator->generateFromMatrix($room, $customMatrix, $validated['layout_preset']);
+            $seatCount = $generator->generateFromMatrix($room, $customMatrix, $validated['layout_preset']);
         } else {
-            $generator->generate($room, $validated['layout_preset'], $seatConfig);
+            $seatCount = $generator->generate($room, $validated['layout_preset'], $seatConfig);
         }
 
         return redirect()->route('admin.rooms.index')
-            ->with('success', "Đã cập nhật khán phòng [{$room->name}] và tái tạo sơ đồ ghế thành công!");
+            ->with('success', "Đã cập nhật khán phòng [{$room->name}] và tái tạo sơ đồ ghế thành công ({$room->capacity} chỗ)!");
     }
 
     public function duplicate(Room $room): RedirectResponse
     {
         $newRoom = $room->replicate(['id', 'created_at', 'updated_at']);
         $newRoom->name = $room->name.' (Bản Sao '.now()->format('d/m H:i').')';
+        $newRoom->capacity = $room->seats()->count();
         $newRoom->save();
 
         // Sao chép toàn bộ ghế sang khán phòng mới

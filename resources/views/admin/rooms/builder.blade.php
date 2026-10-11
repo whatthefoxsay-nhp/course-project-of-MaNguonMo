@@ -25,7 +25,7 @@
             preset: '{{ $preset }}',
             roomName: '{{ addslashes($room->name ?? '') }}',
             roomAddress: '{{ addslashes($room->address ?? '') }}',
-            capacity: {{ $room->capacity ?? 20000 }},
+            capacity: {{ $room->capacity ?? 252 }},
             basePrice: {{ $basePrice }},
             rows: {{ $rows }},
             cols: {{ $cols }},
@@ -197,16 +197,24 @@
 
                             <div class="grid grid-cols-2 gap-4">
                                 <div>
-                                    <label class="block text-gray-700 font-bold uppercase tracking-wider mb-1.5">
-                                        Sức Chứa Khán Giả <span class="text-crimson">*</span>
-                                    </label>
+                                    <div class="flex items-center justify-between mb-1.5">
+                                        <label class="block text-gray-700 font-bold uppercase tracking-wider text-[11px]">
+                                            Sức Chứa Khán Giả <span class="text-crimson">*</span>
+                                        </label>
+                                        <span class="text-[9px] text-emerald-800 font-bold bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
+                                            Khớp 100% sơ đồ
+                                        </span>
+                                    </div>
                                     <input 
                                         type="number" 
                                         name="capacity" 
                                         x-model="capacity" 
-                                        class="glass-input w-full rounded-xl px-4 py-2.5 font-black text-xs font-mono"
+                                        class="glass-input w-full rounded-xl px-4 py-2.5 font-black text-xs font-mono bg-amber-50/30"
                                         required
                                     >
+                                    <p class="text-[10px] text-gray-500 mt-1 leading-tight">
+                                        <span x-text="activeSeatCount"></span> ghế khán đài<span x-show="preset === 'mega_concert'"> + 40 chỗ đứng GA</span> (Tự động cập nhật khi vẽ ghế).
+                                    </p>
                                 </div>
 
                                 <div>

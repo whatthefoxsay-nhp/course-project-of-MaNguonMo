@@ -111,12 +111,12 @@
 
                     <div class="space-y-3 pt-4 border-t border-black/5">
                         <div class="grid grid-cols-2 gap-3 text-xs">
-                            <div class="p-3 bg-sky-50/60 rounded-2xl border border-sky-200/70">
-                                <span class="text-sky-800 block text-[10px] uppercase font-black">Sức Chứa</span>
-                                <span class="font-black text-base text-sky-950 mt-0.5 block">{{ number_format($room->capacity) }} Khán giả</span>
+                            <div class="p-3 bg-emerald-50/70 rounded-2xl border border-emerald-200/80">
+                                <span class="text-emerald-800 block text-[10px] uppercase font-black">Sức Chứa Thực Tế</span>
+                                <span class="font-black text-base text-emerald-950 mt-0.5 block">{{ number_format($room->capacity) }} Chỗ</span>
                             </div>
                             <div class="p-3 bg-amber-50/60 rounded-2xl border border-amber-200/70">
-                                <span class="text-amber-800 block text-[10px] uppercase font-black">Ghế Đã Sinh</span>
+                                <span class="text-amber-800 block text-[10px] uppercase font-black">Số Ghế Sơ Đồ</span>
                                 <span class="font-black text-base text-amber-950 mt-0.5 block">{{ $room->seats_count ?? $room->seats->count() }} Ghế</span>
                             </div>
                         </div>

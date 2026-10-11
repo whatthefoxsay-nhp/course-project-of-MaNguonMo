@@ -228,25 +228,25 @@ class DatabaseSeeder extends Seeder
             'name' => 'Sân Vận Động Quân Khu 7 (SVĐ QK7 Arena)',
             'address' => 'Số 202 Hoàng Văn Thụ, Phường 9, Quận Phú Nhuận, TP.HCM',
             'latitude' => 10.8005, 'longitude' => 106.6658,
-            'capacity' => 20000, 'layout_preset' => 'mega_concert',
+            'capacity' => 252, 'layout_preset' => 'mega_concert',
         ],
         'opera' => [
             'name' => 'Nhà Hát Thành Phố (Saigon Opera House)',
             'address' => '07 Công Trường Lam Sơn, Bến Nghé, Quận 1, TP.HCM',
             'latitude' => 10.7766, 'longitude' => 106.7032,
-            'capacity' => 800, 'layout_preset' => 'theater_hall',
+            'capacity' => 112, 'layout_preset' => 'theater_hall',
         ],
         'secc' => [
             'name' => 'Trung Tâm Hội Nghị & Triển Lãm SECC Hall A',
             'address' => '799 Nguyễn Văn Linh, Tân Phú, Quận 7, TP.HCM',
             'latitude' => 10.7302, 'longitude' => 106.7218,
-            'capacity' => 3000, 'layout_preset' => 'convention_center',
+            'capacity' => 108, 'layout_preset' => 'convention_center',
         ],
         'hoabinh' => [
             'name' => 'Nhà Hát Hòa Bình Main Hall',
             'address' => '240 đường 3 Tháng 2, Phường 12, Quận 10, TP.HCM',
             'latitude' => 10.7712, 'longitude' => 106.6745,
-            'capacity' => 2500, 'layout_preset' => 'theater_hall',
+            'capacity' => 112, 'layout_preset' => 'theater_hall',
         ],
     ];
 
