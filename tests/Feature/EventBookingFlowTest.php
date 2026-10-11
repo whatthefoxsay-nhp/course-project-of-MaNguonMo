@@ -80,8 +80,9 @@ test('ticket selection page renders direct tier selector for non-concert events'
 
     $response->assertStatus(200);
     $response->assertSee($movie->title);
-    $response->assertSee('Vé vào khu triển lãm');
-    $response->assertSee('Số vé');
+    $response->assertSee('Vé Tiêu Chuẩn (Standard Pass)');
+    $response->assertSee('Số lượng');
+    $response->assertDontSee('Chọn khu vé trên sơ đồ');
     $response->assertDontSee('SÂN KHẤU CHÍNH (MAIN STAGE)');
 });
 

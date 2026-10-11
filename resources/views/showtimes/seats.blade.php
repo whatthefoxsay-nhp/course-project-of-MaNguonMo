@@ -134,6 +134,7 @@
             :seats="$seats" 
             :ticketTiers="$ticketTiers"
             :venueZones="$venueZones ?? []"
+            :useZoneMap="$useZoneMap ?? false"
         />
 
     </div>

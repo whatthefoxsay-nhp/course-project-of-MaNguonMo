@@ -17,6 +17,8 @@ class ShowtimeController extends Controller
 
         abort_unless($event->status === 'published', 404);
 
+        $useZoneMap = $event->category?->slug === 'concert' && $showtime->room->isZoned();
+
         $allShowtimes = $event->showtimes()
             ->with('room')
             ->where('start_time', '>', now())
@@ -27,8 +29,9 @@ class ShowtimeController extends Controller
             'showtime' => $showtime,
             'allShowtimes' => $allShowtimes,
             'movie' => $event,
-            'seats' => ($event->is_seated || $showtime->room->isZoned()) ? SeatMapPresenter::forShowtime($showtime) : [],
-            'venueZones' => $showtime->room->isZoned() ? SeatMapPresenter::zonesForShowtime($showtime) : [],
+            'seats' => ($event->is_seated || $useZoneMap) ? SeatMapPresenter::forShowtime($showtime) : [],
+            'venueZones' => $useZoneMap ? SeatMapPresenter::zonesForShowtime($showtime) : [],
+            'useZoneMap' => $useZoneMap,
             'ticketTiers' => TicketTiers::for($showtime->base_price, $event->is_seated),
         ]);
     }

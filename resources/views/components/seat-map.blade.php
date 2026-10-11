@@ -1,4 +1,4 @@
-@props(['showtime', 'movie', 'seats', 'ticketTiers' => [], 'venueZones' => []])
+@props(['showtime', 'movie', 'seats', 'ticketTiers' => [], 'venueZones' => [], 'useZoneMap' => false])
 
 @php
     $basePrice = $showtime->base_price ?? 180000;
@@ -7,7 +7,7 @@
         $ticketTiers = \App\Support\TicketTiers::for($basePrice, $isSeatedConcert);
     }
     $seatsCollection = collect($seats);
-    $isZonedVenue = $showtime->room->isZoned();
+    $isZonedVenue = $useZoneMap && $showtime->room->isZoned();
     $totalAvailable = $seatsCollection->where('status', 'available')->count();
     $totalBooked = $seatsCollection->where('status', 'booked')->count();
     $totalHeld = $seatsCollection->where('status', 'held')->count();
