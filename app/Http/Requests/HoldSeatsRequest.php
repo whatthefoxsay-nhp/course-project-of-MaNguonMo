@@ -19,6 +19,8 @@ class HoldSeatsRequest extends FormRequest
             'seat_ids.*' => ['integer', 'distinct'],
             'tiers' => ['nullable', 'array', 'max:6'],
             'tiers.*' => ['integer', 'min:0', 'max:8'],
+            'zones' => ['nullable', 'array', 'max:20'],
+            'zones.*' => ['integer', 'min:0', 'max:8'],
         ];
     }
 
@@ -26,7 +28,7 @@ class HoldSeatsRequest extends FormRequest
     {
         return [
             function (Validator $validator) {
-                if ($this->seatIds() === [] && array_sum($this->tierQuantities()) === 0) {
+                if ($this->seatIds() === [] && array_sum($this->tierQuantities()) === 0 && array_sum($this->zoneQuantities()) === 0) {
                     $validator->errors()->add('seat_ids', 'Vui lòng chọn ít nhất 1 vé.');
                 }
             },
@@ -43,5 +45,11 @@ class HoldSeatsRequest extends FormRequest
     public function tierQuantities(): array
     {
         return array_map('intval', $this->input('tiers', []) ?? []);
+    }
+
+    /** @return array<int, int> */
+    public function zoneQuantities(): array
+    {
+        return array_map('intval', $this->input('zones', []) ?? []);
     }
 }
