@@ -76,6 +76,7 @@
             @forelse($rooms as $room)
                 @php
                     $presetLabel = match($room->layout_preset ?? 'mega_concert') {
+                        'sayhi_concert' => '🎤 Live Concert Anh Trai Say Hi',
                         'theater_hall' => '🎭 Nhà Hát & Giao Hưởng',
                         'convention_center' => '🏢 Trung Tâm Hội Nghị',
                         'custom_grid' => '⚡ Ma Trận Tùy Chỉnh',

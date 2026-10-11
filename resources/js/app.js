@@ -1051,6 +1051,25 @@ Alpine.data('adminSeatMapBuilder', (config = {}) => ({
                     is_blocked: false,
                 }))
             }));
+        } else if (preset === 'sayhi_concert') {
+            const defs = [
+                ['SVIP-SH1', 12, 'svip_diamond'], ['SVIP-SH2', 12, 'svip_diamond'],
+                ['VIP-SH1', 14, 'vip_gold'], ['VIP-SH2', 14, 'vip_gold'], ['VIP-SH3', 14, 'vip_gold'], ['VIP-SH4', 14, 'vip_gold'],
+                ['CAT1-A1', 16, 'cat1_stand'], ['CAT1-A2', 16, 'cat1_stand'], ['CAT1-A3', 16, 'cat1_stand'],
+                ['CAT2-B1', 14, 'cat1_stand'], ['CAT2-B2', 14, 'cat1_stand'],
+                ['CAT3-C1', 12, 'cat2_wings'], ['CAT3-C2', 12, 'cat2_wings'],
+                ['CAT3-D1', 12, 'cat2_wings'], ['CAT3-D2', 12, 'cat2_wings'],
+                ['SKYLNG', 8, 'skybox_suite'],
+            ];
+            this.matrixRows = defs.map(([label, count, type]) => ({
+                row: label,
+                seats: Array.from({ length: count }, (_, i) => ({
+                    number: i + 1,
+                    type: type,
+                    is_aisle: false,
+                    is_blocked: false,
+                }))
+            }));
         } else if (preset === 'theater_hall') {
             const defs = [
                 ['ST-1', 16, 'vip_gold'], ['ST-2', 16, 'vip_gold'],
@@ -1108,7 +1127,7 @@ Alpine.data('adminSeatMapBuilder', (config = {}) => ({
     },
 
     syncCapacity() {
-        const standing = (this.preset === 'mega_concert') ? 40 : 0;
+        const standing = (this.preset === 'mega_concert' || this.preset === 'sayhi_concert') ? 40 : 0;
         this.capacity = this.activeSeatCount + standing;
     },
 
@@ -1237,6 +1256,13 @@ Alpine.data('adminSeatMapBuilder', (config = {}) => ({
             icon: '🏟️',
             badge: 'badge-gold',
         },
+        sayhi_concert: {
+            name: 'Live Concert Anh Trai "Say Hi"',
+            subtitle: 'Sân khấu Runway T-Stage đỉnh cao (252 chỗ: 212 ghế khán đài + 40 vé đứng Super Fan Fanzone Say Hi A/B)',
+            capacityDefault: 252,
+            icon: '🎤',
+            badge: 'badge-rose',
+        },
         theater_hall: {
             name: 'Nhà Hát & Giao Hưởng (Theater Hall)',
             subtitle: 'Khán phòng nghệ thuật (112 chỗ: Tầng Trệt Stalls, Dress Circle, Gallery)',
@@ -1274,7 +1300,65 @@ Alpine.data('adminSeatMapBuilder', (config = {}) => ({
 
     get generatedTiers() {
         const base = parseFloat(this.basePrice) || 250000;
-        if (this.preset === 'mega_concert') {
+        if (this.preset === 'sayhi_concert') {
+            return [
+                {
+                    key: 'svip_diamond',
+                    name: 'SVIP Say Hi Diamond B-Stage',
+                    label: 'SVIP Diamond',
+                    price: Math.round(base * 2.8),
+                    color: '#D4AF37',
+                    badge: 'badge-gold',
+                    perks: ['Ghế cạnh Runway & B-Stage', 'Soundcheck Pass', 'Lightstick Say Hi', 'Lối đi riêng'],
+                    multiplier: 'x2.8',
+                    gate: 'Cổng VIP Say Hi',
+                },
+                {
+                    key: 'vip_gold',
+                    name: 'VIP Gold Say Hi Floor',
+                    label: 'VIP Gold',
+                    price: Math.round(base * 1.8),
+                    color: '#C08497',
+                    badge: 'badge-rose',
+                    perks: ['Sàn Catwalk trung tâm', 'Set quà độc quyền Anh Trai Say Hi', 'Check-in VIP'],
+                    multiplier: 'x1.8',
+                    gate: 'Cổng VIP A2',
+                },
+                {
+                    key: 'cat1_stand',
+                    name: 'Khán Đài Say Hi CAT 1 (Tầng 1)',
+                    label: 'Khán Đài CAT 1',
+                    price: Math.round(base * 1.2),
+                    color: '#3A5A40',
+                    badge: 'badge-sage',
+                    perks: ['Tầm nhìn trực diện', 'Ghế đệm êm có tựa', 'Quạt & Banner sự kiện'],
+                    multiplier: 'x1.2',
+                    gate: 'Cổng Khán Đài A',
+                },
+                {
+                    key: 'cat2_wings',
+                    name: 'Khán Đài Say Hi CAT 2 & 3 (Cánh)',
+                    label: 'Khán Đài Cánh',
+                    price: Math.round(base * 1.0),
+                    color: '#1F2937',
+                    badge: 'badge-dark',
+                    perks: ['Bao quát toàn cảnh sân vận động', 'Hòa âm đa tầng'],
+                    multiplier: 'x1.0',
+                    gate: 'Cổng Khán Đài C/D',
+                },
+                {
+                    key: 'skybox_suite',
+                    name: 'Sky Lounge VIP Suites Say Hi',
+                    label: 'Sky Lounge VIP',
+                    price: Math.round(base * 3.5),
+                    color: '#8D6E00',
+                    badge: 'badge-gold',
+                    perks: ['Phòng suite riêng tầng thượng', 'Tiệc Finger Food & Rượu vang', 'Quản gia hỗ trợ'],
+                    multiplier: 'x3.5',
+                    gate: 'Thang máy VIP',
+                },
+            ];
+        } else if (this.preset === 'mega_concert') {
             return [
                 {
                     key: 'svip_diamond',
@@ -1397,8 +1481,8 @@ Alpine.data('adminSeatMapBuilder', (config = {}) => ({
     },
 
     get calculatedTotalSeats() {
-        if (this.preset === 'mega_concert') {
-            return 210;
+        if (this.preset === 'mega_concert' || this.preset === 'sayhi_concert') {
+            return 212;
         } else if (this.preset === 'theater_hall') {
             return 112;
         } else if (this.preset === 'convention_center') {

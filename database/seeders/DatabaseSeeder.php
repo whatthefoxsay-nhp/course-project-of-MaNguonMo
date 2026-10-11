@@ -234,6 +234,12 @@ class DatabaseSeeder extends Seeder
             'latitude' => 10.8005, 'longitude' => 106.6658,
             'capacity' => 252, 'layout_preset' => 'mega_concert',
         ],
+        'sayhi_arena' => [
+            'name' => 'Sân Vận Động Quân Khu 7 - Sân Khấu Live Concert Anh Trai "Say Hi"',
+            'address' => 'Số 202 Hoàng Văn Thụ, Phường 9, Quận Phú Nhuận, TP.HCM',
+            'latitude' => 10.8005, 'longitude' => 106.6658,
+            'capacity' => 252, 'layout_preset' => 'sayhi_concert',
+        ],
         'opera' => [
             'name' => 'Nhà Hát Thành Phố (Saigon Opera House)',
             'address' => '07 Công Trường Lam Sơn, Bến Nghé, Quận 1, TP.HCM',
@@ -258,8 +264,8 @@ class DatabaseSeeder extends Seeder
     private const SCHEDULE = [
         ['live-concert-anh-trai-vuot-ngan-chong-gai-2026', 'qk7', 1, '19:00', '23:00'],
         ['live-concert-anh-trai-vuot-ngan-chong-gai-2026', 'qk7', 8, '19:00', '23:00'],
-        ['live-concert-anh-trai-say-hi-2026', 'qk7', 5, '19:00', '23:00'],
-        ['live-concert-anh-trai-say-hi-2026', 'qk7', 12, '19:00', '23:00'],
+        ['live-concert-anh-trai-say-hi-2026', 'sayhi_arena', 5, '19:00', '23:00'],
+        ['live-concert-anh-trai-say-hi-2026', 'sayhi_arena', 12, '19:00', '23:00'],
         ['saigon-autumn-music-light-festival-2026', 'qk7', 4, '17:00', '23:00'],
         ['hoa-nhac-giao-huong-saigon-philharmonic', 'opera', 2, '19:30', '21:30'],
         ['nhac-kich-les-miserables-vn', 'opera', 3, '19:30', '22:15'],

@@ -28,7 +28,7 @@ test('anh trai say hi concert has showtimes at stadium room', function () {
     $showtimes = $event->showtimes()->with('room')->get();
 
     expect($showtimes)->not->toBeEmpty()
-        ->and($showtimes->first()->room->layout_preset)->toBe('mega_concert')
+        ->and($showtimes->first()->room->layout_preset)->toBe('sayhi_concert')
         ->and($showtimes->first()->showtimeSeats()->count())->toBe(252);
 });
 

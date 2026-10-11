@@ -59,6 +59,6 @@ test('seeding twice does not duplicate data', function () {
     $this->seed();
 
     expect(Event::count())->toBe(9)
-        ->and(Room::count())->toBe(4)
+        ->and(Room::count())->toBe(5)
         ->and(Booking::where('booking_code', 'TBX-89214')->count())->toBe(1);
 });

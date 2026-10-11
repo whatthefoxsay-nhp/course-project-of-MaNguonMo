@@ -22,13 +22,14 @@
 
     // Khán phòng thường (nhà hát / hội nghị / lưới tùy chỉnh): vẽ lưới theo hàng
     $generalSeats = $seatsCollection->where('sector', 'general')->groupBy('row_label');
-    $isStadiumLayout = $generalSeats->isEmpty();
+    $isSayHi = ($showtime->room->layout_preset ?? '') === 'sayhi_concert' || str_contains($movie->slug ?? '', 'say-hi');
+    $isStadiumLayout = $generalSeats->isEmpty() || in_array($showtime->room->layout_preset ?? '', ['mega_concert', 'sayhi_concert'], true);
 
     // Thống kê chi tiết theo phân khu phục vụ Sơ đồ SVĐ phân khu thật (Ticketbox)
     $zoneStats = [
         'svip_diamond' => [
-            'name' => 'SVIP Sân Khấu Kim Cương',
-            'label' => 'SVIP B-Stage Diamond',
+            'name' => $isSayHi ? 'SVIP Say Hi Diamond B-Stage' : 'SVIP Sân Khấu Kim Cương',
+            'label' => $isSayHi ? 'SVIP Say Hi Diamond' : 'SVIP B-Stage Diamond',
             'code' => 'ZONE-SVIP',
             'gate' => 'Cổng VIP 1',
             'price' => $ticketTiers['svip_diamond']['price'] ?? 400000,
@@ -153,6 +154,7 @@
 
         @php
             $venuePresetLabel = match($showtime->room->layout_preset ?? 'mega_concert') {
+                'sayhi_concert' => 'Live Concert Anh Trai "Say Hi"',
                 'theater_hall' => 'Nhà Hát & Giao Hưởng (Opera House)',
                 'convention_center' => 'Trung Tâm Hội Nghị (Convention Center)',
                 'custom_grid' => 'Ma Trận Tùy Chỉnh (Custom Grid)',
@@ -805,7 +807,7 @@
 
             <!-- Entry Gates Top Indicators -->
             <div class="relative flex items-center justify-between text-[10px] font-mono uppercase tracking-widest text-gray-400 pb-4 border-b border-white/10 z-10">
-                @if ($showtime->room->layout_preset === 'mega_concert')
+                @if (in_array($showtime->room->layout_preset ?? '', ['mega_concert', 'sayhi_concert'], true))
                     <span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-cyan-400 animate-ping"></span> CỔNG VÀO KHÁN ĐÀI C (NORTH GATE)</span>
                     <span class="hidden sm:inline text-gold-antique font-bold">🏟️ SƠ ĐỒ CHI TIẾT TỪNG GHẾ ({{ mb_strtoupper($showtime->room->name) }})</span>
                     <span class="flex items-center gap-1.5">CỔNG VÀO KHÁN ĐÀI D (SOUTH GATE) <span class="w-2 h-2 rounded-full bg-pink-400 animate-ping"></span></span>

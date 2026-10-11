@@ -15,7 +15,7 @@ final class SeatMapPresenter
     {
         $showtime->loadMissing('room');
         $tiers = TicketTiers::for($showtime->base_price, true);
-        $isStadium = $showtime->room->layout_preset === 'mega_concert';
+        $isStadium = in_array($showtime->room->layout_preset, ['mega_concert', 'sayhi_concert'], true);
 
         return $showtime->showtimeSeats()
             ->with('seat')
@@ -59,13 +59,13 @@ final class SeatMapPresenter
         }
 
         return match (true) {
-            str_starts_with($row, 'SVIP') => ['floor', 'SVIP B-Stage Hàng '.substr($row, -1)],
-            str_starts_with($row, 'FL') => ['floor', 'VIP Floor Hàng '.substr($row, 3)],
-            str_starts_with($row, 'SB') => ['skybox', 'Skybox VIP Suites (Tầng Thượng)'],
-            str_starts_with($row, 'A') => ['center_stand', 'Khán Đài A Hàng '.substr($row, 1).' (Trung Tâm Tầng 1)'],
-            str_starts_with($row, 'B') => ['upper_stand', 'Khán Đài B Hàng '.substr($row, 1).' (Trung Tâm Tầng 2)'],
-            str_starts_with($row, 'C') => ['left_stand', 'Khán Đài C Hàng '.substr($row, 1).' (Cánh Trái)'],
-            str_starts_with($row, 'D') => ['right_stand', 'Khán Đài D Hàng '.substr($row, 1).' (Cánh Phải)'],
+            str_starts_with($row, 'SVIP') => ['floor', 'SVIP Diamond Hàng '.substr($row, -1)],
+            str_starts_with($row, 'VIP') || str_starts_with($row, 'FL') => ['floor', 'VIP Gold Hàng '.substr($row, -1)],
+            str_starts_with($row, 'SB') || str_starts_with($row, 'SKYLNG') => ['skybox', 'Sky Lounge VIP Suites (Tầng Thượng)'],
+            str_starts_with($row, 'CAT1') || str_starts_with($row, 'A') => ['center_stand', 'Khán Đài CAT 1 Hàng '.substr($row, -1).' (Trung Tâm Tầng 1)'],
+            str_starts_with($row, 'CAT2') || str_starts_with($row, 'B') => ['upper_stand', 'Khán Đài CAT 2 Hàng '.substr($row, -1).' (Trung Tâm Tầng 2)'],
+            str_starts_with($row, 'CAT3-C') || str_starts_with($row, 'C') => ['left_stand', 'Khán Đài CAT 3 Hàng '.substr($row, -1).' (Cánh Trái)'],
+            str_starts_with($row, 'CAT3-D') || str_starts_with($row, 'D') => ['right_stand', 'Khán Đài CAT 3 Hàng '.substr($row, -1).' (Cánh Phải)'],
             default => ['general', "Hàng {$row}"],
         };
     }

@@ -109,7 +109,23 @@
                                 </div>
                             </div>
 
-                            <!-- Preset 2: Theater Hall -->
+                            <!-- Preset 2: Anh Trai Say Hi Concert -->
+                            <div 
+                                @click="selectPreset('sayhi_concert')"
+                                class="p-4 rounded-2xl border-2 transition-all cursor-pointer flex items-start gap-3.5"
+                                :class="preset === 'sayhi_concert' ? 'border-rose-400 bg-rose-50/60 shadow-sm ring-2 ring-rose-300' : 'border-black/10 bg-[#FAF9F6] hover:border-black/20'"
+                            >
+                                <span class="text-2xl">🎤</span>
+                                <div class="flex-1">
+                                    <div class="flex items-center justify-between">
+                                        <h4 class="font-display font-black text-xs text-black">Live Concert Anh Trai "Say Hi"</h4>
+                                        <span class="badge-rose text-[9px] px-2 py-0.5 rounded-full font-bold">25.000+ chỗ</span>
+                                    </div>
+                                    <p class="text-[11px] text-gray-500 mt-1">Sân khấu Runway T-Stage mở rộng, Super Fan Fanzone Say Hi A/B, SVIP Diamond, VIP Gold, Khán đài CAT 1-3, Sky Lounge.</p>
+                                </div>
+                            </div>
+
+                            <!-- Preset 3: Theater Hall -->
                             <div 
                                 @click="selectPreset('theater_hall')"
                                 class="p-4 rounded-2xl border-2 transition-all cursor-pointer flex items-start gap-3.5"
@@ -125,7 +141,7 @@
                                 </div>
                             </div>
 
-                            <!-- Preset 3: Convention Center -->
+                            <!-- Preset 4: Convention Center -->
                             <div 
                                 @click="selectPreset('convention_center')"
                                 class="p-4 rounded-2xl border-2 transition-all cursor-pointer flex items-start gap-3.5"
@@ -141,7 +157,7 @@
                                 </div>
                             </div>
 
-                            <!-- Preset 4: Custom Grid -->
+                            <!-- Preset 5: Custom Grid -->
                             <div 
                                 @click="selectPreset('custom_grid')"
                                 class="p-4 rounded-2xl border-2 transition-all cursor-pointer flex items-start gap-3.5"
@@ -213,7 +229,7 @@
                                         required
                                     >
                                     <p class="text-[10px] text-gray-500 mt-1 leading-tight">
-                                        <span x-text="activeSeatCount"></span> ghế khán đài<span x-show="preset === 'mega_concert'"> + 40 chỗ đứng GA</span> (Tự động cập nhật khi vẽ ghế).
+                                        <span x-text="activeSeatCount"></span> ghế khán đài<span x-show="preset === 'mega_concert' || preset === 'sayhi_concert'"> + 40 chỗ đứng GA Fanzone</span> (Tự động cập nhật khi vẽ ghế).
                                     </p>
                                 </div>
 

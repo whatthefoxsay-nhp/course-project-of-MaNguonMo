@@ -54,6 +54,7 @@ class Room extends Model
     {
         return match ($this->layout_preset ?? 'mega_concert') {
             self::ZONED_PRESET => '🗺️ Sơ Đồ Theo Khu Vực',
+            'sayhi_concert' => '🎤 Live Concert Anh Trai Say Hi',
             'theater_hall' => '🎭 Nhà Hát & Giao Hưởng',
             'convention_center' => '🏢 Trung Tâm Hội Nghị & Triển Lãm',
             'custom_grid' => '⚡ Ma Trận Tùy Chỉnh',

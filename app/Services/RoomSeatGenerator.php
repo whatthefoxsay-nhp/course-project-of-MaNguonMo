@@ -7,7 +7,7 @@ use App\Models\Seat;
 
 class RoomSeatGenerator
 {
-    public const PRESETS = ['mega_concert', 'theater_hall', 'convention_center', 'custom_grid'];
+    public const PRESETS = ['mega_concert', 'sayhi_concert', 'theater_hall', 'convention_center', 'custom_grid'];
 
     /** Hàng ghế ẩn dùng cho vé đứng (GA) — không vẽ trên sơ đồ, server tự gán. */
     public const STANDING_ROW = 'GA';
@@ -85,9 +85,9 @@ class RoomSeatGenerator
             }
         }
 
-        // Nếu là mega_concert mà chưa có hàng GA Standing, tự động thêm GA Standing row
+        // Nếu là mega_concert hoặc sayhi_concert mà chưa có hàng GA Standing, tự động thêm GA Standing row
         $hasGa = collect($inserts)->contains('row_label', self::STANDING_ROW);
-        if ($preset === 'mega_concert' && ! $hasGa) {
+        if (in_array($preset, ['mega_concert', 'sayhi_concert'], true) && ! $hasGa) {
             for ($num = 1; $num <= self::STANDING_CAPACITY; $num++) {
                 $inserts[] = [
                     'room_id' => $room->id,
@@ -121,6 +121,16 @@ class RoomSeatGenerator
                 ['C1', 12, 'cat2_wings'], ['C2', 12, 'cat2_wings'],
                 ['D1', 12, 'cat2_wings'], ['D2', 12, 'cat2_wings'],
                 ['SB', 8, 'skybox_suite'],
+                [self::STANDING_ROW, self::STANDING_CAPACITY, 'standing_pit'],
+            ],
+            'sayhi_concert' => [
+                ['SVIP-SH1', 12, 'svip_diamond'], ['SVIP-SH2', 12, 'svip_diamond'],
+                ['VIP-SH1', 14, 'vip_gold'], ['VIP-SH2', 14, 'vip_gold'], ['VIP-SH3', 14, 'vip_gold'], ['VIP-SH4', 14, 'vip_gold'],
+                ['CAT1-A1', 16, 'cat1_stand'], ['CAT1-A2', 16, 'cat1_stand'], ['CAT1-A3', 16, 'cat1_stand'],
+                ['CAT2-B1', 14, 'cat1_stand'], ['CAT2-B2', 14, 'cat1_stand'],
+                ['CAT3-C1', 12, 'cat2_wings'], ['CAT3-C2', 12, 'cat2_wings'],
+                ['CAT3-D1', 12, 'cat2_wings'], ['CAT3-D2', 12, 'cat2_wings'],
+                ['SKYLNG', 8, 'skybox_suite'],
                 [self::STANDING_ROW, self::STANDING_CAPACITY, 'standing_pit'],
             ],
             'theater_hall' => [

@@ -105,3 +105,29 @@ test('regular user cannot access room builder or create rooms', function () {
     ]);
     $responseStore->assertStatus(403);
 });
+
+test('admin can create room with sayhi concert preset and auto-generate seats', function () {
+    $admin = User::factory()->create();
+    $admin->assignRole('admin');
+
+    $response = $this->actingAs($admin)->post(route('admin.rooms.store'), [
+        'name' => 'Sân Khấu Say Hi Vạn Phúc City',
+        'address' => 'Khu Đô Thị Vạn Phúc, TP. Thủ Đức, TP.HCM',
+        'capacity' => 25000,
+        'layout_preset' => 'sayhi_concert',
+        'base_price' => 350000,
+    ]);
+
+    $response->assertRedirect(route('admin.rooms.index'));
+    $response->assertSessionHas('success');
+
+    $room = Room::where('name', 'Sân Khấu Say Hi Vạn Phúc City')->first();
+    expect($room)->not->toBeNull()
+        ->and($room->layout_preset)->toBe('sayhi_concert')
+        ->and($room->preset_label)->toBe('🎤 Live Concert Anh Trai Say Hi');
+
+    // 212 seats + 40 GA standing = 252 seats
+    expect($room->seats()->count())->toBe(252);
+    expect($room->seats()->where('type', 'svip_diamond')->count())->toBe(24);
+    expect($room->seats()->where('type', 'standing_pit')->count())->toBe(40);
+});
