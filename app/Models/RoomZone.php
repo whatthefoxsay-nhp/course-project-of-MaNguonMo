@@ -8,6 +8,12 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class RoomZone extends Model
 {
+    protected static function booted(): void
+    {
+        static::saved(fn (self $zone) => $zone->room?->recalculateCapacity());
+        static::deleted(fn (self $zone) => $zone->room?->recalculateCapacity());
+    }
+
     public const KIND_SEATED = 'seated';
 
     public const KIND_STANDING = 'standing';

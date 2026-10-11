@@ -11,6 +11,12 @@ class Seat extends Model
 {
     use HasFactory;
 
+    protected static function booted(): void
+    {
+        static::saved(fn (self $seat) => $seat->room?->recalculateCapacity());
+        static::deleted(fn (self $seat) => $seat->room?->recalculateCapacity());
+    }
+
     protected $fillable = [
         'room_id',
         'zone_id',

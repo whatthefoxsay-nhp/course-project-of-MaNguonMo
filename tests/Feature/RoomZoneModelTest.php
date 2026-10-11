@@ -13,7 +13,7 @@ test('a room has ordered zones and seats belong to a zone', function () {
     expect($room->zones->pluck('code')->all())->toBe(['A', 'B'])
         ->and($seat->zone->is($first))->toBeTrue()
         ->and($first->seats)->toHaveCount(1)
-        ->and($room->fresh()->capacity)->toBe(70000); // vượt giới hạn smallint cũ
+        ->and($room->fresh()->capacity)->toBe(1); // tổng ghế khu + ghế legacy
 });
 
 test('zone kinds determine inventory mode and effective capacity', function () {
@@ -34,4 +34,18 @@ test('zone kinds determine inventory mode and effective capacity', function () {
         ->and($standing->sellsByQuantity())->toBeTrue()
         ->and($standing->effectiveCapacity())->toBe(500)
         ->and($admission->effectiveCapacity())->toBe(120);
+});
+
+test('room capacity recalculates from zone inventory and legacy seats', function () {
+    $room = Room::factory()->create(['capacity' => 999]);
+    $seated = RoomZone::create(['room_id' => $room->id, 'code' => 'A', 'name' => 'Khu ngồi', 'kind' => 'seated', 'seat_type' => 'cat1_stand', 'capacity' => 999]);
+    $standing = RoomZone::create(['room_id' => $room->id, 'code' => 'GA', 'name' => 'Khu đứng', 'kind' => 'standing', 'seat_type' => 'standing_pit', 'capacity' => 500]);
+    Seat::create(['room_id' => $room->id, 'zone_id' => $seated->id, 'row_label' => 'A', 'seat_number' => 1, 'type' => 'cat1_stand']);
+    Seat::create(['room_id' => $room->id, 'zone_id' => null, 'row_label' => 'L', 'seat_number' => 1, 'type' => 'vip_gold']);
+
+    expect($room->fresh()->recalculateCapacity())->toBe(502)
+        ->and($room->fresh()->capacity)->toBe(502);
+
+    $standing->update(['capacity' => 450]);
+    expect($room->fresh()->capacity)->toBe(452);
 });

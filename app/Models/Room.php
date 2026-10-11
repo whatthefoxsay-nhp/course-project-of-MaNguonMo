@@ -50,6 +50,19 @@ class Room extends Model
         return $this->layout_preset === self::ZONED_PRESET;
     }
 
+    public function recalculateCapacity(): int
+    {
+        $zoneCapacity = $this->zones()->get()->sum(function (RoomZone $zone) {
+            return $zone->hasSeats() ? $zone->seats()->count() : (int) $zone->capacity;
+        });
+        $legacySeats = $this->seats()->whereNull('zone_id')->count();
+        $capacity = (int) $zoneCapacity + $legacySeats;
+
+        $this->forceFill(['capacity' => $capacity])->saveQuietly();
+
+        return $capacity;
+    }
+
     public function getPresetLabelAttribute(): string
     {
         return match ($this->layout_preset ?? 'mega_concert') {
