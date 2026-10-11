@@ -175,6 +175,27 @@ test('new room builder shows zone kinds and calculated capacity', function () {
         ->assertSee('Sức chứa tổng (tính tự động)');
 });
 
+test('admin room preview exposes zone map mode for zoned concert venues', function () {
+    $admin = User::factory()->create();
+    $admin->assignRole('admin');
+    $room = Room::create([
+        'name' => 'Concert nhiều phân khu',
+        'capacity' => 0,
+        'layout_preset' => 'outdoor_concert',
+    ]);
+    app(\App\Services\ZoneLayoutGenerator::class)->generate($room, [
+        ['code' => 'PIT-L', 'name' => 'Fanzone trái', 'kind' => 'standing', 'seat_type' => 'standing_pit', 'capacity' => 300],
+        ['code' => 'PIT-R', 'name' => 'Fanzone phải', 'kind' => 'standing', 'seat_type' => 'standing_pit', 'capacity' => 300],
+    ]);
+
+    $this->actingAs($admin)->get(route('admin.rooms.index'))
+        ->assertOk()
+        ->assertSee("activeRoom?.diagram_mode === 'zones'", false)
+        ->assertSee('Sơ đồ phân khu')
+        ->assertViewHas('rooms', fn ($rooms) => $rooms->firstWhere('id', $room->id)?->blueprint_data['diagram_mode'] === Room::MODE_ZONES
+            && count($rooms->firstWhere('id', $room->id)->blueprint_data['zones']) === 2);
+});
+
 test('duplicating a zoned room preserves zones seats and non-seat capacity', function () {
     $admin = User::factory()->create();
     $admin->assignRole('admin');

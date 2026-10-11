@@ -16,16 +16,19 @@
             activeRoom: null,
             zoomScale: 1,
             hoveredSeat: null,
+            activeZoneId: null,
             openBlueprint(roomData) {
                 this.activeRoom = roomData;
                 this.zoomScale = 1;
                 this.hoveredSeat = null;
+                this.activeZoneId = null;
                 this.showModal = true;
             },
             closeBlueprint() {
                 this.showModal = false;
                 this.activeRoom = null;
                 this.hoveredSeat = null;
+                this.activeZoneId = null;
             },
             zoomIn() {
                 if (this.zoomScale < 1.6) this.zoomScale += 0.15;
@@ -269,8 +272,32 @@
                             <span class="text-[10px] text-gray-400 font-mono">HỆ THỐNG ÂM THANH ÁNH SÁNG &amp; MÀN HÌNH LED</span>
                         </div>
 
-                        <!-- ZOOM CANVAS CONTAINER -->
-                        <div class="overflow-x-auto pb-6">
+                        <!-- ZONE MAP: zoned venues show areas instead of a misleading flat seat grid. -->
+                        <template x-if="activeRoom?.diagram_mode === 'zones'">
+                            <div class="mx-auto max-w-4xl">
+                                <p class="mb-4 text-center text-xs font-bold text-slate-300">Sơ đồ phân khu · chọn một khu để xem sức chứa và loại hình</p>
+                                <div class="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4" :style="'transform: scale(' + zoomScale + '); transform-origin: top center'">
+                                    <template x-for="zone in activeRoom?.zones || []" :key="zone.id">
+                                        <button type="button" @click="activeZoneId = activeZoneId === zone.id ? null : zone.id"
+                                            class="min-h-32 rounded-2xl border-2 p-4 text-left shadow-lg transition hover:-translate-y-1"
+                                            :style="'border-color:' + zone.color + '; background:linear-gradient(145deg,' + zone.color + '33,#0f172a 75%)'"
+                                            :class="activeZoneId === zone.id ? 'ring-4 ring-white/70' : ''">
+                                            <span class="inline-flex rounded-full px-2.5 py-1 text-[10px] font-black uppercase text-slate-950" :style="'background-color:' + zone.color" x-text="zone.code"></span>
+                                            <strong class="mt-3 block text-sm font-black text-white" x-text="zone.name"></strong>
+                                            <span class="mt-1 block text-[10px] font-bold uppercase tracking-wider text-slate-300" x-text="zone.kind === 'standing' ? 'Khu đứng' : (zone.kind === 'admission' ? 'Vé vào cửa' : (zone.kind === 'table' ? 'Khu bàn' : 'Khu ghế'))"></span>
+                                            <span class="mt-3 block text-xs font-bold text-white" x-text="Number(zone.capacity).toLocaleString('vi-VN') + ' chỗ / vé'"></span>
+                                        </button>
+                                    </template>
+                                </div>
+                                <div x-show="activeZoneId" x-cloak class="mx-auto mt-5 max-w-xl rounded-2xl border border-white/15 bg-black/50 p-4 text-center">
+                                    <p class="text-sm font-black text-white" x-text="(activeRoom?.zones || []).find(zone => zone.id === activeZoneId)?.name"></p>
+                                    <p class="mt-1 text-xs text-slate-300">Khu vực được quản lý riêng. Dùng trình sửa để đổi tên, sức chứa, hạng vé hoặc thứ tự khu.</p>
+                                </div>
+                            </div>
+                        </template>
+
+                        <!-- SEAT MAP: only for traditional seat-layout rooms. -->
+                        <div x-show="activeRoom?.diagram_mode !== 'zones'" class="overflow-x-auto pb-6">
                             <div 
                                 class="transition-transform duration-200 origin-top min-w-[500px] max-w-4xl mx-auto space-y-3"
                                 :style="'transform: scale(' + zoomScale + ')'"
@@ -309,7 +336,7 @@
                         </div>
 
                         <!-- LIVE HOVER INSPECTOR BAR -->
-                        <div class="mt-6 p-3 bg-black/80 rounded-2xl border border-white/10 max-w-lg mx-auto flex items-center justify-between text-xs">
+                        <div x-show="activeRoom?.diagram_mode !== 'zones'" class="mt-6 p-3 bg-black/80 rounded-2xl border border-white/10 max-w-lg mx-auto flex items-center justify-between text-xs">
                             <div class="flex items-center gap-2">
                                 <span class="w-3 h-3 rounded-full" :style="'background-color: ' + (hoveredSeat?.color || '#D4AF37')"></span>
                                 <span class="font-bold text-gray-400">Ghế đang xem:</span>
@@ -323,7 +350,11 @@
                     <!-- Modal Footer: Statistics & Quick Actions -->
                     <div class="p-6 bg-white border-t border-black/10 flex flex-col sm:flex-row items-center justify-between gap-4">
                         <!-- Legend & Counts -->
-                        <div class="flex flex-wrap items-center gap-4 text-xs font-semibold">
+                        <div x-show="activeRoom?.diagram_mode === 'zones'" class="flex flex-wrap items-center gap-2 text-xs font-semibold">
+                            <span class="rounded-full bg-emerald-50 px-3 py-1 text-emerald-950">Sơ đồ khu · <strong x-text="activeRoom?.zones?.length || 0"></strong> khu</span>
+                            <span class="rounded-full bg-slate-100 px-3 py-1 text-slate-900">Tổng sức chứa · <strong x-text="Number(activeRoom?.capacity || 0).toLocaleString('vi-VN')"></strong></span>
+                        </div>
+                        <div x-show="activeRoom?.diagram_mode !== 'zones'" class="flex flex-wrap items-center gap-4 text-xs font-semibold">
                             <div class="flex items-center gap-1.5">
                                 <span class="w-3 h-3 rounded-full bg-[#D4AF37]"></span>
                                 <span>SVIP: <strong x-text="activeRoom?.summary?.svip || 0"></strong></span>
