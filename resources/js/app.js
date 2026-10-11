@@ -29,6 +29,11 @@ Alpine.data('seatBookingManager', (config = {}) => ({
     isSubmitting: false,
     unavailableIds: [],
 
+    concertViewMode: config.defaultViewMode || 'zone',
+    selectedZone: 'svip_diamond',
+    hoveredZone: null,
+    availableSeatsByZone: config.availableSeatsByZone || {},
+
     init() {
         if (config.tiers) {
             Object.keys(config.tiers).forEach(k => {
@@ -39,6 +44,81 @@ Alpine.data('seatBookingManager', (config = {}) => ({
         if (config.pollStatus && config.statusUrl) {
             setInterval(() => this.refreshSeatStatus(), 15000);
         }
+    },
+
+    switchViewMode(mode) {
+        this.concertViewMode = mode;
+    },
+
+    selectConcertZone(zoneKey) {
+        this.selectedZone = zoneKey;
+        this.activeZoneFilter = zoneKey;
+    },
+
+    setHoveredZone(zoneKey) {
+        this.hoveredZone = zoneKey;
+    },
+
+    clearHoveredZone() {
+        this.hoveredZone = null;
+    },
+
+    focusZoneInSeatGrid(zoneKey) {
+        this.concertViewMode = 'seat';
+        this.activeZoneFilter = zoneKey;
+        const zoneName = this.tierMeta[zoneKey]?.name || zoneKey;
+        this.notify(`Đang xem vị trí từng ghế khu: ${zoneName}`, 'info');
+    },
+
+    getZoneSelectedCount(zoneKey) {
+        if (zoneKey === 'standing_pit') return this.standingCount;
+        return this.selectedSeats.filter(s => s.type === zoneKey).length;
+    },
+
+    quickPickSeatFromZone(zoneKey) {
+        if (zoneKey === 'standing_pit') {
+            return this.addStandingTicket();
+        }
+
+        if (this.totalTicketCount >= 8) {
+            this.notify('Bạn chỉ có thể chọn tối đa 8 vé cho mỗi lượt đặt.', 'warning');
+            return;
+        }
+
+        const zoneSeats = this.availableSeatsByZone[zoneKey] || [];
+        const availableSeat = zoneSeats.find(s => 
+            s.status === 'available' && 
+            !this.unavailableIds.includes(s.id) && 
+            !this.isSeatSelected(s.id)
+        );
+
+        if (!availableSeat) {
+            this.notify('Khu vực này hiện đã hết ghế trống khả dụng!', 'warning');
+            return;
+        }
+
+        this.toggleSeat(
+            availableSeat.id,
+            availableSeat.number,
+            availableSeat.row,
+            availableSeat.type,
+            availableSeat.typeName,
+            availableSeat.status,
+            availableSeat.price,
+            availableSeat.perks
+        );
+    },
+
+    quickRemoveSeatFromZone(zoneKey) {
+        if (zoneKey === 'standing_pit') {
+            return this.removeStandingTicket();
+        }
+
+        const pickedSeats = this.selectedSeats.filter(s => s.type === zoneKey);
+        if (pickedSeats.length === 0) return;
+
+        const lastSeat = pickedSeats[pickedSeats.length - 1];
+        this.removeSeat(lastSeat.id);
     },
 
     // Individual Seat Toggle for Seated Concerts
