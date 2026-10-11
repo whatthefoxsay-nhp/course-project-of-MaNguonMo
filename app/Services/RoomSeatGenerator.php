@@ -7,7 +7,7 @@ use App\Models\Seat;
 
 class RoomSeatGenerator
 {
-    public const PRESETS = ['mega_concert', 'sayhi_concert', 'theater_hall', 'convention_center', 'custom_grid'];
+    public const PRESETS = ['mega_concert', 'sayhi_concert', 'sayhi_concert_d2', 'theater_hall', 'convention_center', 'custom_grid'];
 
     /** Hàng ghế ẩn dùng cho vé đứng (GA) — không vẽ trên sơ đồ, server tự gán. */
     public const STANDING_ROW = 'GA';
@@ -48,7 +48,7 @@ class RoomSeatGenerator
     /**
      * Sinh ghế từ ma trận tùy chỉnh do Admin thiết kế trực tiếp.
      */
-    public function generateFromMatrix(Room $room, array $matrixRows, string $preset = 'mega_concert'): int
+    public function generateFromMatrix(Room $room, array $matrixRows, string $preset = 'mega_concert', array $seatConfig = []): int
     {
         $room->seats()->delete();
 
@@ -85,18 +85,41 @@ class RoomSeatGenerator
             }
         }
 
-        // Nếu là mega_concert hoặc sayhi_concert mà chưa có hàng GA Standing, tự động thêm GA Standing row
-        $hasGa = collect($inserts)->contains('row_label', self::STANDING_ROW);
-        if (in_array($preset, ['mega_concert', 'sayhi_concert'], true) && ! $hasGa) {
-            for ($num = 1; $num <= self::STANDING_CAPACITY; $num++) {
-                $inserts[] = [
-                    'room_id' => $room->id,
-                    'row_label' => self::STANDING_ROW,
-                    'seat_number' => $num,
-                    'type' => 'standing_pit',
-                    'created_at' => $now,
-                    'updated_at' => $now,
-                ];
+        // Tùy chỉnh các khu đứng Fanzone theo cấu hình Admin (nếu có)
+        $standingZones = $seatConfig['standing_zones'] ?? null;
+        if (is_array($standingZones) && ! empty($standingZones)) {
+            foreach ($standingZones as $zone) {
+                $count = max(0, (int) ($zone['capacity'] ?? 20));
+                $code = trim((string) ($zone['code'] ?? 'GA'));
+                if ($code === '') {
+                    $code = 'GA';
+                }
+                for ($num = 1; $num <= $count; $num++) {
+                    $inserts[] = [
+                        'room_id' => $room->id,
+                        'row_label' => $code,
+                        'seat_number' => $num,
+                        'type' => 'standing_pit',
+                        'created_at' => $now,
+                        'updated_at' => $now,
+                    ];
+                }
+            }
+        } else {
+            // Mặc định cho concert nếu chưa có khu đứng riêng
+            $hasGa = collect($inserts)->contains('row_label', self::STANDING_ROW);
+            if (in_array($preset, ['mega_concert', 'sayhi_concert', 'sayhi_concert_d2'], true) && ! $hasGa) {
+                $standingCapacity = (int) ($seatConfig['standing_capacity'] ?? ($preset === 'sayhi_concert_d2' ? 60 : self::STANDING_CAPACITY));
+                for ($num = 1; $num <= $standingCapacity; $num++) {
+                    $inserts[] = [
+                        'room_id' => $room->id,
+                        'row_label' => self::STANDING_ROW,
+                        'seat_number' => $num,
+                        'type' => 'standing_pit',
+                        'created_at' => $now,
+                        'updated_at' => $now,
+                    ];
+                }
             }
         }
 
@@ -132,6 +155,16 @@ class RoomSeatGenerator
                 ['CAT3-D1', 12, 'cat2_wings'], ['CAT3-D2', 12, 'cat2_wings'],
                 ['SKYLNG', 8, 'skybox_suite'],
                 [self::STANDING_ROW, self::STANDING_CAPACITY, 'standing_pit'],
+            ],
+            'sayhi_concert_d2' => [
+                ['SVIP-D2-1', 14, 'svip_diamond'], ['SVIP-D2-2', 14, 'svip_diamond'],
+                ['VIP-D2-1', 16, 'vip_gold'], ['VIP-D2-2', 16, 'vip_gold'], ['VIP-D2-3', 16, 'vip_gold'], ['VIP-D2-4', 16, 'vip_gold'],
+                ['CAT1-D2-1', 18, 'cat1_stand'], ['CAT1-D2-2', 18, 'cat1_stand'], ['CAT1-D2-3', 18, 'cat1_stand'],
+                ['CAT2-D2-1', 16, 'cat1_stand'], ['CAT2-D2-2', 16, 'cat1_stand'],
+                ['CAT3-C1', 14, 'cat2_wings'], ['CAT3-C2', 14, 'cat2_wings'],
+                ['CAT3-D1', 14, 'cat2_wings'], ['CAT3-D2', 14, 'cat2_wings'],
+                ['SKYLNG-1', 8, 'skybox_suite'], ['SKYLNG-2', 8, 'skybox_suite'],
+                [self::STANDING_ROW, 60, 'standing_pit'],
             ],
             'theater_hall' => [
                 ['ST-1', 16, 'vip_gold'], ['ST-2', 16, 'vip_gold'],

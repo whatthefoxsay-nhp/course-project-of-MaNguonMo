@@ -18,6 +18,14 @@
         $cols = $config['cols'] ?? 14;
         $vipRatio = $config['vip_ratio'] ?? 30;
         $svipRatio = $config['svip_ratio'] ?? 15;
+        $stageType = $config['stage_type'] ?? ($preset === 'sayhi_concert_d2' ? 'runway_y' : (($preset === 'sayhi_concert' || $preset === 'mega_concert') ? 'runway_t' : 'standard'));
+        $standingZones = $config['standing_zones'] ?? ($preset === 'sayhi_concert_d2' ? [
+            ['code' => 'FZ-A', 'name' => 'Super Fan Fanzone A', 'capacity' => 30],
+            ['code' => 'FZ-B', 'name' => 'Super Fan Fanzone B', 'capacity' => 30],
+        ] : (($preset === 'sayhi_concert' || $preset === 'mega_concert') ? [
+            ['code' => 'GA-A', 'name' => 'Khu Đứng Fanzone A', 'capacity' => 20],
+            ['code' => 'GA-B', 'name' => 'Khu Đứng Fanzone B', 'capacity' => 20],
+        ] : []));
     @endphp
 
     <div 
@@ -31,6 +39,8 @@
             cols: {{ $cols }},
             vipRatio: {{ $vipRatio }},
             svipRatio: {{ $svipRatio }},
+            stageType: '{{ $stageType }}',
+            standingZones: @js($standingZones),
             initialRows: @js($initialRows ?? [])
         })"
         class="space-y-6"
@@ -74,6 +84,8 @@
             @endif
 
             <input type="hidden" name="layout_preset" :value="preset">
+            <input type="hidden" name="stage_type" :value="stageType">
+            <input type="hidden" name="standing_zones" :value="JSON.stringify(standingZones)">
             <input type="hidden" name="custom_layout_matrix" :value="JSON.stringify(matrixRows)">
 
             <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
@@ -93,6 +105,25 @@
                         </div>
 
                         <div class="space-y-3">
+                            <!-- Preset 0: Anh Trai Say Hi Concert Đêm 2 -->
+                            <div 
+                                @click="selectPreset('sayhi_concert_d2')"
+                                class="p-4 rounded-2xl border-2 transition-all cursor-pointer flex items-start gap-3.5 relative overflow-hidden"
+                                :class="preset === 'sayhi_concert_d2' ? 'border-amber-400 bg-amber-50/70 shadow-md ring-2 ring-amber-300' : 'border-black/10 bg-[#FAF9F6] hover:border-black/20'"
+                            >
+                                <span class="text-2xl">🌟</span>
+                                <div class="flex-1">
+                                    <div class="flex items-center justify-between">
+                                        <h4 class="font-display font-black text-xs text-black flex items-center gap-1.5">
+                                            <span>Live Concert Anh Trai Say Hi - Đêm 2</span>
+                                            <span class="text-[9px] bg-red-600 text-white font-black px-1.5 py-0.2 rounded uppercase">Vạn Phúc City</span>
+                                        </h4>
+                                        <span class="badge-gold text-[9px] px-2 py-0.5 rounded-full font-bold">Y-Stage Runway</span>
+                                    </div>
+                                    <p class="text-[11px] text-gray-500 mt-1">Sân khấu Runway chữ Y (Y-Stage Catwalk), 2 cụm Super Fanzone A/B ôm sát cánh gà, SVIP Diamond ôm trọn ngã ba sân khấu, VIP Gold, CAT 1-3, Sky Lounge.</p>
+                                </div>
+                            </div>
+
                             <!-- Preset 1: Mega Concert -->
                             <div 
                                 @click="selectPreset('mega_concert')"
@@ -118,8 +149,8 @@
                                 <span class="text-2xl">🎤</span>
                                 <div class="flex-1">
                                     <div class="flex items-center justify-between">
-                                        <h4 class="font-display font-black text-xs text-black">Live Concert Anh Trai "Say Hi"</h4>
-                                        <span class="badge-rose text-[9px] px-2 py-0.5 rounded-full font-bold">25.000+ chỗ</span>
+                                        <h4 class="font-display font-black text-xs text-black">Live Concert Anh Trai "Say Hi" - Đêm 1</h4>
+                                        <span class="badge-rose text-[9px] px-2 py-0.5 rounded-full font-bold">SVĐ QK7</span>
                                     </div>
                                     <p class="text-[11px] text-gray-500 mt-1">Sân khấu Runway T-Stage mở rộng, Super Fan Fanzone Say Hi A/B, SVIP Diamond, VIP Gold, Khán đài CAT 1-3, Sky Lounge.</p>
                                 </div>
@@ -171,6 +202,137 @@
                                     </div>
                                     <p class="text-[11px] text-gray-500 mt-1">Tự do nhập số hàng, số cột, tỷ lệ phân chia SVIP / VIP / Standard.</p>
                                 </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 1.5 Custom Stage Blueprint & Standing Fanzone Card -->
+                    <div class="bg-white rounded-3xl p-6 border border-black/10 shadow-sm space-y-4">
+                        <div class="border-b border-black/10 pb-3 flex items-center justify-between">
+                            <div>
+                                <h3 class="font-display font-black text-base text-black flex items-center gap-2">
+                                    <span>2. Kiểu Dáng Sân Khấu &amp; Khu Đứng Fanzone</span>
+                                </h3>
+                                <p class="text-xs text-gray-500 mt-0.5">Tùy biến cấu trúc sàn catwalk &amp; số lượng vé đứng thực tế:</p>
+                            </div>
+                            <span class="badge-gold text-[10px] px-2.5 py-0.5 rounded-full font-bold">Customizable</span>
+                        </div>
+
+                        <!-- Stage Blueprint Selector -->
+                        <div class="space-y-2">
+                            <label class="block text-gray-700 font-bold uppercase tracking-wider text-[11px]">
+                                Kiểu Sân Khấu Catwalk (Stage Blueprint)
+                            </label>
+                            <div class="grid grid-cols-2 gap-2 text-xs">
+                                <button 
+                                    type="button" 
+                                    @click="setStageType('runway_y')"
+                                    :class="stageType === 'runway_y' ? 'border-amber-400 bg-amber-50 text-amber-950 ring-2 ring-amber-300 font-black' : 'border-black/10 bg-white hover:border-black/30 text-gray-700 font-medium'"
+                                    class="p-2.5 rounded-xl border flex items-center gap-2 transition-all cursor-pointer text-left"
+                                >
+                                    <span class="text-lg">🔱</span>
+                                    <div>
+                                        <div class="font-bold">Runway Chữ Y</div>
+                                        <div class="text-[10px] text-gray-500 leading-tight">Y-Catwalk (Anh Trai Đêm 2)</div>
+                                    </div>
+                                </button>
+
+                                <button 
+                                    type="button" 
+                                    @click="setStageType('runway_t')"
+                                    :class="stageType === 'runway_t' ? 'border-amber-400 bg-amber-50 text-amber-950 ring-2 ring-amber-300 font-black' : 'border-black/10 bg-white hover:border-black/30 text-gray-700 font-medium'"
+                                    class="p-2.5 rounded-xl border flex items-center gap-2 transition-all cursor-pointer text-left"
+                                >
+                                    <span class="text-lg">⚡</span>
+                                    <div>
+                                        <div class="font-bold">Runway Chữ T</div>
+                                        <div class="text-[10px] text-gray-500 leading-tight">T-Stage Runway nối B-Stage</div>
+                                    </div>
+                                </button>
+
+                                <button 
+                                    type="button" 
+                                    @click="setStageType('dual_runway')"
+                                    :class="stageType === 'dual_runway' ? 'border-amber-400 bg-amber-50 text-amber-950 ring-2 ring-amber-300 font-black' : 'border-black/10 bg-white hover:border-black/30 text-gray-700 font-medium'"
+                                    class="p-2.5 rounded-xl border flex items-center gap-2 transition-all cursor-pointer text-left"
+                                >
+                                    <span class="text-lg">🛤️</span>
+                                    <div>
+                                        <div class="font-bold">Hai Cánh Song Song</div>
+                                        <div class="text-[10px] text-gray-500 leading-tight">Dual Catwalk 2 bên</div>
+                                    </div>
+                                </button>
+
+                                <button 
+                                    type="button" 
+                                    @click="setStageType('standard')"
+                                    :class="stageType === 'standard' ? 'border-amber-400 bg-amber-50 text-amber-950 ring-2 ring-amber-300 font-black' : 'border-black/10 bg-white hover:border-black/30 text-gray-700 font-medium'"
+                                    class="p-2.5 rounded-xl border flex items-center gap-2 transition-all cursor-pointer text-left"
+                                >
+                                    <span class="text-lg">🏛️</span>
+                                    <div>
+                                        <div class="font-bold">Sân Khấu Chuẩn</div>
+                                        <div class="text-[10px] text-gray-500 leading-tight">Proscenium cổ điển</div>
+                                    </div>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Standing Fanzone / Pit Manager -->
+                        <div class="space-y-3 pt-2 border-t border-black/10">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <label class="block text-gray-700 font-bold uppercase tracking-wider text-[11px]">
+                                        Khu Vực Vé Đứng (Standing Pits / Fanzones)
+                                    </label>
+                                    <span class="text-[10px] text-gray-500">Tổng vé đứng: <strong class="text-amber-800" x-text="totalStandingCapacity"></strong> vé</span>
+                                </div>
+                                <button 
+                                    type="button" 
+                                    @click="addStandingZone()"
+                                    class="px-2.5 py-1 rounded-xl text-[11px] font-bold bg-amber-50 border border-amber-300 text-amber-900 hover:bg-amber-100 transition-all flex items-center gap-1 cursor-pointer"
+                                >
+                                    <span>+ Thêm Khu Đứng</span>
+                                </button>
+                            </div>
+
+                            <div class="space-y-2">
+                                <template x-for="(zone, zIdx) in standingZones" :key="zIdx">
+                                    <div class="p-2.5 rounded-xl bg-[#FAF9F6] border border-black/10 flex items-center gap-2">
+                                        <input 
+                                            type="text" 
+                                            x-model="zone.code" 
+                                            placeholder="Mã (FZ-A)" 
+                                            class="w-20 px-2 py-1.5 text-xs font-mono font-bold rounded-lg border border-black/15 bg-white"
+                                        >
+                                        <input 
+                                            type="text" 
+                                            x-model="zone.name" 
+                                            placeholder="Tên khu (Fanzone A)" 
+                                            class="flex-1 px-2.5 py-1.5 text-xs rounded-lg border border-black/15 bg-white font-medium"
+                                        >
+                                        <div class="flex items-center gap-1">
+                                            <input 
+                                                type="number" 
+                                                x-model.number="zone.capacity" 
+                                                @input="syncCapacity()"
+                                                min="0" 
+                                                max="500" 
+                                                placeholder="SL" 
+                                                class="w-16 px-2 py-1.5 text-xs font-mono font-bold text-center rounded-lg border border-black/15 bg-amber-50/50 text-amber-950"
+                                            >
+                                            <span class="text-[10px] text-gray-400 font-bold">chỗ</span>
+                                        </div>
+                                        <button 
+                                            type="button" 
+                                            @click="removeStandingZone(zIdx)"
+                                            class="w-7 h-7 rounded-lg text-red-500 hover:bg-red-50 flex items-center justify-center font-black text-xs transition-colors cursor-pointer"
+                                            title="Xóa khu đứng này"
+                                        >
+                                            &times;
+                                        </button>
+                                    </div>
+                                </template>
                             </div>
                         </div>
                     </div>
@@ -229,7 +391,7 @@
                                         required
                                     >
                                     <p class="text-[10px] text-gray-500 mt-1 leading-tight">
-                                        <span x-text="activeSeatCount"></span> ghế khán đài<span x-show="preset === 'mega_concert' || preset === 'sayhi_concert'"> + 40 chỗ đứng GA Fanzone</span> (Tự động cập nhật khi vẽ ghế).
+                                        <span x-text="activeSeatCount"></span> ghế khán đài<span x-show="totalStandingCapacity > 0"> + <span x-text="totalStandingCapacity"></span> chỗ đứng Fanzone</span> (Tự động cập nhật khi vẽ ghế).
                                     </p>
                                 </div>
 
@@ -396,6 +558,43 @@
                             <p class="text-[11px] text-gray-500 italic pt-1">
                                 💡 <strong>Mẹo:</strong> Click vào tên hàng (nhãn chữ cái bên trái) để đổi màu toàn bộ hàng. Click vào cọ <strong>Lối Đi (Aisle)</strong> để khoét khoảng trống đi lại.
                             </p>
+
+                            <!-- QUICK SMART GENERATORS (CÔNG CỤ TẠO NHANH BỐ CỤC) -->
+                            <div class="pt-2 border-t border-black/10 flex flex-wrap items-center gap-1.5">
+                                <span class="text-[10px] font-black uppercase text-gray-500 mr-1">Tạo Nhanh Bố Cục:</span>
+                                <button 
+                                    type="button" 
+                                    @click="generateYStageCutout()"
+                                    class="px-2.5 py-1 rounded-lg text-[10px] font-bold bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 transition-all flex items-center gap-1 cursor-pointer"
+                                    title="Tự động khoét rãnh sân khấu Catwalk chữ Y ở các hàng ghế đầu"
+                                >
+                                    <span>🔱 Khoét Runway Chữ Y</span>
+                                </button>
+                                <button 
+                                    type="button" 
+                                    @click="generateCenterAisle()"
+                                    class="px-2.5 py-1 rounded-lg text-[10px] font-bold bg-white hover:bg-gray-100 text-gray-700 border border-black/15 transition-all flex items-center gap-1 cursor-pointer"
+                                    title="Mở lối đi giữa xuyên suốt các hàng"
+                                >
+                                    <span>🛣️ Mở Lối Đi Giữa</span>
+                                </button>
+                                <button 
+                                    type="button" 
+                                    @click="generateSideAisles()"
+                                    class="px-2.5 py-1 rounded-lg text-[10px] font-bold bg-white hover:bg-gray-100 text-gray-700 border border-black/15 transition-all flex items-center gap-1 cursor-pointer"
+                                    title="Mở 2 lối đi phân chia 3 block khán đài"
+                                >
+                                    <span>↔️ Mở 2 Lối Đi Hông</span>
+                                </button>
+                                <button 
+                                    type="button" 
+                                    @click="restoreAllSeats()"
+                                    class="px-2 py-1 rounded-lg text-[10px] font-bold bg-gray-50 hover:bg-gray-100 text-gray-500 border border-black/10 transition-all flex items-center gap-1 cursor-pointer"
+                                    title="Hủy mọi lối đi và khôi phục ghế ngồi"
+                                >
+                                    <span>🔄 Khôi Phục Ghế</span>
+                                </button>
+                            </div>
                         </div>
 
                         <!-- SEAT MATRIX CANVAS (KHUNG SOẠN THẢO TRỰC QUAN) -->
@@ -405,12 +604,76 @@
                                 class="transition-transform duration-200 origin-top min-w-[540px] max-w-4xl mx-auto space-y-4"
                                 :style="'transform: scale(' + zoomScale + ')'"
                             >
-                                <!-- STAGE BANNER -->
-                                <div class="w-full max-w-md mx-auto p-3 bg-gradient-to-r from-obsidian-950 via-obsidian-800 to-obsidian-950 text-white text-center rounded-2xl shadow-md border-2 border-gold-antique/80 relative overflow-hidden mb-6">
-                                    <div class="font-display font-black text-xs tracking-widest uppercase text-gold-light">
-                                        ★ SÂN KHẤU CHÍNH (MAIN STAGE) ★
+                                <!-- DYNAMIC STAGE BLUEPRINT VISUAL -->
+                                <div class="w-full max-w-xl mx-auto space-y-2 mb-6">
+                                    <!-- Main Stage Header -->
+                                    <div class="p-3 bg-gradient-to-r from-obsidian-950 via-obsidian-800 to-obsidian-950 text-white text-center rounded-2xl shadow-lg border-2 border-amber-400 relative overflow-hidden">
+                                        <div class="font-display font-black text-xs tracking-widest uppercase text-amber-300 flex items-center justify-center gap-2">
+                                            <span>★</span>
+                                            <span>SÂN KHẤU CHÍNH (MAIN STAGE)</span>
+                                            <span x-show="stageType === 'runway_y'" class="text-[9px] px-1.5 py-0.2 rounded bg-amber-500/20 text-amber-300 border border-amber-500/40 font-mono">Y-STAGE CATWALK</span>
+                                            <span x-show="stageType === 'runway_t'" class="text-[9px] px-1.5 py-0.2 rounded bg-rose-500/20 text-rose-300 border border-rose-500/40 font-mono">T-STAGE RUNWAY</span>
+                                            <span>★</span>
+                                        </div>
+                                        <div class="text-[10px] text-gray-400 font-mono flex items-center justify-center gap-3 mt-0.5">
+                                            <span>HỆ THỐNG MÀN HÌNH LED NGHỆ THUẬT</span>
+                                            <span>•</span>
+                                            <span>DÀN ÂM THANH ÁNH SÁNG 360°</span>
+                                        </div>
                                     </div>
-                                    <span class="text-[10px] text-gray-400 font-mono">DÀN ÂM THANH ÁNH SÁNG 360°</span>
+
+                                    <!-- Extended Runway & Fanzone Pits Visuals -->
+                                    <div x-show="stageType === 'runway_y'" class="flex items-center justify-center gap-2 pt-1">
+                                        <!-- Left Fanzone -->
+                                        <div class="px-3 py-1.5 rounded-xl bg-amber-500/10 border border-amber-500/40 text-amber-300 text-center text-[10px] font-bold shadow-xs flex-1 max-w-[130px]">
+                                            <div class="text-[9px] text-amber-400/80 uppercase">SUPER FANZONE</div>
+                                            <div class="font-black text-xs text-amber-200">KHU A (TẢ)</div>
+                                            <div class="text-[9px] font-mono text-gray-300" x-text="(standingZones[0]?.capacity || 30) + ' VÉ ĐỨNG'"></div>
+                                        </div>
+
+                                        <!-- Y-Runway Catwalk Spine -->
+                                        <div class="flex flex-col items-center justify-center px-4 py-1.5 bg-gradient-to-b from-amber-500/30 to-amber-600/10 border border-amber-400/60 rounded-xl">
+                                            <span class="text-xs">🔱</span>
+                                            <span class="text-[9px] font-black tracking-widest text-amber-300 uppercase">RUNWAY CHỮ Y</span>
+                                            <span class="text-[8px] text-gray-400 font-mono">Cầu nối ngã 3 sàn diễn</span>
+                                        </div>
+
+                                        <!-- Right Fanzone -->
+                                        <div class="px-3 py-1.5 rounded-xl bg-amber-500/10 border border-amber-500/40 text-amber-300 text-center text-[10px] font-bold shadow-xs flex-1 max-w-[130px]">
+                                            <div class="text-[9px] text-amber-400/80 uppercase">SUPER FANZONE</div>
+                                            <div class="font-black text-xs text-amber-200">KHU B (HỮU)</div>
+                                            <div class="text-[9px] font-mono text-gray-300" x-text="(standingZones[1]?.capacity || 30) + ' VÉ ĐỨNG'"></div>
+                                        </div>
+                                    </div>
+
+                                    <div x-show="stageType === 'runway_t'" class="flex items-center justify-center gap-3 pt-1">
+                                        <!-- Left Fanzone GA -->
+                                        <div class="px-3 py-1.5 rounded-xl bg-rose-500/10 border border-rose-500/40 text-rose-300 text-center text-[10px] font-bold flex-1 max-w-[120px]">
+                                            <div class="text-[9px] text-rose-400 uppercase">FANZONE A</div>
+                                            <div class="text-[9px] font-mono text-gray-300" x-text="(standingZones[0]?.capacity || 20) + ' vé đứng'"></div>
+                                        </div>
+
+                                        <!-- T-Runway -->
+                                        <div class="flex flex-col items-center justify-center px-4 py-1 bg-gradient-to-b from-rose-500/30 to-rose-600/10 border border-rose-400/60 rounded-xl">
+                                            <span class="text-xs">⚡</span>
+                                            <span class="text-[9px] font-black tracking-widest text-rose-300 uppercase">CATWALK T-RUNWAY ➔ B-STAGE</span>
+                                        </div>
+
+                                        <!-- Right Fanzone GA -->
+                                        <div class="px-3 py-1.5 rounded-xl bg-rose-500/10 border border-rose-500/40 text-rose-300 text-center text-[10px] font-bold flex-1 max-w-[120px]">
+                                            <div class="text-[9px] text-rose-400 uppercase">FANZONE B</div>
+                                            <div class="text-[9px] font-mono text-gray-300" x-text="(standingZones[1]?.capacity || 20) + ' vé đứng'"></div>
+                                        </div>
+                                    </div>
+
+                                    <div x-show="stageType === 'dual_runway'" class="flex items-center justify-between px-10 pt-1">
+                                        <div class="px-3 py-1 rounded-xl bg-amber-500/10 border border-amber-400/40 text-amber-300 text-[10px] font-bold">
+                                            🛤️ SÀN CATWALK TẢ
+                                        </div>
+                                        <div class="px-3 py-1 rounded-xl bg-amber-500/10 border border-amber-400/40 text-amber-300 text-[10px] font-bold">
+                                            🛤️ SÀN CATWALK HỮU
+                                        </div>
+                                    </div>
                                 </div>
 
                                 <!-- MATRIX ROWS -->
@@ -418,16 +681,26 @@
                                     <template x-for="(r, rIdx) in matrixRows" :key="rIdx">
                                         <div class="flex items-center justify-center gap-2 group">
                                             
-                                            <!-- Row Label Clickable (Paint Whole Row) -->
-                                            <button 
-                                                type="button" 
-                                                @click="paintRow(rIdx)"
-                                                class="w-14 text-right pr-2 text-[10px] font-mono font-bold text-gray-300 hover:text-amber-400 hover:scale-105 transition-all shrink-0 cursor-pointer"
-                                                title="Bấm để đổi toàn bộ hàng này thành cọ đang chọn"
-                                            >
-                                                <span x-text="r.row"></span>
-                                                <span class="text-[9px] text-amber-400 opacity-0 group-hover:opacity-100">🖌️</span>
-                                            </button>
+                                            <!-- Row Label Clickable (Paint Whole Row) & Rename -->
+                                            <div class="w-16 flex items-center justify-end gap-1 shrink-0">
+                                                <button 
+                                                    type="button" 
+                                                    @click="paintRow(rIdx)"
+                                                    class="text-right text-[10px] font-mono font-bold text-gray-300 hover:text-amber-400 hover:scale-105 transition-all cursor-pointer"
+                                                    title="Bấm để đổi toàn bộ hàng này thành cọ đang chọn"
+                                                >
+                                                    <span x-text="r.row"></span>
+                                                    <span class="text-[9px] text-amber-400 opacity-0 group-hover:opacity-100">🖌️</span>
+                                                </button>
+                                                <button 
+                                                    type="button" 
+                                                    @click.stop="promptRenameRow(rIdx)"
+                                                    class="text-[9px] text-gray-500 hover:text-amber-300 opacity-0 group-hover:opacity-100 transition-opacity p-0.5 cursor-pointer"
+                                                    title="Đổi tên nhãn hàng ghế này (VD: SVIP-D2-1, CAT1-A...)"
+                                                >
+                                                    ✏️
+                                                </button>
+                                            </div>
 
                                             <!-- Seats in Row -->
                                             <div class="flex items-center gap-1 flex-wrap justify-center">

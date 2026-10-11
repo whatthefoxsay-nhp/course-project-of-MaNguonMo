@@ -154,6 +154,17 @@ class RoomController extends Controller
             $seatConfig['matrix'] = $customMatrix;
         }
 
+        if ($request->filled('stage_type')) {
+            $seatConfig['stage_type'] = $request->input('stage_type');
+        }
+
+        if ($request->filled('standing_zones')) {
+            $sz = json_decode($request->input('standing_zones'), true);
+            if (is_array($sz)) {
+                $seatConfig['standing_zones'] = $sz;
+            }
+        }
+
         $room = Room::create([
             'name' => $validated['name'],
             'address' => $validated['address'] ?? 'Trung tâm Tổ chức Sự kiện',
@@ -163,7 +174,7 @@ class RoomController extends Controller
         ]);
 
         if ($customMatrix) {
-            $seatCount = $generator->generateFromMatrix($room, $customMatrix, $validated['layout_preset']);
+            $seatCount = $generator->generateFromMatrix($room, $customMatrix, $validated['layout_preset'], $seatConfig);
         } else {
             $seatCount = $generator->generate($room, $validated['layout_preset'], $seatConfig);
         }
@@ -207,6 +218,17 @@ class RoomController extends Controller
             $seatConfig['matrix'] = $customMatrix;
         }
 
+        if ($request->filled('stage_type')) {
+            $seatConfig['stage_type'] = $request->input('stage_type');
+        }
+
+        if ($request->filled('standing_zones')) {
+            $sz = json_decode($request->input('standing_zones'), true);
+            if (is_array($sz)) {
+                $seatConfig['standing_zones'] = $sz;
+            }
+        }
+
         if ($room->showtimes()->exists()) {
             // Đã có suất diễn: KHÔNG sinh lại ghế (sẽ cascade xóa vé đã bán).
             $room->update([
@@ -228,7 +250,7 @@ class RoomController extends Controller
         ]);
 
         if ($customMatrix) {
-            $seatCount = $generator->generateFromMatrix($room, $customMatrix, $validated['layout_preset']);
+            $seatCount = $generator->generateFromMatrix($room, $customMatrix, $validated['layout_preset'], $seatConfig);
         } else {
             $seatCount = $generator->generate($room, $validated['layout_preset'], $seatConfig);
         }

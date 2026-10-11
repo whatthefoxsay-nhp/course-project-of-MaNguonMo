@@ -15,7 +15,7 @@ final class SeatMapPresenter
     {
         $showtime->loadMissing('room');
         $tiers = TicketTiers::for($showtime->base_price, true);
-        $isStadium = in_array($showtime->room->layout_preset, ['mega_concert', 'sayhi_concert'], true);
+        $isStadium = in_array($showtime->room->layout_preset, ['mega_concert', 'sayhi_concert', 'sayhi_concert_d2'], true);
 
         return $showtime->showtimeSeats()
             ->with('seat')
