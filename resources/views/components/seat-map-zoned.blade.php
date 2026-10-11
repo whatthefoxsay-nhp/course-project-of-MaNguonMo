@@ -42,7 +42,7 @@
             </div>
         </div>
         <div class="mt-4 flex flex-wrap justify-center gap-x-5 gap-y-2 text-[11px] font-semibold text-gray-600">
-            <span>Chạm vào khu để xem chi tiết</span><span>·</span><span>Ghế ngồi chọn từng ghế</span><span>·</span><span>Khu đứng chọn số lượng</span>
+            <span>Chọn khu ghế để mở sơ đồ riêng</span><span>·</span><span>Khu đứng chọn số lượng</span>
         </div>
     </article>
 
@@ -80,7 +80,11 @@
                 </div>
 
                 @if(in_array($zone['kind'], ['seated', 'table'], true))
-                    <div x-show="activeVenueZone === {{ $zone['id'] }}" x-cloak class="mt-4 max-h-[48vh] space-y-3 overflow-y-auto pr-1">
+                    <div x-show="activeVenueZone === {{ $zone['id'] }}" x-cloak x-transition class="mt-4 max-h-[48vh] space-y-3 overflow-y-auto pr-1">
+                        <div class="sticky top-0 z-10 flex items-center justify-between gap-2 rounded-xl bg-slate-950 px-3 py-2 text-white shadow">
+                            <span class="text-xs font-black">Sơ đồ ghế · {{ $zone['name'] }}</span>
+                            <button type="button" @click="activeVenueZone = null" class="rounded-full bg-white/15 px-3 py-1 text-[10px] font-bold hover:bg-white/25">Đóng sơ đồ</button>
+                        </div>
                         @forelse($zoneRows as $rowLabel => $rowSeats)
                             <div class="rounded-xl bg-[#FAF9F6] p-3">
                                 <div class="mb-2 flex items-center justify-between gap-2">

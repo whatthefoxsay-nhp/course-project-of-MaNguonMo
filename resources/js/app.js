@@ -49,7 +49,7 @@ Alpine.data('seatBookingManager', (config = {}) => ({
             this.zoneQuantities[zone.id] = 0;
             this.zoneMeta[zone.id] = zone;
         });
-        this.activeVenueZone = (config.zones || []).find(zone => ['seated', 'table'].includes(zone.kind))?.id ?? null;
+        this.activeVenueZone = null;
         if (config.pollStatus && config.statusUrl) {
             setInterval(() => this.refreshSeatStatus(), 15000);
         }
