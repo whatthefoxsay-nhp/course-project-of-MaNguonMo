@@ -35,10 +35,10 @@ test('event list paginates nine events per page', function () {
 
     $this->get(route('events.index'))
         ->assertOk()
-        ->assertViewHas('events', fn ($page) => $page->count() === 9 && $page->total() === 13);
+        ->assertViewHas('events', fn ($page) => $page->count() === 9 && $page->total() === 14);
 
     $this->get(route('events.index', ['page' => 2]))
-        ->assertViewHas('events', fn ($page) => $page->count() === 4);
+        ->assertViewHas('events', fn ($page) => $page->count() === 5);
 });
 
 test('search keyword longer than 100 characters is rejected', function () {

@@ -165,6 +165,10 @@ class DatabaseSeeder extends Seeder
             ['user_id' => $admin->id, 'event_id' => $events['live-concert-anh-trai-vuot-ngan-chong-gai-2026']->id],
             ['content' => 'Sân khấu quy mô khủng, hệ thống ghế ngồi khán đài được phân luồng rất khoa học.']
         );
+        Comment::firstOrCreate(
+            ['user_id' => $admin->id, 'event_id' => $events['live-concert-anh-trai-say-hi-2026']->id],
+            ['content' => 'Concert Anh Trai Say Hi quá đỉnh! Visual sân khấu và âm thanh bùng nổ thực sự.']
+        );
 
         // 9. Create Standard Discounts / Vouchers
         $discountsData = [
@@ -254,6 +258,8 @@ class DatabaseSeeder extends Seeder
     private const SCHEDULE = [
         ['live-concert-anh-trai-vuot-ngan-chong-gai-2026', 'qk7', 1, '19:00', '23:00'],
         ['live-concert-anh-trai-vuot-ngan-chong-gai-2026', 'qk7', 8, '19:00', '23:00'],
+        ['live-concert-anh-trai-say-hi-2026', 'qk7', 5, '19:00', '23:00'],
+        ['live-concert-anh-trai-say-hi-2026', 'qk7', 12, '19:00', '23:00'],
         ['saigon-autumn-music-light-festival-2026', 'qk7', 4, '17:00', '23:00'],
         ['hoa-nhac-giao-huong-saigon-philharmonic', 'opera', 2, '19:30', '21:30'],
         ['nhac-kich-les-miserables-vn', 'opera', 3, '19:30', '22:15'],

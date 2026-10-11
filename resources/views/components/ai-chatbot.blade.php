@@ -450,8 +450,23 @@ document.addEventListener('alpine:init', () => {
         generateBotResponse(query) {
             const q = query.toLowerCase();
 
-            // 1. Hot Concert / Anh Trai Vuot Ngan Chong Gai
-            if (q.includes('concert') || q.includes('anh trai') || q.includes('hot') || q.includes('gợi ý')) {
+            // 1. Hot Concert / Anh Trai Say Hi
+            if (q.includes('say hi') || q.includes('hieuthuhai') || q.includes('rhyder') || q.includes('atus')) {
+                return {
+                    text: '<p class="font-bold text-slate-900">🔥 Live Concert Anh Trai "Say Hi" 2026:</p><p>Đại nhạc hội bùng nổ của 30 Anh Trai đang mở bán vé tại <strong>Sân Vận Động Quân Khu 7 (TP.HCM)</strong> với sơ đồ phân khu chuẩn quốc tế.</p><p class="text-xs text-slate-600">✨ <em>Dàn line-up:</em> HIEUTHUHAI, Rhyder, Quang Hùng MasterD, Anh Tú Atus, Đức Phúc, Isaac, Negav, Pháp Kiều...</p>',
+                    event: {
+                        title: 'Live Concert: Anh Trai "Say Hi" 2026',
+                        date: '19:30 - Sắp diễn ra',
+                        venue: 'SVĐ Quân Khu 7, TP.HCM',
+                        price: '250.000₫',
+                        poster: 'https://picsum.photos/seed/live-concert-anh-trai-say-hi-2026/480/720',
+                        link: '/events/live-concert-anh-trai-say-hi-2026'
+                    }
+                };
+            }
+
+            // 2. Hot Concert / Anh Trai Vuot Ngan Chong Gai
+            if (q.includes('concert') || q.includes('anh trai') || q.includes('chông gai') || q.includes('hot') || q.includes('gợi ý')) {
                 return {
                     text: '<p class="font-bold text-slate-900">🔥 Sự kiện âm nhạc được quan tâm nhất:</p><p><strong>Live Concert Anh Trai Vượt Ngàn Chông Gai 2026</strong> đang mở bán các suất diễn bùng nổ tại <strong>Sân Vận Động Quân Khu 7 (TP.HCM)</strong>.</p><p class="text-xs text-slate-600">✨ <em>Dàn nghệ sĩ:</em> Soobin Hoàng Sơn, Bằng Kiều, NSND Tự Long, Hồ Ngọc Hà, Jun Phạm, Cường Seven...</p>',
                     event: {

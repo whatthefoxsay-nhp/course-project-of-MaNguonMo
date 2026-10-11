@@ -323,4 +323,56 @@ return [
                     ]
                 ]
             ],
+            [
+                9, 'event', 'Live Concert: Anh Trai "Say Hi" 2026', 'live-concert-anh-trai-say-hi-2026', 1,
+                'Đại nhạc hội bùng nổ của 30 Anh Trai "Say Hi" với sân khấu 360 độ quốc tế, hiệu ứng ánh sáng laser, visual 3D mapping công nghệ cao và những bản hit triệu views làm khuấy đảo hàng triệu khán giả.',
+                240, 250000, true,
+                [
+                    'venue_name' => 'Sân Vận Động Quân Khu 7 (SVĐ QK7 Arena)',
+                    'venue_address' => 'Số 202 Hoàng Văn Thụ, Phường 9, Quận Phú Nhuận, TP. Hồ Chí Minh',
+                    'venue_gates' => 'Cổng VIP (SVIP & Skybox), Cổng A/B (Khán đài A/B), Cổng C/D (Khán đài Cánh), Cổng GA (Fanzone Say Hi)',
+                    'parking_info' => 'Bãi giữ xe máy Cổng 2 (đường Phạm Văn Đồng), Bãi ô tô tầng hầm Nhà thi đấu QK7 (sức chứa 1.500 xe).',
+                    'participants_title' => 'Dàn 30 Anh Trai "Say Hi" & Khách Mời Đặc Biệt (Official Cast & Guests)',
+                    'participants_summary' => 'Quy tụ trọn vẹn 30 Anh Trai thế hệ Gen Z & All-star cùng Giám đốc âm nhạc JustaTee',
+                    'host_mc' => 'MC Trấn Thành',
+                    'special_guests' => 'Giám đốc âm nhạc JustaTee, Nữ ca sĩ tlinh, Vũ Cát Tường & DJ Wokeup',
+                    'timeline' => [
+                        ['time' => '15:00 - 17:00', 'title' => 'Check-in & Đổi Vòng Tay (Wristband Exchange)', 'desc' => 'Đổi mã QR vé điện tử lấy vòng tay vào cổng & nhận set quà Merchandise Say Hi độc quyền.'],
+                        ['time' => '16:30 - 17:15', 'title' => 'Đặc Quyền Soundcheck Say Hi Rehearsal', 'desc' => 'Dành riêng cho hạng vé SVIP Kim Cương xem trực tiếp buổi tổng duyệt của các Anh Trai.'],
+                        ['time' => '17:30', 'title' => 'Mở Toàn Bộ Cổng Soát Vé (Gate Opening)', 'desc' => 'Khán giả làm thủ tục qua cổng an ninh và ổn định chỗ ngồi tại các khán đài.'],
+                        ['time' => '19:30 - 23:00', 'title' => 'Live Concert "Anh Trai Say Hi" Bùng Nổ (Official Showtime)', 'desc' => 'Hơn 30 tiết mục bùng nổ, visual 3D mapping, pháo hoa nghệ thuật và tương tác trực tiếp.'],
+                        ['time' => '23:15', 'title' => 'Bế Mạc & Điều Phối Giao Thông', 'desc' => 'Ban tổ chức hướng dẫn khán giả di chuyển theo các cửa thoát hiểm và xe buýt trung chuyển an toàn.']
+                    ],
+                    'lineup' => [
+                        ['name' => 'HIEUTHUHAI', 'role' => 'Quán Quân / Ca Sĩ / Rapper', 'tag' => 'GERDNANG', 'badge' => 'All-Star Champion'],
+                        ['name' => 'Rhyder', 'role' => 'Á Quân / Ca Sĩ / Producer', 'tag' => 'Team Chịu Cách Mình Nói Thua', 'badge' => 'Hit Maker'],
+                        ['name' => 'Quang Hùng MasterD', 'role' => 'Ca Sĩ / Nhạc Sĩ', 'tag' => 'Team Thủy Triều', 'badge' => 'International Star'],
+                        ['name' => 'Anh Tú Atus', 'role' => 'Ca Sĩ / Diễn Viên', 'tag' => 'Team Visual', 'badge' => 'King of Visual'],
+                        ['name' => 'Đức Phúc', 'role' => 'Ca Sĩ / Giọng Ca Khủng', 'tag' => 'Team Vocal', 'badge' => 'Golden Voice'],
+                        ['name' => 'Isaac', 'role' => 'Ca Sĩ / Đội Trưởng', 'tag' => 'Team Thủ Lĩnh', 'badge' => 'Ultimate Leader'],
+                        ['name' => 'Negav', 'role' => 'Rapper / Nhạc Sĩ', 'tag' => 'GERDNANG', 'badge' => 'Vibe Maker'],
+                        ['name' => 'Pháp Kiều', 'role' => 'Rapper / Performer', 'tag' => 'Team Bùng Nổ', 'badge' => 'Stage Slayer'],
+                        ['name' => 'HURRYKNG', 'role' => 'Rapper / Nhạc Sĩ', 'tag' => 'GERDNANG', 'badge' => 'Lyricist'],
+                        ['name' => 'Captain Boy', 'role' => 'Rapper / Multi-instrumentalist', 'tag' => 'Team Tuổi Trẻ', 'badge' => 'Gen Z Prodigy'],
+                        ['name' => 'Song Luân', 'role' => 'Ca Sĩ / Diễn Viên', 'tag' => 'Team Nam Thần', 'badge' => 'Charming Vocal'],
+                        ['name' => 'Quân A.P', 'role' => 'Ca Sĩ Ballad', 'tag' => 'Team Tình Ca', 'badge' => 'Melody King'],
+                        ['name' => 'JSOL', 'role' => 'Ca Sĩ', 'tag' => 'Team Năng Lượng', 'badge' => 'Sweet Boy'],
+                        ['name' => 'Dương Domic', 'role' => 'Ca Sĩ / Nhạc Sĩ', 'tag' => 'Team Xu Hướng', 'badge' => 'Breakthrough Artist'],
+                        ['name' => 'Hùng Huỳnh', 'role' => 'Ca Sĩ / Dancer', 'tag' => 'Team Vũ Đạo', 'badge' => 'Dance Machine'],
+                        ['name' => 'Ali Hoàng Dương', 'role' => 'Ca Sĩ Nội Lực', 'tag' => 'Team Quán Quân', 'badge' => 'Power Vocal']
+                    ],
+                    'organizers' => [
+                        'lead' => 'TicketBox Vietnam & DatVietVAC / VieON Group',
+                        'sponsor' => 'VPBank, Trà Mật Ong Boncha & Shopee',
+                        'media' => 'Vie Channel, HTV2 & YouTube Anh Trai Say Hi'
+                    ],
+                    'entry_policy' => [
+                        'age' => 'Sự kiện dành cho khán giả từ 12 tuổi trở lên. Khán giả dưới 14 tuổi phải có người lớn đi kèm.',
+                        'checkin' => 'Vui lòng chuẩn bị sẵn mã QR vé điện tử (E-Ticket) trên ứng dụng và CCCD/VNeID để đối chiếu khi cần.',
+                        'allowed' => 'Được mang điện thoại, sạc dự phòng, lightstick Say Hi chính hãng, ví tiền, túi xách kích thước dưới 30x30cm.',
+                        'prohibited' => 'CẤM mang máy ảnh cơ ống kính tele, gậy selfie dài, chai thủy tinh, bật lửa, pháo sáng, đồ ăn ngoài và chất kích thích.',
+                        'refund' => 'Vé đã mua không được hoàn trả trừ trường hợp sự kiện bị hủy từ phía Ban tổ chức theo quy định của pháp luật.'
+                    ]
+                ]
+            ],
 ];

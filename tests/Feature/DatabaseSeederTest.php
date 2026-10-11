@@ -7,13 +7,17 @@ use App\Models\Showtime;
 
 beforeEach(fn () => $this->seed());
 
-test('the seeder publishes the eight demo events with their details', function () {
+test('the seeder publishes the demo events with their details', function () {
     $concert = Event::firstWhere('slug', 'live-concert-anh-trai-vuot-ngan-chong-gai-2026');
+    $sayHiConcert = Event::firstWhere('slug', 'live-concert-anh-trai-say-hi-2026');
 
-    expect(Event::published()->count())->toBe(8)
+    expect(Event::published()->count())->toBe(9)
         ->and($concert->is_seated)->toBeTrue()
         ->and($concert->venue_name)->toContain('Quân Khu 7')
         ->and($concert->lineup)->not->toBeEmpty()
+        ->and($sayHiConcert)->not->toBeNull()
+        ->and($sayHiConcert->is_seated)->toBeTrue()
+        ->and($sayHiConcert->lineup)->not->toBeEmpty()
         ->and($concert->entry_policy)->toHaveKey('prohibited')
         ->and(Event::firstWhere('slug', 'vietnam-tech-summit-ai-expo-2026')->is_seated)->toBeFalse();
 });
@@ -54,7 +58,7 @@ test('the event base price is the cheapest showtime price', function () {
 test('seeding twice does not duplicate data', function () {
     $this->seed();
 
-    expect(Event::count())->toBe(8)
+    expect(Event::count())->toBe(9)
         ->and(Room::count())->toBe(4)
         ->and(Booking::where('booking_code', 'TBX-89214')->count())->toBe(1);
 });
