@@ -159,6 +159,8 @@ test('new room builder shows zone kinds and calculated capacity', function () {
     $this->actingAs($admin)->get(route('admin.rooms.create'))
         ->assertOk()
         ->assertSee('Các khu trong khán phòng')
+        ->assertSee('Xem trước mặt bằng')
+        ->assertSee('Bố cục các khu vé')
         ->assertSee('Vé đứng theo số lượng')
         ->assertSee('Sức chứa tổng (tính tự động)');
 });

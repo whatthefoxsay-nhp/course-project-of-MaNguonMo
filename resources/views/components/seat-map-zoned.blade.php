@@ -7,13 +7,50 @@
         <p class="mt-2 text-center text-[10px] font-black uppercase tracking-[0.35em] text-white/70">Sân khấu / khu vực sự kiện</p>
     </div>
 
+    <article class="overflow-hidden rounded-3xl border border-black/10 bg-white p-5 shadow-sm sm:p-7">
+        <div class="flex flex-wrap items-end justify-between gap-3">
+            <div>
+                <p class="text-xs font-black uppercase tracking-[0.18em] text-emerald-800">Sơ đồ chọn khu</p>
+                <h3 class="mt-1 text-xl font-black">Chọn khu vé trên sơ đồ</h3>
+            </div>
+            <p class="text-xs text-gray-500">Chọn một khu để xem ghế hoặc số vé còn</p>
+        </div>
+        <div class="mx-auto mt-6 max-w-4xl rounded-[2rem] bg-[#F7F6F2] p-3 sm:p-6">
+            <div class="mx-auto mb-5 max-w-sm rounded-t-[50%] border-b-4 border-amber-400 bg-slate-900 px-8 py-3 text-center text-xs font-black uppercase tracking-[0.3em] text-white shadow-lg">Sân khấu</div>
+            <div class="grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-3">
+                @foreach($venueZones as $index => $zone)
+                    @php
+                        $zonePalette = [
+                            ['bg' => 'bg-rose-100', 'border' => 'border-rose-400', 'text' => 'text-rose-950', 'dot' => 'bg-rose-500'],
+                            ['bg' => 'bg-amber-100', 'border' => 'border-amber-400', 'text' => 'text-amber-950', 'dot' => 'bg-amber-500'],
+                            ['bg' => 'bg-sky-100', 'border' => 'border-sky-400', 'text' => 'text-sky-950', 'dot' => 'bg-sky-500'],
+                            ['bg' => 'bg-emerald-100', 'border' => 'border-emerald-400', 'text' => 'text-emerald-950', 'dot' => 'bg-emerald-500'],
+                            ['bg' => 'bg-violet-100', 'border' => 'border-violet-400', 'text' => 'text-violet-950', 'dot' => 'bg-violet-500'],
+                            ['bg' => 'bg-orange-100', 'border' => 'border-orange-400', 'text' => 'text-orange-950', 'dot' => 'bg-orange-500'],
+                        ][$index % 6];
+                    @endphp
+                    <button type="button"
+                        @click="document.getElementById('zone-card-{{ $zone['id'] }}')?.scrollIntoView({ behavior: 'smooth', block: 'center' })"
+                        class="group min-h-24 rounded-2xl border-2 {{ $zonePalette['border'] }} {{ $zonePalette['bg'] }} p-3 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-emerald-700 sm:min-h-28 sm:p-4">
+                        <span class="flex items-center gap-2 text-[10px] font-black uppercase tracking-wider {{ $zonePalette['text'] }}"><span class="h-2.5 w-2.5 rounded-full {{ $zonePalette['dot'] }}"></span>{{ $zone['code'] }}</span>
+                        <strong class="mt-2 block text-sm font-black leading-tight {{ $zonePalette['text'] }} sm:text-base">{{ $zone['name'] }}</strong>
+                        <span class="mt-2 block text-[11px] font-semibold {{ $zonePalette['text'] }}">{{ number_format($zone['price']) }}₫ · còn {{ number_format($zone['available']) }}</span>
+                    </button>
+                @endforeach
+            </div>
+        </div>
+        <div class="mt-4 flex flex-wrap justify-center gap-x-5 gap-y-2 text-[11px] font-semibold text-gray-600">
+            <span>Chạm vào khu để xem chi tiết</span><span>·</span><span>Ghế ngồi chọn từng ghế</span><span>·</span><span>Khu đứng chọn số lượng</span>
+        </div>
+    </article>
+
     <div class="grid gap-4 lg:grid-cols-2">
         @foreach($venueZones as $zone)
             @php
                 $zoneSeats = $seatsCollection->where('zone_id', $zone['id']);
                 $zoneRows = $zoneSeats->groupBy('row_label');
             @endphp
-            <article class="rounded-3xl border border-black/10 bg-white p-5 shadow-sm">
+            <article id="zone-card-{{ $zone['id'] }}" class="scroll-mt-24 rounded-3xl border border-black/10 bg-white p-5 shadow-sm">
                 <div class="flex items-start justify-between gap-4 border-b border-black/10 pb-4">
                     <div>
                         <span class="rounded-full bg-emerald-50 px-2.5 py-1 text-[10px] font-black uppercase text-emerald-900">{{ $zone['code'] }}</span>

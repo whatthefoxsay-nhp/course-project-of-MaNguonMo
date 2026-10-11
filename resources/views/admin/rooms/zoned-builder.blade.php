@@ -47,6 +47,29 @@
             </section>
 
             <section class="rounded-2xl border border-gray-200 bg-white p-5 space-y-4">
+                <div>
+                    <p class="text-xs font-black uppercase tracking-[0.18em] text-emerald-800">Xem trước mặt bằng</p>
+                    <h2 class="mt-1 font-black text-lg">Bố cục các khu vé</h2>
+                    <p class="text-sm text-gray-500">Bản phác thảo giúp kiểm tra các khu đã được tách riêng trước khi lưu.</p>
+                </div>
+                <div class="mx-auto max-w-3xl rounded-3xl bg-[#F7F6F2] p-4 sm:p-6">
+                    <div class="mx-auto mb-4 max-w-xs rounded-t-[50%] border-b-4 border-amber-400 bg-slate-900 px-6 py-2 text-center text-[10px] font-black uppercase tracking-[0.3em] text-white">Sân khấu</div>
+                    <div class="grid grid-cols-2 gap-2 sm:grid-cols-3">
+                        <template x-for="(zone, index) in zones" :key="'preview-' + zone._key">
+                            <div class="flex min-h-20 flex-col justify-between rounded-2xl border-2 p-3 shadow-sm"
+                                :class="previewPalette(index)"
+                                :title="zone.name + ' · ' + zone.kind">
+                                <span class="text-[10px] font-black uppercase tracking-wider" x-text="zone.code || ('KHU ' + (index + 1))"></span>
+                                <strong class="text-sm leading-tight" x-text="zone.name || ('Khu ' + (index + 1))"></strong>
+                                <span class="text-[10px] font-semibold" x-text="zoneSummary(zone)"></span>
+                            </div>
+                        </template>
+                        <p x-show="zones.length === 0" class="col-span-full rounded-xl bg-amber-50 p-4 text-sm text-amber-900">Thêm khu để xem sơ đồ.</p>
+                    </div>
+                </div>
+            </section>
+
+            <section class="rounded-2xl border border-gray-200 bg-white p-5 space-y-4">
                 <div class="flex items-center justify-between gap-3">
                     <div><h2 class="font-black text-lg">Các khu trong khán phòng</h2><p class="text-sm text-gray-500">Mỗi khu có sơ đồ ghế hoặc tồn kho vé riêng.</p></div>
                     <button type="button" @click="addZone()" class="rounded-xl bg-emerald-800 px-4 py-2 text-sm font-bold text-white">+ Thêm khu</button>
@@ -129,6 +152,13 @@
                     [this.zones[index], this.zones[next]] = [this.zones[next], this.zones[index]];
                 },
                 seatCapacity(zone) { return Math.max(0, Number(zone.kind === 'table' ? zone.tables * zone.seats_per_table : zone.rows * zone.cols) || 0); },
+                previewPalette(index) {
+                    return ['border-rose-400 bg-rose-100 text-rose-950', 'border-amber-400 bg-amber-100 text-amber-950', 'border-sky-400 bg-sky-100 text-sky-950', 'border-emerald-400 bg-emerald-100 text-emerald-950', 'border-violet-400 bg-violet-100 text-violet-950', 'border-orange-400 bg-orange-100 text-orange-950'][index % 6];
+                },
+                zoneSummary(zone) {
+                    if (['seated', 'table'].includes(zone.kind)) return `${this.seatCapacity(zone)} ghế`;
+                    return `${Math.max(0, Number(zone.capacity) || 0)} vé`;
+                },
                 get totalCapacity() {
                     return this.zones.reduce((total, zone) => total + (['seated', 'table'].includes(zone.kind) ? this.seatCapacity(zone) : Math.max(0, Number(zone.capacity) || 0)), 0);
                 },

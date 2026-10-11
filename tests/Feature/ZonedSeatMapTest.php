@@ -19,6 +19,8 @@ test('seated event renders physical seats alongside quantity based venue zones',
 
     $this->get(route('showtimes.seats', $showtime))
         ->assertOk()
+        ->assertSee('Chọn khu vé trên sơ đồ')
+        ->assertSee('id="zone-card-'.$room->zones()->first()->id.'"', false)
         ->assertSee('Khán đài A')
         ->assertSee('Fanzone')
         ->assertSee('Chọn cả bàn')
