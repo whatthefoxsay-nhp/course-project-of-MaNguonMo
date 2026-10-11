@@ -15,19 +15,24 @@ class BookingController extends Controller
                 'items.showtimeSeat.seat',
                 'items.showtimeSeat.showtime.room',
                 'items.showtimeSeat.showtime.event.category',
+                'items.zoneTicket.zone',
+                'items.zoneTicket.showtime.room',
+                'items.zoneTicket.showtime.event.category',
             ])
             ->latest()
             ->get()
             ->map(function (Booking $booking) {
                 // Mỗi đơn luôn thuộc 1 suất (SeatHoldService chỉ cho giữ ghế của 1 suất tại 1 thời điểm).
-                $showtime = $booking->items->first()?->showtimeSeat?->showtime;
+                $firstItem = $booking->items->first();
+                $showtime = $firstItem?->showtimeSeat?->showtime ?? $firstItem?->zoneTicket?->showtime;
 
                 return (object) [
                     'id' => $booking->id,
                     'booking_code' => $booking->booking_code,
                     'movie' => $showtime?->event,
                     'showtime' => $showtime,
-                    'seats' => $booking->items->map(fn ($item) => $item->showtimeSeat?->seat?->full_code ?? '')->filter()->all(),
+                    'seats' => $booking->items->map(fn ($item) => $item->showtimeSeat?->seat?->full_code
+                        ?? ($item->zoneTicket ? $item->zoneTicket->zone->name.' — vé số '.$item->zoneTicket->id : ''))->filter()->all(),
                     'total_price' => $booking->total_price,
                     'status' => $booking->status,
                     'created_at' => $booking->created_at,

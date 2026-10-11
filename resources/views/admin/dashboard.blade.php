@@ -286,10 +286,10 @@
                         @forelse($recentBookings as $booking)
                             @php
                                 $firstItem = $booking->items->first();
-                                $movie = $firstItem?->showtimeSeat?->showtime?->movie;
-                                $showtime = $firstItem?->showtimeSeat?->showtime;
+                                $showtime = $firstItem?->showtimeSeat?->showtime ?? $firstItem?->zoneTicket?->showtime;
+                                $movie = $showtime?->movie;
                                 $seat = $firstItem?->showtimeSeat?->seat;
-                                $seatLabel = $seat ? "Ghế {$seat->row_label}{$seat->seat_number}" : ($booking->items->count() > 0 ? $booking->items->count() . ' vé' : 'N/A');
+                                $seatLabel = $seat ? "Ghế {$seat->row_label}{$seat->seat_number}" : ($firstItem?->zoneTicket ? $firstItem->zoneTicket->zone->name.' — vé số '.$firstItem->zoneTicket->id : ($booking->items->count() > 0 ? $booking->items->count() . ' vé' : 'N/A'));
                             @endphp
                             <tr class="hover:bg-[#FAF9F6] transition-colors">
                                 <td class="py-4 px-6 font-mono font-black text-black">{{ $booking->booking_code }}</td>

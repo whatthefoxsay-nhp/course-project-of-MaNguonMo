@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Exceptions\SeatHoldException;
 use App\Models\Booking;
 use App\Models\ShowtimeSeat;
+use App\Models\ZoneTicket;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
 
@@ -24,8 +25,10 @@ class CheckoutService
                 ->with(['seat', 'showtime'])
                 ->lockForUpdate()
                 ->get();
+            $zoneTickets = ZoneTicket::where('status', 'held')->where('held_by_user_id', $user->id)
+                ->where('held_until', '>', now())->with('showtime')->lockForUpdate()->get();
 
-            if ($seats->isEmpty()) {
+            if ($seats->isEmpty() && $zoneTickets->isEmpty()) {
                 throw new SeatHoldException('Giỏ vé trống hoặc đã hết thời gian giữ chỗ. Vui lòng chọn lại ghế.');
             }
 
@@ -33,7 +36,7 @@ class CheckoutService
 
             $booking = Booking::create([
                 'user_id' => $user->id,
-                'total_price' => $seats->sum($priceOf),
+                'total_price' => $seats->sum($priceOf) + $zoneTickets->sum('price'),
                 'status' => 'confirmed',
                 'payment_method' => $paymentMethod,
             ]);
@@ -45,6 +48,18 @@ class CheckoutService
                 ]);
 
                 $seat->update([
+                    'status' => 'booked',
+                    'held_by_user_id' => null,
+                    'held_until' => null,
+                ]);
+            }
+
+            foreach ($zoneTickets as $ticket) {
+                $booking->items()->create([
+                    'zone_ticket_id' => $ticket->id,
+                    'price' => $ticket->price,
+                ]);
+                $ticket->update([
                     'status' => 'booked',
                     'held_by_user_id' => null,
                     'held_until' => null,

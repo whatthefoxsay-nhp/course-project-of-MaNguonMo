@@ -10,6 +10,8 @@
                 'row_label' => $item->seat->row_label ?? '',
                 'seat_number' => $item->seat->seat_number ?? '',
                 'seat_type' => $item->seat->type ?? 'Tiêu chuẩn',
+                'is_zone_ticket' => $item->is_zone_ticket ?? false,
+                'item_id' => $item->id,
                 'price' => $item->price,
             ];
         }, $items);
@@ -31,6 +33,7 @@
             userPhone: '{{ addslashes($userPhone) }}',
             checkoutUrl: @js(route('checkout.store')),
             removeUrl: @js(route('cart.seats.destroy', '__ID__')),
+            removeZoneUrl: @js(route('cart.zone-tickets.destroy', '__ID__')),
         })"
     >
         <!-- Floating Toast Notification -->
@@ -172,7 +175,11 @@
                                             </p>
                                             <div class="mt-2 flex items-center gap-2">
                                                 <span class="badge-gold text-xs px-2.5 py-0.5 rounded-lg font-bold">
-                                                    Vị trí: {{ $item->seat->row_label }}{{ $item->seat->seat_number }} ({{ $item->seat->type }})
+                                                    @if($item->is_zone_ticket)
+                                                        {{ $item->zone->name }} — vé số {{ $item->id }}
+                                                    @else
+                                                        Vị trí: {{ $item->seat->row_label }}{{ $item->seat->seat_number }} ({{ $item->seat->type }})
+                                                    @endif
                                                 </span>
                                             </div>
                                         </div>
@@ -185,7 +192,7 @@
                                             <button
                                                 type="button"
                                                 x-show="step === 'cart'"
-                                                @click="removeItem({{ $item->id }})"
+                                                @click="removeItem({ id: {{ $item->id }}, isZoneTicket: {{ ($item->is_zone_ticket ?? false) ? 'true' : 'false' }} })"
                                                 class="mt-1 text-[11px] font-bold text-[#CC0000] hover:underline block"
                                             >
                                                 Bỏ vé

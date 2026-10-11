@@ -98,7 +98,7 @@ class DashboardController extends Controller
         })->sortByDesc('booked_seats')->values()->take(4);
 
         // 5. Recent Bookings Log
-        $recentBookings = Booking::with(['user', 'items.showtimeSeat.showtime.movie', 'items.showtimeSeat.seat'])
+        $recentBookings = Booking::with(['user', 'items.showtimeSeat.showtime.movie', 'items.showtimeSeat.seat', 'items.zoneTicket.zone', 'items.zoneTicket.showtime.movie'])
             ->latest()
             ->take(6)
             ->get();
