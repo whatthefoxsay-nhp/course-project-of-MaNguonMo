@@ -45,6 +45,11 @@ class Showtime extends Model
         return $this->hasMany(ShowtimeSeat::class);
     }
 
+    public function zoneTickets(): HasMany
+    {
+        return $this->hasMany(ZoneTicket::class);
+    }
+
     public function availableSeatsCount(): int
     {
         return $this->showtimeSeats()->where('status', 'available')->count();

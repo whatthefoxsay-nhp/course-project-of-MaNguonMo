@@ -12,6 +12,10 @@ class RoomZone extends Model
 
     public const KIND_STANDING = 'standing';
 
+    public const KIND_TABLE = 'table';
+
+    public const KIND_ADMISSION = 'admission';
+
     /** Hạng vé gán được cho khu ngồi (khớp TicketTiers::for(..., true)). */
     public const SEATED_TYPES = ['svip_diamond', 'vip_gold', 'cat1_stand', 'cat2_wings', 'skybox_suite'];
 
@@ -23,14 +27,17 @@ class RoomZone extends Model
         'name',
         'kind',
         'seat_type',
+        'ticket_tier',
         'capacity',
         'layout',
+        'meta',
         'sort_order',
     ];
 
     protected $casts = [
         'capacity' => 'integer',
         'layout' => 'array',
+        'meta' => 'array',
         'sort_order' => 'integer',
     ];
 
@@ -44,8 +51,28 @@ class RoomZone extends Model
         return $this->hasMany(Seat::class, 'zone_id');
     }
 
+    public function tickets(): HasMany
+    {
+        return $this->hasMany(ZoneTicket::class, 'zone_id');
+    }
+
     public function isStanding(): bool
     {
         return $this->kind === self::KIND_STANDING;
+    }
+
+    public function sellsByQuantity(): bool
+    {
+        return in_array($this->kind, [self::KIND_STANDING, self::KIND_ADMISSION], true);
+    }
+
+    public function hasSeats(): bool
+    {
+        return in_array($this->kind, [self::KIND_SEATED, self::KIND_TABLE], true);
+    }
+
+    public function effectiveCapacity(): int
+    {
+        return $this->hasSeats() ? $this->seats()->count() : (int) $this->capacity;
     }
 }

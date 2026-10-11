@@ -15,3 +15,23 @@ test('a room has ordered zones and seats belong to a zone', function () {
         ->and($first->seats)->toHaveCount(1)
         ->and($room->fresh()->capacity)->toBe(70000); // vượt giới hạn smallint cũ
 });
+
+test('zone kinds determine inventory mode and effective capacity', function () {
+    $room = Room::factory()->create();
+    $seated = RoomZone::create(['room_id' => $room->id, 'code' => 'A', 'name' => 'Khu ngồi', 'kind' => 'seated', 'seat_type' => 'cat1_stand', 'capacity' => 999]);
+    $standing = RoomZone::create(['room_id' => $room->id, 'code' => 'GA', 'name' => 'Khu đứng', 'kind' => 'standing', 'seat_type' => 'standing_pit', 'capacity' => 500]);
+    $admission = RoomZone::create(['room_id' => $room->id, 'code' => 'IN', 'name' => 'Vào cửa', 'kind' => 'admission', 'seat_type' => 'cat1_stand', 'capacity' => 120]);
+    $table = RoomZone::create(['room_id' => $room->id, 'code' => 'T', 'name' => 'Bàn', 'kind' => 'table', 'seat_type' => 'cat1_stand', 'capacity' => 999]);
+
+    Seat::create(['room_id' => $room->id, 'zone_id' => $seated->id, 'row_label' => 'A', 'seat_number' => 1, 'type' => 'cat1_stand']);
+    Seat::create(['room_id' => $room->id, 'zone_id' => $table->id, 'row_label' => 'T1', 'seat_number' => 1, 'type' => 'cat1_stand']);
+
+    expect($seated->hasSeats())->toBeTrue()
+        ->and($seated->sellsByQuantity())->toBeFalse()
+        ->and($seated->effectiveCapacity())->toBe(1)
+        ->and($table->effectiveCapacity())->toBe(1)
+        ->and($standing->hasSeats())->toBeFalse()
+        ->and($standing->sellsByQuantity())->toBeTrue()
+        ->and($standing->effectiveCapacity())->toBe(500)
+        ->and($admission->effectiveCapacity())->toBe(120);
+});
