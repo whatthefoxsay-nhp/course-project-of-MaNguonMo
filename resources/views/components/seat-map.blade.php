@@ -377,23 +377,23 @@
 
                             <!-- 1. SKYBOX VIP SUITES (Tầng Thượng Hoàng Gia) -->
                             <g 
-                                @click="selectConcertZone('skybox_suite')" 
+                                @click="selectConcertZone('skybox_suite', true)" 
                                 @mouseenter="setHoveredZone('skybox_suite')" 
                                 @mouseleave="clearHoveredZone()"
                                 class="cursor-pointer transition-all duration-300"
                             >
                                 <!-- Cánh trái Skybox 1-4 -->
-                                <rect x="55" y="45" width="160" height="34" rx="10" fill="#831843" fill-opacity="0.85" stroke="#F472B6" :stroke-width="selectedZone === 'skybox_suite' ? 3.5 : 1.5" :filter="selectedZone === 'skybox_suite' ? 'url(#glow-rose)' : ''" />
+                                <rect x="55" y="45" width="160" height="34" rx="10" fill="#831843" fill-opacity="0.85" :stroke="selectedZone === 'skybox_suite' || hoveredZone === 'skybox_suite' ? '#FDE047' : '#F472B6'" :stroke-width="selectedZone === 'skybox_suite' || hoveredZone === 'skybox_suite' ? 3.5 : 1.5" :filter="selectedZone === 'skybox_suite' || hoveredZone === 'skybox_suite' ? 'url(#glow-rose)' : ''" />
                                 <text x="135" y="66" fill="#FCE7F3" font-size="11" font-weight="900" text-anchor="middle" font-family="monospace">🥂 SKYBOX SUITES (L)</text>
                                 
                                 <!-- Cánh phải Skybox 5-8 -->
-                                <rect x="785" y="45" width="160" height="34" rx="10" fill="#831843" fill-opacity="0.85" stroke="#F472B6" :stroke-width="selectedZone === 'skybox_suite' ? 3.5 : 1.5" :filter="selectedZone === 'skybox_suite' ? 'url(#glow-rose)' : ''" />
+                                <rect x="785" y="45" width="160" height="34" rx="10" fill="#831843" fill-opacity="0.85" :stroke="selectedZone === 'skybox_suite' || hoveredZone === 'skybox_suite' ? '#FDE047' : '#F472B6'" :stroke-width="selectedZone === 'skybox_suite' || hoveredZone === 'skybox_suite' ? 3.5 : 1.5" :filter="selectedZone === 'skybox_suite' || hoveredZone === 'skybox_suite' ? 'url(#glow-rose)' : ''" />
                                 <text x="865" y="66" fill="#FCE7F3" font-size="11" font-weight="900" text-anchor="middle" font-family="monospace">🥂 SKYBOX SUITES (R)</text>
                             </g>
 
                             <!-- 2. KHÁN ĐÀI C (CÁNH TRÁI / WEST WING STAND) -->
                             <g 
-                                @click="selectConcertZone('cat2_wings')" 
+                                @click="selectConcertZone('cat2_wings', true)" 
                                 @mouseenter="setHoveredZone('cat2_wings')" 
                                 @mouseleave="clearHoveredZone()"
                                 class="cursor-pointer transition-all duration-300"
@@ -401,8 +401,8 @@
                                 <path 
                                     d="M 270,115 C 160,185 140,380 220,520 L 150,555 C 60,390 80,165 200,85 Z" 
                                     fill="url(#grad-stand-c)" 
-                                    stroke="#3B82F6" 
-                                    :stroke-width="selectedZone === 'cat2_wings' ? 4 : 2" 
+                                    :stroke="selectedZone === 'cat2_wings' || hoveredZone === 'cat2_wings' ? '#FDE047' : '#3B82F6'" 
+                                    :stroke-width="selectedZone === 'cat2_wings' || hoveredZone === 'cat2_wings' ? 4.5 : 2" 
                                     class="transition-all"
                                 />
                                 <text x="165" y="325" fill="#BFDBFE" font-size="13" font-weight="900" text-anchor="middle" transform="rotate(-70 165 325)">KHÁN ĐÀI C (CÁNH TRÁI)</text>
@@ -411,7 +411,7 @@
 
                             <!-- 3. KHÁN ĐÀI D (CÁNH PHẢI / EAST WING STAND) -->
                             <g 
-                                @click="selectConcertZone('cat2_wings')" 
+                                @click="selectConcertZone('cat2_wings', true)" 
                                 @mouseenter="setHoveredZone('cat2_wings')" 
                                 @mouseleave="clearHoveredZone()"
                                 class="cursor-pointer transition-all duration-300"
@@ -419,8 +419,8 @@
                                 <path 
                                     d="M 730,115 C 840,185 860,380 780,520 L 850,555 C 940,390 920,165 800,85 Z" 
                                     fill="url(#grad-stand-d)" 
-                                    stroke="#3B82F6" 
-                                    :stroke-width="selectedZone === 'cat2_wings' ? 4 : 2" 
+                                    :stroke="selectedZone === 'cat2_wings' || hoveredZone === 'cat2_wings' ? '#FDE047' : '#3B82F6'" 
+                                    :stroke-width="selectedZone === 'cat2_wings' || hoveredZone === 'cat2_wings' ? 4.5 : 2" 
                                     class="transition-all"
                                 />
                                 <text x="835" y="325" fill="#BFDBFE" font-size="13" font-weight="900" text-anchor="middle" transform="rotate(70 835 325)">KHÁN ĐÀI D (CÁNH PHẢI)</text>
@@ -429,7 +429,7 @@
 
                             <!-- 4. KHÁN ĐÀI B (TẦNG 2 TRÊN CAO / UPPER STAND CAT 1) -->
                             <g 
-                                @click="selectConcertZone('cat1_stand')" 
+                                @click="selectConcertZone('cat1_stand', true)" 
                                 @mouseenter="setHoveredZone('cat1_stand')" 
                                 @mouseleave="clearHoveredZone()"
                                 class="cursor-pointer transition-all duration-300"
@@ -437,8 +437,8 @@
                                 <path 
                                     d="M 195,600 C 315,710 685,710 805,600 L 838,660 C 700,785 300,785 162,660 Z" 
                                     fill="url(#grad-stand-b)" 
-                                    stroke="#059669" 
-                                    :stroke-width="selectedZone === 'cat1_stand' ? 4 : 2" 
+                                    :stroke="selectedZone === 'cat1_stand' || hoveredZone === 'cat1_stand' ? '#FDE047' : '#059669'" 
+                                    :stroke-width="selectedZone === 'cat1_stand' || hoveredZone === 'cat1_stand' ? 4.5 : 2" 
                                     class="transition-all"
                                 />
                                 <text x="500" y="700" fill="#A7F3D0" font-size="13" font-weight="900" text-anchor="middle">KHÁN ĐÀI B (TẦNG 2 TRÊN CAO)</text>
@@ -447,7 +447,7 @@
 
                             <!-- 5. KHÁN ĐÀI A (TRUNG TÂM TẦNG 1 / CENTER STAND CAT 1) -->
                             <g 
-                                @click="selectConcertZone('cat1_stand')" 
+                                @click="selectConcertZone('cat1_stand', true)" 
                                 @mouseenter="setHoveredZone('cat1_stand')" 
                                 @mouseleave="clearHoveredZone()"
                                 class="cursor-pointer transition-all duration-300"
@@ -455,8 +455,9 @@
                                 <path 
                                     d="M 235,530 C 335,622 665,622 765,530 L 795,588 C 680,690 320,690 205,588 Z" 
                                     fill="url(#grad-stand-a)" 
-                                    stroke="#10B981" 
-                                    :stroke-width="selectedZone === 'cat1_stand' ? 4.5 : 2.5" 
+                                    :stroke="selectedZone === 'cat1_stand' || hoveredZone === 'cat1_stand' ? '#FDE047' : '#10B981'" 
+                                    :stroke-width="selectedZone === 'cat1_stand' || hoveredZone === 'cat1_stand' ? 5 : 2.5" 
+                                    :filter="selectedZone === 'cat1_stand' || hoveredZone === 'cat1_stand' ? 'url(#glow-gold)' : ''"
                                     class="transition-all"
                                 />
                                 <text x="500" y="605" fill="#D1FAE5" font-size="14" font-weight="900" text-anchor="middle">✨ KHÁN ĐÀI A (TRUNG TÂM TẦNG 1) ✨</text>
@@ -465,7 +466,7 @@
 
                             <!-- 6. VIP FLOOR A & B (MẶT SÀN TRUNG TÂM) -->
                             <g 
-                                @click="selectConcertZone('vip_gold')" 
+                                @click="selectConcertZone('vip_gold', true)" 
                                 @mouseenter="setHoveredZone('vip_gold')" 
                                 @mouseleave="clearHoveredZone()"
                                 class="cursor-pointer transition-all duration-300"
@@ -474,8 +475,9 @@
                                 <rect 
                                     x="315" y="385" width="175" height="108" rx="14" 
                                     fill="url(#grad-vip-floor)" 
-                                    stroke="#F59E0B" 
-                                    :stroke-width="selectedZone === 'vip_gold' ? 3.5 : 2" 
+                                    :stroke="selectedZone === 'vip_gold' || hoveredZone === 'vip_gold' ? '#FDE047' : '#F59E0B'" 
+                                    :stroke-width="selectedZone === 'vip_gold' || hoveredZone === 'vip_gold' ? 4 : 2" 
+                                    :filter="selectedZone === 'vip_gold' || hoveredZone === 'vip_gold' ? 'url(#glow-gold)' : ''"
                                     class="transition-all"
                                 />
                                 <text x="402" y="430" fill="#FEF3C7" font-size="12" font-weight="900" text-anchor="middle">⭐ VIP FLOOR A</text>
@@ -486,8 +488,9 @@
                                 <rect 
                                     x="510" y="385" width="175" height="108" rx="14" 
                                     fill="url(#grad-vip-floor)" 
-                                    stroke="#F59E0B" 
-                                    :stroke-width="selectedZone === 'vip_gold' ? 3.5 : 2" 
+                                    :stroke="selectedZone === 'vip_gold' || hoveredZone === 'vip_gold' ? '#FDE047' : '#F59E0B'" 
+                                    :stroke-width="selectedZone === 'vip_gold' || hoveredZone === 'vip_gold' ? 4 : 2" 
+                                    :filter="selectedZone === 'vip_gold' || hoveredZone === 'vip_gold' ? 'url(#glow-gold)' : ''"
                                     class="transition-all"
                                 />
                                 <text x="598" y="430" fill="#FEF3C7" font-size="12" font-weight="900" text-anchor="middle">⭐ VIP FLOOR B</text>
@@ -501,7 +504,7 @@
 
                             <!-- 7. GA STANDING PIT A & B (FANZONE TRÁI & PHẢI SÁT CATWALK) -->
                             <g 
-                                @click="selectConcertZone('standing_pit')" 
+                                @click="selectConcertZone('standing_pit', true)" 
                                 @mouseenter="setHoveredZone('standing_pit')" 
                                 @mouseleave="clearHoveredZone()"
                                 class="cursor-pointer transition-all duration-300"
@@ -510,8 +513,9 @@
                                 <rect 
                                     x="305" y="125" width="148" height="165" rx="18" 
                                     fill="url(#grad-pit-a)" 
-                                    stroke="#F43F5E" 
-                                    :stroke-width="selectedZone === 'standing_pit' ? 4 : 2" 
+                                    :stroke="selectedZone === 'standing_pit' || hoveredZone === 'standing_pit' ? '#FDE047' : '#F43F5E'" 
+                                    :stroke-width="selectedZone === 'standing_pit' || hoveredZone === 'standing_pit' ? 4.5 : 2" 
+                                    :filter="selectedZone === 'standing_pit' || hoveredZone === 'standing_pit' ? 'url(#glow-rose)' : ''"
                                     stroke-dasharray="6 4"
                                     class="transition-all"
                                 />
@@ -523,8 +527,9 @@
                                 <rect 
                                     x="547" y="125" width="148" height="165" rx="18" 
                                     fill="url(#grad-pit-b)" 
-                                    stroke="#F43F5E" 
-                                    :stroke-width="selectedZone === 'standing_pit' ? 4 : 2" 
+                                    :stroke="selectedZone === 'standing_pit' || hoveredZone === 'standing_pit' ? '#FDE047' : '#F43F5E'" 
+                                    :stroke-width="selectedZone === 'standing_pit' || hoveredZone === 'standing_pit' ? 4.5 : 2" 
+                                    :filter="selectedZone === 'standing_pit' || hoveredZone === 'standing_pit' ? 'url(#glow-rose)' : ''"
                                     stroke-dasharray="6 4"
                                     class="transition-all"
                                 />
@@ -535,7 +540,7 @@
 
                             <!-- 8. SVIP B-STAGE DIAMOND (VÒNG QUANH ĐẦU SÂN KHẤU B-STAGE) -->
                             <g 
-                                @click="selectConcertZone('svip_diamond')" 
+                                @click="selectConcertZone('svip_diamond', true)" 
                                 @mouseenter="setHoveredZone('svip_diamond')" 
                                 @mouseleave="clearHoveredZone()"
                                 class="cursor-pointer transition-all duration-300"
@@ -543,9 +548,9 @@
                                 <path 
                                     d="M 405,305 C 440,355 560,355 595,305 L 635,360 C 565,420 435,420 365,360 Z" 
                                     fill="url(#grad-svip-arch)" 
-                                    stroke="#FDE047" 
-                                    :stroke-width="selectedZone === 'svip_diamond' ? 4.5 : 2.5" 
-                                    :filter="selectedZone === 'svip_diamond' ? 'url(#glow-gold)' : ''"
+                                    :stroke="selectedZone === 'svip_diamond' || hoveredZone === 'svip_diamond' ? '#FFFFFF' : '#FDE047'" 
+                                    :stroke-width="selectedZone === 'svip_diamond' || hoveredZone === 'svip_diamond' ? 5 : 2.5" 
+                                    :filter="selectedZone === 'svip_diamond' || hoveredZone === 'svip_diamond' ? 'url(#glow-gold)' : ''"
                                     class="transition-all"
                                 />
                                 <text x="500" y="375" fill="#FEF08A" font-size="12" font-weight="900" text-anchor="middle">💎 SVIP B-STAGE DIAMOND 💎</text>
@@ -607,150 +612,120 @@
                     </div>
                 </div>
 
-                <!-- Cột phải: Bảng Điều Khiển & Đặt Vé Theo Phân Khu (Zone Inspector & Booking Panel) -->
+                <!-- Cột phải: Bảng Điều Khiển & Đặt Vé Theo Phân Khu (Ticketbox Zone Matrix) -->
                 <div class="lg:col-span-4 space-y-4">
                     
-                    <!-- 1. ACTIVE ZONE BOOKING CARD (Ticketbox Style) -->
-                    <div class="bg-white rounded-3xl p-6 border-2 border-black/10 shadow-xl space-y-5">
-                        
-                        @foreach ($zoneStats as $zKey => $zone)
-                            <div 
-                                x-show="selectedZone === '{{ $zKey }}'" 
-                                x-transition:enter="transition-opacity duration-200"
-                                class="space-y-4"
-                            >
-                                <!-- Header Phân Khu -->
-                                <div class="flex items-start justify-between gap-2 border-b border-black/10 pb-3">
-                                    <div class="space-y-1">
-                                        <div class="flex items-center gap-2">
-                                            <span class="text-xl">{{ $zone['icon'] }}</span>
-                                            <span class="badge-gold text-[10px] px-2.5 py-0.5 rounded-full font-black uppercase">
-                                                {{ $zone['code'] }}
-                                            </span>
-                                            <span class="text-xs text-gray-500 font-bold">
-                                                {{ $zone['gate'] }}
-                                            </span>
-                                        </div>
-                                        <h4 class="font-display font-black text-lg text-black leading-tight">
-                                            {{ $zone['name'] }}
-                                        </h4>
-                                        <p class="text-xs text-gray-500">
-                                            {{ $zone['desc'] }}
-                                        </p>
-                                    </div>
-                                </div>
-
-                                <!-- Giá vé & Tình trạng ghế -->
-                                <div class="flex items-center justify-between bg-[#FAF9F6] p-4 rounded-2xl border border-black/5">
-                                    <div>
-                                        <span class="text-[10px] text-gray-400 uppercase font-black tracking-wider block">Giá vé chính thức</span>
-                                        <span class="font-display font-black text-2xl text-black">
-                                            {{ number_format($zone['price']) }}₫
-                                        </span>
-                                    </div>
-                                    <div class="text-right">
-                                        <span class="text-[10px] text-gray-400 uppercase font-bold block">Tình trạng vé</span>
-                                        <span class="text-xs font-black text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200">
-                                            Còn trống {{ $zone['available'] }} / {{ $zone['total'] }}
-                                        </span>
-                                    </div>
-                                </div>
-
-                                <!-- Danh sách đặc quyền của khu -->
-                                @if (!empty($zone['perks']))
-                                    <div class="space-y-1.5 text-xs text-gray-700 pt-1">
-                                        <span class="text-[10px] font-black uppercase text-gray-400 tracking-wider">Đặc quyền phân khu</span>
-                                        @foreach ($zone['perks'] as $perk)
-                                            <div class="flex items-center gap-2">
-                                                <span class="text-emerald-600 font-black">✓</span>
-                                                <span class="font-medium">{{ $perk }}</span>
-                                            </div>
-                                        @endforeach
-                                    </div>
-                                @endif
-
-                                <!-- Thao tác chọn vé của phân khu này -->
-                                <div class="pt-3 border-t border-black/10 space-y-3">
-                                    <div class="flex items-center justify-between">
-                                        <span class="text-xs font-bold text-gray-700">
-                                            Vé đang chọn trong khu này:
-                                        </span>
-                                        <span class="font-mono font-black text-base text-rose-taupe" x-text="getZoneSelectedCount('{{ $zKey }}') + ' vé'">
-                                            0 vé
-                                        </span>
-                                    </div>
-
-                                    <div class="grid grid-cols-2 gap-2">
-                                        <!-- Quick Stepper: Bớt / Thêm vé -->
-                                        <button 
-                                            type="button" 
-                                            @click="quickRemoveSeatFromZone('{{ $zKey }}')"
-                                            :disabled="getZoneSelectedCount('{{ $zKey }}') <= 0"
-                                            class="py-2.5 rounded-xl border border-black/15 bg-[#FAF9F6] hover:bg-rose-50 text-xs font-black text-gray-700 hover:text-rose-taupe disabled:opacity-40 disabled:pointer-events-none transition-all flex items-center justify-center gap-1.5"
-                                        >
-                                            <span>&minus;</span>
-                                            <span>Bớt 1 vé</span>
-                                        </button>
-
-                                        <button 
-                                            type="button" 
-                                            @click="quickPickSeatFromZone('{{ $zKey }}')"
-                                            class="py-2.5 rounded-xl btn-rose text-xs font-black shadow-sm transition-all flex items-center justify-center gap-1.5 active:scale-95"
-                                        >
-                                            <span>&#43;</span>
-                                            <span>Thêm 1 vé</span>
-                                        </button>
-                                    </div>
-
-                                    <div class="p-2.5 rounded-xl bg-amber-500/10 border border-amber-400/30 text-amber-900 text-center text-[11px] font-semibold">
-                                        ✨ Vé sẽ được tự động xếp vào các vị trí đẹp nhất trong phân khu này khi bạn xác nhận giữ chỗ.
-                                    </div>
-                                </div>
-
+                    <div class="bg-white rounded-3xl p-5 sm:p-6 border-2 border-black/10 shadow-xl space-y-4">
+                        <div class="flex items-center justify-between border-b border-black/10 pb-3">
+                            <div>
+                                <h4 class="font-display font-black text-sm uppercase tracking-wider text-black flex items-center gap-2">
+                                    <span>🎟️</span>
+                                    <span>Chọn Vé Theo Phân Khu (Zone)</span>
+                                </h4>
+                                <p class="text-[11px] text-gray-500 mt-0.5">Bấm [+] hoặc click vào sơ đồ SVĐ để chọn vé</p>
                             </div>
-                        @endforeach
-
-                    </div>
-
-                    <!-- 2. QUICK ZONE SELECTOR LIST (Tất cả phân khu để click nhanh) -->
-                    <div class="bg-white rounded-3xl p-5 border border-black/10 shadow-sm space-y-3">
-                        <div class="flex items-center justify-between border-b border-black/10 pb-2">
-                            <span class="font-display font-black text-xs uppercase tracking-wider text-black">
-                                Bảng Giá Tất Cả Phân Khu
+                            <span class="badge-gold text-[10px] px-2.5 py-0.5 rounded-full font-black uppercase">
+                                Tối đa 8 vé
                             </span>
-                            <span class="text-[10px] text-gray-500 font-semibold">Click để chọn</span>
                         </div>
 
-                        <div class="space-y-2">
+                        <!-- Danh sách các phân khu vé chuẩn Ticketbox -->
+                        <div class="space-y-2.5">
                             @foreach ($zoneStats as $zKey => $zone)
-                                <button 
-                                    type="button"
+                                <div 
+                                    id="zone-card-{{ $zKey }}"
                                     @click="selectConcertZone('{{ $zKey }}')"
-                                    :class="selectedZone === '{{ $zKey }}' ? 'border-black bg-black/5 ring-2 ring-black font-black' : 'border-black/10 hover:border-black/30 bg-[#FAF9F6]'"
-                                    class="w-full p-3 rounded-2xl border text-left flex items-center justify-between transition-all group"
+                                    @mouseenter="setHoveredZone('{{ $zKey }}')"
+                                    @mouseleave="clearHoveredZone()"
+                                    :class="selectedZone === '{{ $zKey }}' ? 'border-black ring-2 ring-gold-antique bg-amber-500/5 shadow-md' : 'border-black/10 hover:border-black/30 bg-[#FAF9F6]'"
+                                    class="p-3.5 rounded-2xl border transition-all cursor-pointer group"
                                 >
-                                    <div class="flex items-center gap-2.5">
-                                        <span class="w-3.5 h-3.5 rounded-full shrink-0" style="background-color: {{ $zone['color'] }};"></span>
-                                        <div>
-                                            <span class="text-xs font-bold text-black group-hover:text-gold-dark transition-colors block">
-                                                {{ $zone['name'] }}
-                                            </span>
-                                            <span class="text-[10px] text-gray-500 font-mono">
-                                                Còn {{ $zone['available'] }} chỗ
-                                            </span>
+                                    <div class="flex items-center justify-between gap-3">
+                                        <!-- Left: Zone Color + Info -->
+                                        <div class="flex items-center gap-3 min-w-0 flex-1">
+                                            <span class="w-3.5 h-3.5 rounded-full shrink-0 shadow-xs ring-2 ring-white" style="background-color: {{ $zone['color'] }};"></span>
+                                            <div class="min-w-0 flex-1">
+                                                <div class="flex items-center gap-2 flex-wrap">
+                                                    <span class="font-display font-black text-xs text-black group-hover:text-gold-dark transition-colors truncate">
+                                                        {{ $zone['name'] }}
+                                                    </span>
+                                                    <span class="text-[9px] font-black uppercase px-1.5 py-0.2 rounded bg-black/5 text-gray-600">
+                                                        {{ $zone['code'] }}
+                                                    </span>
+                                                </div>
+                                                <div class="flex items-center gap-2 text-[11px] text-gray-500 mt-0.5">
+                                                    <span class="font-bold text-gray-700">{{ $zone['gate'] }}</span>
+                                                    <span>·</span>
+                                                    <span class="text-emerald-700 font-bold">Còn {{ $zone['available'] }} chỗ</span>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Right: Price & Stepper -->
+                                        <div class="flex items-center gap-2.5 shrink-0">
+                                            <div class="text-right">
+                                                <span class="font-display font-black text-sm text-black block">
+                                                    {{ number_format($zone['price']) }}₫
+                                                </span>
+                                                <span class="text-[9px] text-gray-400 uppercase font-bold block">
+                                                    {{ $zKey === 'standing_pit' ? 'Vé đứng' : 'Vé ngồi' }}
+                                                </span>
+                                            </div>
+
+                                            <!-- Stepper buttons [-] [count] [+] -->
+                                            <div class="flex items-center bg-white border border-black/15 rounded-xl p-0.5 shadow-xs">
+                                                <button 
+                                                    type="button"
+                                                    @click.stop="quickRemoveSeatFromZone('{{ $zKey }}')"
+                                                    :disabled="getZoneSelectedCount('{{ $zKey }}') <= 0"
+                                                    class="w-7 h-7 rounded-lg flex items-center justify-center text-gray-700 hover:bg-black hover:text-white font-black text-sm transition-all disabled:opacity-20 disabled:pointer-events-none"
+                                                    title="Giảm 1 vé"
+                                                >
+                                                    &minus;
+                                                </button>
+
+                                                <span 
+                                                    class="w-7 text-center font-mono font-black text-xs" 
+                                                    :class="getZoneSelectedCount('{{ $zKey }}') > 0 ? 'text-rose-taupe font-bold' : 'text-gray-400'"
+                                                    x-text="getZoneSelectedCount('{{ $zKey }}')"
+                                                >
+                                                    0
+                                                </span>
+
+                                                <button 
+                                                    type="button"
+                                                    @click.stop="quickPickSeatFromZone('{{ $zKey }}')"
+                                                    :disabled="getZoneSelectedCount('{{ $zKey }}') >= {{ $zone['available'] }} || totalTicketCount >= 8"
+                                                    class="w-7 h-7 rounded-lg bg-black text-white hover:bg-gold-dark font-black text-sm flex items-center justify-center transition-all disabled:opacity-20 disabled:pointer-events-none shadow-xs active:scale-95"
+                                                    title="Thêm 1 vé"
+                                                >
+                                                    &#43;
+                                                </button>
+                                            </div>
                                         </div>
                                     </div>
 
-                                    <div class="text-right">
-                                        <span class="font-display font-black text-xs text-black block">
-                                            {{ number_format($zone['price']) }}₫
-                                        </span>
-                                        <template x-if="getZoneSelectedCount('{{ $zKey }}') > 0">
-                                            <span class="badge-rose text-[9px] px-1.5 py-0.2 rounded-full font-bold" x-text="'Đã chọn ' + getZoneSelectedCount('{{ $zKey }}')"></span>
-                                        </template>
+                                    <!-- Expanded Perks info when selected -->
+                                    <div x-show="selectedZone === '{{ $zKey }}'" x-transition class="mt-2.5 pt-2.5 border-t border-black/10 flex flex-wrap gap-1.5 text-[10px] text-gray-600">
+                                        @if (!empty($zone['perks']))
+                                            @foreach ($zone['perks'] as $perk)
+                                                <span class="inline-flex items-center gap-1 bg-white px-2 py-0.5 rounded-md border border-black/5 font-medium shadow-xs">
+                                                    <span class="text-emerald-600 font-bold">✓</span>
+                                                    <span>{{ $perk }}</span>
+                                                </span>
+                                            @endforeach
+                                        @endif
                                     </div>
-                                </button>
+                                </div>
                             @endforeach
+                        </div>
+
+                        <!-- Ticketbox Guarantee Note -->
+                        <div class="p-3.5 rounded-2xl bg-gradient-to-r from-amber-50 to-amber-100/40 border border-amber-200/80 text-amber-950 text-xs flex items-center gap-2.5">
+                            <span class="text-base">✨</span>
+                            <span class="font-medium leading-relaxed">
+                                Hệ thống sẽ <strong>tự động giữ các vị trí đẹp nhất</strong> trong phân khu cho bạn khi xác nhận đặt vé.
+                            </span>
                         </div>
                     </div>
 

@@ -50,9 +50,16 @@ Alpine.data('seatBookingManager', (config = {}) => ({
         this.concertViewMode = mode;
     },
 
-    selectConcertZone(zoneKey) {
+    selectConcertZone(zoneKey, autoIncrement = false) {
         this.selectedZone = zoneKey;
         this.activeZoneFilter = zoneKey;
+        if (autoIncrement && this.getZoneSelectedCount(zoneKey) === 0) {
+            this.quickPickSeatFromZone(zoneKey);
+        }
+        const el = document.getElementById('zone-card-' + zoneKey);
+        if (el) {
+            el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
     },
 
     setHoveredZone(zoneKey) {
