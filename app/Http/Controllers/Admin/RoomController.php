@@ -374,8 +374,10 @@ class RoomController extends Controller
             \App\Models\Seat::insert($chunk);
         }
         // Zone model hooks run while zones are copied, before their seats are inserted.
-        $copiedCapacity = $newRoom->zones()->get()->sum(fn ($zone) => $zone->hasSeats() ? $zone->seats()->count() : (int) $zone->capacity)
-            + $newRoom->seats()->whereNull('zone_id')->count();
+        $copiedCapacity = $zoneIdMap === []
+            ? (int) $room->capacity
+            : $newRoom->zones()->get()->sum(fn ($zone) => $zone->hasSeats() ? $zone->seats()->count() : (int) $zone->capacity)
+                + $newRoom->seats()->whereNull('zone_id')->count();
         Room::whereKey($newRoom->id)->update(['capacity' => $copiedCapacity]);
 
         return redirect()->route('admin.rooms.index')

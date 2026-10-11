@@ -36,7 +36,7 @@ class SeatHoldService
      */
     public function hold(User $user, Showtime $showtime, array $showtimeSeatIds, array $tierQuantities = [], array $zoneQuantities = []): Collection
     {
-        $showtime->loadMissing('event');
+        $showtime->loadMissing('event', 'room');
         $event = $showtime->event;
         $tierQuantities = array_filter($tierQuantities, fn (int $quantity) => $quantity > 0);
         $zoneQuantities = array_filter($zoneQuantities, fn (int $quantity) => $quantity > 0);
@@ -56,7 +56,7 @@ class SeatHoldService
         if ($showtime->start_time->isPast()) {
             throw new SeatHoldException('Suất diễn đã bắt đầu, không thể đặt vé.');
         }
-        if ($showtimeSeatIds !== [] && ! $event->is_seated) {
+        if ($showtimeSeatIds !== [] && ! $event->is_seated && ! $showtime->room->isZoned()) {
             throw new SeatHoldException('Sự kiện này không chọn ghế trên sơ đồ, vui lòng chọn hạng vé.');
         }
         foreach (array_keys($tierQuantities) as $tier) {

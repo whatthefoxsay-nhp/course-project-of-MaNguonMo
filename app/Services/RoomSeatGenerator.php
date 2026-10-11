@@ -45,6 +45,12 @@ class RoomSeatGenerator
         return count($inserts);
     }
 
+    /** Rows used to bootstrap a legacy preset as explicit venue zones. */
+    public function rowsForPreset(string $preset, array $config = []): array
+    {
+        return $this->rows($preset, $config);
+    }
+
     /**
      * Sinh ghế từ ma trận tùy chỉnh do Admin thiết kế trực tiếp.
      */

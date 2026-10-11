@@ -13,6 +13,8 @@ use App\Models\Showtime;
 use App\Models\User;
 use App\Services\RoomSeatGenerator;
 use App\Services\ShowtimeSeatGenerator;
+use App\Services\ZoneLayoutGenerator;
+use App\Models\RoomZone;
 use App\Support\TicketTiers;
 use Carbon\Carbon;
 use Illuminate\Database\Seeder;
@@ -23,7 +25,7 @@ class DatabaseSeeder extends Seeder
     /**
      * Seed the application's database with Event categories, venues, events, showtimes and sample bookings.
      */
-    public function run(RoomSeatGenerator $roomSeats, ShowtimeSeatGenerator $showtimeSeats): void
+    public function run(RoomSeatGenerator $roomSeats, ShowtimeSeatGenerator $showtimeSeats, ZoneLayoutGenerator $zoneLayouts): void
     {
         // 1. Setup Spatie Roles
         $this->call(RoleSeeder::class);
@@ -108,8 +110,14 @@ class DatabaseSeeder extends Seeder
         $rooms = [];
         foreach (self::VENUES as $key => $venue) {
             $rooms[$key] = Room::updateOrCreate(['name' => $venue['name']], $venue);
-            if ($rooms[$key]->seats()->doesntExist()) {
-                $roomSeats->generate($rooms[$key], $venue['layout_preset'], []);
+            if ($rooms[$key]->seats()->doesntExist() && $rooms[$key]->zones()->doesntExist()) {
+                $definitions = $key === 'secc'
+                    ? [[
+                        'code' => 'EXPO', 'name' => 'Vé vào khu triển lãm', 'kind' => RoomZone::KIND_ADMISSION,
+                        'seat_type' => 'cat1_stand', 'ticket_tier' => 'standard_pass', 'capacity' => $venue['capacity'],
+                    ]]
+                    : $this->zoneDefinitionsForPreset($roomSeats, $venue['layout_preset']);
+                $zoneLayouts->generate($rooms[$key], $definitions);
             }
         }
 
@@ -312,5 +320,61 @@ class DatabaseSeeder extends Seeder
                 $showtimeSeat->update(['status' => 'booked']);
             }
         }
+    }
+
+    /** Convert each legacy preset row into a real seated zone; GA becomes capacity inventory. */
+    private function zoneDefinitionsForPreset(RoomSeatGenerator $generator, string $preset): array
+    {
+        $groups = [];
+        $standingCapacity = 0;
+        foreach ($generator->rowsForPreset($preset) as [$rowLabel, $count, $type]) {
+            if ($type === RoomZone::STANDING_TYPE) {
+                $standingCapacity += $count;
+                continue;
+            }
+
+            $parts = preg_split('/[-_]/', trim($rowLabel));
+            $prefix = strtoupper((string) ($parts[0] ?? $rowLabel));
+            $groups[$prefix.'|'.$type][] = ['row' => $rowLabel, 'count' => $count, 'type' => $type];
+        }
+
+        $zones = [];
+        foreach ($groups as $key => $rows) {
+            [$prefix, $type] = explode('|', $key, 2);
+            $code = substr(preg_replace('/[^A-Z0-9]/i', '', $prefix).match ($type) {
+                'svip_diamond' => 'S', 'vip_gold' => 'V', 'cat1_stand' => 'C1',
+                'cat2_wings' => 'C2', 'skybox_suite' => 'SB', default => 'Z',
+            }, 0, 6);
+            $layoutRows = [];
+            foreach ($rows as $row) {
+                $seats = [];
+                for ($number = 1; $number <= $row['count']; $number++) {
+                    $seats[] = ['number' => $number, 'type' => $row['type']];
+                }
+                $layoutRows[] = ['row' => $row['row'], 'seats' => $seats];
+            }
+            $label = match ($type) {
+                'svip_diamond' => 'SVIP Diamond', 'vip_gold' => 'VIP Gold',
+                'cat1_stand' => 'Khán Đài Cat 1', 'cat2_wings' => 'Khán Đài Cat 2',
+                'skybox_suite' => 'Skybox VIP', default => 'Khu ghế',
+            };
+            $zones[] = [
+                'code' => $code,
+                'name' => $label.' '.$prefix,
+                'kind' => RoomZone::KIND_SEATED,
+                'seat_type' => $type,
+                'layout' => $layoutRows,
+            ];
+        }
+
+        if ($standingCapacity > 0) {
+            $zones[] = [
+                'code' => 'GA', 'name' => 'Khu đứng GA', 'kind' => RoomZone::KIND_STANDING,
+                'seat_type' => RoomZone::STANDING_TYPE, 'ticket_tier' => 'standing_pit',
+                'capacity' => $standingCapacity,
+            ];
+        }
+
+        return $zones;
     }
 }

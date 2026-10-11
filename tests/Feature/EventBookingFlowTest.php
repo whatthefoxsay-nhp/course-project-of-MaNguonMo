@@ -64,12 +64,11 @@ test('seat map page displays concert stadium arena blueprint for seated concerts
     $response->assertStatus(200);
     $response->assertSee($movie->title);
     $response->assertSee($showtime->room->name);
-    $response->assertSee('SÂN KHẤU CHÍNH');
-    $response->assertSee('CATWALK RUNWAY');
-    $response->assertSee('GA STANDING');
-    $response->assertSee('SVIP B-Stage Floor');
-    $response->assertSee('Khán Đài A');
-    $response->assertSee('Skybox VIP Suites');
+    $response->assertSee('Sơ đồ khán phòng');
+    $response->assertSee('Khu đứng GA');
+    $response->assertSee('SVIP Diamond');
+    $response->assertSee('Khán Đài Cat 1');
+    $response->assertSee('Skybox VIP');
     $response->assertSee('Tổng Tạm Tính');
 });
 
@@ -81,10 +80,8 @@ test('ticket selection page renders direct tier selector for non-concert events'
 
     $response->assertStatus(200);
     $response->assertSee($movie->title);
-    $response->assertSee('Chọn Hạng Vé & Số Lượng Tham Dự');
-    $response->assertSee('Vé VIP Toàn Diện');
-    $response->assertSee('Vé Tiêu Chuẩn');
-    $response->assertSee('Combo Nhóm 2 Người');
+    $response->assertSee('Vé vào khu triển lãm');
+    $response->assertSee('Số vé');
     $response->assertDontSee('SÂN KHẤU CHÍNH (MAIN STAGE)');
 });
 

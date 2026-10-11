@@ -30,13 +30,15 @@ test('every showtime has one showtime seat per room seat', function () {
     expect(Showtime::count())->toBeGreaterThanOrEqual(11);
 });
 
-test('the concert runs in the stadium room with a standing row', function () {
+test('the concert room stores standing inventory as a zone rather than fake seats', function () {
     $concert = Event::firstWhere('slug', 'live-concert-anh-trai-vuot-ngan-chong-gai-2026');
     $room = $concert->showtimes()->first()->room;
 
     expect($room->layout_preset)->toBe('mega_concert')
         ->and($room->latitude)->not->toBeNull()
-        ->and($room->seats()->where('type', 'standing_pit')->count())->toBe(40);
+        ->and($room->seats()->where('type', 'standing_pit')->count())->toBe(0)
+        ->and($room->zones()->where('kind', 'standing')->value('capacity'))->toBe(40)
+        ->and($room->capacity)->toBe(252);
 });
 
 test('the demo booking is confirmed and its seats are sold', function () {

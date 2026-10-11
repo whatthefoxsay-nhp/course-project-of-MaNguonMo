@@ -29,7 +29,7 @@ test('anh trai say hi concert has showtimes at stadium room', function () {
 
     expect($showtimes)->not->toBeEmpty()
         ->and($showtimes->first()->room->layout_preset)->toBe('sayhi_concert')
-        ->and($showtimes->first()->showtimeSeats()->count())->toBe(252);
+        ->and($showtimes->first()->showtimeSeats()->count())->toBe(212);
 });
 
 test('anh trai say hi seat selection page renders stadium concert zone map', function () {
@@ -38,12 +38,9 @@ test('anh trai say hi seat selection page renders stadium concert zone map', fun
 
     $this->get(route('showtimes.seats', $showtime))
         ->assertOk()
-        ->assertSee('SÂN KHẤU CHÍNH')
-        ->assertSee('CATWALK RUNWAY')
-        ->assertSee('B-STAGE')
-        ->assertSee('GA PIT A')
-        ->assertSee('GA PIT B')
-        ->assertSee('Khán Đài A')
-        ->assertSee('Skybox VIP Suites')
+        ->assertSee('Sơ đồ khán phòng')
+        ->assertSee('Khu đứng GA')
+        ->assertSee('Khán Đài Cat 1')
+        ->assertSee('Skybox VIP')
         ->assertSee('HIEUTHUHAI', false);
 });

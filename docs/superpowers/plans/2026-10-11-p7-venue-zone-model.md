@@ -42,54 +42,54 @@ index `(showtime_id, zone_id, status)`. Vé giữ quá hạn coi như không t�
 ## Tasks
 
 ### Task 1 — Schema
-- [ ] Migration `2026_10_12_000001_extend_room_zones_kinds`: thêm cột `ticket_tier` (string, nullable), `meta` (json, nullable — vd. số chỗ/bàn); comment kind mới.
-- [ ] Migration `2026_10_12_000002_create_zone_tickets_table`.
-- [ ] Migration `2026_10_12_000003_add_zone_ticket_id_to_booking_items`: `showtime_seat_id` → nullable, thêm `zone_ticket_id` nullable FK; ràng buộc ứng dụng: đúng 1 trong 2 khác null.
-- [ ] Model `ZoneTicket` + quan hệ (`Showtime::zoneTickets`, `RoomZone::tickets`, `BookingItem::zoneTicket`).
-- [ ] `RoomZone`: hằng `KIND_TABLE`, `KIND_ADMISSION`; `sellsByQuantity()`, `hasSeats()`, `effectiveCapacity()`.
-- [ ] Test: `RoomZoneModelTest` mở rộng (kind, capacity rules). Commit `feat(venue): add zone kinds and zone_tickets inventory`.
+- [x] Migration `2026_10_12_000001_extend_room_zones_kinds`: thêm cột `ticket_tier` (string, nullable), `meta` (json, nullable — vd. số chỗ/bàn); comment kind mới.
+- [x] Migration `2026_10_12_000002_create_zone_tickets_table`.
+- [x] Migration `2026_10_12_000003_add_zone_ticket_id_to_booking_items`: `showtime_seat_id` → nullable, thêm `zone_ticket_id` nullable FK; ràng buộc ứng dụng: đúng 1 trong 2 khác null.
+- [x] Model `ZoneTicket` + quan hệ (`Showtime::zoneTickets`, `RoomZone::tickets`, `BookingItem::zoneTicket`).
+- [x] `RoomZone`: hằng `KIND_TABLE`, `KIND_ADMISSION`; `sellsByQuantity()`, `hasSeats()`, `effectiveCapacity()`.
+- [x] Test: `RoomZoneModelTest` mở rộng (kind, capacity rules). Commit `feat(venue): add zone kinds and zone_tickets inventory`.
 
 ### Task 2 — `Room::recalculateCapacity()`
-- [ ] Sức chứa = Σ(seated/table: số ghế thuộc khu; standing/admission: `capacity`) + ghế legacy chưa có khu.
-- [ ] Gọi sau mỗi lần lưu khu. Test unit. Commit.
+- [x] Sức chứa = Σ(seated/table: số ghế thuộc khu; standing/admission: `capacity`) + ghế legacy chưa có khu.
+- [x] Gọi sau mỗi lần lưu khu. Test unit. Commit.
 
 ### Task 3 — `ZoneLayoutGenerator` (thay `RoomSeatGenerator` cho phòng zoned)
-- [ ] Nhận mảng khu từ admin → upsert `room_zones`, sinh ghế thật **chỉ** cho `seated`/`table`, không tạo ghế GA.
-- [ ] Từ chối sửa khu đã có suất diễn bán vé (giống quy tắc hiện tại của `RoomSeatGenerator`).
-- [ ] Test: khu đứng 500 chỗ → 0 dòng `seats`, capacity = 500 + ghế ngồi. Commit.
+- [x] Nhận mảng khu từ admin → upsert `room_zones`, sinh ghế thật **chỉ** cho `seated`/`table`, không tạo ghế GA.
+- [x] Từ chối sửa khu đã có suất diễn bán vé (giống quy tắc hiện tại của `RoomSeatGenerator`).
+- [x] Test: khu đứng 500 chỗ → 0 dòng `seats`, capacity = 500 + ghế ngồi. Commit.
 
 ### Task 4 — Preset theo mục đích (chỉ là cấu hình khởi tạo)
-- [ ] `VenuePresets`: `outdoor_concert`, `theater`, `fixed_hall`, `conference_tables`, `admission_only`; trả về danh sách khu mặc định (không ép số ghế mẫu = sức chứa).
-- [ ] Giữ alias `mega_concert`/`sayhi_concert*` → map sang `outdoor_concert` để không vỡ dữ liệu/test cũ. Commit.
+- [x] `VenuePresets`: `outdoor_concert`, `theater`, `fixed_hall`, `conference_tables`, `admission_only`; trả về danh sách khu mặc định (không ép số ghế mẫu = sức chứa).
+- [x] Giữ alias `mega_concert`/`sayhi_concert*` → map sang `outdoor_concert` để không vỡ dữ liệu/test cũ. Commit.
 
 ### Task 5 — Admin: CRUD khu
 - [ ] `RoomController` + builder: danh sách khu (thêm/sửa/xóa/sắp xếp), form theo kind
   (seated: hàng × ghế + cọ vẽ hiện có; table: số bàn × chỗ/bàn; standing/admission: sức chứa), tổng sức chứa tự tính, ô capacity read-only.
-- [ ] `AdminRoomBuilderTest` cho từng kind. Commit.
+- [x] `AdminRoomBuilderTest` cho từng kind. Commit.
 
 ### Task 6 — Đặt vé theo số lượng qua `zone_tickets`
-- [ ] `SeatHoldService::hold()` nhận thêm `zones: {zone_id: qty}`; với khu `standing/admission`: lock `room_zones` row, đếm vé hiệu lực, tạo `zone_tickets` held.
-- [ ] `release`, `releaseExpired`, giới hạn 8 vé, "1 user 1 suất" tính gộp ghế + zone_tickets.
-- [ ] `HoldSeatsRequest`: thêm `zones`. Giữ tương thích `tiers.standing_pit` → map về khu đứng đầu tiên.
-- [ ] Test: bán vượt sức chứa bị chặn; vé hết hạn được bán lại; tổng 8 vé. Commit.
+- [x] `SeatHoldService::hold()` nhận thêm `zones: {zone_id: qty}`; với khu `standing/admission`: lock `room_zones` row, đếm vé hiệu lực, tạo `zone_tickets` held.
+- [x] `release`, `releaseExpired`, giới hạn 8 vé, "1 user 1 suất" tính gộp ghế + zone_tickets.
+- [x] `HoldSeatsRequest`: thêm `zones`. Giữ tương thích `tiers.standing_pit` → map về khu đứng đầu tiên.
+- [x] Test: bán vượt sức chứa bị chặn; vé hết hạn được bán lại; tổng 8 vé. Commit.
 
 ### Task 7 — Giỏ vé, checkout, lịch sử, admin booking
-- [ ] `CartController`/`CheckoutService`: gộp ghế đang giữ + `zone_tickets` đang giữ → `booking_items` (seat hoặc zone_ticket).
-- [ ] Hủy đơn admin nhả cả `zone_tickets`. E-ticket hiển thị "Khu đứng GA — vé số N".
-- [ ] Cập nhật `CheckoutTest`, `CartAndHistoryTest`. Commit.
+- [x] `CartController`/`CheckoutService`: gộp ghế đang giữ + `zone_tickets` đang giữ → `booking_items` (seat hoặc zone_ticket).
+- [x] Hủy đơn admin nhả cả `zone_tickets`. E-ticket hiển thị "Khu đứng GA — vé số N".
+- [x] Cập nhật `CheckoutTest`, `CartAndHistoryTest`. Commit.
 
 ### Task 8 — Trang chọn chỗ khách hàng
-- [ ] `SeatMapPresenter` trả thêm `zones` (kind, còn trống, giá). Khu ngồi/bàn → sơ đồ ghế; khu đứng/vé vào cửa → stepper số lượng (dùng UI zone matrix hiện có).
-- [ ] `app.js`: gửi `zones` thay cho `standingCount`. Nút "Đặt cả bàn". `npm run build`. Cập nhật `SeatMapPageTest`. Commit.
+- [x] `SeatMapPresenter` trả thêm `zones` (kind, còn trống, giá). Khu ngồi/bàn → sơ đồ ghế; khu đứng/vé vào cửa → stepper số lượng (dùng UI zone matrix hiện có).
+- [x] `app.js`: gửi `zones` thay cho `standingCount`. Nút "Đặt cả bàn". `npm run build`. Cập nhật `SeatMapPageTest`. Commit.
 
 ### Task 9 — Lệnh chuyển dữ liệu `rooms:migrate-zones {--dry-run}`
-- [ ] Với mỗi phòng chưa có khu: gom ghế theo (tiền tố `row_label`, `type`) → tạo khu `seated`, gán `zone_id`.
-- [ ] Ghế `standing_pit`: không có `booking_items` & không đang giữ → xóa (kèm `showtime_seats`), cộng vào `capacity` khu `standing`; còn lại giữ làm legacy gắn khu đứng.
-- [ ] In bảng: phòng | capacity cũ | Σ khu | lệch | số ghế GA xóa/giữ. Dry-run chạy trong transaction rồi rollback.
-- [ ] Test trên seeder. Commit.
+- [x] Với mỗi phòng chưa có khu: gom ghế theo (tiền tố `row_label`, `type`) → tạo khu `seated`, gán `zone_id`.
+- [x] Ghế `standing_pit`: không có `booking_items` & không đang giữ → xóa (kèm `showtime_seats`), cộng vào `capacity` khu `standing`; còn lại giữ làm legacy gắn khu đứng.
+- [x] In bảng: phòng | capacity cũ | Σ khu | lệch | số ghế GA xóa/giữ. Dry-run chạy trong transaction rồi rollback.
+- [x] Test trên seeder. Commit.
 
 ### Task 10 — Seeder & tài liệu
-- [ ] Seeder tạo phòng theo khu (không ghế ảo). Cập nhật `docs/architecture.md`. Commit.
+- [x] Seeder tạo phòng theo khu (không ghế ảo). Cập nhật `docs/architecture.md`. Commit.
 
 ## Rủi ro
 - `booking_items.showtime_seat_id` nullable ảnh hưởng mọi chỗ `->showtimeSeat->seat` (lịch sử, admin, PDF báo cáo) → grep & null-safe trong Task 7.
