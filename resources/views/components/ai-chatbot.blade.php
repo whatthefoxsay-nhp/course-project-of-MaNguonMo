@@ -418,9 +418,9 @@ document.addEventListener('alpine:init', () => {
             this.sendMessage();
         },
 
-        sendMessage() {
+        async sendMessage() {
             const query = this.userInput.trim();
-            if (!query) return;
+            if (!query || this.isTyping) return;
 
             // Add user message
             this.messages.push({
@@ -433,18 +433,44 @@ document.addEventListener('alpine:init', () => {
             this.isTyping = true;
             this.scrollToBottom();
 
-            // Simulate intelligent AI processing with realistic delay
-            setTimeout(() => {
-                const response = this.generateBotResponse(query);
+            try {
+                const response = await fetch('{{ route("chatbot.message") }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '{{ csrf_token() }}',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        message: query,
+                        history: this.messages.slice(-5, -1)
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error('HTTP error ' + response.status);
+                }
+
+                const data = await response.json();
                 this.messages.push({
                     sender: 'bot',
-                    text: response.text,
+                    text: data.reply,
                     time: new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }),
-                    event: response.event || null
+                    event: null
                 });
+            } catch (error) {
+                console.warn('Gemini chatbot fallback to local engine:', error);
+                const fallback = this.generateBotResponse(query);
+                this.messages.push({
+                    sender: 'bot',
+                    text: fallback.text,
+                    time: new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }),
+                    event: fallback.event || null
+                });
+            } finally {
                 this.isTyping = false;
                 this.scrollToBottom();
-            }, 550 + Math.random() * 350);
+            }
         },
 
         generateBotResponse(query) {

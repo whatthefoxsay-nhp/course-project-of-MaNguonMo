@@ -17,6 +17,7 @@ use App\Http\Controllers\HomeController;
 use App\Http\Controllers\MovieController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SeatHoldController;
+use App\Http\Controllers\ChatbotController;
 use App\Http\Controllers\ShowtimeController;
 use Illuminate\Support\Facades\Route;
 
@@ -30,6 +31,11 @@ Route::get('/movies', [EventController::class, 'index'])->name('movies.index');
 Route::get('/movies/{slug}', [EventController::class, 'show'])->name('movies.show');
 Route::get('/showtimes/{showtime}/seats', [ShowtimeController::class, 'seats'])->name('showtimes.seats');
 Route::get('/showtimes/{showtime}/seat-status', [ShowtimeController::class, 'seatStatus'])->name('showtimes.seat-status');
+
+// Chatbot AI
+Route::post('/chatbot/message', [ChatbotController::class, 'sendMessage'])
+    ->middleware('throttle:30,1')
+    ->name('chatbot.message');
 
 Route::middleware('auth')->group(function () {
     Route::post('/showtimes/{showtime}/holds', [SeatHoldController::class, 'store'])

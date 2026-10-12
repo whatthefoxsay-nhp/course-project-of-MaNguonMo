@@ -139,7 +139,7 @@
     <!-- Modern Luxury Collapsible Sidebar (Navy Dark + Amber Accent) -->
     <aside 
         class="admin-sidebar fixed inset-y-0 left-0 border-r z-30 flex flex-col justify-between shadow-2xl transition-all duration-300 ease-in-out"
-        :class="sidebarCollapsed ? 'w-20' : 'w-64'"
+        :class="sidebarCollapsed ? 'w-20' : 'w-72'"
     >
         <div>
             <!-- Admin Brand & Collapse Toggle -->
@@ -204,7 +204,7 @@
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
                                 </svg>
                             </div>
-                            <span x-show="!sidebarCollapsed" x-transition class="truncate">Tổng Quan (KPIs)</span>
+                            <span x-show="!sidebarCollapsed" x-transition class="whitespace-nowrap">Tổng Quan (KPIs)</span>
                         </a>
 
                         <a 
@@ -218,7 +218,7 @@
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                                 </svg>
                             </div>
-                            <span x-show="!sidebarCollapsed" x-transition class="truncate">Báo Cáo Doanh Thu</span>
+                            <span x-show="!sidebarCollapsed" x-transition class="whitespace-nowrap">Báo Cáo Doanh Thu</span>
                         </a>
                     </div>
                 </div>
@@ -227,7 +227,7 @@
                 <div>
                     <div x-show="!sidebarCollapsed" x-transition class="px-2 pb-2 flex items-center gap-2">
                         <span class="w-1.5 h-1.5 rounded-full shrink-0" style="background-color: var(--accent);"></span>
-                        <span class="text-[11px] font-bold uppercase tracking-[0.08em] truncate" style="color: var(--group-title); opacity: 0.85;">Quản Trị Nội Dung</span>
+                        <span class="text-[11px] font-bold uppercase tracking-[0.08em] whitespace-nowrap" style="color: var(--group-title); opacity: 0.85;">Quản Trị Nội Dung</span>
                     </div>
                     <div x-show="sidebarCollapsed" class="w-6 h-px mx-auto my-2" style="background-color: var(--border-subtle);"></div>
                     <div class="space-y-1.5">
@@ -242,7 +242,7 @@
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
                                 </svg>
                             </div>
-                            <span x-show="!sidebarCollapsed" x-transition class="truncate">Danh Mục</span>
+                            <span x-show="!sidebarCollapsed" x-transition class="whitespace-nowrap">Danh Mục</span>
                         </a>
 
                         <a 
@@ -256,7 +256,7 @@
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 4v16M17 4v16M3 8h4m10 0h4M3 12h18M3 16h4m10 0h4M4 20h16a1 1 0 001-1V5a1 1 0 00-1-1H4a1 1 0 00-1 1v14a1 1 0 001 1z" />
                                 </svg>
                             </div>
-                            <span x-show="!sidebarCollapsed" x-transition class="truncate">Quản Lý Sự Kiện</span>
+                            <span x-show="!sidebarCollapsed" x-transition class="whitespace-nowrap">Quản Lý Sự Kiện</span>
                         </a>
 
                         <a 
@@ -270,7 +270,7 @@
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                                 </svg>
                             </div>
-                            <span x-show="!sidebarCollapsed" x-transition class="truncate">Lịch Diễn &amp; Suất Chiếu</span>
+                            <span x-show="!sidebarCollapsed" x-transition class="whitespace-nowrap">Lịch Diễn &amp; Suất Chiếu</span>
                         </a>
 
                         <a 
@@ -284,7 +284,7 @@
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
                                 </svg>
                             </div>
-                            <span x-show="!sidebarCollapsed" x-transition class="truncate">Khán Phòng &amp; Sơ Đồ Ghế</span>
+                            <span x-show="!sidebarCollapsed" x-transition class="whitespace-nowrap">Khán Phòng &amp; Sơ Đồ Ghế</span>
                         </a>
                     </div>
                 </div>
@@ -293,7 +293,7 @@
                 <div>
                     <div x-show="!sidebarCollapsed" x-transition class="px-2 pb-2 flex items-center gap-2">
                         <span class="w-1.5 h-1.5 rounded-full shrink-0" style="background-color: var(--accent);"></span>
-                        <span class="text-[11px] font-bold uppercase tracking-[0.08em] truncate" style="color: var(--group-title); opacity: 0.85;">Bán Vé &amp; Khách Hàng</span>
+                        <span class="text-[11px] font-bold uppercase tracking-[0.08em] whitespace-nowrap" style="color: var(--group-title); opacity: 0.85;">Bán Vé &amp; Khách Hàng</span>
                     </div>
                     <div x-show="sidebarCollapsed" class="w-6 h-px mx-auto my-2" style="background-color: var(--border-subtle);"></div>
                     <div class="space-y-1.5">
@@ -308,7 +308,7 @@
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
                                 </svg>
                             </div>
-                            <span x-show="!sidebarCollapsed" x-transition class="truncate">Danh Sách Đơn Đặt Vé</span>
+                            <span x-show="!sidebarCollapsed" x-transition class="whitespace-nowrap">Danh Sách Đơn Đặt Vé</span>
                         </a>
 
                         <a 
@@ -322,7 +322,7 @@
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
                                 </svg>
                             </div>
-                            <span x-show="!sidebarCollapsed" x-transition class="truncate">Quản Lý Mã Giảm</span>
+                            <span x-show="!sidebarCollapsed" x-transition class="whitespace-nowrap">Quản Lý Mã Giảm</span>
                         </a>
 
                         <a 
@@ -336,7 +336,7 @@
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
                                 </svg>
                             </div>
-                            <span x-show="!sidebarCollapsed" x-transition class="truncate">Quản Lý Tài Khoản</span>
+                            <span x-show="!sidebarCollapsed" x-transition class="whitespace-nowrap">Quản Lý Tài Khoản</span>
                         </a>
                     </div>
                 </div>
@@ -345,7 +345,7 @@
                 <div>
                     <div x-show="!sidebarCollapsed" x-transition class="px-2 pb-2 flex items-center gap-2">
                         <span class="w-1.5 h-1.5 rounded-full shrink-0" style="background-color: var(--accent);"></span>
-                        <span class="text-[11px] font-bold uppercase tracking-[0.08em] truncate" style="color: var(--group-title); opacity: 0.85;">Hệ Thống</span>
+                        <span class="text-[11px] font-bold uppercase tracking-[0.08em] whitespace-nowrap" style="color: var(--group-title); opacity: 0.85;">Hệ Thống</span>
                     </div>
                     <div x-show="sidebarCollapsed" class="w-6 h-px mx-auto my-2" style="background-color: var(--border-subtle);"></div>
                     <a 
@@ -359,7 +359,7 @@
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                             </svg>
                         </div>
-                        <span x-show="!sidebarCollapsed" x-transition class="truncate">Xem Trang Khách Hàng</span>
+                        <span x-show="!sidebarCollapsed" x-transition class="whitespace-nowrap">Xem Trang Khách Hàng</span>
                     </a>
                 </div>
             </nav>
@@ -410,7 +410,7 @@
     <!-- Main Content Panel (Bright White Canvas) -->
     <div 
         class="min-h-screen flex flex-col min-w-0 bg-[#FAF9F6] transition-all duration-300 ease-in-out"
-        :class="sidebarCollapsed ? 'pl-20' : 'pl-64'"
+        :class="sidebarCollapsed ? 'pl-20' : 'pl-72'"
     >
         <!-- Admin Topbar (Bright Surface) -->
         <header class="h-20 bg-white/95 backdrop-blur-xl border-b border-black/10 px-4 sm:px-6 lg:px-8 flex items-center justify-between sticky top-0 z-20 shadow-sm">
