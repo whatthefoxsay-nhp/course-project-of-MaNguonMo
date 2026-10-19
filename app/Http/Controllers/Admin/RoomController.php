@@ -10,6 +10,8 @@ use App\Support\ZoneCanvas;
 use App\Support\VenuePresets;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
 class RoomController extends Controller
@@ -194,51 +196,23 @@ class RoomController extends Controller
             'custom_layout_matrix' => 'nullable|string',
         ]);
 
-        $customMatrix = null;
-        if (! empty($validated['custom_layout_matrix'])) {
-            $decoded = json_decode($validated['custom_layout_matrix'], true);
-            if (is_array($decoded) && ! empty($decoded)) {
-                $customMatrix = $decoded;
-            }
-        }
+        [$customMatrix, $seatConfig] = $this->validatedSeatLayout($request, $validated);
 
-        $seatConfig = [
-            'base_price' => (float) ($validated['base_price'] ?? 250000),
-            'rows' => (int) ($validated['rows'] ?? 10),
-            'cols' => (int) ($validated['cols'] ?? 14),
-            'vip_ratio' => (int) ($validated['vip_ratio'] ?? 30),
-            'svip_ratio' => (int) ($validated['svip_ratio'] ?? 15),
-        ];
+        // Tạo phòng + sinh ghế trong 1 transaction: lỗi giữa chừng không để lại phòng 0 ghế.
+        $room = DB::transaction(function () use ($validated, $seatConfig, $customMatrix, $generator) {
+            $room = Room::create([
+                'name' => $validated['name'],
+                'address' => $validated['address'] ?? 'Trung tâm Tổ chức Sự kiện',
+                'capacity' => (int) $validated['capacity'],
+                'layout_preset' => $validated['layout_preset'],
+                'diagram_mode' => Room::MODE_SEATS,
+                'seat_config' => $seatConfig,
+            ]);
 
-        if ($customMatrix) {
-            $seatConfig['matrix'] = $customMatrix;
-        }
+            $this->generateSeats($generator, $room, $validated['layout_preset'], $seatConfig, $customMatrix);
 
-        if ($request->filled('stage_type')) {
-            $seatConfig['stage_type'] = $request->input('stage_type');
-        }
-
-        if ($request->filled('standing_zones')) {
-            $sz = json_decode($request->input('standing_zones'), true);
-            if (is_array($sz)) {
-                $seatConfig['standing_zones'] = $sz;
-            }
-        }
-
-        $room = Room::create([
-            'name' => $validated['name'],
-            'address' => $validated['address'] ?? 'Trung tâm Tổ chức Sự kiện',
-            'capacity' => (int) $validated['capacity'],
-            'layout_preset' => $validated['layout_preset'],
-            'diagram_mode' => Room::MODE_SEATS,
-            'seat_config' => $seatConfig,
-        ]);
-
-        if ($customMatrix) {
-            $seatCount = $generator->generateFromMatrix($room, $customMatrix, $validated['layout_preset'], $seatConfig);
-        } else {
-            $seatCount = $generator->generate($room, $validated['layout_preset'], $seatConfig);
-        }
+            return $room;
+        });
 
         return redirect()->route('admin.rooms.index')
             ->with('success', "Đã tạo khán phòng [{$room->name}] và lưu sơ đồ tùy chỉnh thành công ({$room->capacity} chỗ)!");
@@ -263,37 +237,6 @@ class RoomController extends Controller
             'custom_layout_matrix' => 'nullable|string',
         ]);
 
-        $customMatrix = null;
-        if (! empty($validated['custom_layout_matrix'])) {
-            $decoded = json_decode($validated['custom_layout_matrix'], true);
-            if (is_array($decoded) && ! empty($decoded)) {
-                $customMatrix = $decoded;
-            }
-        }
-
-        $seatConfig = [
-            'base_price' => (float) ($validated['base_price'] ?? 250000),
-            'rows' => (int) ($validated['rows'] ?? 10),
-            'cols' => (int) ($validated['cols'] ?? 14),
-            'vip_ratio' => (int) ($validated['vip_ratio'] ?? 30),
-            'svip_ratio' => (int) ($validated['svip_ratio'] ?? 15),
-        ];
-
-        if ($customMatrix) {
-            $seatConfig['matrix'] = $customMatrix;
-        }
-
-        if ($request->filled('stage_type')) {
-            $seatConfig['stage_type'] = $request->input('stage_type');
-        }
-
-        if ($request->filled('standing_zones')) {
-            $sz = json_decode($request->input('standing_zones'), true);
-            if (is_array($sz)) {
-                $seatConfig['standing_zones'] = $sz;
-            }
-        }
-
         if ($room->showtimes()->exists()) {
             // Đã có suất diễn: KHÔNG sinh lại ghế (sẽ cascade xóa vé đã bán).
             $room->update([
@@ -306,20 +249,20 @@ class RoomController extends Controller
                 ->with('warning', "Đã cập nhật thông tin [{$room->name}]. Khán phòng đã có suất diễn nên sơ đồ ghế được giữ nguyên. Hãy dùng nút Nhân Bản nếu muốn tạo phiên bản sơ đồ mới!");
         }
 
-        $room->update([
-            'name' => $validated['name'],
-            'address' => $validated['address'] ?? $room->address,
-            'capacity' => (int) $validated['capacity'],
-            'layout_preset' => $validated['layout_preset'],
-            'diagram_mode' => Room::MODE_SEATS,
-            'seat_config' => $seatConfig,
-        ]);
+        [$customMatrix, $seatConfig] = $this->validatedSeatLayout($request, $validated);
 
-        if ($customMatrix) {
-            $seatCount = $generator->generateFromMatrix($room, $customMatrix, $validated['layout_preset'], $seatConfig);
-        } else {
-            $seatCount = $generator->generate($room, $validated['layout_preset'], $seatConfig);
-        }
+        DB::transaction(function () use ($room, $validated, $seatConfig, $customMatrix, $generator) {
+            $room->update([
+                'name' => $validated['name'],
+                'address' => $validated['address'] ?? $room->address,
+                'capacity' => (int) $validated['capacity'],
+                'layout_preset' => $validated['layout_preset'],
+                'diagram_mode' => Room::MODE_SEATS,
+                'seat_config' => $seatConfig,
+            ]);
+
+            $this->generateSeats($generator, $room, $validated['layout_preset'], $seatConfig, $customMatrix);
+        });
 
         return redirect()->route('admin.rooms.index')
             ->with('success', "Đã cập nhật khán phòng [{$room->name}] và tái tạo sơ đồ ghế thành công ({$room->capacity} chỗ)!");
@@ -355,23 +298,199 @@ class RoomController extends Controller
             return redirect()->route('admin.rooms.index')->with('warning', "Khán phòng [{$room->name}] đã có suất diễn nên không thể sửa khu vực. Hãy nhân bản phòng để tạo sơ đồ mới.");
         }
 
-        $room ??= new Room;
-        $room->fill([
-            'name' => $validated['name'],
-            'address' => $validated['address'] ?? 'Trung tâm Tổ chức Sự kiện',
-            'layout_preset' => $validated['layout_preset'] === Room::ZONED_PRESET ? 'outdoor_concert' : $validated['layout_preset'],
-            'diagram_mode' => Room::MODE_ZONES,
-            'seat_config' => ['base_price' => 250000],
-        ]);
-        $room->save();
+        $this->assertZoneLayoutsValid($zones);
 
-        try {
+        // Lưu phòng + sinh khu/ghế trong 1 transaction: lỗi giữa chừng không để lại phòng rỗng.
+        $room = DB::transaction(function () use ($room, $validated, $zones) {
+            $room ??= new Room;
+            $room->fill([
+                'name' => $validated['name'],
+                'address' => $validated['address'] ?? 'Trung tâm Tổ chức Sự kiện',
+                'layout_preset' => $validated['layout_preset'] === Room::ZONED_PRESET ? 'outdoor_concert' : $validated['layout_preset'],
+                'diagram_mode' => Room::MODE_ZONES,
+                'seat_config' => ['base_price' => 250000],
+            ]);
+            $room->save();
+
             app(ZoneLayoutGenerator::class)->generate($room, $zones);
-        } catch (\Illuminate\Validation\ValidationException $exception) {
-            throw $exception;
-        }
+
+            return $room;
+        });
 
         return redirect()->route('admin.rooms.index')->with('success', "Đã lưu khán phòng [{$room->name}] với sức chứa {$room->fresh()->capacity} chỗ.");
+    }
+
+    private function generateSeats(RoomSeatGenerator $generator, Room $room, string $preset, array $seatConfig, ?array $customMatrix): int
+    {
+        return $customMatrix
+            ? $generator->generateFromMatrix($room, $customMatrix, $preset, $seatConfig)
+            : $generator->generate($room, $preset, $seatConfig);
+    }
+
+    /**
+     * Đọc + kiểm tra sơ đồ ghế tùy chỉnh (JSON) để dữ liệu xấu trả lỗi validation thay vì lỗi 500
+     * (vd. trùng hàng+số ghế vi phạm unique, tên hàng dài hơn cột row_label).
+     *
+     * @return array{0: array|null, 1: array} [ma trận ghế hoặc null, seat_config]
+     *
+     * @throws ValidationException
+     */
+    private function validatedSeatLayout(Request $request, array $validated): array
+    {
+        $fail = fn (string $field, string $message) => throw ValidationException::withMessages([$field => $message]);
+
+        $customMatrix = null;
+        if (! empty($validated['custom_layout_matrix'])) {
+            $decoded = json_decode($validated['custom_layout_matrix'], true);
+            if (! is_array($decoded)) {
+                $fail('custom_layout_matrix', 'Sơ đồ ghế tùy chỉnh không đúng định dạng.');
+            }
+            $customMatrix = $decoded === [] ? null : array_values($decoded);
+        }
+
+        $standingZones = null;
+        if ($request->filled('standing_zones')) {
+            $decoded = json_decode((string) $request->input('standing_zones'), true);
+            if (! is_array($decoded)) {
+                $fail('standing_zones', 'Cấu hình khu đứng không đúng định dạng.');
+            }
+            $standingZones = $decoded;
+        }
+
+        if ($customMatrix !== null) {
+            $taken = [];
+            $seatCount = 0;
+            foreach ($customMatrix as $row) {
+                if (! is_array($row)) {
+                    $fail('custom_layout_matrix', 'Sơ đồ ghế tùy chỉnh không đúng định dạng.');
+                }
+                $label = is_scalar($row['row'] ?? null) ? trim((string) $row['row']) : '';
+                if ($label === '') {
+                    continue; // generator cũng bỏ qua hàng không tên
+                }
+                if (mb_strlen($label) > 16) {
+                    $fail('custom_layout_matrix', "Tên hàng ghế \"{$label}\" tối đa 16 ký tự.");
+                }
+                if (isset($row['seats']) && ! is_array($row['seats'])) {
+                    $fail('custom_layout_matrix', "Danh sách ghế của hàng {$label} không hợp lệ.");
+                }
+                $taken[$label] ??= [];
+                foreach ($row['seats'] ?? [] as $seat) {
+                    if (! is_array($seat)) {
+                        $fail('custom_layout_matrix', "Danh sách ghế của hàng {$label} không hợp lệ.");
+                    }
+                    if (! empty($seat['is_aisle']) || ($seat['type'] ?? '') === 'aisle') {
+                        continue;
+                    }
+                    $number = filter_var($seat['number'] ?? null, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1, 'max_range' => 65535]]);
+                    if ($number === false) {
+                        $fail('custom_layout_matrix', "Số ghế ở hàng {$label} phải là số nguyên dương.");
+                    }
+                    if (isset($taken[$label][$number])) {
+                        $fail('custom_layout_matrix', "Ghế {$label}{$number} bị trùng trong sơ đồ.");
+                    }
+                    $taken[$label][$number] = true;
+                    $seatCount++;
+                }
+            }
+
+            foreach ($standingZones ?? [] as $zone) {
+                $code = is_array($zone) && is_scalar($zone['code'] ?? 'GA') ? trim((string) ($zone['code'] ?? 'GA')) : null;
+                $capacity = is_array($zone) ? filter_var($zone['capacity'] ?? 20, FILTER_VALIDATE_INT, ['options' => ['min_range' => 0, 'max_range' => 10000]]) : false;
+                if ($code === null || $capacity === false || mb_strlen($code) > 16) {
+                    $fail('standing_zones', 'Mã khu đứng tối đa 16 ký tự và sức chứa từ 0 đến 10.000.');
+                }
+                $code = $code === '' ? 'GA' : $code;
+                if (isset($taken[$code])) {
+                    $fail('standing_zones', "Mã khu đứng \"{$code}\" bị trùng với hàng ghế hoặc khu đứng khác.");
+                }
+                $taken[$code] = [];
+                $seatCount += $capacity;
+            }
+
+            if ($seatCount === 0) {
+                $fail('custom_layout_matrix', 'Sơ đồ cần có ít nhất 1 ghế.');
+            }
+        }
+
+        $seatConfig = [
+            'base_price' => (float) ($validated['base_price'] ?? 250000),
+            'rows' => (int) ($validated['rows'] ?? 10),
+            'cols' => (int) ($validated['cols'] ?? 14),
+            'vip_ratio' => (int) ($validated['vip_ratio'] ?? 30),
+            'svip_ratio' => (int) ($validated['svip_ratio'] ?? 15),
+        ];
+
+        if ($customMatrix) {
+            $seatConfig['matrix'] = $customMatrix;
+        }
+
+        if ($request->filled('stage_type')) {
+            $seatConfig['stage_type'] = $request->input('stage_type');
+        }
+
+        if ($standingZones !== null) {
+            $seatConfig['standing_zones'] = $standingZones;
+        }
+
+        return [$customMatrix, $seatConfig];
+    }
+
+    /**
+     * Sơ đồ ghế tự vẽ của từng khu: mã khu không trùng, nhãn hàng vừa cột row_label,
+     * số ghế dương và không trùng trong khu.
+     *
+     * @throws ValidationException
+     */
+    private function assertZoneLayoutsValid(array $zones): void
+    {
+        $fail = fn (string $message) => throw ValidationException::withMessages(['zones' => $message]);
+        $codes = [];
+
+        foreach ($zones as $zone) {
+            $code = strtoupper(trim((string) $zone['code']));
+            if (isset($codes[$code])) {
+                $fail("Mã khu vực \"{$code}\" bị trùng.");
+            }
+            $codes[$code] = true;
+
+            if (! in_array($zone['kind'], ['seated', 'table'], true) || ! array_key_exists('layout', $zone) || $zone['layout'] === null) {
+                continue;
+            }
+            if (! is_array($zone['layout'])) {
+                $fail("Sơ đồ ghế của khu {$zone['name']} không hợp lệ.");
+            }
+
+            $taken = [];
+            foreach ($zone['layout'] as $row) {
+                if (! is_array($row) || (isset($row['seats']) && ! is_array($row['seats']))) {
+                    $fail("Sơ đồ ghế của khu {$zone['name']} không hợp lệ.");
+                }
+                $label = is_scalar($row['row'] ?? null) ? trim((string) $row['row']) : '';
+                if ($label === '') {
+                    continue;
+                }
+                if (mb_strlen($code.'-'.$label) > 16) {
+                    $fail("Tên hàng \"{$label}\" của khu {$zone['name']} quá dài.");
+                }
+                foreach ($row['seats'] ?? [] as $seat) {
+                    if (! is_array($seat)) {
+                        $fail("Sơ đồ ghế của khu {$zone['name']} không hợp lệ.");
+                    }
+                    if (! empty($seat['is_aisle']) || ($seat['type'] ?? '') === 'aisle') {
+                        continue;
+                    }
+                    $number = filter_var($seat['number'] ?? null, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1, 'max_range' => 65535]]);
+                    if ($number === false) {
+                        $fail("Số ghế ở hàng {$label} của khu {$zone['name']} phải là số nguyên dương.");
+                    }
+                    if (isset($taken[$label][$number])) {
+                        $fail("Ghế {$label}{$number} của khu {$zone['name']} bị trùng.");
+                    }
+                    $taken[$label][$number] = true;
+                }
+            }
+        }
     }
 
     public function duplicate(Room $room): RedirectResponse
