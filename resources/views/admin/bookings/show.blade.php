@@ -220,6 +220,16 @@
                             @endforelse
                         </tbody>
                         <tfoot class="border-t-2 border-black/10 font-bold bg-[#FAF9F6]">
+                            @if($booking->discount_amount > 0)
+                                <tr>
+                                    <td colspan="3" class="pt-4 px-4 text-gray-600 text-xs">
+                                        Mã giảm giá{{ $booking->discount ? ': '.$booking->discount->code : ' (mã đã bị xóa)' }}
+                                    </td>
+                                    <td class="pt-4 px-4 text-right text-xs text-emerald-700 font-black font-mono">
+                                        -{{ number_format($booking->discount_amount, 0, ',', '.') }}₫
+                                    </td>
+                                </tr>
+                            @endif
                             <tr>
                                 <td colspan="3" class="py-4 px-4 text-black text-sm">Tổng Cộng Thanh Toán:</td>
                                 <td class="py-4 px-4 text-right text-base text-black font-black font-mono">

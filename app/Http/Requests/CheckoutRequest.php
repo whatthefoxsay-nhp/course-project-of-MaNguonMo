@@ -29,6 +29,7 @@ class CheckoutRequest extends FormRequest
             'buyer_name' => ['required', 'string', 'max:100'],
             'buyer_phone' => ['required', 'string', 'regex:/^\+?[0-9][0-9 .\-]{7,18}$/'],
             'buyer_email' => ['nullable', 'email', 'max:255'],
+            'discount_code' => ['nullable', 'string', 'max:32'],
         ];
     }
 
@@ -39,6 +40,7 @@ class CheckoutRequest extends FormRequest
             'buyer_name' => 'họ tên người nhận vé',
             'buyer_phone' => 'số điện thoại',
             'buyer_email' => 'email',
+            'discount_code' => 'mã giảm giá',
         ];
     }
 

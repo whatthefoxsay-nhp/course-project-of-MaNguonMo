@@ -1,8 +1,10 @@
 <?php
 
 use App\Models\Booking;
+use App\Models\Discount;
 use App\Models\Event;
 use App\Models\Showtime;
+use App\Services\CheckoutService;
 use App\Services\SeatHoldService;
 
 beforeEach(fn () => $this->seed());
@@ -120,6 +122,129 @@ test('checkout is refused when the event is no longer published', function () {
         ->assertJsonPath('message', 'Sự kiện hiện không mở bán, không thể thanh toán.');
 
     expect(Booking::where('user_id', $user->id)->exists())->toBeFalse();
+});
+
+function makeDiscount(array $overrides = []): Discount
+{
+    return Discount::create(array_merge([
+        'code' => 'GIAM10',
+        'title' => 'Giảm 10%',
+        'discount_type' => 'percentage',
+        'discount_value' => 10,
+        'min_order_value' => 0,
+        'max_discount_amount' => null,
+        'max_uses' => 5,
+        'used_count' => 0,
+        'start_date' => now()->subDay()->toDateString(),
+        'end_date' => now()->addDay()->toDateString(),
+        'is_active' => true,
+    ], $overrides));
+}
+
+test('the cart discount endpoint previews the discounted total from server-side prices', function () {
+    $user = createCustomer();
+    holdCompletionSeats($user, 2);
+    $subtotal = app(CheckoutService::class)->heldSubtotal($user);
+    makeDiscount();
+
+    $this->actingAs($user)->postJson(route('cart.discount'), ['code' => 'giam10'])
+        ->assertOk()
+        ->assertJsonPath('code', 'GIAM10')
+        ->assertJsonPath('subtotal', $subtotal)
+        ->assertJsonPath('discount_amount', (int) round($subtotal * 0.1))
+        ->assertJsonPath('total', $subtotal - (int) round($subtotal * 0.1));
+});
+
+test('a discount is usable for the whole of its end date', function () {
+    $this->travelTo(now()->setTime(23, 30));
+    $user = createCustomer();
+    holdCompletionSeats($user, 1);
+    makeDiscount(['end_date' => now()->toDateString()]);
+
+    $this->actingAs($user)->postJson(route('cart.discount'), ['code' => 'GIAM10'])->assertOk();
+});
+
+test('invalid discounts are rejected with a vietnamese message', function (array $overrides, string $message) {
+    $user = createCustomer();
+    holdCompletionSeats($user, 1);
+    makeDiscount($overrides);
+
+    $this->actingAs($user)->postJson(route('cart.discount'), ['code' => 'GIAM10'])
+        ->assertStatus(422)
+        ->assertJsonPath('message', $message);
+})->with([
+    'inactive' => [['is_active' => false], 'Mã giảm giá không tồn tại hoặc đã ngừng áp dụng.'],
+    'not started' => [['start_date' => now()->addDays(2)->toDateString()], 'Mã giảm giá chưa đến thời gian áp dụng.'],
+    'expired' => [['end_date' => now()->subDay()->toDateString(), 'start_date' => now()->subDays(5)->toDateString()], 'Mã giảm giá đã hết hạn.'],
+    'used up' => [['used_count' => 5], 'Mã giảm giá đã hết lượt sử dụng.'],
+    'min order' => [['min_order_value' => 999999999], 'Đơn hàng cần tối thiểu 999.999.999₫ để dùng mã này.'],
+]);
+
+test('unknown discount codes are rejected', function () {
+    $user = createCustomer();
+    holdCompletionSeats($user, 1);
+
+    $this->actingAs($user)->postJson(route('cart.discount'), ['code' => 'KHONGCO'])
+        ->assertStatus(422)
+        ->assertJsonValidationErrors('code');
+});
+
+test('checkout applies the discount server-side and records it on the booking', function () {
+    $user = createCustomer();
+    holdCompletionSeats($user, 2);
+    $subtotal = app(CheckoutService::class)->heldSubtotal($user);
+    $discount = makeDiscount(['discount_type' => 'fixed', 'discount_value' => 50000, 'used_count' => 2]);
+
+    $code = $this->actingAs($user)->postJson(route('checkout.store'), checkoutPayload(['discount_code' => 'GIAM10']))
+        ->assertOk()
+        ->assertJsonPath('total_price', $subtotal - 50000)
+        ->json('booking_code');
+
+    $booking = Booking::firstWhere('booking_code', $code);
+    expect($booking->discount_id)->toBe($discount->id)
+        ->and($booking->discount_amount)->toBe(50000)
+        ->and($booking->total_price)->toBe($subtotal - 50000)
+        ->and($booking->items->sum('price'))->toBe($subtotal)
+        ->and($discount->fresh()->used_count)->toBe(3);
+
+    $this->actingAs($user)->get(route('bookings.history'))->assertSee('Đã giảm 50.000₫ (mã GIAM10)');
+    $this->actingAs(createAdmin())->get(route('admin.bookings.show', $booking))->assertSee('Mã giảm giá: GIAM10');
+});
+
+test('percentage discounts respect the maximum discount amount', function () {
+    $user = createCustomer();
+    holdCompletionSeats($user, 2);
+    $subtotal = app(CheckoutService::class)->heldSubtotal($user);
+    makeDiscount(['discount_value' => 50, 'max_discount_amount' => 1000]);
+
+    $this->actingAs($user)->postJson(route('checkout.store'), checkoutPayload(['discount_code' => 'GIAM10']))
+        ->assertOk()
+        ->assertJsonPath('total_price', $subtotal - 1000);
+});
+
+test('checkout refuses a discount that ran out and does not book', function () {
+    $user = createCustomer();
+    holdCompletionSeats($user, 1);
+    $discount = makeDiscount(['used_count' => 5]);
+
+    $this->actingAs($user)->postJson(route('checkout.store'), checkoutPayload(['discount_code' => 'GIAM10']))
+        ->assertStatus(422)
+        ->assertJsonValidationErrors('discount_code');
+
+    expect(Booking::where('user_id', $user->id)->exists())->toBeFalse()
+        ->and($discount->fresh()->used_count)->toBe(5);
+});
+
+test('deleting a discount keeps the booking but clears the link', function () {
+    $user = createCustomer();
+    holdCompletionSeats($user, 1);
+    $discount = makeDiscount(['discount_type' => 'fixed', 'discount_value' => 1000]);
+    $code = $this->actingAs($user)->postJson(route('checkout.store'), checkoutPayload(['discount_code' => 'GIAM10']))->json('booking_code');
+
+    $discount->delete();
+
+    $booking = Booking::firstWhere('booking_code', $code);
+    expect($booking->discount_id)->toBeNull()->and($booking->discount_amount)->toBe(1000);
 });
 
 test('holding another seat extends the earlier holds so checkout books the whole cart', function () {

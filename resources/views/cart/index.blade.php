@@ -32,6 +32,7 @@
             userEmail: @js($userEmail),
             userPhone: @js($userPhone),
             checkoutUrl: @js(route('checkout.store')),
+            discountUrl: @js(route('cart.discount')),
             removeUrl: @js(route('cart.seats.destroy', '__ID__')),
             removeZoneUrl: @js(route('cart.zone-tickets.destroy', '__ID__')),
         })"
@@ -187,7 +188,7 @@
                                         <!-- Price -->
                                         <div class="text-right shrink-0">
                                             <span class="font-display font-black text-black text-lg">
-                                                {{ number_format($item->price) }}₫
+                                                {{ number_format($item->price, 0, ',', '.') }}₫
                                             </span>
                                             <button
                                                 type="button"
@@ -418,7 +419,7 @@
                                         </div>
                                         <span>Tạm tính tiền vé:</span>
                                     </div>
-                                    <span class="font-black text-sm text-slate-900 font-mono">{{ number_format($totalPrice) }}₫</span>
+                                    <span class="font-black text-sm text-slate-900 font-mono">{{ number_format($totalPrice, 0, ',', '.') }}₫</span>
                                 </div>
 
                                 <!-- Row 2: Service Fee & E-Ticket QR -->
@@ -451,6 +452,53 @@
                                         🏦 VietQR 24/7
                                     </span>
                                 </div>
+
+                                <!-- Row 4: Discount Applied -->
+                                <div class="flex items-center justify-between" x-show="appliedDiscount" style="display: none;">
+                                    <div class="flex items-center gap-2.5 text-slate-600 font-semibold">
+                                        <div class="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center shrink-0 font-black">%</div>
+                                        <span>Giảm giá (<span class="font-mono" x-text="appliedDiscount ? appliedDiscount.code : ''"></span>):</span>
+                                    </div>
+                                    <span class="font-black text-sm text-emerald-700 font-mono" x-text="appliedDiscount ? '-' + formatCurrency(appliedDiscount.discount_amount) : ''"></span>
+                                </div>
+                            </div>
+
+                            <!-- Discount Code Input -->
+                            <div class="space-y-2">
+                                <label for="discount-code" class="block text-xs font-bold text-slate-700">Mã giảm giá</label>
+                                <div class="flex items-center gap-2">
+                                    <input
+                                        type="text"
+                                        id="discount-code"
+                                        name="discount_code"
+                                        maxlength="32"
+                                        autocomplete="off"
+                                        x-model="discountCodeInput"
+                                        @keydown.enter.prevent="applyDiscount()"
+                                        :disabled="isApplyingDiscount"
+                                        placeholder="VD: TICKETBOX2026"
+                                        class="flex-1 min-w-0 rounded-xl px-3.5 py-2.5 bg-[#FAF9F6] border border-black/10 focus:border-gold-dark focus:bg-white text-xs font-mono font-bold uppercase text-black placeholder-gray-400"
+                                    >
+                                    <button
+                                        type="button"
+                                        x-show="!appliedDiscount"
+                                        @click="applyDiscount()"
+                                        :disabled="isApplyingDiscount"
+                                        class="px-4 py-2.5 rounded-xl bg-slate-900 hover:bg-black text-white text-xs font-black shrink-0 disabled:opacity-60 cursor-pointer"
+                                    >
+                                        Áp dụng
+                                    </button>
+                                    <button
+                                        type="button"
+                                        x-show="appliedDiscount"
+                                        @click="removeDiscount()"
+                                        class="px-4 py-2.5 rounded-xl border border-black/10 text-slate-700 hover:bg-slate-100 text-xs font-bold shrink-0 cursor-pointer"
+                                        style="display: none;"
+                                    >
+                                        Bỏ mã
+                                    </button>
+                                </div>
+                                <p class="text-[11px] font-semibold" :class="appliedDiscount ? 'text-emerald-700' : 'text-[#CC0000]'" x-show="discountMessage" x-text="discountMessage" style="display: none;"></p>
                             </div>
 
                             <!-- Visual Hierarchy Focal Point: Total Amount Sub-Card -->
@@ -464,8 +512,8 @@
                                     </span>
                                 </div>
                                 <div class="text-right shrink-0">
-                                    <span class="font-display font-black text-2xl sm:text-3xl text-[#976D00] tracking-tight block whitespace-nowrap">
-                                        {{ number_format($totalPrice) }}<span class="text-lg sm:text-xl font-black text-[#976D00] ml-0.5">₫</span>
+                                    <span class="font-display font-black text-2xl sm:text-3xl text-[#976D00] tracking-tight block whitespace-nowrap" x-text="formatCurrency(payableAmount)">
+                                        {{ number_format($totalPrice, 0, ',', '.') }}₫
                                     </span>
                                 </div>
                             </div>
@@ -667,11 +715,11 @@
                                 <div class="bg-[#FAF9F6] rounded-2xl p-3.5 border border-black/5 flex items-center justify-between">
                                     <div>
                                         <span class="text-gray-500 block text-[11px] font-semibold">Số tiền thanh toán:</span>
-                                        <span class="font-display font-black text-lg text-crimson" x-text="formatCurrency(totalAmount)">500.000 ₫</span>
+                                        <span class="font-display font-black text-lg text-crimson" x-text="formatCurrency(payableAmount)">500.000 ₫</span>
                                     </div>
                                     <button 
                                         type="button" 
-                                        @click="copyToClipboard(totalAmount.toString(), 'Số tiền')"
+                                        @click="copyToClipboard(payableAmount.toString(), 'Số tiền')"
                                         class="btn-ghost-light px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1 cursor-pointer"
                                     >
                                         <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
@@ -720,7 +768,7 @@
                                 <div class="bg-[#FAF9F6] rounded-2xl p-3.5 border border-black/5 flex items-center justify-between">
                                     <div>
                                         <span class="text-gray-500 block text-[11px] font-semibold">Số tiền thanh toán:</span>
-                                        <span class="font-display font-black text-lg text-[#A50064]" x-text="formatCurrency(totalAmount)">500.000 ₫</span>
+                                        <span class="font-display font-black text-lg text-[#A50064]" x-text="formatCurrency(payableAmount)">500.000 ₫</span>
                                     </div>
                                     <span class="text-sage-forest font-bold text-xs">Miễn phí giao dịch</span>
                                 </div>
@@ -757,7 +805,7 @@
                                 <div class="bg-[#FAF9F6] rounded-2xl p-3.5 border border-black/5 flex items-center justify-between">
                                     <div>
                                         <span class="text-gray-500 block text-[11px] font-semibold">Số tiền cần thanh toán:</span>
-                                        <span class="font-display font-black text-lg text-[#0068FF]" x-text="formatCurrency(totalAmount)">500.000 ₫</span>
+                                        <span class="font-display font-black text-lg text-[#0068FF]" x-text="formatCurrency(payableAmount)">500.000 ₫</span>
                                     </div>
                                     <span class="text-sage-forest font-bold text-xs">Miễn phí giao dịch</span>
                                 </div>
@@ -915,7 +963,7 @@
                                             class="w-full h-full object-contain"
                                         >
                                     </div>
-                                    <span class="text-[11px] font-bold" x-text="formatCurrency(totalAmount)">500.000 ₫</span>
+                                    <span class="text-[11px] font-bold" x-text="formatCurrency(payableAmount)">500.000 ₫</span>
                                 </div>
                                 <p class="text-[11px] text-gray-500 mt-2 font-medium">Quét mã bằng ứng dụng MoMo</p>
                             </div>
@@ -939,7 +987,7 @@
                                             class="w-full h-full object-contain"
                                         >
                                     </div>
-                                    <span class="text-[11px] font-bold" x-text="formatCurrency(totalAmount)">500.000 ₫</span>
+                                    <span class="text-[11px] font-bold" x-text="formatCurrency(payableAmount)">500.000 ₫</span>
                                 </div>
                                 <p class="text-[11px] text-gray-500 mt-2 font-medium">Quét mã bằng ứng dụng Zalo hoặc ZaloPay</p>
                             </div>
@@ -1139,7 +1187,7 @@
                             <!-- Total & Verification Stamp -->
                             <div class="space-y-1">
                                 <span class="text-[11px] text-slate-500 uppercase font-bold block">Tổng tiền đã thanh toán</span>
-                                <span class="font-display font-black text-slate-900 text-xl">{{ number_format($totalPrice) }}₫</span>
+                                <span class="font-display font-black text-slate-900 text-xl" x-text="formatCurrency(payableAmount)">{{ number_format($totalPrice, 0, ',', '.') }}₫</span>
                             </div>
 
                             <!-- Download CTA inside stub -->

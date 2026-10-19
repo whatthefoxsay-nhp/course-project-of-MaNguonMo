@@ -44,6 +44,9 @@ Route::middleware('auth')->group(function () {
     Route::delete('/cart/seats/{showtimeSeat}', [SeatHoldController::class, 'destroy'])->name('cart.seats.destroy');
     Route::delete('/cart/zone-tickets/{zoneTicket}', [SeatHoldController::class, 'destroyZoneTicket'])->name('cart.zone-tickets.destroy');
     Route::get('/cart', [CartController::class, 'index'])->name('cart.index');
+    Route::post('/cart/discount', [CartController::class, 'applyDiscount'])
+        ->middleware('throttle:20,1')
+        ->name('cart.discount');
     Route::post('/checkout', [CheckoutController::class, 'store'])
         ->middleware('throttle:10,1')
         ->name('checkout.store');

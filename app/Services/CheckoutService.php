@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Exceptions\DiscountException;
 use App\Exceptions\SeatHoldException;
 use App\Models\Booking;
 use App\Models\Showtime;
@@ -14,16 +15,37 @@ class CheckoutService
 {
     public const PAYMENT_METHODS = ['vietqr', 'momo', 'zalopay', 'card'];
 
+    public function __construct(private readonly DiscountService $discounts)
+    {
+    }
+
+    /** Tạm tính các vé user đang giữ (chưa hết hạn) — dùng cho bước áp mã giảm giá ở giỏ vé. */
+    public function heldSubtotal(User $user): int
+    {
+        $seats = ShowtimeSeat::heldBy($user)->with('seat', 'showtime')->get();
+        $zoneTotal = ZoneTicket::where('status', 'held')->where('held_by_user_id', $user->id)
+            ->where('held_until', '>', now())->sum('price');
+
+        return (int) ($seats->sum(fn (ShowtimeSeat $seat) => self::seatPrice($seat)) + $zoneTotal);
+    }
+
+    private static function seatPrice(ShowtimeSeat $seat): int
+    {
+        return (int) ($seat->price_override ?? $seat->effective_price);
+    }
+
     /**
      * Thanh toán giả lập (spec mục 5): ghế đang giữ -> đơn "confirmed".
      *
      * @param  array{name?: ?string, phone?: ?string, email?: ?string}  $buyer  người nhận vé (mặc định lấy từ tài khoản)
      *
-     * @throws SeatHoldException
+     * @param  ?string  $discountCode  mã giảm giá (kiểm tra lại & tính tiền giảm phía server)
+     *
+     * @throws SeatHoldException|DiscountException
      */
-    public function checkout(User $user, string $paymentMethod, array $buyer = []): Booking
+    public function checkout(User $user, string $paymentMethod, array $buyer = [], ?string $discountCode = null): Booking
     {
-        return DB::transaction(function () use ($user, $paymentMethod, $buyer) {
+        return DB::transaction(function () use ($user, $paymentMethod, $buyer, $discountCode) {
             $seats = ShowtimeSeat::heldBy($user)
                 ->with(['seat', 'showtime'])
                 ->lockForUpdate()
@@ -37,11 +59,22 @@ class CheckoutService
 
             $this->ensureShowtimesBookable($seats->pluck('showtime')->concat($zoneTickets->pluck('showtime')));
 
-            $priceOf = fn (ShowtimeSeat $seat) => $seat->price_override ?? $seat->effective_price;
+            $priceOf = fn (ShowtimeSeat $seat) => self::seatPrice($seat);
+            $subtotal = $seats->sum($priceOf) + $zoneTickets->sum('price');
+
+            $discount = null;
+            $discountAmount = 0;
+            if ($discountCode !== null && trim($discountCode) !== '') {
+                // Khóa dòng mã giảm giá để 2 đơn đồng thời không vượt quá max_uses.
+                [$discount, $discountAmount] = $this->discounts->resolve($discountCode, $subtotal, lockForUpdate: true);
+                $discount->increment('used_count');
+            }
 
             $booking = Booking::create([
                 'user_id' => $user->id,
-                'total_price' => $seats->sum($priceOf) + $zoneTickets->sum('price'),
+                'total_price' => $subtotal - $discountAmount,
+                'discount_id' => $discount?->id,
+                'discount_amount' => $discountAmount,
                 'status' => 'confirmed',
                 'payment_method' => $paymentMethod,
                 'buyer_name' => array_key_exists('name', $buyer) ? $buyer['name'] : $user->name,

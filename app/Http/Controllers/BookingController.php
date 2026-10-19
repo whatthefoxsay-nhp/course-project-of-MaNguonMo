@@ -12,6 +12,7 @@ class BookingController extends Controller
     {
         $bookings = $request->user()->bookings()
             ->with([
+                'discount',
                 'items.showtimeSeat.seat',
                 'items.showtimeSeat.showtime.room',
                 'items.showtimeSeat.showtime.event.category',
@@ -34,6 +35,8 @@ class BookingController extends Controller
                     'seats' => $booking->items->map(fn ($item) => $item->showtimeSeat?->seat?->full_code
                         ?? ($item->zoneTicket ? $item->zoneTicket->zone->name.' — vé số '.$item->zoneTicket->id : ''))->filter()->all(),
                     'total_price' => $booking->total_price,
+                    'discount_amount' => $booking->discount_amount,
+                    'discount_code' => $booking->discount?->code,
                     'status' => $booking->status,
                     'buyer_name' => $booking->buyer_name,
                     'buyer_phone' => $booking->buyer_phone,

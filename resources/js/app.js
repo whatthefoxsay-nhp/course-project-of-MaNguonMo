@@ -494,8 +494,13 @@ Alpine.data('ticketPaymentManager', (config = {}) => ({
     selectedMethod: 'vietqr', // 'vietqr' | 'momo' | 'zalopay' | 'card'
     selectedBank: 'TCB', // 'TCB' | 'VCB' | 'MB'
     orderCode: 'TBX-' + Math.floor(100000 + Math.random() * 900000),
-    totalAmount: config.totalAmount || 500000,
+    totalAmount: config.totalAmount || 0,
     items: config.items || [],
+    discountCodeInput: '',
+    appliedDiscount: null, // { code, discount_amount, total } do server trả về
+    discountMessage: '',
+    isApplyingDiscount: false,
+    paidAmount: null, // số tiền server xác nhận sau khi thanh toán thành công
     buyerInfo: {
         fullName: config.userName || '',
         phone: config.userPhone || '',
@@ -543,6 +548,48 @@ Alpine.data('ticketPaymentManager', (config = {}) => ({
     toastMsg: '',
     showToast: false,
     toastTimer: null,
+
+    get payableAmount() {
+        if (this.paidAmount !== null) return this.paidAmount;
+        return this.appliedDiscount ? this.appliedDiscount.total : this.totalAmount;
+    },
+
+    async applyDiscount() {
+        const code = this.discountCodeInput.trim().toUpperCase();
+        if (!code) {
+            this.discountMessage = 'Vui lòng nhập mã giảm giá.';
+            return;
+        }
+        if (this.isApplyingDiscount) return;
+
+        this.isApplyingDiscount = true;
+        try {
+            const response = await fetch(config.discountUrl, {
+                method: 'POST',
+                headers: jsonHeaders(),
+                body: JSON.stringify({ code }),
+            });
+            const data = await response.json();
+            if (!response.ok) {
+                this.appliedDiscount = null;
+                this.discountMessage = data.message || 'Không áp dụng được mã giảm giá.';
+                return;
+            }
+            this.appliedDiscount = { code: data.code, discount_amount: data.discount_amount, total: data.total };
+            this.discountCodeInput = data.code;
+            this.discountMessage = data.message;
+        } catch (error) {
+            this.discountMessage = 'Mất kết nối tới máy chủ, vui lòng thử lại.';
+        } finally {
+            this.isApplyingDiscount = false;
+        }
+    },
+
+    removeDiscount() {
+        this.appliedDiscount = null;
+        this.discountCodeInput = '';
+        this.discountMessage = '';
+    },
 
     get currentBank() {
         return this.banks[this.selectedBank] || this.banks.TCB;
@@ -615,12 +662,19 @@ Alpine.data('ticketPaymentManager', (config = {}) => ({
                     buyer_name: this.buyerInfo.fullName.trim(),
                     buyer_phone: this.buyerInfo.phone.trim(),
                     buyer_email: this.buyerInfo.email.trim() || null,
+                    discount_code: this.appliedDiscount ? this.appliedDiscount.code : null,
                 }),
             });
             const data = await response.json();
 
             if (!response.ok) {
                 this.notify(data.message || 'Thanh toán thất bại, vui lòng thử lại.');
+                if (data.errors && data.errors.discount_code) {
+                    // Mã không còn hợp lệ lúc thanh toán: bỏ mã, quay lại giỏ để khách xem lại tổng tiền.
+                    this.appliedDiscount = null;
+                    this.discountMessage = data.message;
+                    this.backToCart();
+                }
                 if (data.errors && (data.errors.buyer_name || data.errors.buyer_phone || data.errors.buyer_email)) {
                     this.backToCart();
                 }
@@ -628,6 +682,7 @@ Alpine.data('ticketPaymentManager', (config = {}) => ({
             }
 
             this.orderCode = data.booking_code;
+            this.paidAmount = data.total_price;
             this.paymentSuccess = true;
             this.step = 'e_ticket';
             window.scrollTo({ top: 0, behavior: 'smooth' });

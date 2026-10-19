@@ -21,11 +21,19 @@ class Booking extends Model
         'buyer_name',
         'buyer_phone',
         'buyer_email',
+        'discount_id',
+        'discount_amount',
     ];
 
     protected $casts = [
         'total_price' => 'integer',
+        'discount_amount' => 'integer',
     ];
+
+    public function discount(): BelongsTo
+    {
+        return $this->belongsTo(Discount::class);
+    }
 
     protected static function boot()
     {

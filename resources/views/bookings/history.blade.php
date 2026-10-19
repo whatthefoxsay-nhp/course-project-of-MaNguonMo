@@ -137,7 +137,12 @@
                                 <!-- Total Price Block -->
                                 <div>
                                     <span class="text-[10px] text-slate-500 uppercase tracking-wider block font-bold">Tổng chi phí thanh toán</span>
-                                    <span class="font-display font-black text-[#976D00] text-xl sm:text-2xl">{{ number_format($booking->total_price) }}₫</span>
+                                    <span class="font-display font-black text-[#976D00] text-xl sm:text-2xl">{{ number_format($booking->total_price, 0, ',', '.') }}₫</span>
+                                    @if ($booking->discount_amount > 0)
+                                        <span class="text-[11px] text-emerald-700 font-bold block mt-0.5">
+                                            Đã giảm {{ number_format($booking->discount_amount, 0, ',', '.') }}₫{{ $booking->discount_code ? ' (mã '.$booking->discount_code.')' : '' }}
+                                        </span>
+                                    @endif
                                 </div>
 
                                 <!-- Download Ticket Button -->
