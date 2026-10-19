@@ -423,6 +423,108 @@ Alpine.data('seatBookingManager', (config = {}) => ({
 }));
 
 // Quick Search Modal Alpine Component
+// Bình luận sự kiện: tải thêm / gửi / xóa không tải lại trang.
+// Nội dung người dùng luôn render bằng x-text trong view (không x-html) để tránh XSS.
+Alpine.data('eventComments', (config = {}) => ({
+    comments: config.comments || [],
+    total: config.total || 0,
+    nextPageUrl: config.nextPageUrl || null,
+    newComment: '',
+    isPosting: false,
+    isLoadingMore: false,
+    error: '',
+
+    commentError(response, data, fallback) {
+        if (response.status === 401) return 'Phiên đăng nhập đã hết, vui lòng đăng nhập lại.';
+        if (response.status === 419) return 'Phiên làm việc đã hết hạn, vui lòng tải lại trang.';
+        if (response.status === 429) return 'Bạn thao tác quá nhanh, vui lòng thử lại sau ít phút.';
+        return data?.errors?.content?.[0] || data?.message || fallback;
+    },
+
+    async loadMore() {
+        if (!this.nextPageUrl || this.isLoadingMore) return;
+        this.isLoadingMore = true;
+        this.error = '';
+
+        try {
+            const response = await fetch(this.nextPageUrl, { headers: { 'Accept': 'application/json' } });
+            const data = await response.json().catch(() => ({}));
+
+            if (!response.ok) {
+                this.error = this.commentError(response, data, 'Không thể tải thêm bình luận.');
+                return;
+            }
+
+            const known = new Set(this.comments.map(item => item.id));
+            this.comments.push(...data.data.filter(item => !known.has(item.id)));
+            this.nextPageUrl = data.next_page_url;
+            this.total = data.total;
+        } catch (error) {
+            this.error = 'Mất kết nối tới máy chủ, vui lòng thử lại.';
+        } finally {
+            this.isLoadingMore = false;
+        }
+    },
+
+    async submit() {
+        if (!config.canComment) {
+            window.location.href = config.loginUrl;
+            return;
+        }
+
+        const content = this.newComment.trim();
+        if (!content || this.isPosting) return;
+
+        this.isPosting = true;
+        this.error = '';
+
+        try {
+            const response = await fetch(config.storeUrl, {
+                method: 'POST',
+                headers: jsonHeaders(),
+                body: JSON.stringify({ content }),
+            });
+            const data = await response.json().catch(() => ({}));
+
+            if (!response.ok) {
+                this.error = this.commentError(response, data, 'Không thể gửi bình luận.');
+                return;
+            }
+
+            this.comments.unshift(data.comment);
+            this.total++;
+            this.newComment = '';
+        } catch (error) {
+            this.error = 'Mất kết nối tới máy chủ, vui lòng thử lại.';
+        } finally {
+            this.isPosting = false;
+        }
+    },
+
+    async remove(comment) {
+        if (!confirm('Xóa bình luận này?')) return;
+        this.error = '';
+
+        try {
+            const response = await fetch(config.destroyUrl.replace('__ID__', comment.id), {
+                method: 'DELETE',
+                headers: jsonHeaders(),
+            });
+            const data = await response.json().catch(() => ({}));
+
+            if (!response.ok) {
+                this.error = this.commentError(response, data, 'Không thể xóa bình luận này.');
+                return;
+            }
+
+            this.comments = this.comments.filter(item => item.id !== comment.id);
+            this.total = Math.max(0, this.total - 1);
+        } catch (error) {
+            this.error = 'Mất kết nối tới máy chủ, vui lòng thử lại.';
+        }
+    },
+}));
+
 Alpine.data('searchModal', () => ({
     isOpen: false,
     query: '',
