@@ -72,6 +72,26 @@ class User extends Authenticatable
         return $this->hasRole('admin') ? 'Quản trị viên' : 'Khách hàng';
     }
 
+    /**
+     * Chữ cái đầu (tối đa 2) để hiện avatar dự phòng. Dùng mb_* vì tên tiếng Việt
+     * có ký tự nhiều byte (Đ, Ă, ...), substr() sẽ cắt hỏng chữ.
+     */
+    public function getInitialsAttribute(): string
+    {
+        $words = preg_split('/\s+/u', trim((string) $this->name), -1, PREG_SPLIT_NO_EMPTY);
+
+        if (! $words) {
+            return '?';
+        }
+
+        $initials = mb_substr($words[0], 0, 1);
+        if (count($words) > 1) {
+            $initials .= mb_substr($words[count($words) - 1], 0, 1);
+        }
+
+        return mb_strtoupper($initials);
+    }
+
     public function getStatusLabelAttribute(): string
     {
         return $this->is_active ? 'Đang hoạt động' : 'Đã bị khóa';
