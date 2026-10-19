@@ -23,9 +23,44 @@
         @csrf
     </form>
 
-    <form method="post" action="{{ route('profile.update') }}" class="mt-6 space-y-5">
+    <form method="post" action="{{ route('profile.update') }}" enctype="multipart/form-data" class="mt-6 space-y-5">
         @csrf
         @method('patch')
+
+        <!-- Avatar (xem trước cục bộ trước khi lưu) -->
+        <div class="space-y-1.5" x-data="{ preview: null }">
+            <span class="block text-xs font-bold text-slate-700 uppercase tracking-wider">Ảnh Đại Diện</span>
+            <div class="flex items-center gap-4">
+                <div class="w-16 h-16 rounded-full overflow-hidden border border-black/10 bg-gold-antique flex items-center justify-center font-display font-black text-lg text-black shrink-0">
+                    <template x-if="preview">
+                        <img :src="preview" alt="Ảnh đại diện mới" class="w-full h-full object-cover">
+                    </template>
+                    @if ($user->avatar_url)
+                        <img x-show="!preview" src="{{ $user->avatar_url }}" alt="Ảnh đại diện" class="w-full h-full object-cover">
+                    @else
+                        <span x-show="!preview">{{ $user->initials }}</span>
+                    @endif
+                </div>
+                <div class="min-w-0">
+                    <label for="avatar" class="btn-ghost-light inline-flex items-center gap-2 px-4 py-2 rounded-2xl text-xs font-bold cursor-pointer">
+                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                        </svg>
+                        <span>Chọn ảnh</span>
+                    </label>
+                    <input
+                        id="avatar"
+                        name="avatar"
+                        type="file"
+                        accept="image/jpeg,image/png,image/webp"
+                        class="sr-only"
+                        @change="const f = $event.target.files[0]; if (preview) URL.revokeObjectURL(preview); preview = f ? URL.createObjectURL(f) : null"
+                    >
+                    <p class="mt-1.5 text-[11px] text-slate-500 font-medium">JPG, PNG hoặc WEBP, tối đa 2MB. Nhấn "Lưu thay đổi" để cập nhật.</p>
+                </div>
+            </div>
+            <x-input-error class="mt-1" :messages="$errors->get('avatar')" />
+        </div>
 
         <!-- Full Name -->
         <div class="space-y-1.5">

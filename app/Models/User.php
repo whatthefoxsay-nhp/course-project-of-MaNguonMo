@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\Storage;
 use Spatie\Permission\Traits\HasRoles;
 
 class User extends Authenticatable
@@ -70,6 +71,23 @@ class User extends Authenticatable
     public function getRoleNameAttribute(): string
     {
         return $this->hasRole('admin') ? 'Quản trị viên' : 'Khách hàng';
+    }
+
+    /**
+     * URL ảnh đại diện, hoặc null nếu chưa có (giao diện dùng $user->initials làm dự phòng).
+     * Không gọi dịch vụ ảnh bên ngoài để tạo avatar (không gửi tên người dùng ra ngoài).
+     */
+    public function getAvatarUrlAttribute(): ?string
+    {
+        if (! $this->avatar) {
+            return null;
+        }
+
+        if (str_starts_with($this->avatar, 'http://') || str_starts_with($this->avatar, 'https://')) {
+            return $this->avatar;
+        }
+
+        return Storage::disk('public')->url($this->avatar);
     }
 
     /**
