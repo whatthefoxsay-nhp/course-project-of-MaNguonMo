@@ -162,7 +162,7 @@
                                         </span>
                                         <button 
                                             type="button" 
-                                            @click="navigator.clipboard.writeText('{{ $discount->code }}'); copyNotice = 'Đã sao chép mã {{ $discount->code }} vào bộ nhớ tạm!'; setTimeout(() => copyNotice = '', 3000)"
+                                            @click="navigator.clipboard.writeText(@js($discount->code)); copyNotice = @js('Đã sao chép mã ' . $discount->code . ' vào bộ nhớ tạm!'); setTimeout(() => copyNotice = '', 3000)"
                                             class="text-gray-400 hover:text-black p-1 rounded-lg hover:bg-black/5" 
                                             title="Sao chép mã"
                                         >

@@ -65,3 +65,13 @@ test('a regular user cannot manage categories', function () {
         ->get(route('admin.categories.index'))
         ->assertForbidden();
 });
+
+test('category search term is passed to Alpine as an escaped JS string', function () {
+    $payload = "',x:alert(1),y:'";
+
+    $this->actingAs(createAdmin())
+        ->get(route('admin.categories.index', ['search' => $payload]))
+        ->assertOk()
+        ->assertDontSee("searchQuery: '&#039;,x:alert(1)", false)
+        ->assertSee('searchQuery: \'\u0027,x:alert(1),y:\u0027\'', false);
+});

@@ -42,7 +42,7 @@
                 this.viewMode = mode;
                 localStorage.setItem('category_view_mode', mode);
             },
-            searchQuery: '{{ request('search') }}',
+            searchQuery: @js((string) request('search', '')),
             selectedIds: [],
             selectAll: false,
             toggleSelectAll(items) {
@@ -446,7 +446,7 @@
                                     <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-100/90 border border-slate-200/80 font-mono text-[11px] text-slate-700">
                                         <span>{{ $category->slug }}</span>
                                         <button 
-                                            @click="copyToClipboard('{{ $category->slug }}')"
+                                            @click="copyToClipboard(@js($category->slug))"
                                             type="button" 
                                             class="text-gray-400 hover:text-black transition-colors" 
                                             title="Sao chép slug"
@@ -571,7 +571,7 @@
                         </h4>
                         <div class="mt-1 inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-slate-100 font-mono text-[10px] text-slate-600">
                             <span>{{ $category->slug }}</span>
-                            <button @click="copyToClipboard('{{ $category->slug }}')" type="button" class="text-gray-400 hover:text-black">
+                            <button @click="copyToClipboard(@js($category->slug))" type="button" class="text-gray-400 hover:text-black">
                                 <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
                             </button>
                         </div>
