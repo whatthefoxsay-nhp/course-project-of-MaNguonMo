@@ -14,6 +14,7 @@ Cập nhật file này mỗi khi kiến trúc hoặc yêu cầu dự án thay đ
   - **Quản lý Tài khoản Người Dùng (Admin User Management)**: `UserController` xử lý tìm kiếm đa năng (Tên/Email/SĐT), lọc theo Role (Admin/User), lọc theo Trạng thái (Active/Locked), phân trang (Pagination), và AJAX Toggle Khóa/Mở khóa tài khoản bảo mật kèm hộp thoại xác nhận.
   - **Admin CRUD (Plan 1)**: danh mục, sự kiện (upload poster), suất diễn (chặn trùng giờ, tự sinh ghế theo suất), bảo vệ khán phòng có vé bán ra.
   - **Engine đặt vé (Plan 3)**: giữ ghế AJAX chống đặt trùng, giỏ vé, thanh toán giả lập, lịch sử — đã bỏ hoàn toàn dữ liệu giả DemoCatalog.
+  - **API ngoài (Plan 5)**: bản đồ Google Maps + nút chỉ đường trên trang chi tiết; dự báo thời tiết OpenWeatherMap cho địa điểm ngoài trời; admin nhập tọa độ khán phòng.
   - **Giao diện & Trải nghiệm (Luxury Light Theme)**: Hoàn thiện hệ thống giao diện tone sáng sang trọng với bảng màu tương phản cao `#000000`, `#F5F5DC`, `#FFFFFF`, `#C08497`, `#D4AF37`, `#3A5A40`, `#CC0000`.
 
 ---
@@ -36,6 +37,8 @@ Cập nhật file này mỗi khi kiến trúc hoặc yêu cầu dự án thay đ
 | **2026-09-23** | **Quản trị hệ thống** | Làm sạch dữ liệu thực trên Dashboard & Báo cáo (xóa bỏ số liệu giả lập); Hoàn thiện chi tiết đơn vé & giải phóng ghế khi hủy đơn; Khởi tạo bảng & Model `Discount` lưu trữ thật; Bổ sung đổi vai trò Admin/User và đặt lại mật khẩu | Đảm bảo phân hệ Admin vận hành 100% trên cơ sở dữ liệu thật MySQL, không còn mock/alert giả lập. |
 | **2026-09-23** | **Public Catalog DB (Plan 2)** | Toàn bộ trang chủ, danh sách sự kiện, chi tiết sự kiện và sơ đồ ghế đọc trực tiếp từ MySQL; Thống nhất định giá qua `TicketTiers`; Trình bày sơ đồ ghế động qua `SeatMapPresenter`; Hỗ trợ cả Sân vận động và Khán phòng nhà hát | Loại bỏ hoàn toàn phụ thuộc vào `DemoCatalog` cho luồng xem sự kiện và sơ đồ ghế. |
 | **2026-10-11** | **Đồng bộ Sức chứa & Sơ đồ** | Admin Builder tính sức chứa từ khu; Seeder khởi tạo khu theo mục đích. Lệnh `rooms:migrate-zones --dry-run` báo cáo chuyển đổi phòng cũ trước khi áp dụng. | Giữ tồn kho vé, sơ đồ và sức chứa nhất quán; việc chuyển dữ liệu thật cần chạy lệnh sau khi rà soát báo cáo dry-run. |
+| **2026-10-19** | **API ngoài (Plan 5)** | Google Maps: `App\Support\MapEmbed` dùng Maps Embed API khi có `GOOGLE_MAPS_EMBED_KEY`, không có key thì dùng link nhúng công khai `maps.google.com/maps?q=…&output=embed`; kèm nút "Chỉ đường". OpenWeatherMap (`OPENWEATHER_API_KEY`): `App\Services\WeatherService` gọi dự báo 5 ngày/3 giờ, chọn mốc gần giờ diễn nhất (lệch tối đa 3 giờ), timeout 5 giây, cache 30 phút theo tọa độ (lỗi nhớ 5 phút). Thiếu key / API lỗi / suất diễn ngoài 5 ngày → **ẩn hẳn** khối thời tiết, không hiện số liệu giả. Admin nhập vĩ độ/kinh độ trong form khán phòng (cả sơ đồ ghế lẫn sơ đồ khu). | Trang không phụ thuộc vào việc API ngoài sống hay chết; demo được cả khi chưa có key Maps. |
+| **2026-10-19** | **Phạm vi thời tiết** | Chỉ hiện dự báo cho địa điểm **ngoài trời** — suy ra từ `rooms.layout_preset` (`Room::isOutdoor()`: các mẫu chuẩn hóa về `outdoor_concert` như `mega_concert`, `sayhi_concert*`, sơ đồ khu). Nhà hát, hội trường, trung tâm hội nghị chỉ hiện bản đồ. | Spec ghi "sự kiện ngoài trời"; chưa có cờ trong nhà/ngoài trời riêng nên dùng mẫu bố cục thay vì thêm cột mới. |
 
 ---
 
