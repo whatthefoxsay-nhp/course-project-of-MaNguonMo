@@ -535,6 +535,8 @@
             x-transition:leave-start="opacity-100 translate-y-0"
             x-transition:leave-end="opacity-0 translate-y-4"
             class="fixed bottom-6 right-6 z-50 bg-black text-white px-5 py-3 rounded-2xl shadow-2xl flex items-center gap-3 border border-white/20"
+            role="status"
+            aria-live="polite"
             style="display: none;"
         >
             <span class="w-2.5 h-2.5 rounded-full" :class="toastType === 'success' ? 'bg-emerald-400' : 'bg-red-400'"></span>

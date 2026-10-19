@@ -2017,7 +2017,10 @@
         x-transition:leave="ease-in duration-200"
         x-transition:leave-start="opacity-100 translate-y-0 scale-100"
         x-transition:leave-end="opacity-0 translate-y-6 scale-95"
-        class="fixed bottom-8 right-8 z-50 bg-black text-white border border-white/20 px-5 py-3.5 rounded-2xl shadow-2xl flex items-center gap-3 max-w-sm"
+        {{-- Đặt phía trên nút chatbot (fixed bottom-right) để không bị che. --}}
+        class="fixed bottom-28 right-4 sm:right-6 z-50 bg-black text-white border border-white/20 px-5 py-3.5 rounded-2xl shadow-2xl flex items-center gap-3 max-w-[calc(100vw-2rem)] sm:max-w-sm"
+        role="status"
+        aria-live="polite"
         style="display: none;"
     >
         <div 

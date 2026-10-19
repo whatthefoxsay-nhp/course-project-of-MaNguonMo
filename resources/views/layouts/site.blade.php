@@ -22,9 +22,9 @@
 >
     <!-- Background Ambient Luxury Glows (Depth & Texture) -->
     <div class="fixed inset-0 pointer-events-none z-0 overflow-hidden">
-        <div class="absolute -top-[20%] -left-[10%] w-[55vw] h-[55vw] rounded-full bg-[#C08497]/8 blur-[130px]"></div>
-        <div class="absolute top-[30%] -right-[15%] w-[50vw] h-[50vw] rounded-full bg-[#D4AF37]/8 blur-[140px]"></div>
-        <div class="absolute bottom-[10%] left-[15%] w-[45vw] h-[45vw] rounded-full bg-[#3A5A40]/6 blur-[130px]"></div>
+        <div class="absolute -top-[20%] -left-[10%] w-[55vw] h-[55vw] rounded-full bg-[#C08497]/[0.08] blur-[130px]"></div>
+        <div class="absolute top-[30%] -right-[15%] w-[50vw] h-[50vw] rounded-full bg-[#D4AF37]/[0.08] blur-[140px]"></div>
+        <div class="absolute bottom-[10%] left-[15%] w-[45vw] h-[45vw] rounded-full bg-[#3A5A40]/[0.06] blur-[130px]"></div>
     </div>
 
     @php
