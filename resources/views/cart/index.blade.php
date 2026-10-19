@@ -319,7 +319,7 @@
                                     </svg>
                                     <span>Chọn Phương Thức Thanh Toán</span>
                                 </h3>
-                                <p class="text-xs text-gray-500 mt-1">Hệ thống hỗ trợ thanh toán tự động qua VietQR liên ngân hàng, Ví điện tử và Thẻ quốc tế.</p>
+                                <p class="text-xs text-gray-500 mt-1">Tất cả phương thức đều là thanh toán giả lập, không thu tiền thật.</p>
                             </div>
 
                             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5 pt-2">
@@ -331,10 +331,10 @@
                                     <input type="radio" name="payment_method" value="vietqr" x-model="selectedMethod" class="mt-1 text-gold-dark focus:ring-gold-dark">
                                     <div class="flex-1">
                                         <div class="flex items-center gap-2">
-                                            <span class="font-display font-black text-xs text-black">Chuyển Khoản VietQR 24/7</span>
-                                            <span class="badge-gold text-[9px] px-2 py-0.2 rounded-full font-bold">Khuyên Dùng</span>
+                                            <span class="font-display font-black text-xs text-black">Chuyển Khoản VietQR</span>
+                                            
                                         </div>
-                                        <p class="text-[11px] text-gray-500 mt-1">Quét mã QR qua Techcombank, Vietcombank, MBBank, BIDV...</p>
+                                        <p class="text-[11px] text-gray-500 mt-1">Mã QR minh họa, không chuyển tiền thật.</p>
                                     </div>
                                 </label>
 
@@ -348,7 +348,7 @@
                                         <div class="flex items-center gap-2">
                                             <span class="font-display font-black text-xs text-black">Ví Điện Tử MoMo</span>
                                         </div>
-                                        <p class="text-[11px] text-gray-500 mt-1">Quét mã MoMo QR thanh toán tức thì qua App MoMo.</p>
+                                        <p class="text-[11px] text-gray-500 mt-1">Mô phỏng thanh toán ví MoMo.</p>
                                     </div>
                                 </label>
 
@@ -362,7 +362,7 @@
                                         <div class="flex items-center gap-2">
                                             <span class="font-display font-black text-xs text-black">Ví Điện Tử ZaloPay</span>
                                         </div>
-                                        <p class="text-[11px] text-gray-500 mt-1">Thanh toán liền mạch qua Zalo &amp; Ví ZaloPay.</p>
+                                        <p class="text-[11px] text-gray-500 mt-1">Mô phỏng thanh toán ví ZaloPay.</p>
                                     </div>
                                 </label>
 
@@ -376,7 +376,7 @@
                                         <div class="flex items-center gap-2">
                                             <span class="font-display font-black text-xs text-black">Thẻ Quốc Tế (Visa / Master)</span>
                                         </div>
-                                        <p class="text-[11px] text-gray-500 mt-1">Cổng thanh toán quốc tế 3D-Secure an toàn.</p>
+                                        <p class="text-[11px] text-gray-500 mt-1">Mô phỏng, không thu thông tin thẻ.</p>
                                     </div>
                                 </label>
                             </div>
@@ -448,8 +448,8 @@
                                         </div>
                                         <span>Phương thức:</span>
                                     </div>
-                                    <span class="font-bold text-slate-800 bg-slate-100 px-3 py-1 rounded-xl text-xs inline-flex items-center gap-1.5 shadow-2xs whitespace-nowrap" x-text="selectedMethod === 'vietqr' ? '🏦 VietQR 24/7' : (selectedMethod === 'momo' ? '🟣 Ví MoMo' : (selectedMethod === 'zalopay' ? '🔵 Ví ZaloPay' : '💳 Thẻ Quốc Tế'))">
-                                        🏦 VietQR 24/7
+                                    <span class="font-bold text-slate-800 bg-slate-100 px-3 py-1 rounded-xl text-xs inline-flex items-center gap-1.5 shadow-2xs whitespace-nowrap" x-text="selectedMethod === 'vietqr' ? '🏦 VietQR' : (selectedMethod === 'momo' ? '🟣 Ví MoMo' : (selectedMethod === 'zalopay' ? '🔵 Ví ZaloPay' : '💳 Thẻ Quốc Tế'))">
+                                        🏦 VietQR
                                     </span>
                                 </div>
 
@@ -532,29 +532,11 @@
                                 </span>
                             </button>
 
-                            <!-- Enhanced Security & Trust Logos Section -->
-                            <div class="pt-3 border-t border-slate-100 space-y-3">
-                                <div class="flex items-center justify-center gap-2 text-slate-700 text-xs font-bold whitespace-nowrap">
-                                    <div class="w-5 h-5 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0">
-                                        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-                                        </svg>
-                                    </div>
-                                    <span>Giao Dịch Được Bảo Mật 256–Bit SSL</span>
-                                </div>
-
-                                <!-- Trust Security Seals -->
-                                <div class="flex items-center justify-center gap-2 text-[10px] font-bold uppercase tracking-wider text-slate-600 flex-wrap">
-                                    <span class="px-2.5 py-1 rounded-lg bg-slate-50 text-slate-700 border border-slate-200/80">
-                                        NAPAS 24/7
-                                    </span>
-                                    <span class="px-2.5 py-1 rounded-lg bg-slate-50 text-slate-700 border border-slate-200/80">
-                                        PCI-DSS Level 1
-                                    </span>
-                                    <span class="px-2.5 py-1 rounded-lg bg-slate-50 text-slate-700 border border-slate-200/80">
-                                        VietQR Verified
-                                    </span>
-                                </div>
+                            <!-- Simulated payment notice -->
+                            <div class="pt-3 border-t border-slate-100">
+                                <p class="text-center text-[11px] text-slate-600 font-bold">
+                                    Thanh toán giả lập (Đồ án môn Mã nguồn mở) – không thu tiền thật.
+                                </p>
                             </div>
                         </div>
                     </div>
@@ -626,230 +608,119 @@
                     <!-- Left: Bank / Wallet Details Card + Buyer Info Summary (7 Cols) -->
                     <div class="lg:col-span-7 space-y-6">
                         
-                        <!-- VIEW 1: VIETQR DETAILS -->
+                        <!-- PAYMENT METHOD DETAILS (giả lập, không có tài khoản/thẻ thật) -->
                         <div x-show="selectedMethod === 'vietqr'" class="bg-white rounded-3xl p-6 sm:p-7 border border-black/10 shadow-sm space-y-5">
-                            <div class="border-b border-black/10 pb-4">
-                                <div class="flex items-center justify-between">
-                                    <h4 class="font-serif font-black text-lg text-black">Thông Tin Chuyển Khoản Ngân Hàng</h4>
-                                    <span class="badge-sage text-[10px] px-2.5 py-1 rounded-full font-bold">
-                                        Khớp lệnh tự động 24/7
-                                    </span>
+                            <div class="border-b border-black/10 pb-4 flex items-center justify-between gap-3">
+                                <div>
+                                    <h4 class="font-serif font-black text-lg text-black">Chuyển Khoản VietQR (Giả Lập)</h4>
+                                    <p class="text-xs text-gray-500 mt-0.5">Mã QR bên cạnh chỉ là hình minh họa, không chứa thông tin tài khoản ngân hàng.</p>
                                 </div>
-                                <p class="text-xs text-gray-500 mt-1">Chọn ngân hàng thụ hưởng thuận tiện nhất cho bạn:</p>
-
-                                <!-- Bank Selector Pills -->
-                                <div class="flex items-center gap-2 mt-3 overflow-x-auto pb-1">
-                                    <button 
-                                        type="button" 
-                                        @click="selectedBank = 'TCB'"
-                                        class="px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 cursor-pointer border"
-                                        :class="selectedBank === 'TCB' ? 'bg-red-50 border-red-500 text-red-700 shadow-sm font-black' : 'bg-[#FAF9F6] border-black/10 text-gray-600 hover:border-black/30'"
-                                    >
-                                        Techcombank
-                                    </button>
-                                    <button 
-                                        type="button" 
-                                        @click="selectedBank = 'VCB'"
-                                        class="px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 cursor-pointer border"
-                                        :class="selectedBank === 'VCB' ? 'bg-emerald-50 border-emerald-600 text-emerald-800 shadow-sm font-black' : 'bg-[#FAF9F6] border-black/10 text-gray-600 hover:border-black/30'"
-                                    >
-                                        Vietcombank
-                                    </button>
-                                    <button 
-                                        type="button" 
-                                        @click="selectedBank = 'MB'"
-                                        class="px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 cursor-pointer border"
-                                        :class="selectedBank === 'MB' ? 'bg-blue-50 border-blue-600 text-blue-800 shadow-sm font-black' : 'bg-[#FAF9F6] border-black/10 text-gray-600 hover:border-black/30'"
-                                    >
-                                        MBBank
-                                    </button>
-                                </div>
+                                <span class="badge-gold text-[10px] px-2.5 py-1 rounded-full font-bold shrink-0">Giả lập</span>
                             </div>
 
-                            <!-- Account Details Table -->
                             <div class="space-y-3.5 text-xs">
-                                <!-- Bank Name -->
-                                <div class="bg-[#FAF9F6] rounded-2xl p-3.5 border border-black/5 flex items-center justify-between">
-                                    <div>
-                                        <span class="text-gray-500 block text-[11px] font-semibold">Ngân hàng thụ hưởng:</span>
-                                        <span class="font-bold text-sm text-black" x-text="currentBank.fullName">Ngân hàng TMCP Kỹ Thương Việt Nam</span>
-                                    </div>
-                                    <span class="px-2.5 py-1 rounded-lg text-white font-black text-[11px] uppercase tracking-wider" :class="currentBank.logoBg" x-text="currentBank.shortName">
-                                        Techcombank
-                                    </span>
+                                <div class="bg-amber-50 rounded-2xl p-3.5 border border-amber-300 text-[11px] text-amber-900 font-semibold leading-relaxed">
+                                    Đây là thanh toán giả lập phục vụ đồ án: hệ thống không kết nối ngân hàng/ví điện tử và không thu tiền thật. Bấm "Xác nhận đã hoàn tất thanh toán" để phát hành vé.
                                 </div>
-
-                                <!-- Account Number -->
-                                <div class="bg-[#FAF9F6] rounded-2xl p-3.5 border border-black/5 flex items-center justify-between">
-                                    <div>
-                                        <span class="text-gray-500 block text-[11px] font-semibold">Số tài khoản thụ hưởng:</span>
-                                        <span class="font-mono font-black text-base text-black tracking-wider" x-text="currentBank.accountNo">1903 8888 6688</span>
-                                    </div>
-                                    <button 
-                                        type="button" 
-                                        @click="copyToClipboard(currentBank.accountNo, 'Số tài khoản')"
-                                        class="btn-ghost-light px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1 cursor-pointer"
-                                    >
-                                        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
-                                        <span>Sao chép</span>
-                                    </button>
-                                </div>
-
-                                <!-- Account Holder Name -->
-                                <div class="bg-[#FAF9F6] rounded-2xl p-3.5 border border-black/5 flex items-center justify-between">
-                                    <div>
-                                        <span class="text-gray-500 block text-[11px] font-semibold">Tên chủ tài khoản:</span>
-                                        <span class="font-bold text-xs text-black" x-text="currentBank.accountHolder">CONG TY CP TICKETBOX VIETNAM</span>
-                                    </div>
-                                    <button 
-                                        type="button" 
-                                        @click="copyToClipboard(currentBank.accountHolder, 'Tên chủ tài khoản')"
-                                        class="btn-ghost-light px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1 cursor-pointer"
-                                    >
-                                        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
-                                        <span>Sao chép</span>
-                                    </button>
-                                </div>
-
-                                <!-- Amount -->
                                 <div class="bg-[#FAF9F6] rounded-2xl p-3.5 border border-black/5 flex items-center justify-between">
                                     <div>
                                         <span class="text-gray-500 block text-[11px] font-semibold">Số tiền thanh toán:</span>
-                                        <span class="font-display font-black text-lg text-crimson" x-text="formatCurrency(payableAmount)">500.000 ₫</span>
+                                        <span class="font-display font-black text-lg text-crimson" x-text="formatCurrency(payableAmount)"></span>
                                     </div>
-                                    <button 
-                                        type="button" 
-                                        @click="copyToClipboard(payableAmount.toString(), 'Số tiền')"
-                                        class="btn-ghost-light px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1 cursor-pointer"
-                                    >
-                                        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
-                                        <span>Sao chép</span>
-                                    </button>
                                 </div>
-
-                                <!-- Transfer Content / Order Code -->
-                                <div class="bg-[#FFF8E1] rounded-2xl p-3.5 border border-[#FFE082] flex items-center justify-between">
+                                <div class="bg-[#FAF9F6] rounded-2xl p-3.5 border border-black/5 flex items-center justify-between">
                                     <div>
-                                        <span class="text-gold-dark block text-[11px] font-bold uppercase">Nội dung chuyển khoản (Bắt buộc):</span>
-                                        <span class="font-mono font-black text-base text-black tracking-wider" x-text="orderCode">TBX-829143</span>
+                                        <span class="text-gray-500 block text-[11px] font-semibold">Mã tham chiếu giỏ vé:</span>
+                                        <span class="font-mono font-black text-base text-black tracking-wider" x-text="cartRef"></span>
                                     </div>
-                                    <button 
-                                        type="button" 
-                                        @click="copyToClipboard(orderCode, 'Nội dung chuyển khoản')"
-                                        class="btn-gold px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1 cursor-pointer"
-                                    >
-                                        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
-                                        <span>Sao chép</span>
-                                    </button>
+                                    <button type="button" @click="copyToClipboard(cartRef, 'Mã tham chiếu')" class="btn-ghost-light px-3 py-1.5 rounded-xl text-xs font-bold cursor-pointer">Sao chép</button>
                                 </div>
                             </div>
                         </div>
 
-                        <!-- VIEW 2: MOMO DETAILS -->
                         <div x-show="selectedMethod === 'momo'" class="bg-white rounded-3xl p-6 sm:p-7 border border-black/10 shadow-sm space-y-5" style="display: none;">
-                            <div class="border-b border-black/10 pb-4 flex items-center justify-between">
+                            <div class="border-b border-black/10 pb-4 flex items-center justify-between gap-3">
                                 <div>
-                                    <h4 class="font-serif font-black text-lg text-black">Thanh Toán Qua Ví Điện Tử MoMo</h4>
-                                    <p class="text-xs text-gray-500 mt-0.5">Mở App MoMo và quét mã QR để hoàn tất thanh toán trong 1 chạm.</p>
+                                    <h4 class="font-serif font-black text-lg text-black">Ví Điện Tử MoMo (Giả Lập)</h4>
+                                    <p class="text-xs text-gray-500 mt-0.5">Không kết nối ví MoMo thật; mã QR chỉ mang tính minh họa.</p>
                                 </div>
-                                <div class="w-10 h-10 rounded-2xl bg-[#A50064] text-white flex items-center justify-center font-black text-xs shadow-md">
-                                    MoMo
-                                </div>
+                                <span class="badge-gold text-[10px] px-2.5 py-1 rounded-full font-bold shrink-0">Giả lập</span>
                             </div>
 
                             <div class="space-y-3.5 text-xs">
-                                <div class="bg-[#FAF9F6] rounded-2xl p-3.5 border border-black/5 flex items-center justify-between">
-                                    <div>
-                                        <span class="text-gray-500 block text-[11px] font-semibold">Tên đơn vị chấp nhận:</span>
-                                        <span class="font-bold text-xs text-black" x-text="momoInfo.merchant">TICKETBOX VIETNAM</span>
-                                    </div>
-                                    <span class="badge-rose text-[10px] px-2.5 py-0.5 rounded-full font-bold">MoMo Business</span>
+                                <div class="bg-amber-50 rounded-2xl p-3.5 border border-amber-300 text-[11px] text-amber-900 font-semibold leading-relaxed">
+                                    Đây là thanh toán giả lập phục vụ đồ án: hệ thống không kết nối ngân hàng/ví điện tử và không thu tiền thật. Bấm "Xác nhận đã hoàn tất thanh toán" để phát hành vé.
                                 </div>
                                 <div class="bg-[#FAF9F6] rounded-2xl p-3.5 border border-black/5 flex items-center justify-between">
                                     <div>
                                         <span class="text-gray-500 block text-[11px] font-semibold">Số tiền thanh toán:</span>
-                                        <span class="font-display font-black text-lg text-[#A50064]" x-text="formatCurrency(payableAmount)">500.000 ₫</span>
+                                        <span class="font-display font-black text-lg text-[#A50064]" x-text="formatCurrency(payableAmount)"></span>
                                     </div>
-                                    <span class="text-sage-forest font-bold text-xs">Miễn phí giao dịch</span>
                                 </div>
                                 <div class="bg-[#FAF9F6] rounded-2xl p-3.5 border border-black/5 flex items-center justify-between">
                                     <div>
-                                        <span class="text-gray-500 block text-[11px] font-semibold">Mã giao dịch:</span>
-                                        <span class="font-mono font-black text-base text-black" x-text="orderCode">TBX-829143</span>
+                                        <span class="text-gray-500 block text-[11px] font-semibold">Mã tham chiếu giỏ vé:</span>
+                                        <span class="font-mono font-black text-base text-black tracking-wider" x-text="cartRef"></span>
                                     </div>
-                                    <button type="button" @click="copyToClipboard(orderCode, 'Mã giao dịch')" class="btn-ghost-light px-3 py-1.5 rounded-xl text-xs font-bold cursor-pointer">Sao chép</button>
+                                    <button type="button" @click="copyToClipboard(cartRef, 'Mã tham chiếu')" class="btn-ghost-light px-3 py-1.5 rounded-xl text-xs font-bold cursor-pointer">Sao chép</button>
                                 </div>
                             </div>
                         </div>
 
-                        <!-- VIEW 3: ZALOPAY DETAILS -->
                         <div x-show="selectedMethod === 'zalopay'" class="bg-white rounded-3xl p-6 sm:p-7 border border-black/10 shadow-sm space-y-5" style="display: none;">
-                            <div class="border-b border-black/10 pb-4 flex items-center justify-between">
+                            <div class="border-b border-black/10 pb-4 flex items-center justify-between gap-3">
                                 <div>
-                                    <h4 class="font-serif font-black text-lg text-black">Thanh Toán Qua Ví ZaloPay</h4>
-                                    <p class="text-xs text-gray-500 mt-0.5">Quét mã ZaloPay QR trực tiếp trên Zalo hoặc ứng dụng ZaloPay.</p>
+                                    <h4 class="font-serif font-black text-lg text-black">Ví ZaloPay (Giả Lập)</h4>
+                                    <p class="text-xs text-gray-500 mt-0.5">Không kết nối ví ZaloPay thật; mã QR chỉ mang tính minh họa.</p>
                                 </div>
-                                <div class="w-10 h-10 rounded-2xl bg-[#0068FF] text-white flex items-center justify-center font-black text-xs shadow-md">
-                                    Zalo
-                                </div>
+                                <span class="badge-gold text-[10px] px-2.5 py-1 rounded-full font-bold shrink-0">Giả lập</span>
                             </div>
 
                             <div class="space-y-3.5 text-xs">
-                                <div class="bg-[#FAF9F6] rounded-2xl p-3.5 border border-black/5 flex items-center justify-between">
-                                    <div>
-                                        <span class="text-gray-500 block text-[11px] font-semibold">Đơn vị thụ hưởng:</span>
-                                        <span class="font-bold text-xs text-black" x-text="zalopayInfo.merchant">TICKETBOX TICKET JSC</span>
-                                    </div>
-                                    <span class="badge-sage text-[10px] px-2.5 py-0.5 rounded-full font-bold">ZaloPay Merchant</span>
+                                <div class="bg-amber-50 rounded-2xl p-3.5 border border-amber-300 text-[11px] text-amber-900 font-semibold leading-relaxed">
+                                    Đây là thanh toán giả lập phục vụ đồ án: hệ thống không kết nối ngân hàng/ví điện tử và không thu tiền thật. Bấm "Xác nhận đã hoàn tất thanh toán" để phát hành vé.
                                 </div>
                                 <div class="bg-[#FAF9F6] rounded-2xl p-3.5 border border-black/5 flex items-center justify-between">
                                     <div>
-                                        <span class="text-gray-500 block text-[11px] font-semibold">Số tiền cần thanh toán:</span>
-                                        <span class="font-display font-black text-lg text-[#0068FF]" x-text="formatCurrency(payableAmount)">500.000 ₫</span>
+                                        <span class="text-gray-500 block text-[11px] font-semibold">Số tiền thanh toán:</span>
+                                        <span class="font-display font-black text-lg text-[#0068FF]" x-text="formatCurrency(payableAmount)"></span>
                                     </div>
-                                    <span class="text-sage-forest font-bold text-xs">Miễn phí giao dịch</span>
                                 </div>
                                 <div class="bg-[#FAF9F6] rounded-2xl p-3.5 border border-black/5 flex items-center justify-between">
                                     <div>
-                                        <span class="text-gray-500 block text-[11px] font-semibold">Mã đơn hàng:</span>
-                                        <span class="font-mono font-black text-base text-black" x-text="orderCode">TBX-829143</span>
+                                        <span class="text-gray-500 block text-[11px] font-semibold">Mã tham chiếu giỏ vé:</span>
+                                        <span class="font-mono font-black text-base text-black tracking-wider" x-text="cartRef"></span>
                                     </div>
-                                    <button type="button" @click="copyToClipboard(orderCode, 'Mã đơn hàng')" class="btn-ghost-light px-3 py-1.5 rounded-xl text-xs font-bold cursor-pointer">Sao chép</button>
+                                    <button type="button" @click="copyToClipboard(cartRef, 'Mã tham chiếu')" class="btn-ghost-light px-3 py-1.5 rounded-xl text-xs font-bold cursor-pointer">Sao chép</button>
                                 </div>
                             </div>
                         </div>
 
-                        <!-- VIEW 4: CREDIT / DEBIT CARD DETAILS -->
                         <div x-show="selectedMethod === 'card'" class="bg-white rounded-3xl p-6 sm:p-7 border border-black/10 shadow-sm space-y-5" style="display: none;">
-                            <div class="border-b border-black/10 pb-4 flex items-center justify-between">
+                            <div class="border-b border-black/10 pb-4 flex items-center justify-between gap-3">
                                 <div>
-                                    <h4 class="font-serif font-black text-lg text-black">Thanh Toán Thẻ Quốc Tế (Visa / Mastercard)</h4>
-                                    <p class="text-xs text-gray-500 mt-0.5">Nhập thông tin thẻ thanh toán an toàn qua cổng bảo mật 3D-Secure.</p>
+                                    <h4 class="font-serif font-black text-lg text-black">Thẻ Quốc Tế (Giả Lập)</h4>
+                                    <p class="text-xs text-gray-500 mt-0.5">Thanh toán giả lập, không thu thông tin thẻ (số thẻ, CVV...).</p>
                                 </div>
-                                <div class="flex items-center gap-1.5">
-                                    <span class="px-2 py-1 rounded bg-blue-900 text-white font-black text-[10px]">VISA</span>
-                                    <span class="px-2 py-1 rounded bg-amber-600 text-white font-black text-[10px]">MC</span>
-                                </div>
+                                <span class="badge-gold text-[10px] px-2.5 py-1 rounded-full font-bold shrink-0">Giả lập</span>
                             </div>
 
                             <div class="space-y-3.5 text-xs">
-                                <div>
-                                    <label class="block text-gray-600 font-bold mb-1">Số thẻ thanh toán</label>
-                                    <input type="text" placeholder="4111 2222 3333 4444" class="glass-input w-full rounded-xl px-4 py-2.5 font-mono text-xs">
+                                <div class="bg-amber-50 rounded-2xl p-3.5 border border-amber-300 text-[11px] text-amber-900 font-semibold leading-relaxed">
+                                    Đây là thanh toán giả lập phục vụ đồ án: hệ thống không kết nối ngân hàng/ví điện tử và không thu tiền thật. Bấm "Xác nhận đã hoàn tất thanh toán" để phát hành vé.
                                 </div>
-                                <div class="grid grid-cols-2 gap-3">
+                                <div class="bg-[#FAF9F6] rounded-2xl p-3.5 border border-black/5 flex items-center justify-between">
                                     <div>
-                                        <label class="block text-gray-600 font-bold mb-1">Hạn sử dụng (MM/YY)</label>
-                                        <input type="text" placeholder="12/28" class="glass-input w-full rounded-xl px-4 py-2.5 font-mono text-xs">
-                                    </div>
-                                    <div>
-                                        <label class="block text-gray-600 font-bold mb-1">Mã bảo mật CVV</label>
-                                        <input type="password" placeholder="•••" maxlength="3" class="glass-input w-full rounded-xl px-4 py-2.5 font-mono text-xs">
+                                        <span class="text-gray-500 block text-[11px] font-semibold">Số tiền thanh toán:</span>
+                                        <span class="font-display font-black text-lg text-black" x-text="formatCurrency(payableAmount)"></span>
                                     </div>
                                 </div>
-                                <div>
-                                    <label class="block text-gray-600 font-bold mb-1">Tên in trên thẻ</label>
-                                    <input type="text" :value="buyerInfo.fullName.toUpperCase()" class="glass-input w-full rounded-xl px-4 py-2.5 font-mono uppercase text-xs">
+                                <div class="bg-[#FAF9F6] rounded-2xl p-3.5 border border-black/5 flex items-center justify-between">
+                                    <div>
+                                        <span class="text-gray-500 block text-[11px] font-semibold">Mã tham chiếu giỏ vé:</span>
+                                        <span class="font-mono font-black text-base text-black tracking-wider" x-text="cartRef"></span>
+                                    </div>
+                                    <button type="button" @click="copyToClipboard(cartRef, 'Mã tham chiếu')" class="btn-ghost-light px-3 py-1.5 rounded-xl text-xs font-bold cursor-pointer">Sao chép</button>
                                 </div>
                             </div>
                         </div>
@@ -912,99 +783,33 @@
 
                             <!-- Top QR Header Badge -->
                             <div class="flex items-center justify-center gap-2">
-                                <span class="badge-gold text-[10px] px-3 py-0.5 rounded-full font-black uppercase" x-show="selectedMethod === 'vietqr'">
-                                    VIETQR · NAPAS247
-                                </span>
-                                <span class="badge-rose text-[10px] px-3 py-0.5 rounded-full font-black uppercase" x-show="selectedMethod === 'momo'">
-                                    MOMO QR PAY
-                                </span>
-                                <span class="badge-sage text-[10px] px-3 py-0.5 rounded-full font-black uppercase" x-show="selectedMethod === 'zalopay'">
-                                    ZALOPAY QR CODE
+                                <span class="badge-gold text-[10px] px-3 py-0.5 rounded-full font-black uppercase" x-show="selectedMethod !== 'card'">
+                                    QR MINH HỌA
                                 </span>
                                 <span class="badge-dark text-[10px] px-3 py-0.5 rounded-full font-black uppercase" x-show="selectedMethod === 'card'">
-                                    SECURE CHECKOUT
+                                    THẺ GIẢ LẬP
                                 </span>
                             </div>
 
-                            <!-- High-Fidelity Clickable QR Card (VietQR) -->
-                            <div 
-                                x-show="selectedMethod === 'vietqr'"
-                                @click="simulatePaymentSuccess()"
-                                class="cursor-pointer group relative mx-auto p-4 bg-[#FAF9F6] rounded-2xl border border-black/10 hover:border-gold-dark hover:shadow-lg transition-all"
+                            <!-- Demo QR (không phải mã thanh toán thật) -->
+                            <div
+                                x-show="selectedMethod !== 'card'"
+                                class="relative mx-auto p-4 bg-[#FAF9F6] rounded-2xl border border-black/10"
                             >
-                                <!-- Real VietQR Image with high crispness -->
-                                <div class="w-60 max-w-full mx-auto bg-white rounded-xl p-2 shadow-sm border border-black/5 overflow-hidden group-hover:scale-[1.01] transition-transform">
-                                    <img 
-                                        :src="vietQrUrl" 
-                                        alt="VietQR Payment Code"
+                                <div class="w-56 max-w-full mx-auto bg-white rounded-xl p-2 shadow-sm border border-black/5 overflow-hidden">
+                                    <img
+                                        :src="demoQrUrl"
+                                        alt="Mã QR minh họa – không chuyển tiền"
                                         class="w-full h-auto object-contain rounded-lg"
-                                        onerror="this.onerror=null; this.src='https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=TICKETBOX_PAYMENT_TBX';"
                                     >
                                 </div>
-                                <p class="text-[11px] text-gray-500 mt-2 font-medium">Quét mã bằng ứng dụng Ngân hàng của bạn</p>
+                                <p class="text-xs text-[#CC0000] mt-2 font-black uppercase tracking-wide">Mã QR minh họa – không chuyển tiền</p>
+                                <p class="text-[11px] text-gray-500 mt-1 font-medium">Mã chỉ chứa dòng chữ "DEMO THANH TOAN GIA LAP", không phải mã thanh toán ngân hàng/ví.</p>
                             </div>
 
-                            <!-- MoMo QR Card -->
-                            <div 
-                                x-show="selectedMethod === 'momo'"
-                                @click="simulatePaymentSuccess()"
-                                class="cursor-pointer group relative mx-auto p-4 bg-[#FAF9F6] rounded-2xl border border-[#A50064]/30 hover:border-[#A50064] hover:shadow-lg transition-all"
-                                style="display: none;"
-                            >
-                                <div class="w-56 h-56 mx-auto bg-gradient-to-b from-[#A50064] to-[#80004D] rounded-2xl p-3 shadow-md flex flex-col items-center justify-between text-white">
-                                    <div class="flex items-center justify-between w-full px-2">
-                                        <span class="font-black text-xs tracking-wider">MoMo Pay</span>
-                                        <span class="text-[10px] bg-white/20 px-2 py-0.5 rounded-full font-bold">24/7</span>
-                                    </div>
-                                    <div class="w-36 h-36 bg-white rounded-xl p-2 flex items-center justify-center">
-                                        <img 
-                                            :src="'https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=2|99|0988888999|TICKETBOX_VIETNAM||0|0|' + totalAmount + '|' + orderCode + '|transfer_myqr'" 
-                                            alt="MoMo QR"
-                                            class="w-full h-full object-contain"
-                                        >
-                                    </div>
-                                    <span class="text-[11px] font-bold" x-text="formatCurrency(payableAmount)">500.000 ₫</span>
-                                </div>
-                                <p class="text-[11px] text-gray-500 mt-2 font-medium">Quét mã bằng ứng dụng MoMo</p>
-                            </div>
-
-                            <!-- ZaloPay QR Card -->
-                            <div 
-                                x-show="selectedMethod === 'zalopay'"
-                                @click="simulatePaymentSuccess()"
-                                class="cursor-pointer group relative mx-auto p-4 bg-[#FAF9F6] rounded-2xl border border-[#0068FF]/30 hover:border-[#0068FF] hover:shadow-lg transition-all"
-                                style="display: none;"
-                            >
-                                <div class="w-56 h-56 mx-auto bg-gradient-to-b from-[#0068FF] to-[#0047B3] rounded-2xl p-3 shadow-md flex flex-col items-center justify-between text-white">
-                                    <div class="flex items-center justify-between w-full px-2">
-                                        <span class="font-black text-xs tracking-wider">ZaloPay</span>
-                                        <span class="text-[10px] bg-white/20 px-2 py-0.5 rounded-full font-bold">QR</span>
-                                    </div>
-                                    <div class="w-36 h-36 bg-white rounded-xl p-2 flex items-center justify-center">
-                                        <img 
-                                            :src="'https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=ZALOPAY_TICKETBOX_' + orderCode + '_' + totalAmount" 
-                                            alt="ZaloPay QR"
-                                            class="w-full h-full object-contain"
-                                        >
-                                    </div>
-                                    <span class="text-[11px] font-bold" x-text="formatCurrency(payableAmount)">500.000 ₫</span>
-                                </div>
-                                <p class="text-[11px] text-gray-500 mt-2 font-medium">Quét mã bằng ứng dụng Zalo hoặc ZaloPay</p>
-                            </div>
-
-                            <!-- Card Checkout Trigger -->
-                            <div x-show="selectedMethod === 'card'" style="display: none;" class="p-4 bg-[#FAF9F6] rounded-2xl border border-black/10">
-                                <div class="w-full h-36 bg-gradient-to-tr from-gray-900 via-gray-800 to-black rounded-2xl p-4 text-white flex flex-col justify-between shadow-lg">
-                                    <div class="flex justify-between items-center">
-                                        <span class="text-xs font-mono font-bold tracking-widest text-gold-antique">TICKETBOX VIP PASS</span>
-                                        <span class="text-xs font-black">VISA</span>
-                                    </div>
-                                    <div class="font-mono text-sm tracking-widest text-center text-gray-300">•••• •••• •••• 8899</div>
-                                    <div class="flex justify-between items-center text-[10px]">
-                                        <span class="uppercase font-bold" x-text="buyerInfo.fullName">NGUYEN VAN KIEN</span>
-                                        <span class="font-mono">12/28</span>
-                                    </div>
-                                </div>
+                            <!-- Card: no card data collected -->
+                            <div x-show="selectedMethod === 'card'" style="display: none;" class="p-4 bg-[#FAF9F6] rounded-2xl border border-black/10 text-xs text-gray-700 font-semibold leading-relaxed">
+                                Thanh toán thẻ giả lập: hệ thống không thu thông tin thẻ (số thẻ, ngày hết hạn, CVV). Bấm nút bên dưới để hoàn tất đơn vé.
                             </div>
 
                             <!-- Primary Action Button -->

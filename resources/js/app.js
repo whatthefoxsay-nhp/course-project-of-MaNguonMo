@@ -491,9 +491,10 @@ Alpine.data('ticketPaymentManager', (config = {}) => ({
     step: 'cart', // 'cart' | 'payment_qr' | 'e_ticket'
     isProcessingPayment: false,
     paymentSuccess: false,
-    selectedMethod: 'vietqr', // 'vietqr' | 'momo' | 'zalopay' | 'card'
-    selectedBank: 'TCB', // 'TCB' | 'VCB' | 'MB'
-    orderCode: 'TBX-' + Math.floor(100000 + Math.random() * 900000),
+    selectedMethod: 'vietqr', // 'vietqr' | 'momo' | 'zalopay' | 'card' (đều là giả lập)
+    // Mã tham chiếu tạm của giỏ vé (chỉ để hiển thị); mã đơn thật do server trả về sau khi thanh toán.
+    cartRef: 'GIO-' + Math.floor(100000 + Math.random() * 900000),
+    orderCode: '',
     totalAmount: config.totalAmount || 0,
     items: config.items || [],
     discountCodeInput: '',
@@ -506,48 +507,16 @@ Alpine.data('ticketPaymentManager', (config = {}) => ({
         phone: config.userPhone || '',
         email: config.userEmail || '',
     },
-    banks: {
-        TCB: {
-            code: 'TCB',
-            shortName: 'Techcombank',
-            fullName: 'Ngân hàng TMCP Kỹ Thương Việt Nam',
-            accountNo: '1903 8888 6688',
-            accountHolder: 'CONG TY CP TICKETBOX VIETNAM',
-            color: '#CC0000',
-            logoBg: 'bg-red-600',
-        },
-        VCB: {
-            code: 'VCB',
-            shortName: 'Vietcombank',
-            fullName: 'Ngân hàng TMCP Ngoại Thương Việt Nam',
-            accountNo: '0071 0008 89999',
-            accountHolder: 'CONG TY CP TICKETBOX VIETNAM',
-            color: '#005E28',
-            logoBg: 'bg-emerald-700',
-        },
-        MB: {
-            code: 'MB',
-            shortName: 'MBBank',
-            fullName: 'Ngân hàng TMCP Quân Đội',
-            accountNo: '8888 9999 6868',
-            accountHolder: 'CONG TY CP TICKETBOX VIETNAM',
-            color: '#002B66',
-            logoBg: 'bg-blue-800',
-        }
-    },
-    momoInfo: {
-        merchant: 'TICKETBOX VIETNAM',
-        phone: '0988 888 999',
-        fee: 'Miễn phí',
-    },
-    zalopayInfo: {
-        merchant: 'TICKETBOX TICKET JSC',
-        appId: 'TBX-APP-889',
-        fee: 'Miễn phí',
-    },
     toastMsg: '',
     showToast: false,
     toastTimer: null,
+
+    // QR MINH HỌA: nội dung là văn bản thường, KHÔNG phải payload VietQR/EMVCo hay ví điện tử,
+    // nên quét bằng app ngân hàng sẽ không tạo được lệnh chuyển tiền.
+    get demoQrUrl() {
+        const text = `DEMO THANH TOAN GIA LAP - ${this.orderCode || this.cartRef}`;
+        return 'https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=' + encodeURIComponent(text);
+    },
 
     get payableAmount() {
         if (this.paidAmount !== null) return this.paidAmount;
@@ -589,17 +558,6 @@ Alpine.data('ticketPaymentManager', (config = {}) => ({
         this.appliedDiscount = null;
         this.discountCodeInput = '';
         this.discountMessage = '';
-    },
-
-    get currentBank() {
-        return this.banks[this.selectedBank] || this.banks.TCB;
-    },
-
-    get vietQrUrl() {
-        const bank = this.currentBank;
-        const addInfo = encodeURIComponent(this.orderCode);
-        const name = encodeURIComponent(bank.accountHolder);
-        return `https://img.vietqr.io/image/${bank.code}-${bank.accountNo}-compact2.png?amount=${this.totalAmount}&addInfo=${addInfo}&accountName=${name}`;
     },
 
     notify(msg) {

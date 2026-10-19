@@ -100,6 +100,26 @@ test('the cart buyer form no longer asks for national id or address', function (
         ->assertDontSee('Địa chỉ liên hệ');
 });
 
+test('the payment step only shows a labelled demo QR and collects no card data', function () {
+    $user = createCustomer();
+    holdCompletionSeats($user, 1);
+
+    $html = $this->actingAs($user)->get(route('cart.index'))->assertOk()->getContent();
+
+    expect($html)->toContain('Mã QR minh họa – không chuyển tiền')
+        ->and($html)->toContain('không thu thông tin thẻ')
+        ->and($html)->not->toContain('img.vietqr.io')
+        ->and($html)->not->toContain('CONG TY CP TICKETBOX VIETNAM')
+        ->and($html)->not->toContain('0988888999')
+        ->and($html)->not->toContain('Số thẻ thanh toán')
+        ->and($html)->not->toContain('Mã bảo mật CVV');
+
+    $js = file_get_contents(resource_path('js/app.js'));
+    expect($js)->not->toContain('img.vietqr.io')
+        ->and($js)->not->toContain('accountNo')
+        ->and($js)->toContain('DEMO THANH TOAN GIA LAP');
+});
+
 test('checkout is refused once the showtime has started', function () {
     $user = createCustomer();
     $showtime = holdCompletionSeats($user, 1);
