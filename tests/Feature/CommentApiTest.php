@@ -79,6 +79,11 @@ test('anyone can list comments newest first with pagination', function () {
         ->assertJsonPath('next_page_url', null);
 });
 
+test('a tampered pagination cursor is rejected instead of crashing', function () {
+    $this->getJson(route('comments.index', [$this->event, 'cursor' => base64_encode('{}')]))->assertStatus(400);
+    $this->getJson(route('comments.index', [$this->event, 'cursor' => 'not-a-cursor']))->assertStatus(400);
+});
+
 test('comment content is returned raw, never as html', function () {
     $user = createCustomer();
 

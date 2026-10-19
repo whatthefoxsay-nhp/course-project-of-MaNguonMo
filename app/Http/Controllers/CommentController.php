@@ -23,8 +23,19 @@ class CommentController extends Controller
         abort_unless($event->status === 'published', 404);
 
         $cursor = $request->query('cursor');
+        $cursor = is_string($cursor) ? $cursor : '';
 
-        return response()->json(self::page($event, $request->user(), is_string($cursor) ? $cursor : ''));
+        // Con trỏ do client gửi lên: chỉ chấp nhận đúng dạng Laravel tạo ra, tránh lỗi 500 khi bị sửa tay.
+        if ($cursor !== '') {
+            $decoded = json_decode(base64_decode(strtr($cursor, '-_', '+/')), true);
+            abort_unless(
+                is_array($decoded) && is_bool($decoded['_pointsToNextItems'] ?? null) && is_int($decoded['id'] ?? null),
+                400,
+                'Con trỏ phân trang không hợp lệ.'
+            );
+        }
+
+        return response()->json(self::page($event, $request->user(), $cursor));
     }
 
     /**
