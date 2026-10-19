@@ -2,8 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\BookingItem;
 use App\Models\Category;
 use App\Models\Event;
+use App\Models\Room;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -25,6 +28,7 @@ class HomeController extends Controller
         $query = Event::published()
             ->with('category')
             ->withMin('showtimes', 'base_price')
+            ->withMin(['showtimes as next_showtime_at' => fn (Builder $q) => $q->where('start_time', '>', now())], 'start_time')
             ->latest('release_date');
 
         if ($currentTab === 'concert') {
@@ -51,6 +55,20 @@ class HomeController extends Controller
             'spotlightEvent' => $spotlightEvent,
             'currentTab' => $currentTab,
             'categories' => Category::orderBy('name')->get(),
+            'stats' => $this->stats(),
         ]);
+    }
+
+    /** Số liệu thật cho dải thống kê ở Hero. */
+    private function stats(): array
+    {
+        return [
+            'events_on_sale' => Event::published()
+                ->whereHas('showtimes', fn (Builder $q) => $q->where('start_time', '>', now()))
+                ->count(),
+            'tickets_sold' => BookingItem::whereHas('booking', fn (Builder $q) => $q->where('status', 'confirmed'))
+                ->count(),
+            'venues' => Room::count(),
+        ];
     }
 }

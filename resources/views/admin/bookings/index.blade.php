@@ -107,7 +107,7 @@
                                 <td class="py-3.5 px-3 whitespace-nowrap">
                                     <div class="flex items-center gap-2">
                                         <div class="w-7 h-7 rounded-xl bg-gradient-to-br from-indigo-500 to-blue-600 text-white flex items-center justify-center font-bold text-[10px] shadow-xs shrink-0">
-                                            {{ strtoupper(substr($booking->user?->name ?? 'K', 0, 1)) }}
+                                            {{ mb_strtoupper(mb_substr($booking->user?->name ?? 'K', 0, 1)) }}
                                         </div>
                                         <div class="min-w-0 max-w-[120px] sm:max-w-[150px]">
                                             <div class="font-bold text-black text-xs truncate" title="{{ $booking->user?->name ?? 'Khách vãng lai' }}">{{ $booking->user?->name ?? 'Khách vãng lai' }}</div>

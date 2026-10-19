@@ -1,4 +1,4 @@
-<x-site-layout :title="'Chọn Vé & Chỗ Ngồi: ' . $movie->title . ' - TicketBox'">
+<x-site-layout :title="'Chọn Vé & Chỗ Ngồi: ' . $movie->title">
     <div class="max-w-[1440px] mx-auto px-4 sm:px-8 py-8 sm:py-12 space-y-8">
         
         <!-- Navigation Breadcrumbs & Back link -->

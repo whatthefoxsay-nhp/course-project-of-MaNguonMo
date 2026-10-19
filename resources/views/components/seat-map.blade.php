@@ -135,7 +135,7 @@
         defaultViewMode: 'zone',
         availableSeatsByZone: {
             @foreach ($ticketTiers as $key => $tier)
-                '{{ $key }}': @js($seatsCollection->where('type', $key)->values()->map(fn($s) => [
+                @js((string) $key): @js($seatsCollection->where('type', $key)->values()->map(fn($s) => [
                     'id' => $s->id,
                     'number' => (string) $s->seat_number,
                     'row' => $s->row_label,
@@ -176,7 +176,7 @@
                             Sơ Đồ Sân Khấu &amp; Khán Đài ({{ $venuePresetLabel }})
                         </span>
                         <span class="text-xs text-gray-500 font-semibold hidden sm:inline">
-                            Sức chứa: {{ number_format($showtime->room->capacity) }} chỗ · {{ $showtime->room->name }}
+                            Sức chứa: {{ number_format($showtime->room->capacity, 0, ',', '.') }} chỗ · {{ $showtime->room->name }}
                         </span>
                     </div>
                     <h3 class="font-display font-black text-xl sm:text-2xl text-black mt-1">
@@ -255,13 +255,13 @@
                 @foreach ($ticketTiers as $key => $tier)
                     <button 
                         type="button"
-                        @click="selectConcertZone('{{ $key }}')"
-                        :class="activeZoneFilter === '{{ $key }}' ? 'bg-black text-white shadow-md ring-2 ring-gold-antique' : 'bg-[#FAF9F6] text-gray-700 hover:bg-black/5 border border-black/5'"
+                        @click="selectConcertZone(@js((string) $key))"
+                        :class="activeZoneFilter === @js((string) $key) ? 'bg-black text-white shadow-md ring-2 ring-gold-antique' : 'bg-[#FAF9F6] text-gray-700 hover:bg-black/5 border border-black/5'"
                         class="px-3.5 py-2 rounded-full text-xs font-bold transition-all whitespace-nowrap flex items-center gap-1.5"
                     >
                         <span>{{ $tier['icon'] }}</span>
                         <span>{{ $tier['name'] }}</span>
-                        <span class="text-[10px] font-mono opacity-80">({{ number_format($tier['price']) }}₫)</span>
+                        <span class="text-[10px] font-mono opacity-80">({{ number_format($tier['price'], 0, ',', '.') }}₫)</span>
                     </button>
                 @endforeach
             </div>
@@ -411,7 +411,7 @@
                                     class="transition-all"
                                 />
                                 <text x="165" y="325" fill="#BFDBFE" font-size="13" font-weight="900" text-anchor="middle" transform="rotate(-70 165 325)">KHÁN ĐÀI C (CÁNH TRÁI)</text>
-                                <text x="180" y="325" fill="#93C5FD" font-size="10" font-weight="bold" text-anchor="middle" transform="rotate(-70 180 325)">{{ number_format($ticketTiers['cat2_wings']['price'] ?? 250000) }}₫</text>
+                                <text x="180" y="325" fill="#93C5FD" font-size="10" font-weight="bold" text-anchor="middle" transform="rotate(-70 180 325)">{{ number_format($ticketTiers['cat2_wings']['price'] ?? 250000, 0, ',', '.') }}₫</text>
                             </g>
 
                             <!-- 3. KHÁN ĐÀI D (CÁNH PHẢI / EAST WING STAND) -->
@@ -429,7 +429,7 @@
                                     class="transition-all"
                                 />
                                 <text x="835" y="325" fill="#BFDBFE" font-size="13" font-weight="900" text-anchor="middle" transform="rotate(70 835 325)">KHÁN ĐÀI D (CÁNH PHẢI)</text>
-                                <text x="820" y="325" fill="#93C5FD" font-size="10" font-weight="bold" text-anchor="middle" transform="rotate(70 820 325)">{{ number_format($ticketTiers['cat2_wings']['price'] ?? 250000) }}₫</text>
+                                <text x="820" y="325" fill="#93C5FD" font-size="10" font-weight="bold" text-anchor="middle" transform="rotate(70 820 325)">{{ number_format($ticketTiers['cat2_wings']['price'] ?? 250000, 0, ',', '.') }}₫</text>
                             </g>
 
                             <!-- 4. KHÁN ĐÀI B (TẦNG 2 TRÊN CAO / UPPER STAND CAT 1) -->
@@ -447,7 +447,7 @@
                                     class="transition-all"
                                 />
                                 <text x="500" y="700" fill="#A7F3D0" font-size="13" font-weight="900" text-anchor="middle">KHÁN ĐÀI B (TẦNG 2 TRÊN CAO)</text>
-                                <text x="500" y="720" fill="#6EE7B7" font-size="11" font-weight="bold" text-anchor="middle">{{ number_format($ticketTiers['cat1_stand']['price'] ?? 290000) }}₫ · VIP TẦNG CAO</text>
+                                <text x="500" y="720" fill="#6EE7B7" font-size="11" font-weight="bold" text-anchor="middle">{{ number_format($ticketTiers['cat1_stand']['price'] ?? 290000, 0, ',', '.') }}₫ · VIP TẦNG CAO</text>
                             </g>
 
                             <!-- 5. KHÁN ĐÀI A (TRUNG TÂM TẦNG 1 / CENTER STAND CAT 1) -->
@@ -466,7 +466,7 @@
                                     class="transition-all"
                                 />
                                 <text x="500" y="605" fill="#D1FAE5" font-size="14" font-weight="900" text-anchor="middle">✨ KHÁN ĐÀI A (TRUNG TÂM TẦNG 1) ✨</text>
-                                <text x="500" y="625" fill="#6EE7B7" font-size="11" font-weight="bold" text-anchor="middle">{{ number_format($ticketTiers['cat1_stand']['price'] ?? 290000) }}₫ · TẦM NHÌN TRỰC DIỆN SÂN KHẤU</text>
+                                <text x="500" y="625" fill="#6EE7B7" font-size="11" font-weight="bold" text-anchor="middle">{{ number_format($ticketTiers['cat1_stand']['price'] ?? 290000, 0, ',', '.') }}₫ · TẦM NHÌN TRỰC DIỆN SÂN KHẤU</text>
                             </g>
 
                             <!-- 6. VIP FLOOR A & B (MẶT SÀN TRUNG TÂM) -->
@@ -486,7 +486,7 @@
                                     class="transition-all"
                                 />
                                 <text x="402" y="430" fill="#FEF3C7" font-size="12" font-weight="900" text-anchor="middle">⭐ VIP FLOOR A</text>
-                                <text x="402" y="450" fill="#FCD34D" font-size="10" font-weight="bold" text-anchor="middle">{{ number_format($ticketTiers['vip_gold']['price'] ?? 330000) }}₫</text>
+                                <text x="402" y="450" fill="#FCD34D" font-size="10" font-weight="bold" text-anchor="middle">{{ number_format($ticketTiers['vip_gold']['price'] ?? 330000, 0, ',', '.') }}₫</text>
                                 <text x="402" y="468" fill="#9CA3AF" font-size="9" text-anchor="middle">Hàng FL1 - FL4</text>
 
                                 <!-- Floor B (Phải) -->
@@ -499,7 +499,7 @@
                                     class="transition-all"
                                 />
                                 <text x="598" y="430" fill="#FEF3C7" font-size="12" font-weight="900" text-anchor="middle">⭐ VIP FLOOR B</text>
-                                <text x="598" y="450" fill="#FCD34D" font-size="10" font-weight="bold" text-anchor="middle">{{ number_format($ticketTiers['vip_gold']['price'] ?? 330000) }}₫</text>
+                                <text x="598" y="450" fill="#FCD34D" font-size="10" font-weight="bold" text-anchor="middle">{{ number_format($ticketTiers['vip_gold']['price'] ?? 330000, 0, ',', '.') }}₫</text>
                                 <text x="598" y="468" fill="#9CA3AF" font-size="9" text-anchor="middle">Hàng FL1 - FL4</text>
                             </g>
 
@@ -526,7 +526,7 @@
                                 />
                                 <text x="379" y="195" fill="#FFE4E6" font-size="13" font-weight="900" text-anchor="middle">🔥 GA PIT A</text>
                                 <text x="379" y="215" fill="#FDA4AF" font-size="10" font-weight="bold" text-anchor="middle">FANZONE (TRÁI)</text>
-                                <text x="379" y="235" fill="#FECDD3" font-size="10" font-weight="black" text-anchor="middle">{{ number_format($ticketTiers['standing_pit']['price'] ?? 230000) }}₫</text>
+                                <text x="379" y="235" fill="#FECDD3" font-size="10" font-weight="black" text-anchor="middle">{{ number_format($ticketTiers['standing_pit']['price'] ?? 230000, 0, ',', '.') }}₫</text>
 
                                 <!-- GA Pit B (Phải) -->
                                 <rect 
@@ -540,7 +540,7 @@
                                 />
                                 <text x="621" y="195" fill="#FFE4E6" font-size="13" font-weight="900" text-anchor="middle">🔥 GA PIT B</text>
                                 <text x="621" y="215" fill="#FDA4AF" font-size="10" font-weight="bold" text-anchor="middle">FANZONE (PHẢI)</text>
-                                <text x="621" y="235" fill="#FECDD3" font-size="10" font-weight="black" text-anchor="middle">{{ number_format($ticketTiers['standing_pit']['price'] ?? 230000) }}₫</text>
+                                <text x="621" y="235" fill="#FECDD3" font-size="10" font-weight="black" text-anchor="middle">{{ number_format($ticketTiers['standing_pit']['price'] ?? 230000, 0, ',', '.') }}₫</text>
                             </g>
 
                             <!-- 8. SVIP B-STAGE DIAMOND (VÒNG QUANH ĐẦU SÂN KHẤU B-STAGE) -->
@@ -559,7 +559,7 @@
                                     class="transition-all"
                                 />
                                 <text x="500" y="375" fill="#FEF08A" font-size="12" font-weight="900" text-anchor="middle">💎 SVIP B-STAGE DIAMOND 💎</text>
-                                <text x="500" y="392" fill="#FACC15" font-size="10" font-weight="black" text-anchor="middle">{{ number_format($ticketTiers['svip_diamond']['price'] ?? 400000) }}₫ · SÁT SÀN DIỄN B-STAGE</text>
+                                <text x="500" y="392" fill="#FACC15" font-size="10" font-weight="black" text-anchor="middle">{{ number_format($ticketTiers['svip_diamond']['price'] ?? 400000, 0, ',', '.') }}₫ · SÁT SÀN DIỄN B-STAGE</text>
                             </g>
 
                             <!-- 9. T-STAGE EXTENDED CATWALK RUNWAY -->
@@ -639,10 +639,10 @@
                             @foreach ($zoneStats as $zKey => $zone)
                                 <div 
                                     id="zone-card-{{ $zKey }}"
-                                    @click="selectConcertZone('{{ $zKey }}')"
-                                    @mouseenter="setHoveredZone('{{ $zKey }}')"
+                                    @click="selectConcertZone(@js((string) $zKey))"
+                                    @mouseenter="setHoveredZone(@js((string) $zKey))"
                                     @mouseleave="clearHoveredZone()"
-                                    :class="selectedZone === '{{ $zKey }}' ? 'border-black ring-2 ring-gold-antique bg-amber-500/5 shadow-md' : 'border-black/10 hover:border-black/30 bg-[#FAF9F6]'"
+                                    :class="selectedZone === @js((string) $zKey) ? 'border-black ring-2 ring-gold-antique bg-amber-500/5 shadow-md' : 'border-black/10 hover:border-black/30 bg-[#FAF9F6]'"
                                     class="p-3.5 rounded-2xl border transition-all cursor-pointer group"
                                 >
                                     <div class="flex items-center justify-between gap-3">
@@ -670,7 +670,7 @@
                                         <div class="flex items-center gap-2.5 shrink-0">
                                             <div class="text-right">
                                                 <span class="font-display font-black text-sm text-black block">
-                                                    {{ number_format($zone['price']) }}₫
+                                                    {{ number_format($zone['price'], 0, ',', '.') }}₫
                                                 </span>
                                                 <span class="text-[9px] text-gray-400 uppercase font-bold block">
                                                     {{ $zKey === 'standing_pit' ? 'Vé đứng' : 'Vé ngồi' }}
@@ -681,8 +681,8 @@
                                             <div class="flex items-center bg-white border border-black/15 rounded-xl p-0.5 shadow-xs">
                                                 <button 
                                                     type="button"
-                                                    @click.stop="quickRemoveSeatFromZone('{{ $zKey }}')"
-                                                    :disabled="getZoneSelectedCount('{{ $zKey }}') <= 0"
+                                                    @click.stop="quickRemoveSeatFromZone(@js((string) $zKey))"
+                                                    :disabled="getZoneSelectedCount(@js((string) $zKey)) <= 0"
                                                     class="w-7 h-7 rounded-lg flex items-center justify-center text-gray-700 hover:bg-black hover:text-white font-black text-sm transition-all disabled:opacity-20 disabled:pointer-events-none"
                                                     title="Giảm 1 vé"
                                                 >
@@ -691,16 +691,16 @@
 
                                                 <span 
                                                     class="w-7 text-center font-mono font-black text-xs" 
-                                                    :class="getZoneSelectedCount('{{ $zKey }}') > 0 ? 'text-rose-taupe font-bold' : 'text-gray-400'"
-                                                    x-text="getZoneSelectedCount('{{ $zKey }}')"
+                                                    :class="getZoneSelectedCount(@js((string) $zKey)) > 0 ? 'text-rose-taupe font-bold' : 'text-gray-400'"
+                                                    x-text="getZoneSelectedCount(@js((string) $zKey))"
                                                 >
                                                     0
                                                 </span>
 
                                                 <button 
                                                     type="button"
-                                                    @click.stop="quickPickSeatFromZone('{{ $zKey }}')"
-                                                    :disabled="getZoneSelectedCount('{{ $zKey }}') >= {{ $zone['available'] }} || totalTicketCount >= 8"
+                                                    @click.stop="quickPickSeatFromZone(@js((string) $zKey))"
+                                                    :disabled="getZoneSelectedCount(@js((string) $zKey)) >= {{ $zone['available'] }} || totalTicketCount >= 8"
                                                     class="w-7 h-7 rounded-lg bg-black text-white hover:bg-gold-dark font-black text-sm flex items-center justify-center transition-all disabled:opacity-20 disabled:pointer-events-none shadow-xs active:scale-95"
                                                     title="Thêm 1 vé"
                                                 >
@@ -711,7 +711,7 @@
                                     </div>
 
                                     <!-- Expanded Perks info when selected -->
-                                    <div x-show="selectedZone === '{{ $zKey }}'" x-transition class="mt-2.5 pt-2.5 border-t border-black/10 flex flex-wrap gap-1.5 text-[10px] text-gray-600">
+                                    <div x-show="selectedZone === @js((string) $zKey)" x-transition class="mt-2.5 pt-2.5 border-t border-black/10 flex flex-wrap gap-1.5 text-[10px] text-gray-600">
                                         @if (!empty($zone['perks']))
                                             @foreach ($zone['perks'] as $perk)
                                                 <span class="inline-flex items-center gap-1 bg-white px-2 py-0.5 rounded-md border border-black/5 font-medium shadow-xs">
@@ -772,10 +772,13 @@
                 @endif
             </div>
 
-            <!-- ZOOM CONTAINER (Có thêm khoảng đệm pb-12 để hàng ghế cuối cùng không bao giờ bị chèn/đè) -->
-            <div 
-                :style="`transform: scale(${zoomScale}); transform-origin: top center; transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);`"
-                class="mt-6 pb-12 space-y-10 min-w-max mx-auto flex flex-col items-center"
+            <!-- Khung cuộn ngang: sơ đồ rộng hơn màn hình điện thoại vẫn kéo tới được mọi ghế -->
+            <div class="relative z-10 overflow-x-auto overscroll-x-contain -mx-6 px-6 sm:mx-0 sm:px-0 [-webkit-overflow-scrolling:touch]">
+            <!-- ZOOM CONTAINER (Có thêm khoảng đệm pb-12 để hàng ghế cuối cùng không bao giờ bị chèn/đè).
+                 Dùng CSS zoom (ảnh hưởng layout) thay cho transform: scale để vùng cuộn tính đúng kích thước khi phóng to. -->
+            <div
+                :style="`zoom: ${zoomScale};`"
+                class="mt-6 pb-12 space-y-10 w-max min-w-full mx-auto flex flex-col items-center"
             >
 
                 @if ($isStadiumLayout)
@@ -829,7 +832,7 @@
                         </div>
                         <h5 class="font-display font-black text-xs sm:text-sm text-white">GA STANDING (TRÁI)</h5>
                         <p class="text-[10px] text-gray-400">Sát mép sàn diễn Catwalk</p>
-                        <div class="font-display font-black text-xs text-rose-300">{{ number_format($ticketTiers['standing_pit']['price'] ?? 230000) }}₫</div>
+                        <div class="font-display font-black text-xs text-rose-300">{{ number_format($ticketTiers['standing_pit']['price'] ?? 230000, 0, ',', '.') }}₫</div>
                         
                         <!-- Quick Standing Selector -->
                         <div class="flex items-center justify-center gap-2 pt-1">
@@ -846,7 +849,7 @@
                         <div class="bg-gradient-to-r from-amber-950/70 via-black to-amber-950/70 rounded-3xl p-4 border-2 border-gold-antique/80 text-center space-y-3 shadow-[0_0_30px_rgba(212,175,55,0.2)]">
                             <div class="flex items-center justify-between px-2">
                                 <span class="badge-gold text-[9px] px-2.5 py-0.5 rounded-full font-black uppercase">💎 SVIP B-Stage Floor</span>
-                                <span class="text-[10px] text-gold-light font-bold">{{ number_format($ticketTiers['svip_diamond']['price'] ?? 400000) }}₫</span>
+                                <span class="text-[10px] text-gold-light font-bold">{{ number_format($ticketTiers['svip_diamond']['price'] ?? 400000, 0, ',', '.') }}₫</span>
                             </div>
 
                             <!-- SVIP Seats Row -->
@@ -861,17 +864,17 @@
                                     <button
                                         type="button"
                                         @disabled($isBooked || $isHeld)
-                                        @click="toggleSeat({{ $seat->id }}, '{{ $seat->seat_number }}', '{{ $seat->row_label }}', '{{ $seat->type }}', '{{ $seat->type_name }}', '{{ $seat->status }}', {{ $seatPrice }}, {{ $seatPerks }})"
+                                        @click="toggleSeat({{ $seat->id }}, @js((string) $seat->seat_number), @js((string) $seat->row_label), @js((string) $seat->type), @js((string) $seat->type_name), @js((string) $seat->status), {{ $seatPrice }}, {{ $seatPerks }})"
                                         @mouseenter="setHoveredSeat({
-                                            code: '{{ $seat->code }}',
-                                            row: '{{ $seat->row_label }}',
-                                            number: '{{ $seat->seat_number }}',
-                                            sector: '{{ $seat->sector_label }}',
-                                            gate: '{{ $seat->gate }}',
-                                            type: '{{ $seat->type_name }}',
-                                            icon: '{{ $seat->type_icon }}',
+                                            code: @js((string) $seat->code),
+                                            row: @js((string) $seat->row_label),
+                                            number: @js((string) $seat->seat_number),
+                                            sector: @js((string) $seat->sector_label),
+                                            gate: @js((string) $seat->gate),
+                                            type: @js((string) $seat->type_name),
+                                            icon: @js((string) $seat->type_icon),
                                             price: {{ $seatPrice }},
-                                            status: '{{ $seat->status }}',
+                                            status: @js((string) $seat->status),
                                             perks: {{ $seatPerks }}
                                         })"
                                         @mouseleave="clearHoveredSeat()"
@@ -898,7 +901,7 @@
                         <div class="bg-black/60 rounded-3xl p-4 border border-gold-antique/40 space-y-3">
                             <div class="flex items-center justify-between px-2">
                                 <span class="badge-gold text-[9px] px-2 py-0.5 rounded-full font-bold">⭐ VIP Floor Seating (Mặt Sàn Trung Tâm)</span>
-                                <span class="text-[10px] text-gray-300 font-mono">{{ number_format($ticketTiers['vip_gold']['price'] ?? 330000) }}₫</span>
+                                <span class="text-[10px] text-gray-300 font-mono">{{ number_format($ticketTiers['vip_gold']['price'] ?? 330000, 0, ',', '.') }}₫</span>
                             </div>
 
                             <div class="space-y-2">
@@ -916,17 +919,17 @@
                                                 <button
                                                     type="button"
                                                     @disabled($isBooked || $isHeld)
-                                                    @click="toggleSeat({{ $seat->id }}, '{{ $seat->seat_number }}', '{{ $seat->row_label }}', '{{ $seat->type }}', '{{ $seat->type_name }}', '{{ $seat->status }}', {{ $seatPrice }}, {{ $seatPerks }})"
+                                                    @click="toggleSeat({{ $seat->id }}, @js((string) $seat->seat_number), @js((string) $seat->row_label), @js((string) $seat->type), @js((string) $seat->type_name), @js((string) $seat->status), {{ $seatPrice }}, {{ $seatPerks }})"
                                                     @mouseenter="setHoveredSeat({
-                                                        code: '{{ $seat->code }}',
-                                                        row: '{{ $seat->row_label }}',
-                                                        number: '{{ $seat->seat_number }}',
-                                                        sector: '{{ $seat->sector_label }}',
-                                                        gate: '{{ $seat->gate }}',
-                                                        type: '{{ $seat->type_name }}',
-                                                        icon: '{{ $seat->type_icon }}',
+                                                        code: @js((string) $seat->code),
+                                                        row: @js((string) $seat->row_label),
+                                                        number: @js((string) $seat->seat_number),
+                                                        sector: @js((string) $seat->sector_label),
+                                                        gate: @js((string) $seat->gate),
+                                                        type: @js((string) $seat->type_name),
+                                                        icon: @js((string) $seat->type_icon),
                                                         price: {{ $seatPrice }},
-                                                        status: '{{ $seat->status }}',
+                                                        status: @js((string) $seat->status),
                                                         perks: {{ $seatPerks }}
                                                     })"
                                                     @mouseleave="clearHoveredSeat()"
@@ -968,7 +971,7 @@
                         </div>
                         <h5 class="font-display font-black text-xs sm:text-sm text-white">GA STANDING (PHẢI)</h5>
                         <p class="text-[10px] text-gray-400">Sát mép sàn diễn Catwalk</p>
-                        <div class="font-display font-black text-xs text-rose-300">{{ number_format($ticketTiers['standing_pit']['price'] ?? 230000) }}₫</div>
+                        <div class="font-display font-black text-xs text-rose-300">{{ number_format($ticketTiers['standing_pit']['price'] ?? 230000, 0, ',', '.') }}₫</div>
                         
                         <!-- Quick Standing Selector -->
                         <div class="flex items-center justify-center gap-2 pt-1">
@@ -999,7 +1002,7 @@
                         >
                             <div class="flex items-center justify-between mb-2">
                                 <span class="text-[10px] font-bold text-blue-300">Khán Đài C (Cánh Trái)</span>
-                                <span class="text-[9px] text-gray-400 font-mono">{{ number_format($ticketTiers['cat2_wings']['price'] ?? 250000) }}₫</span>
+                                <span class="text-[9px] text-gray-400 font-mono">{{ number_format($ticketTiers['cat2_wings']['price'] ?? 250000, 0, ',', '.') }}₫</span>
                             </div>
 
                             <div class="grid grid-cols-4 gap-1.5">
@@ -1013,17 +1016,17 @@
                                     <button
                                         type="button"
                                         @disabled($isBooked || $isHeld)
-                                        @click="toggleSeat({{ $seat->id }}, '{{ $seat->seat_number }}', '{{ $seat->row_label }}', '{{ $seat->type }}', '{{ $seat->type_name }}', '{{ $seat->status }}', {{ $seatPrice }}, {{ $seatPerks }})"
+                                        @click="toggleSeat({{ $seat->id }}, @js((string) $seat->seat_number), @js((string) $seat->row_label), @js((string) $seat->type), @js((string) $seat->type_name), @js((string) $seat->status), {{ $seatPrice }}, {{ $seatPerks }})"
                                         @mouseenter="setHoveredSeat({
-                                            code: '{{ $seat->code }}',
-                                            row: '{{ $seat->row_label }}',
-                                            number: '{{ $seat->seat_number }}',
-                                            sector: '{{ $seat->sector_label }}',
-                                            gate: '{{ $seat->gate }}',
-                                            type: '{{ $seat->type_name }}',
-                                            icon: '{{ $seat->type_icon }}',
+                                            code: @js((string) $seat->code),
+                                            row: @js((string) $seat->row_label),
+                                            number: @js((string) $seat->seat_number),
+                                            sector: @js((string) $seat->sector_label),
+                                            gate: @js((string) $seat->gate),
+                                            type: @js((string) $seat->type_name),
+                                            icon: @js((string) $seat->type_icon),
                                             price: {{ $seatPrice }},
-                                            status: '{{ $seat->status }}',
+                                            status: @js((string) $seat->status),
                                             perks: {{ $seatPerks }}
                                         })"
                                         @mouseleave="clearHoveredSeat()"
@@ -1057,7 +1060,7 @@
                             >
                                 <div class="flex items-center justify-between mb-3 px-1">
                                     <span class="badge-sage text-[9px] px-2.5 py-0.5 rounded-full font-black uppercase">✨ Khán Đài A (Trung Tâm Tầng 1)</span>
-                                    <span class="text-[11px] text-emerald-400 font-mono font-bold">{{ number_format($ticketTiers['cat1_stand']['price'] ?? 290000) }}₫</span>
+                                    <span class="text-[11px] text-emerald-400 font-mono font-bold">{{ number_format($ticketTiers['cat1_stand']['price'] ?? 290000, 0, ',', '.') }}₫</span>
                                 </div>
 
                                 <div class="space-y-2">
@@ -1074,17 +1077,17 @@
                                                 <button
                                                     type="button"
                                                     @disabled($isBooked || $isHeld)
-                                                    @click="toggleSeat({{ $seat->id }}, '{{ $seat->seat_number }}', '{{ $seat->row_label }}', '{{ $seat->type }}', '{{ $seat->type_name }}', '{{ $seat->status }}', {{ $seatPrice }}, {{ $seatPerks }})"
+                                                    @click="toggleSeat({{ $seat->id }}, @js((string) $seat->seat_number), @js((string) $seat->row_label), @js((string) $seat->type), @js((string) $seat->type_name), @js((string) $seat->status), {{ $seatPrice }}, {{ $seatPerks }})"
                                                     @mouseenter="setHoveredSeat({
-                                                        code: '{{ $seat->code }}',
-                                                        row: '{{ $seat->row_label }}',
-                                                        number: '{{ $seat->seat_number }}',
-                                                        sector: '{{ $seat->sector_label }}',
-                                                        gate: '{{ $seat->gate }}',
-                                                        type: '{{ $seat->type_name }}',
-                                                        icon: '{{ $seat->type_icon }}',
+                                                        code: @js((string) $seat->code),
+                                                        row: @js((string) $seat->row_label),
+                                                        number: @js((string) $seat->seat_number),
+                                                        sector: @js((string) $seat->sector_label),
+                                                        gate: @js((string) $seat->gate),
+                                                        type: @js((string) $seat->type_name),
+                                                        icon: @js((string) $seat->type_icon),
                                                         price: {{ $seatPrice }},
-                                                        status: '{{ $seat->status }}',
+                                                        status: @js((string) $seat->status),
                                                         perks: {{ $seatPerks }}
                                                     })"
                                                     @mouseleave="clearHoveredSeat()"
@@ -1119,7 +1122,7 @@
                                 >
                                     <div class="flex items-center justify-between mb-2 px-1">
                                         <span class="text-[9px] font-bold text-emerald-300 uppercase">Khán Đài B (Tầng 2 Trên Cao)</span>
-                                        <span class="text-[10px] text-gray-400 font-mono">{{ number_format($ticketTiers['cat1_stand']['price'] ?? 290000) }}₫</span>
+                                        <span class="text-[10px] text-gray-400 font-mono">{{ number_format($ticketTiers['cat1_stand']['price'] ?? 290000, 0, ',', '.') }}₫</span>
                                     </div>
 
                                     <div class="space-y-1.5">
@@ -1136,17 +1139,17 @@
                                                     <button
                                                         type="button"
                                                         @disabled($isBooked || $isHeld)
-                                                        @click="toggleSeat({{ $seat->id }}, '{{ $seat->seat_number }}', '{{ $seat->row_label }}', '{{ $seat->type }}', '{{ $seat->type_name }}', '{{ $seat->status }}', {{ $seatPrice }}, {{ $seatPerks }})"
+                                                        @click="toggleSeat({{ $seat->id }}, @js((string) $seat->seat_number), @js((string) $seat->row_label), @js((string) $seat->type), @js((string) $seat->type_name), @js((string) $seat->status), {{ $seatPrice }}, {{ $seatPerks }})"
                                                         @mouseenter="setHoveredSeat({
-                                                            code: '{{ $seat->code }}',
-                                                            row: '{{ $seat->row_label }}',
-                                                            number: '{{ $seat->seat_number }}',
-                                                            sector: '{{ $seat->sector_label }}',
-                                                            gate: '{{ $seat->gate }}',
-                                                            type: '{{ $seat->type_name }}',
-                                                            icon: '{{ $seat->type_icon }}',
+                                                            code: @js((string) $seat->code),
+                                                            row: @js((string) $seat->row_label),
+                                                            number: @js((string) $seat->seat_number),
+                                                            sector: @js((string) $seat->sector_label),
+                                                            gate: @js((string) $seat->gate),
+                                                            type: @js((string) $seat->type_name),
+                                                            icon: @js((string) $seat->type_icon),
                                                             price: {{ $seatPrice }},
-                                                            status: '{{ $seat->status }}',
+                                                            status: @js((string) $seat->status),
                                                             perks: {{ $seatPerks }}
                                                         })"
                                                         @mouseleave="clearHoveredSeat()"
@@ -1182,7 +1185,7 @@
                         >
                             <div class="flex items-center justify-between mb-2">
                                 <span class="text-[10px] font-bold text-blue-300">Khán Đài D (Cánh Phải)</span>
-                                <span class="text-[9px] text-gray-400 font-mono">{{ number_format($ticketTiers['cat2_wings']['price'] ?? 250000) }}₫</span>
+                                <span class="text-[9px] text-gray-400 font-mono">{{ number_format($ticketTiers['cat2_wings']['price'] ?? 250000, 0, ',', '.') }}₫</span>
                             </div>
 
                             <div class="grid grid-cols-4 gap-1.5">
@@ -1196,17 +1199,17 @@
                                     <button
                                         type="button"
                                         @disabled($isBooked || $isHeld)
-                                        @click="toggleSeat({{ $seat->id }}, '{{ $seat->seat_number }}', '{{ $seat->row_label }}', '{{ $seat->type }}', '{{ $seat->type_name }}', '{{ $seat->status }}', {{ $seatPrice }}, {{ $seatPerks }})"
+                                        @click="toggleSeat({{ $seat->id }}, @js((string) $seat->seat_number), @js((string) $seat->row_label), @js((string) $seat->type), @js((string) $seat->type_name), @js((string) $seat->status), {{ $seatPrice }}, {{ $seatPerks }})"
                                         @mouseenter="setHoveredSeat({
-                                            code: '{{ $seat->code }}',
-                                            row: '{{ $seat->row_label }}',
-                                            number: '{{ $seat->seat_number }}',
-                                            sector: '{{ $seat->sector_label }}',
-                                            gate: '{{ $seat->gate }}',
-                                            type: '{{ $seat->type_name }}',
-                                            icon: '{{ $seat->type_icon }}',
+                                            code: @js((string) $seat->code),
+                                            row: @js((string) $seat->row_label),
+                                            number: @js((string) $seat->seat_number),
+                                            sector: @js((string) $seat->sector_label),
+                                            gate: @js((string) $seat->gate),
+                                            type: @js((string) $seat->type_name),
+                                            icon: @js((string) $seat->type_icon),
                                             price: {{ $seatPrice }},
-                                            status: '{{ $seat->status }}',
+                                            status: @js((string) $seat->status),
                                             perks: {{ $seatPerks }}
                                         })"
                                         @mouseleave="clearHoveredSeat()"
@@ -1241,7 +1244,7 @@
                 >
                     <div class="flex items-center justify-between px-2">
                         <span class="badge-rose text-[9px] px-3 py-0.5 rounded-full font-black uppercase">🥂 Skybox VIP Suites (Tầng Thượng Hoàng Gia)</span>
-                        <span class="text-[11px] text-pink-300 font-mono font-bold">{{ number_format($ticketTiers['skybox_suite']['price'] ?? 700000) }}₫ (Bao gồm 2 vé + Buffet)</span>
+                        <span class="text-[11px] text-pink-300 font-mono font-bold">{{ number_format($ticketTiers['skybox_suite']['price'] ?? 700000, 0, ',', '.') }}₫ (Bao gồm 2 vé + Buffet)</span>
                     </div>
 
                     <div class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-8 gap-2 pt-1">
@@ -1255,17 +1258,17 @@
                             <button
                                 type="button"
                                 @disabled($isBooked || $isHeld)
-                                @click="toggleSeat({{ $seat->id }}, '{{ $seat->seat_number }}', '{{ $seat->row_label }}', '{{ $seat->type }}', '{{ $seat->type_name }}', '{{ $seat->status }}', {{ $seatPrice }}, {{ $seatPerks }})"
+                                @click="toggleSeat({{ $seat->id }}, @js((string) $seat->seat_number), @js((string) $seat->row_label), @js((string) $seat->type), @js((string) $seat->type_name), @js((string) $seat->status), {{ $seatPrice }}, {{ $seatPerks }})"
                                 @mouseenter="setHoveredSeat({
-                                    code: '{{ $seat->code }}',
-                                    row: '{{ $seat->row_label }}',
-                                    number: '{{ $seat->seat_number }}',
-                                    sector: '{{ $seat->sector_label }}',
-                                    gate: '{{ $seat->gate }}',
-                                    type: '{{ $seat->type_name }}',
-                                    icon: '{{ $seat->type_icon }}',
+                                    code: @js((string) $seat->code),
+                                    row: @js((string) $seat->row_label),
+                                    number: @js((string) $seat->seat_number),
+                                    sector: @js((string) $seat->sector_label),
+                                    gate: @js((string) $seat->gate),
+                                    type: @js((string) $seat->type_name),
+                                    icon: @js((string) $seat->type_icon),
                                     price: {{ $seatPrice }},
-                                    status: '{{ $seat->status }}',
+                                    status: @js((string) $seat->status),
                                     perks: {{ $seatPerks }}
                                     })"
                                 @mouseleave="clearHoveredSeat()"
@@ -1348,7 +1351,7 @@
                                                     <button
                                                         type="button"
                                                         @disabled($isBooked || $isHeld)
-                                                        @click="toggleSeat({{ $seat->id }}, @js((string) $seat->seat_number), @js($seat->row_label), @js($seat->type), @js($seat->type_name), @js($seat->status), {{ $seat->price }}, @js($seat->perks))"
+                                                        @click="toggleSeat({{ $seat->id }}, @js((string) $seat->seat_number), @js((string) $seat->row_label), @js((string) $seat->type), @js((string) $seat->type_name), @js((string) $seat->status), {{ $seat->price }}, @js($seat->perks))"
                                                         @mouseenter="setHoveredSeat(@js($hoverData))"
                                                         @mouseleave="clearHoveredSeat()"
                                                         :class="{
@@ -1362,7 +1365,7 @@
                                                             @endif
                                                         }"
                                                         class="w-6 h-6 sm:w-7 sm:h-7 rounded-lg text-[10px] font-black flex items-center justify-center transition-all"
-                                                        title="{{ $seat->type_name }} · {{ number_format($seat->price) }}₫"
+                                                        title="{{ $seat->type_name }} · {{ number_format($seat->price, 0, ',', '.') }}₫"
                                                     >
                                                         <span>{{ $seat->seat_number }}</span>
                                                     </button>
@@ -1406,7 +1409,7 @@
                                                     <button
                                                         type="button"
                                                         @disabled($isBooked || $isHeld)
-                                                        @click="toggleSeat({{ $seat->id }}, @js((string) $seat->seat_number), @js($seat->row_label), @js($seat->type), @js($seat->type_name), @js($seat->status), {{ $seat->price }}, @js($seat->perks))"
+                                                        @click="toggleSeat({{ $seat->id }}, @js((string) $seat->seat_number), @js((string) $seat->row_label), @js((string) $seat->type), @js((string) $seat->type_name), @js((string) $seat->status), {{ $seat->price }}, @js($seat->perks))"
                                                         @mouseenter="setHoveredSeat(@js($hoverData))"
                                                         @mouseleave="clearHoveredSeat()"
                                                         :class="{
@@ -1420,7 +1423,7 @@
                                                             @endif
                                                         }"
                                                         class="w-6 h-6 sm:w-7 sm:h-7 rounded-lg text-[10px] font-black flex items-center justify-center transition-all"
-                                                        title="{{ $seat->type_name }} · {{ number_format($seat->price) }}₫"
+                                                        title="{{ $seat->type_name }} · {{ number_format($seat->price, 0, ',', '.') }}₫"
                                                     >
                                                         <span>{{ $seat->seat_number }}</span>
                                                     </button>
@@ -1464,7 +1467,7 @@
                                                     <button
                                                         type="button"
                                                         @disabled($isBooked || $isHeld)
-                                                        @click="toggleSeat({{ $seat->id }}, @js((string) $seat->seat_number), @js($seat->row_label), @js($seat->type), @js($seat->type_name), @js($seat->status), {{ $seat->price }}, @js($seat->perks))"
+                                                        @click="toggleSeat({{ $seat->id }}, @js((string) $seat->seat_number), @js((string) $seat->row_label), @js((string) $seat->type), @js((string) $seat->type_name), @js((string) $seat->status), {{ $seat->price }}, @js($seat->perks))"
                                                         @mouseenter="setHoveredSeat(@js($hoverData))"
                                                         @mouseleave="clearHoveredSeat()"
                                                         :class="{
@@ -1478,7 +1481,7 @@
                                                             @endif
                                                         }"
                                                         class="w-6 h-6 sm:w-7 sm:h-7 rounded-lg text-[10px] font-black flex items-center justify-center transition-all"
-                                                        title="{{ $seat->type_name }} · {{ number_format($seat->price) }}₫"
+                                                        title="{{ $seat->type_name }} · {{ number_format($seat->price, 0, ',', '.') }}₫"
                                                     >
                                                         <span>{{ $seat->seat_number }}</span>
                                                     </button>
@@ -1536,7 +1539,7 @@
                                                     <button
                                                         type="button"
                                                         @disabled($isBooked || $isHeld)
-                                                        @click="toggleSeat({{ $seat->id }}, @js((string) $seat->seat_number), @js($seat->row_label), @js($seat->type), @js($seat->type_name), @js($seat->status), {{ $seat->price }}, @js($seat->perks))"
+                                                        @click="toggleSeat({{ $seat->id }}, @js((string) $seat->seat_number), @js((string) $seat->row_label), @js((string) $seat->type), @js((string) $seat->type_name), @js((string) $seat->status), {{ $seat->price }}, @js($seat->perks))"
                                                         @mouseenter="setHoveredSeat(@js($hoverData))"
                                                         @mouseleave="clearHoveredSeat()"
                                                         :class="{
@@ -1550,7 +1553,7 @@
                                                             @endif
                                                         }"
                                                         class="w-6 h-6 sm:w-7 sm:h-7 rounded-lg text-[10px] font-black flex items-center justify-center transition-all"
-                                                        title="{{ $seat->type_name }} · {{ number_format($seat->price) }}₫"
+                                                        title="{{ $seat->type_name }} · {{ number_format($seat->price, 0, ',', '.') }}₫"
                                                     >
                                                         {{ $seat->seat_number }}
                                                     </button>
@@ -1594,7 +1597,7 @@
                                                     <button
                                                         type="button"
                                                         @disabled($isBooked || $isHeld)
-                                                        @click="toggleSeat({{ $seat->id }}, @js((string) $seat->seat_number), @js($seat->row_label), @js($seat->type), @js($seat->type_name), @js($seat->status), {{ $seat->price }}, @js($seat->perks))"
+                                                        @click="toggleSeat({{ $seat->id }}, @js((string) $seat->seat_number), @js((string) $seat->row_label), @js((string) $seat->type), @js((string) $seat->type_name), @js((string) $seat->status), {{ $seat->price }}, @js($seat->perks))"
                                                         @mouseenter="setHoveredSeat(@js($hoverData))"
                                                         @mouseleave="clearHoveredSeat()"
                                                         :class="{
@@ -1608,7 +1611,7 @@
                                                             @endif
                                                         }"
                                                         class="w-6 h-6 sm:w-7 sm:h-7 rounded-lg text-[10px] font-black flex items-center justify-center transition-all"
-                                                        title="{{ $seat->type_name }} · {{ number_format($seat->price) }}₫"
+                                                        title="{{ $seat->type_name }} · {{ number_format($seat->price, 0, ',', '.') }}₫"
                                                     >
                                                         {{ $seat->seat_number }}
                                                     </button>
@@ -1653,7 +1656,7 @@
                                             <button
                                                 type="button"
                                                 @disabled($isBooked || $isHeld)
-                                                @click="toggleSeat({{ $seat->id }}, @js((string) $seat->seat_number), @js($seat->row_label), @js($seat->type), @js($seat->type_name), @js($seat->status), {{ $seat->price }}, @js($seat->perks))"
+                                                @click="toggleSeat({{ $seat->id }}, @js((string) $seat->seat_number), @js((string) $seat->row_label), @js((string) $seat->type), @js((string) $seat->type_name), @js((string) $seat->status), {{ $seat->price }}, @js($seat->perks))"
                                                 @mouseenter="setHoveredSeat(@js($hoverData))"
                                                 @mouseleave="clearHoveredSeat()"
                                                 :class="{
@@ -1667,7 +1670,7 @@
                                                     @endif
                                                 }"
                                                 class="w-6 h-6 sm:w-7 sm:h-7 rounded-lg text-[10px] font-black flex items-center justify-center transition-all"
-                                                title="{{ $seat->type_name }} · {{ number_format($seat->price) }}₫"
+                                                title="{{ $seat->type_name }} · {{ number_format($seat->price, 0, ',', '.') }}₫"
                                             >
                                                 {{ $seat->seat_number }}
                                             </button>
@@ -1678,6 +1681,7 @@
                         </div>
                     @endif
                 @endif
+            </div>
             </div>
 
             <!-- DEDICATED FIXED-HEIGHT SEAT & SECTOR DETAIL INSPECTOR STATION -->
@@ -1785,7 +1789,7 @@
                                 <span>{{ $tier['name'] }}</span>
                             </span>
                             <span class="font-display font-black text-sm text-black">
-                                {{ number_format($tier['price']) }}₫
+                                {{ number_format($tier['price'], 0, ',', '.') }}₫
                             </span>
                         </div>
 
@@ -1844,7 +1848,7 @@
 
                             <div class="pt-2">
                                 <span class="font-display font-black text-2xl sm:text-3xl text-black block">
-                                    {{ number_format($tier['price']) }}₫
+                                    {{ number_format($tier['price'], 0, ',', '.') }}₫
                                 </span>
                                 <span class="text-[11px] text-gray-500 font-medium">/ 1 vé tham dự (đã gồm VAT)</span>
                             </div>
@@ -1870,24 +1874,24 @@
                         <div class="pt-4 border-t border-black/10 flex items-center justify-between">
                             <div>
                                 <span class="text-[11px] text-gray-500 font-bold block">Số lượng</span>
-                                <span class="text-xs font-black text-black" x-text="getTierCount('{{ $key }}') > 0 ? (getTierCount('{{ $key }}') * {{ $tier['price'] }}).toLocaleString('vi-VN') + '₫' : 'Chưa chọn'"></span>
+                                <span class="text-xs font-black text-black" x-text="getTierCount(@js((string) $key)) > 0 ? (getTierCount(@js((string) $key)) * {{ $tier['price'] }}).toLocaleString('vi-VN') + '₫' : 'Chưa chọn'"></span>
                             </div>
 
                             <div class="flex items-center gap-2 bg-white rounded-2xl p-1 border border-black/15 shadow-sm">
                                 <button 
                                     type="button" 
-                                    @click="decrementTier('{{ $key }}')" 
-                                    :disabled="getTierCount('{{ $key }}') <= 0"
+                                    @click="decrementTier(@js((string) $key))" 
+                                    :disabled="getTierCount(@js((string) $key)) <= 0"
                                     class="w-8 h-8 rounded-xl bg-[#FAF9F6] hover:bg-rose-50 text-gray-700 hover:text-rose-taupe flex items-center justify-center font-black text-sm disabled:opacity-30 disabled:pointer-events-none transition-colors"
                                 >
                                     &minus;
                                 </button>
                                 
-                                <span class="w-8 text-center font-mono font-black text-sm text-black" x-text="getTierCount('{{ $key }}')">0</span>
+                                <span class="w-8 text-center font-mono font-black text-sm text-black" x-text="getTierCount(@js((string) $key))">0</span>
                                 
                                 <button 
                                     type="button" 
-                                    @click="incrementTier('{{ $key }}', {{ $tier['price'] }}, '{{ $tier['name'] }}')" 
+                                    @click="incrementTier(@js((string) $key), {{ $tier['price'] }}, @js((string) $tier['name']))" 
                                     class="w-8 h-8 rounded-xl btn-rose flex items-center justify-center font-black text-sm shadow-sm transition-transform active:scale-95"
                                 >
                                     &#43;
@@ -2013,7 +2017,10 @@
         x-transition:leave="ease-in duration-200"
         x-transition:leave-start="opacity-100 translate-y-0 scale-100"
         x-transition:leave-end="opacity-0 translate-y-6 scale-95"
-        class="fixed bottom-8 right-8 z-50 bg-black text-white border border-white/20 px-5 py-3.5 rounded-2xl shadow-2xl flex items-center gap-3 max-w-sm"
+        {{-- Đặt phía trên nút chatbot (fixed bottom-right) để không bị che. --}}
+        class="fixed bottom-28 right-4 sm:right-6 z-50 bg-black text-white border border-white/20 px-5 py-3.5 rounded-2xl shadow-2xl flex items-center gap-3 max-w-[calc(100vw-2rem)] sm:max-w-sm"
+        role="status"
+        aria-live="polite"
         style="display: none;"
     >
         <div 

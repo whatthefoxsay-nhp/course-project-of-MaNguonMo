@@ -210,7 +210,7 @@
                             <div class="flex items-center justify-between">
                                 <div class="flex items-center gap-3.5 min-w-0">
                                     <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500 to-amber-700 text-white flex items-center justify-center font-display font-bold text-sm shrink-0 shadow-sm">
-                                        {{ substr($cat['name'], 0, 1) }}
+                                        {{ mb_strtoupper(mb_substr($cat['name'], 0, 1)) }}
                                     </div>
                                     <div class="min-w-0 truncate">
                                         <h4 class="text-sm font-bold text-stone-900 truncate">{{ $cat['name'] }}</h4>

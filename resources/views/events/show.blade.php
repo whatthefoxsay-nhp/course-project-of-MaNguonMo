@@ -91,7 +91,7 @@
                             <div class="space-y-2">
                                 <div>
                                     <span class="text-[10px] text-gray-500 font-bold uppercase block">Ban Tổ Chức Chính:</span>
-                                    <strong class="text-black font-bold">{{ $movie->organizers['lead'] ?? 'TicketBox Vietnam' }}</strong>
+                                    <strong class="text-black font-bold">{{ $movie->organizers['lead'] ?? 'Ban tổ chức sự kiện' }}</strong>
                                 </div>
                                 @if (!empty($movie->organizers['sponsor']))
                                     <div class="pt-1.5 border-t border-black/5">
@@ -169,7 +169,7 @@
                                                     class="text-[10px] px-2 py-0.5 rounded-full font-bold uppercase"
                                                     :class="selectedShowtimeId === {{ $st->id }} ? 'bg-white/20 text-gold-light' : 'bg-black/5 text-gray-600'"
                                                 >
-                                                    {{ number_format($st->base_price) }}₫
+                                                    {{ number_format($st->base_price, 0, ',', '.') }}₫
                                                 </span>
                                             </button>
                                         @endforeach
@@ -438,7 +438,7 @@
                                                 <span>{{ $tier['name'] }}</span>
                                             </span>
                                             <span class="font-display font-black text-sm text-black">
-                                                {{ number_format($tier['price']) }}₫
+                                                {{ number_format($tier['price'], 0, ',', '.') }}₫
                                             </span>
                                         </div>
 
@@ -511,7 +511,7 @@
                                             <div class="text-xs text-gray-700 space-y-1.5 font-medium bg-[#FAF9F6] p-3 rounded-2xl border border-black/5">
                                                 <div class="flex items-center justify-between">
                                                     <span class="text-gray-700">Giá vé khởi điểm:</span>
-                                                    <strong class="text-rose-taupe font-black text-sm">{{ number_format($showtime->base_price) }}₫</strong>
+                                                    <strong class="text-rose-taupe font-black text-sm">{{ number_format($showtime->base_price, 0, ',', '.') }}₫</strong>
                                                 </div>
                                                 <div class="flex items-center justify-between">
                                                     <span class="text-gray-700">Trạng thái:</span>

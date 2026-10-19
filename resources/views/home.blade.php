@@ -37,21 +37,23 @@
                         </a>
                     </div>
 
-                    <!-- Statistics Strip -->
-                    <div class="pt-6 border-t border-black/10 grid grid-cols-3 gap-4 sm:gap-6 max-w-lg text-left">
-                        <div>
-                            <span class="font-display font-black text-2xl sm:text-3xl text-gold-dark block">50K+</span>
-                            <span class="text-[11px] sm:text-xs text-gray-500 font-semibold">Vé đã phát hành</span>
+                    <!-- Statistics Strip (số liệu thật từ HomeController::stats) -->
+                    @isset($stats)
+                        <div class="pt-6 border-t border-black/10 grid grid-cols-3 gap-4 sm:gap-6 max-w-lg text-left">
+                            <div>
+                                <span class="font-display font-black text-2xl sm:text-3xl text-gold-dark block">{{ number_format($stats['events_on_sale'], 0, ',', '.') }}</span>
+                                <span class="text-[11px] sm:text-xs text-gray-500 font-semibold">Sự kiện đang mở bán</span>
+                            </div>
+                            <div>
+                                <span class="font-display font-black text-2xl sm:text-3xl text-rose-taupe block">{{ number_format($stats['tickets_sold'], 0, ',', '.') }}</span>
+                                <span class="text-[11px] sm:text-xs text-gray-500 font-semibold">Vé đã bán</span>
+                            </div>
+                            <div>
+                                <span class="font-display font-black text-2xl sm:text-3xl text-sage-forest block">{{ number_format($stats['venues'], 0, ',', '.') }}</span>
+                                <span class="text-[11px] sm:text-xs text-gray-500 font-semibold">Khán phòng &amp; địa điểm</span>
+                            </div>
                         </div>
-                        <div>
-                            <span class="font-display font-black text-2xl sm:text-3xl text-rose-taupe block">100+</span>
-                            <span class="text-[11px] sm:text-xs text-gray-500 font-semibold">Show diễn độc quyền</span>
-                        </div>
-                        <div>
-                            <span class="font-display font-black text-2xl sm:text-3xl text-sage-forest block">4.9/5</span>
-                            <span class="text-[11px] sm:text-xs text-gray-500 font-semibold">Độ hài lòng khán giả</span>
-                        </div>
-                    </div>
+                    @endisset
                 </div>
 
                 <!-- Right Spotlight Feature Card -->
@@ -97,8 +99,13 @@
                                     
                                     <div class="mt-4 pt-3.5 border-t border-black/10 flex items-center justify-between">
                                         <div>
-                                            <span class="text-[10px] text-gray-400 font-semibold block">Giá vé từ</span>
-                                            <span class="font-display font-black text-black text-lg">{{ number_format($leadEvent->base_price ?? 250000, 0, ',', '.') }}₫</span>
+                                            @if ($leadEvent->base_price !== null)
+                                                <span class="text-[10px] text-gray-400 font-semibold block">Giá vé từ</span>
+                                                <span class="font-display font-black text-black text-lg">{{ number_format($leadEvent->base_price, 0, ',', '.') }}₫</span>
+                                            @else
+                                                <span class="text-[10px] text-gray-400 font-semibold block">Giá vé</span>
+                                                <span class="font-display font-black text-gray-500 text-sm">Đang cập nhật</span>
+                                            @endif
                                         </div>
                                         <a href="{{ route('movies.show', $leadEvent->slug) }}" class="btn-gold px-5 py-2.5 rounded-xl text-xs font-black shadow-sm flex items-center gap-1.5 hover:shadow-md transition-all">
                                             <span>Chọn chỗ ngồi</span>
@@ -121,7 +128,7 @@
         id="featured-section" 
         class="max-w-[1440px] mx-auto px-4 sm:px-8 py-8 sm:py-12" 
         x-data="{ 
-            currentTab: '{{ $currentTab ?? 'all' }}',
+            currentTab: @js($currentTab ?? 'all'),
             loading: false,
             async setTab(tab) {
                 if (this.currentTab === tab && !this.loading) return;
@@ -275,7 +282,7 @@
     </section>
 
     <!-- FAQ Accordion Section with Alpine.js -->
-    <section class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-14" x-data="{ activeFaq: null }">
+    <section id="faq" class="scroll-mt-24 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-14" x-data="{ activeFaq: null }">
         <div class="text-center mb-10">
             <span class="text-xs font-black uppercase tracking-wider text-rose-taupe">Hỏi &amp; Đáp</span>
             <h2 class="font-serif text-3xl font-black text-black mt-1">Câu Hỏi Thường Gặp Khi Đặt Vé Sự Kiện</h2>
@@ -291,7 +298,7 @@
                     <span>Vé sự kiện của tôi được giữ trong thời gian bao lâu sau khi chọn chỗ?</span>
                     <span class="text-xl font-black text-gold-dark shrink-0" x-text="activeFaq === 1 ? '−' : '+'">+</span>
                 </button>
-                <div x-show="activeFaq === 1" x-collapse class="px-6 pb-5 pt-3.5 text-sm sm:text-base text-slate-800 font-medium leading-relaxed border-t border-slate-100 bg-[#FAF9F6]/70">
+                <div x-show="activeFaq === 1" x-transition.opacity.duration.200ms style="display: none;" class="px-6 pb-5 pt-3.5 text-sm sm:text-base text-slate-800 font-medium leading-relaxed border-t border-slate-100 bg-[#FAF9F6]/70">
                     Sau khi chọn chỗ ngồi và thêm vào giỏ vé, hệ thống sẽ tạm khóa chỗ độc quyền cho bạn trong 10 phút để tránh bị người khác đặt trùng. Sau 10 phút nếu chưa thanh toán, vé sẽ tự động giải phóng.
                 </div>
             </div>
@@ -305,7 +312,7 @@
                     <span>Làm sao để tôi kiểm tra lại mã vé E-Ticket khi đến sự kiện?</span>
                     <span class="text-xl font-black text-gold-dark shrink-0" x-text="activeFaq === 2 ? '−' : '+'">+</span>
                 </button>
-                <div x-show="activeFaq === 2" x-collapse class="px-6 pb-5 pt-3.5 text-sm sm:text-base text-slate-800 font-medium leading-relaxed border-t border-slate-100 bg-[#FAF9F6]/70">
+                <div x-show="activeFaq === 2" x-transition.opacity.duration.200ms style="display: none;" class="px-6 pb-5 pt-3.5 text-sm sm:text-base text-slate-800 font-medium leading-relaxed border-t border-slate-100 bg-[#FAF9F6]/70">
                     Bạn có thể đăng nhập vào tài khoản và truy cập trang "Vé của tôi" (My Bookings) ở thanh điều hướng để xem mã vé điện tử QR Code cùng thông tin khán phòng và cửa vào sự kiện.
                 </div>
             </div>
@@ -319,7 +326,7 @@
                     <span>Sự kiện ngoài trời có hiển thị thông tin thời tiết và bản đồ định vị không?</span>
                     <span class="text-xl font-black text-gold-dark shrink-0" x-text="activeFaq === 3 ? '−' : '+'">+</span>
                 </button>
-                <div x-show="activeFaq === 3" x-collapse class="px-6 pb-5 pt-3.5 text-sm sm:text-base text-slate-800 font-medium leading-relaxed border-t border-slate-100 bg-[#FAF9F6]/70">
+                <div x-show="activeFaq === 3" x-transition.opacity.duration.200ms style="display: none;" class="px-6 pb-5 pt-3.5 text-sm sm:text-base text-slate-800 font-medium leading-relaxed border-t border-slate-100 bg-[#FAF9F6]/70">
                     Có! Đối với các sự kiện ngoài trời, hệ thống tự động tích hợp dự báo thời tiết và bản đồ chỉ đường Google Maps ngay trên trang chi tiết sự kiện.
                 </div>
             </div>

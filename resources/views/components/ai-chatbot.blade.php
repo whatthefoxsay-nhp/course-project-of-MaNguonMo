@@ -558,8 +558,15 @@ document.addEventListener('alpine:init', () => {
 
             // Fallback general response
             return {
-                text: '<p>Cảm ơn bạn đã gửi câu hỏi: <em>"' + query + '"</em>.</p><p class="text-xs text-slate-600">Tôi có thể hỗ trợ bạn tìm kiếm sự kiện âm nhạc, giải đáp sơ đồ sân khấu, cách giữ chỗ hoặc các hình thức thanh toán. Hãy chọn một trong các gợi ý bên dưới hoặc đặt câu hỏi chi tiết hơn nhé!</p>'
+                text: '<p>Cảm ơn bạn đã gửi câu hỏi: <em>"' + this.escapeHtml(query) + '"</em>.</p><p class="text-xs text-slate-600">Tôi có thể hỗ trợ bạn tìm kiếm sự kiện âm nhạc, giải đáp sơ đồ sân khấu, cách giữ chỗ hoặc các hình thức thanh toán. Hãy chọn một trong các gợi ý bên dưới hoặc đặt câu hỏi chi tiết hơn nhé!</p>'
             };
+        },
+
+        // Text người dùng nhập luôn được escape trước khi ghép vào HTML hiển thị bằng x-html.
+        escapeHtml(value) {
+            const div = document.createElement('div');
+            div.textContent = String(value ?? '');
+            return div.innerHTML.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
         },
 
         scrollToBottom() {

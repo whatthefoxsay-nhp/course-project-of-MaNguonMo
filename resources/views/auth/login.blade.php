@@ -36,7 +36,7 @@
     @endif
 
     <form method="POST" action="{{ route('login') }}" class="space-y-4 sm:space-y-5" x-data="{ 
-        emailVal: '{{ old('email', '') }}', 
+        emailVal: @js(old('email', '')),
         showPass: false,
         fillAccount(email, pass) {
             this.emailVal = email;
@@ -140,7 +140,8 @@
             </span>
         </button>
 
-        <!-- Quick Demo One-Click Login Box (Antique Gold for Admin, Forest Sage for User) -->
+        <!-- Quick Demo One-Click Login Box: chỉ hiện ở môi trường local -->
+        @if (app()->environment('local'))
         <div class="pt-5 border-t border-slate-100">
             <span class="text-[10px] font-black uppercase tracking-wider text-slate-400 block text-center mb-2.5">
                 Đăng nhập nhanh tài khoản mẫu:
@@ -179,6 +180,7 @@
                 </button>
             </div>
         </div>
+        @endif
 
         <!-- Register Link -->
         <div class="text-center pt-2 text-xs text-slate-500 font-medium">

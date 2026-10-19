@@ -2,6 +2,7 @@
 
 namespace App\View\Components;
 
+use App\Support\UpcomingShowtimes;
 use Illuminate\View\Component;
 use Illuminate\View\View;
 
@@ -13,6 +14,8 @@ class SiteLayout extends Component
 
     public function render(): View
     {
-        return view('layouts.site');
+        return view('layouts.site', [
+            'upcomingShowtimes' => UpcomingShowtimes::for(auth()->user()),
+        ]);
     }
 }

@@ -134,7 +134,11 @@ TEXT;
                 $replyText = $result['candidates'][0]['content']['parts'][0]['text'] ?? null;
 
                 if ($replyText) {
-                    return Str::markdown(trim($replyText));
+                    // Escape HTML thô do model sinh ra (có thể bị prompt-injection) trước khi render x-html.
+                    return Str::markdown(trim($replyText), [
+                        'html_input' => 'escape',
+                        'allow_unsafe_links' => false,
+                    ]);
                 }
             }
 
