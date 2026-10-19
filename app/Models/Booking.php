@@ -60,8 +60,20 @@ class Booking extends Model
         return $this->hasMany(BookingItem::class);
     }
 
+    /** Nhãn hiển thị cho khách theo trạng thái đơn (khớp các trạng thái admin có thể đặt). */
+    public const STATUS_LABELS = [
+        'confirmed' => 'Đã xác nhận',
+        'pending' => 'Chờ xác nhận',
+        'cancelled' => 'Đã hủy',
+    ];
+
     public function isConfirmed(): bool
     {
         return $this->status === 'confirmed';
+    }
+
+    public function statusLabel(): string
+    {
+        return self::STATUS_LABELS[$this->status] ?? ucfirst((string) $this->status);
     }
 }

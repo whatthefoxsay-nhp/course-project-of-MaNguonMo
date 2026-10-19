@@ -684,201 +684,20 @@ Alpine.data('ticketPaymentManager', (config = {}) => ({
     },
 
     downloadTicketAsPNG() {
-        const firstItem = this.items[0] || {};
-        const movieTitle = firstItem.movie_title || 'Live Concert TicketBox 2026';
-        const showtime = firstItem.showtime_str || '19:30 - 25/10/2026';
-        const venue = firstItem.room_name || 'Sân Khấu Sự Kiện';
-        const seats = this.items.map(i => i.is_zone_ticket ? i.seat_type : (i.row_label ? i.row_label + i.seat_number : i.seat_type)).join(', ') || 'Ghế C4, C5';
-
-        const canvas = document.createElement('canvas');
-        canvas.width = 1200;
-        canvas.height = 680;
-        const ctx = canvas.getContext('2d');
-
-        // Background
-        ctx.fillStyle = '#14161D';
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-        // Header Gradient Banner
-        const grad = ctx.createLinearGradient(0, 0, 1200, 0);
-        grad.addColorStop(0, '#C08497');
-        grad.addColorStop(0.5, '#D4AF37');
-        grad.addColorStop(1, '#3A5A40');
-        ctx.fillStyle = grad;
-        ctx.fillRect(0, 0, 1200, 12);
-
-        // Ticket Card Body
-        ctx.fillStyle = '#FFFFFF';
-        ctx.roundRect(40, 40, 1120, 600, 24);
-        ctx.fill();
-        ctx.strokeStyle = '#D4AF37';
-        ctx.lineWidth = 3;
-        ctx.stroke();
-
-        // Stub divider line (dashed)
-        ctx.setLineDash([8, 8]);
-        ctx.strokeStyle = '#C08497';
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        ctx.moveTo(820, 40);
-        ctx.lineTo(820, 640);
-        ctx.stroke();
-        ctx.setLineDash([]); // reset
-
-        // Left Stub Notch
-        ctx.fillStyle = '#14161D';
-        ctx.beginPath();
-        ctx.arc(820, 40, 20, 0, Math.PI);
-        ctx.fill();
-        ctx.beginPath();
-        ctx.arc(820, 640, 20, Math.PI, 0);
-        ctx.fill();
-
-        // Brand & Title
-        ctx.fillStyle = '#C08497';
-        ctx.font = 'bold 16px "Plus Jakarta Sans", sans-serif';
-        ctx.fillText('TICKETBOX OFFICIAL E-TICKET PASS', 70, 85);
-
-        ctx.fillStyle = '#22C55E';
-        ctx.font = 'bold 15px "Plus Jakarta Sans", sans-serif';
-        ctx.fillText('● ĐÃ THANH TOÁN 100% (CONFIRMED)', 500, 85);
-
-        // Event Title
-        ctx.fillStyle = '#000000';
-        ctx.font = '900 28px "Playfair Display", serif';
-        const displayTitle = movieTitle.length > 38 ? movieTitle.substring(0, 36) + '...' : movieTitle;
-        ctx.fillText(displayTitle, 70, 135);
-
-        // Gold line under title
-        ctx.fillStyle = '#D4AF37';
-        ctx.fillRect(70, 155, 710, 2);
-
-        // Grid Details Left Side
-        const drawField = (label, val, x, y, isBig = false) => {
-            ctx.fillStyle = '#6B7280';
-            ctx.font = 'bold 13px "Plus Jakarta Sans", sans-serif';
-            ctx.fillText(label.toUpperCase(), x, y);
-
-            ctx.fillStyle = '#111827';
-            ctx.font = isBig ? '900 20px "Space Grotesk", sans-serif' : 'bold 16px "Plus Jakarta Sans", sans-serif';
-            ctx.fillText(val, x, y + 26);
-        };
-
-        drawField('Thời Gian Diễn Ra', showtime, 70, 200);
-        drawField('Địa Điểm & Sân Khấu', venue, 430, 200);
-
-        drawField('Cổng Vào (Gate)', 'CỔNG A1 (LỐI VIP / SEATED)', 70, 280);
-        drawField('Vị Trí Ghế / Hạng Vé', seats, 430, 280, true);
-
-        drawField('Người Sở Hữu Vé', `${this.buyerInfo.fullName} (CCCD: ${this.buyerInfo.idCard || 'Chính chủ'})`, 70, 360);
-        drawField('Số Điện Thoại / Email', `${this.buyerInfo.phone} · ${this.buyerInfo.email}`, 430, 360);
-
-        drawField('Mã Đơn Đặt Chỗ', this.orderCode, 70, 440, true);
-        drawField('Tổng Tiền Thanh Toán', this.formatCurrency(this.totalAmount), 430, 440, true);
-
-        // Security Notice Box
-        ctx.fillStyle = '#F5F5DC';
-        ctx.roundRect(70, 520, 710, 90, 14);
-        ctx.fill();
-        ctx.strokeStyle = '#D8D8A8';
-        ctx.lineWidth = 1;
-        ctx.stroke();
-
-        ctx.fillStyle = '#3A5A40';
-        ctx.font = 'bold 13px "Plus Jakarta Sans", sans-serif';
-        ctx.fillText('LƯU Ý CHECK-IN SỰ KIỆN:', 90, 548);
-        ctx.fillStyle = '#4B5563';
-        ctx.font = '12px "Plus Jakarta Sans", sans-serif';
-        ctx.fillText('• Xuất trình mã QR tại cổng kiểm soát vé để quét đổi vòng tay / vào khán phòng.', 90, 572);
-        ctx.fillText('• Mỗi vé QR chỉ có giá trị cho 01 lần check-in. Vui lòng bảo mật mã vé cá nhân.', 90, 592);
-
-        // Right Stub (QR Code & Barcode Section)
-        ctx.fillStyle = '#FAF9F6';
-        ctx.roundRect(845, 65, 290, 550, 16);
-        ctx.fill();
-
-        ctx.fillStyle = '#000000';
-        ctx.font = '900 18px "Space Grotesk", sans-serif';
-        ctx.textAlign = 'center';
-        ctx.fillText('GATE PASS', 990, 105);
-
-        ctx.fillStyle = '#6B7280';
-        ctx.font = '12px "Plus Jakarta Sans", sans-serif';
-        ctx.fillText('SCAN TO ENTER', 990, 125);
-
-        // Simulated QR Code Frame on Stub
-        ctx.fillStyle = '#FFFFFF';
-        ctx.roundRect(890, 145, 200, 200, 12);
-        ctx.fill();
-        ctx.strokeStyle = '#D4AF37';
-        ctx.lineWidth = 2;
-        ctx.stroke();
-
-        // Draw Stylized QR Grid pattern
-        ctx.fillStyle = '#000000';
-        // 3 Corner Eyes
-        const drawEye = (ex, ey) => {
-            ctx.fillRect(ex, ey, 45, 45);
-            ctx.fillStyle = '#FFFFFF';
-            ctx.fillRect(ex + 8, ey + 8, 29, 29);
-            ctx.fillStyle = '#000000';
-            ctx.fillRect(ex + 15, ey + 15, 15, 15);
-        };
-        drawEye(905, 160);
-        drawEye(1030, 160);
-        drawEye(905, 285);
-
-        // Random matrix dots
-        for (let r = 0; r < 7; r++) {
-            for (let c = 0; c < 7; c++) {
-                if ((r < 3 && c < 3) || (r < 3 && c > 3) || (r > 3 && c < 3)) continue;
-                if ((r + c * 3 + this.orderCode.charCodeAt(r % 5)) % 2 === 0) {
-                    ctx.fillRect(960 + c * 9, 215 + r * 9, 7, 7);
-                }
-            }
-        }
-
-        // Center TicketBox Logo on QR
-        ctx.fillStyle = '#C08497';
-        ctx.fillRect(972, 227, 36, 36);
-        ctx.fillStyle = '#FFFFFF';
-        ctx.font = '900 12px "Plus Jakarta Sans", sans-serif';
-        ctx.fillText('TBX', 990, 250);
-
-        // Booking Code
-        ctx.fillStyle = '#000000';
-        ctx.font = '900 16px "Space Grotesk", sans-serif';
-        ctx.fillText(this.orderCode, 990, 380);
-
-        // Barcode lines
-        ctx.fillStyle = '#111827';
-        const startBx = 875;
-        for (let i = 0; i < 40; i++) {
-            const w = (i % 3 === 0 || i % 7 === 0) ? 4 : 2;
-            const gap = i * 6;
-            ctx.fillRect(startBx + gap, 410, w, 45);
-        }
-
-        ctx.font = 'bold 11px "Space Grotesk", sans-serif';
-        ctx.fillStyle = '#9CA3AF';
-        ctx.fillText('AUTH-' + Date.now().toString().slice(-8), 990, 475);
-
-        // Brand Stamp
-        ctx.fillStyle = '#3A5A40';
-        ctx.font = 'bold 12px "Plus Jakarta Sans", sans-serif';
-        ctx.fillText('TICKETBOX VERIFIED', 990, 530);
-
-        ctx.fillStyle = '#D4AF37';
-        ctx.font = 'bold 11px "Plus Jakarta Sans", sans-serif';
-        ctx.fillText('★ VIP ADMISSION ★', 990, 555);
-
-        ctx.textAlign = 'left'; // reset
-
-        // Trigger Download
-        const link = document.createElement('a');
-        link.download = `Ve-Dien-Tu-${this.orderCode}.png`;
-        link.href = canvas.toDataURL('image/png');
-        link.click();
+        const first = this.items[0] || {};
+        window.downloadTicketPNG({
+            eventTitle: first.movie_title,
+            showtime: first.showtime_str,
+            venue: first.room_name,
+            seats: this.items.map(i => i.label).join(', '),
+            orderCode: this.orderCode,
+            totalPrice: this.payableAmount,
+            discountAmount: this.appliedDiscount ? this.appliedDiscount.discount_amount : 0,
+            buyerName: this.buyerInfo.fullName,
+            buyerContact: [this.buyerInfo.phone, this.buyerInfo.email].filter(Boolean).join(' · '),
+            status: 'confirmed',
+            statusLabel: 'Đã xác nhận',
+        });
 
         this.notify(`Đã lưu vé điện tử ${this.orderCode}.png về thiết bị của bạn!`);
     },
@@ -888,20 +707,35 @@ Alpine.data('ticketPaymentManager', (config = {}) => ({
     }
 }));
 
-// Global Ticket PNG Downloader Helper
-window.downloadTicketPNG = function(bookingData) {
-    const movieTitle = bookingData.movieTitle || 'Live Concert TicketBox 2026';
-    const showtime = bookingData.showtime || '19:30 - 25/10/2026';
-    const venue = bookingData.venue || 'Khán Phòng Sự Kiện';
-    const seats = bookingData.seats || 'Ghế VIP';
-    const orderCode = bookingData.orderCode || 'TBX-' + Math.floor(100000 + Math.random() * 900000);
-    const totalPrice = bookingData.totalPrice ? new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(bookingData.totalPrice) : '500.000 ₫';
-    const buyerName = bookingData.buyerName || 'Nguyễn Hải Phong';
+/**
+ * Vẽ vé điện tử ra ảnh PNG và tải về — dùng chung cho trang giỏ vé (sau thanh toán) và lịch sử vé.
+ * Chỉ in dữ liệu thật của đơn; trường nào thiếu thì để trống thay vì điền dữ liệu giả.
+ *
+ * @param {{eventTitle?: string, showtime?: string, venue?: string, seats?: string, orderCode: string,
+ *          totalPrice?: number, discountAmount?: number, buyerName?: string, buyerContact?: string,
+ *          status?: string, statusLabel?: string}} data
+ */
+function drawAndDownloadTicket(data) {
+    const formatVnd = (val) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(val || 0);
+    const orderCode = data.orderCode || '';
+    const status = data.status || 'confirmed';
+    const statusLabel = (data.statusLabel || status).toUpperCase();
+    const statusColor = status === 'confirmed' ? '#16A34A' : (status === 'cancelled' ? '#DC2626' : '#D97706');
 
     const canvas = document.createElement('canvas');
     canvas.width = 1200;
     canvas.height = 680;
     const ctx = canvas.getContext('2d');
+
+    // Cắt chữ cho vừa chiều rộng (danh sách ghế / tên sự kiện dài)
+    const fit = (text, maxWidth) => {
+        let value = String(text ?? '');
+        if (ctx.measureText(value).width <= maxWidth) return value;
+        while (value.length > 1 && ctx.measureText(value + '…').width > maxWidth) {
+            value = value.slice(0, -1);
+        }
+        return value + '…';
+    };
 
     // Background
     ctx.fillStyle = '#14161D';
@@ -933,7 +767,7 @@ window.downloadTicketPNG = function(bookingData) {
     ctx.stroke();
     ctx.setLineDash([]);
 
-    // Left Stub Notch
+    // Stub notches
     ctx.fillStyle = '#14161D';
     ctx.beginPath();
     ctx.arc(820, 40, 20, 0, Math.PI);
@@ -942,47 +776,46 @@ window.downloadTicketPNG = function(bookingData) {
     ctx.arc(820, 640, 20, Math.PI, 0);
     ctx.fill();
 
-    // Brand & Title
+    // Heading & status
     ctx.fillStyle = '#C08497';
     ctx.font = 'bold 16px "Plus Jakarta Sans", sans-serif';
-    ctx.fillText('TICKETBOX OFFICIAL E-TICKET PASS', 70, 85);
+    ctx.fillText('VÉ ĐIỆN TỬ · E-TICKET', 70, 85);
 
-    ctx.fillStyle = '#22C55E';
+    ctx.fillStyle = statusColor;
     ctx.font = 'bold 15px "Plus Jakarta Sans", sans-serif';
-    ctx.fillText('● ĐÃ THANH TOÁN 100% (CONFIRMED)', 500, 85);
+    ctx.fillText('● ' + fit(statusLabel, 300), 470, 85);
 
     // Event Title
     ctx.fillStyle = '#000000';
     ctx.font = '900 28px "Playfair Display", serif';
-    const displayTitle = movieTitle.length > 38 ? movieTitle.substring(0, 36) + '...' : movieTitle;
-    ctx.fillText(displayTitle, 70, 135);
+    ctx.fillText(fit(data.eventTitle || '', 710), 70, 135);
 
     ctx.fillStyle = '#D4AF37';
     ctx.fillRect(70, 155, 710, 2);
 
-    const drawField = (label, val, x, y, isBig = false) => {
+    const drawField = (label, val, x, y, maxWidth, isBig = false) => {
         ctx.fillStyle = '#6B7280';
         ctx.font = 'bold 13px "Plus Jakarta Sans", sans-serif';
         ctx.fillText(label.toUpperCase(), x, y);
 
         ctx.fillStyle = '#111827';
         ctx.font = isBig ? '900 20px "Space Grotesk", sans-serif' : 'bold 16px "Plus Jakarta Sans", sans-serif';
-        ctx.fillText(val, x, y + 26);
+        ctx.fillText(fit(val || '—', maxWidth), x, y + 26);
     };
 
-    drawField('Thời Gian Diễn Ra', showtime, 70, 200);
-    drawField('Địa Điểm & Sân Khấu', venue, 430, 200);
+    drawField('Thời Gian Diễn Ra', data.showtime, 70, 200, 340);
+    drawField('Địa Điểm', data.venue, 430, 200, 350);
 
-    drawField('Cổng Vào (Gate)', 'CỔNG A1 (LỐI VIP / SEATED)', 70, 280);
-    drawField('Vị Trí Ghế / Hạng Vé', seats, 430, 280, true);
+    drawField('Vị Trí Ghế / Hạng Vé', data.seats, 70, 280, 710, true);
 
-    drawField('Người Sở Hữu Vé', buyerName, 70, 360);
-    drawField('Trạng Thái Vé', 'HỢP LỆ - ĐÃ KÍCH HOẠT CHECK-IN', 430, 360);
+    drawField('Người Nhận Vé', data.buyerName, 70, 360, 340);
+    drawField('Liên Hệ', data.buyerContact, 430, 360, 350);
 
-    drawField('Mã Đơn Đặt Chỗ', orderCode, 70, 440, true);
-    drawField('Tổng Tiền Thanh Toán', totalPrice, 430, 440, true);
+    drawField('Mã Đặt Vé', orderCode, 70, 440, 340, true);
+    const totalText = formatVnd(data.totalPrice) + (data.discountAmount > 0 ? ` (đã giảm ${formatVnd(data.discountAmount)})` : '');
+    drawField('Tổng Tiền Thanh Toán', totalText, 430, 440, 350, true);
 
-    // Security Notice Box
+    // Notice Box
     ctx.fillStyle = '#F5F5DC';
     ctx.roundRect(70, 520, 710, 90, 14);
     ctx.fill();
@@ -992,26 +825,27 @@ window.downloadTicketPNG = function(bookingData) {
 
     ctx.fillStyle = '#3A5A40';
     ctx.font = 'bold 13px "Plus Jakarta Sans", sans-serif';
-    ctx.fillText('LƯU Ý CHECK-IN SỰ KIỆN:', 90, 548);
+    ctx.fillText('LƯU Ý:', 90, 548);
     ctx.fillStyle = '#4B5563';
     ctx.font = '12px "Plus Jakarta Sans", sans-serif';
-    ctx.fillText('• Xuất trình mã QR tại cổng kiểm soát vé để quét đổi vòng tay / vào khán phòng.', 90, 572);
-    ctx.fillText('• Mỗi vé QR chỉ có giá trị cho 01 lần check-in. Vui lòng bảo mật mã vé cá nhân.', 90, 592);
+    ctx.fillText('• Xuất trình mã đặt vé khi check-in. Không chia sẻ mã vé cho người khác.', 90, 572);
+    ctx.fillText('• Vé phát hành từ hệ thống thanh toán giả lập – Đồ án môn Mã nguồn mở, không có giá trị thực tế.', 90, 592);
 
     // Right Stub
     ctx.fillStyle = '#FAF9F6';
     ctx.roundRect(845, 65, 290, 550, 16);
     ctx.fill();
 
+    ctx.textAlign = 'center';
     ctx.fillStyle = '#000000';
     ctx.font = '900 18px "Space Grotesk", sans-serif';
-    ctx.textAlign = 'center';
-    ctx.fillText('GATE PASS', 990, 105);
+    ctx.fillText('MÃ VÉ', 990, 105);
 
     ctx.fillStyle = '#6B7280';
     ctx.font = '12px "Plus Jakarta Sans", sans-serif';
-    ctx.fillText('SCAN TO ENTER', 990, 125);
+    ctx.fillText('Hình minh họa, không phải mã quét', 990, 125);
 
+    // Stylized code frame (decorative pattern derived from the booking code)
     ctx.fillStyle = '#FFFFFF';
     ctx.roundRect(890, 145, 200, 200, 12);
     ctx.fill();
@@ -1031,52 +865,45 @@ window.downloadTicketPNG = function(bookingData) {
     drawEye(1030, 160);
     drawEye(905, 285);
 
+    const codeChars = orderCode || '0';
     for (let r = 0; r < 7; r++) {
         for (let c = 0; c < 7; c++) {
             if ((r < 3 && c < 3) || (r < 3 && c > 3) || (r > 3 && c < 3)) continue;
-            if ((r + c * 3 + orderCode.charCodeAt(r % 5)) % 2 === 0) {
+            if ((r + c * 3 + codeChars.charCodeAt((r + c) % codeChars.length)) % 2 === 0) {
                 ctx.fillRect(960 + c * 9, 215 + r * 9, 7, 7);
             }
         }
     }
 
-    ctx.fillStyle = '#C08497';
-    ctx.fillRect(972, 227, 36, 36);
-    ctx.fillStyle = '#FFFFFF';
-    ctx.font = '900 12px "Plus Jakarta Sans", sans-serif';
-    ctx.fillText('TBX', 990, 250);
-
+    // Booking Code
     ctx.fillStyle = '#000000';
     ctx.font = '900 16px "Space Grotesk", sans-serif';
     ctx.fillText(orderCode, 990, 380);
 
+    // Decorative barcode
     ctx.fillStyle = '#111827';
-    const startBx = 875;
     for (let i = 0; i < 40; i++) {
         const w = (i % 3 === 0 || i % 7 === 0) ? 4 : 2;
-        const gap = i * 6;
-        ctx.fillRect(startBx + gap, 410, w, 45);
+        ctx.fillRect(875 + i * 6, 410, w, 45);
     }
 
-    ctx.font = 'bold 11px "Space Grotesk", sans-serif';
-    ctx.fillStyle = '#9CA3AF';
-    ctx.fillText('AUTH-' + Date.now().toString().slice(-8), 990, 475);
+    ctx.fillStyle = statusColor;
+    ctx.font = 'bold 12px "Plus Jakarta Sans", sans-serif';
+    ctx.fillText(fit(statusLabel, 260), 990, 500);
 
     ctx.fillStyle = '#3A5A40';
     ctx.font = 'bold 12px "Plus Jakarta Sans", sans-serif';
-    ctx.fillText('TICKETBOX VERIFIED', 990, 530);
-
-    ctx.fillStyle = '#D4AF37';
-    ctx.font = 'bold 11px "Plus Jakarta Sans", sans-serif';
-    ctx.fillText('★ VIP ADMISSION ★', 990, 555);
+    ctx.fillText('Đồ án môn Mã nguồn mở', 990, 545);
 
     ctx.textAlign = 'left';
 
     const link = document.createElement('a');
-    link.download = `Ve-Dien-Tu-${orderCode}.png`;
+    link.download = `Ve-Dien-Tu-${orderCode || 've'}.png`;
     link.href = canvas.toDataURL('image/png');
     link.click();
-};
+}
+
+window.downloadTicketPNG = drawAndDownloadTicket;
 
 // Admin Auto Seat Map & Ticket Tier Builder Alpine Component
 Alpine.data('adminSeatMapBuilder', (config = {}) => ({

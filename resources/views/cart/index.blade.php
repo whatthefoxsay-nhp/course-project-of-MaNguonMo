@@ -1,7 +1,12 @@
 <x-site-layout :title="'Thanh Toán & Phát Hành Vé Điện Tử E-Ticket - TicketBox'">
     @php
-        $jsItems = array_map(function($item) {
+        // Nhãn thật của từng vé: "A5 (VIP Floor A & B)" hoặc "Khu đứng — vé số 12".
+        $itemLabel = fn ($item) => ($item->is_zone_ticket ?? false)
+            ? $item->zone->name.' — vé số '.$item->id
+            : $item->seat->row_label.$item->seat->seat_number.' ('.$item->seat->type.')';
+        $jsItems = array_map(function($item) use ($itemLabel) {
             return [
+                'label' => $itemLabel($item),
                 'movie_title' => $item->movie->title,
                 'category_name' => $item->movie->category->name ?? 'Sự Kiện',
                 'poster_path' => $item->movie->poster_url,
@@ -852,10 +857,10 @@
                         <div>
                             <div class="flex items-center gap-2">
                                 <span class="badge-sage text-[10px] px-2.5 py-0.5 rounded-full font-black uppercase">Thanh Toán Thành Công</span>
-                                <span class="text-xs text-gray-500 font-mono font-bold" x-text="'Mã đơn: ' + orderCode">Mã đơn: TBX-829143</span>
+                                <span class="text-xs text-gray-500 font-mono font-bold" x-text="'Mã đơn: ' + orderCode"></span>
                             </div>
                             <h2 class="font-serif font-black text-xl text-black mt-0.5">Vé Điện Tử E-Ticket Đã Được Kích Hoạt</h2>
-                            <p class="text-xs text-gray-600">Quý khách xuất trình mã QR trên vé tại cổng an ninh hoặc lưu ảnh vé về máy để làm thủ tục check-in.</p>
+                            <p class="text-xs text-gray-600">Đơn vé đã được lưu vào mục "Vé của tôi". Bạn có thể lưu ảnh vé về máy hoặc in vé.</p>
                         </div>
                     </div>
 
@@ -899,13 +904,13 @@
                             <!-- Header Info -->
                             <div class="flex items-center justify-between">
                                 <div class="flex items-center gap-2">
-                                    <span class="font-display font-black text-rose-taupe text-base tracking-widest">TICKETBOX</span>
+                                    <span class="font-display font-black text-rose-taupe text-base tracking-widest">VÉ ĐIỆN TỬ</span>
                                     <span class="text-xs text-gray-400">|</span>
-                                    <span class="text-xs font-bold text-gray-600 uppercase tracking-wider">OFFICIAL PASS</span>
+                                    <span class="text-xs font-bold text-gray-600 tracking-wider">Đồ án môn Mã nguồn mở</span>
                                 </div>
                                 <span class="badge-sage text-[10px] px-3 py-1 rounded-full font-black uppercase flex items-center gap-1">
                                     <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-                                    <span>ĐÃ THANH TOÁN 100%</span>
+                                    <span>Đã xác nhận · thanh toán giả lập</span>
                                 </span>
                             </div>
 
@@ -917,10 +922,10 @@
 
                                 <div class="flex-1 min-w-0">
                                     <span class="badge-gold text-[9px] px-2.5 py-0.5 rounded-full font-black uppercase mb-1.5 inline-block">
-                                        {{ $firstItem->movie->category->name ?? 'Sự Kiện Đặc Biệt' }}
+                                        {{ $firstItem->movie->category->name ?? '' }}
                                     </span>
                                     <h3 class="font-serif font-black text-2xl text-black leading-tight">
-                                        {{ $firstItem->movie->title ?? 'Sự Kiện TicketBox 2026' }}
+                                        {{ $firstItem->movie->title ?? '' }}
                                     </h3>
                                     <p class="text-xs text-gray-600 font-medium mt-1">
                                         {{ $firstItem->showtime->start_time->format('H:i - d/m/Y') }} · {{ $firstItem->showtime->room->name }}
@@ -929,36 +934,21 @@
                             </div>
 
                             <!-- Grid Details -->
-                            <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 py-4 border-y border-black/10 text-xs">
-                                <div>
-                                    <span class="text-gray-400 block text-[10px] uppercase font-bold">Cổng Vào (Gate)</span>
-                                    <span class="text-black font-black text-sm">CỔNG A1</span>
-                                </div>
-                                <div>
-                                    <span class="text-gray-400 block text-[10px] uppercase font-bold">Khu Vực (Zone)</span>
-                                    <span class="text-rose-taupe font-black text-sm">VIP SEATED</span>
-                                </div>
-                                <div class="sm:col-span-2">
-                                    <span class="text-gray-400 block text-[10px] uppercase font-bold">Vị Trí Ghế / Hạng Vé</span>
-                                    <span class="text-black font-black text-sm">
-                                        @foreach ($items as $idx => $i)
-                                            {{ $i->seat->row_label }}{{ $i->seat->seat_number }}{{ $idx < count($items) - 1 ? ', ' : '' }}
-                                        @endforeach
-                                    </span>
-                                </div>
+                            <div class="py-4 border-y border-black/10 text-xs">
+                                <span class="text-gray-400 block text-[10px] uppercase font-bold">Vị Trí Ghế / Hạng Vé ({{ count($items) }} vé)</span>
+                                <span class="text-black font-black text-sm">{{ implode(', ', array_map($itemLabel, $items)) }}</span>
                             </div>
 
                             <!-- Buyer Info & Booking Code -->
                             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
                                 <div>
-                                    <span class="text-gray-400 block text-[10px] uppercase font-bold">Chủ Sở Hữu Vé</span>
+                                    <span class="text-gray-400 block text-[10px] uppercase font-bold">Người Nhận Vé</span>
                                     <span class="text-black font-bold text-xs" x-text="buyerInfo.fullName"></span>
                                     <span class="text-gray-500 block text-[11px]" x-text="[buyerInfo.phone, buyerInfo.email].filter(Boolean).join(' · ')"></span>
                                 </div>
                                 <div>
                                     <span class="text-gray-400 block text-[10px] uppercase font-bold">Mã Tra Cứu E-Ticket</span>
-                                    <span class="font-mono font-black text-black text-base" x-text="orderCode">TBX-829143</span>
-                                    <span class="text-sage-forest block text-[11px] font-bold">Đã xác thực chữ ký số</span>
+                                    <span class="font-mono font-black text-black text-base" x-text="orderCode"></span>
                                 </div>
                             </div>
 
@@ -976,21 +966,21 @@
                             <!-- Header of Stub -->
                             <div class="w-full">
                                 <span class="badge-dark text-[9px] px-3 py-1 rounded-full font-mono uppercase tracking-widest block mb-1">
-                                    GATE CHECK-IN PASS
+                                    MÃ VÉ ĐIỆN TỬ
                                 </span>
-                                <span class="text-xs text-slate-600 font-bold block">Quét Mã Vào Cổng</span>
+                                <span class="text-xs text-slate-600 font-bold block">QR chứa mã đặt vé</span>
                             </div>
 
                             <!-- E-Ticket High-Res QR Code Frame -->
                             <div class="p-3.5 bg-white rounded-3xl shadow-md border-2 border-amber-400/60 space-y-2">
                                 <div class="w-44 h-44 bg-white rounded-2xl p-2 flex items-center justify-center overflow-hidden border border-slate-100">
                                     <img 
-                                        :src="'https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=TICKETBOX_AUTH_PASS_' + orderCode" 
-                                        alt="Check-in QR Code"
+                                        :src="orderCode ? 'https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=' + encodeURIComponent(orderCode) : ''" 
+                                        alt="Mã QR chứa mã đặt vé"
                                         class="w-full h-full object-contain"
                                     >
                                 </div>
-                                <span class="font-mono text-xs font-black text-slate-900 block tracking-widest" x-text="orderCode">TBX-829143</span>
+                                <span class="font-mono text-xs font-black text-slate-900 block tracking-widest" x-text="orderCode"></span>
                             </div>
 
                             <!-- Total & Verification Stamp -->

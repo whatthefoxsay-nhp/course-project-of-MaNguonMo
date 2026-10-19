@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\Booking;
+use App\Models\BookingItem;
+use App\Support\TicketTiers;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
@@ -32,12 +34,12 @@ class BookingController extends Controller
                     'booking_code' => $booking->booking_code,
                     'movie' => $showtime?->event,
                     'showtime' => $showtime,
-                    'seats' => $booking->items->map(fn ($item) => $item->showtimeSeat?->seat?->full_code
-                        ?? ($item->zoneTicket ? $item->zoneTicket->zone->name.' — vé số '.$item->zoneTicket->id : ''))->filter()->all(),
+                    'seats' => $booking->items->map(fn ($item) => $this->itemLabel($item))->filter()->all(),
                     'total_price' => $booking->total_price,
                     'discount_amount' => $booking->discount_amount,
                     'discount_code' => $booking->discount?->code,
                     'status' => $booking->status,
+                    'status_label' => $booking->statusLabel(),
                     'buyer_name' => $booking->buyer_name,
                     'buyer_phone' => $booking->buyer_phone,
                     'buyer_email' => $booking->buyer_email,
@@ -49,5 +51,23 @@ class BookingController extends Controller
             ->all();
 
         return view('bookings.history', ['bookings' => $bookings]);
+    }
+
+    /** Nhãn thật của vé: "A5 (VIP)" cho ghế, "Khu đứng — vé số 12" cho vé theo khu. */
+    private function itemLabel(BookingItem $item): string
+    {
+        if ($item->zoneTicket) {
+            return $item->zoneTicket->zone->name.' — vé số '.$item->zoneTicket->id;
+        }
+
+        $seat = $item->showtimeSeat?->seat;
+        if (! $seat) {
+            return '';
+        }
+
+        $type = TicketTiers::normalizeSeatType($seat->type);
+        $tierLabel = TicketTiers::for((int) $item->showtimeSeat->showtime->base_price, true)[$type]['label'] ?? null;
+
+        return $tierLabel ? "{$seat->full_code} ({$tierLabel})" : $seat->full_code;
     }
 }

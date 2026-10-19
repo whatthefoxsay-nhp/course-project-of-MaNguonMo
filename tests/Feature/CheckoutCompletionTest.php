@@ -135,6 +135,40 @@ test('the hold countdown is hidden for an empty cart and stops after checkout', 
     expect(file_get_contents(resource_path('js/app.js')))->toContain("new CustomEvent('checkout-completed')");
 });
 
+test('booking history shows the real status and only confirmed bookings get a valid ticket', function () {
+    $user = createCustomer();
+    $codes = [];
+    foreach (['confirmed', 'pending', 'cancelled'] as $status) {
+        holdCompletionSeats($user, 1);
+        $code = $this->actingAs($user)->postJson(route('checkout.store'), checkoutPayload(['buyer_name' => 'Pham Van Ve']))->json('booking_code');
+        Booking::firstWhere('booking_code', $code)->update(['status' => $status]);
+        $codes[$status] = $code;
+    }
+
+    $html = $this->actingAs($user)->get(route('bookings.history'))->assertOk()->getContent();
+
+    expect($html)->toContain('Đã xác nhận')
+        ->and($html)->toContain('Chờ xác nhận')
+        ->and($html)->toContain('Đã hủy')
+        ->and($html)->not->toContain('HỢP LỆ ĐỐI SOÁT CỔNG')
+        ->and(substr_count($html, 'window.downloadTicketPNG('))->toBe(1)
+        ->and(substr_count($html, 'create-qr-code'))->toBe(1)
+        ->and($html)->toMatch('/downloadTicketPNG\(JSON\.parse\(.*buyerName.*Pham Van Ve/');
+});
+
+test('the ticket image generator is a single function without hard-coded fake data', function () {
+    $js = file_get_contents(resource_path('js/app.js'));
+
+    expect(substr_count($js, 'canvas.width = 1200'))->toBe(1)
+        ->and($js)->not->toContain('Nguyễn Hải Phong')
+        ->and($js)->not->toContain('CỔNG A1')
+        ->and($js)->not->toContain('VIP ADMISSION')
+        ->and($js)->not->toContain('HỢP LỆ - ĐÃ KÍCH HOẠT CHECK-IN')
+        ->and($js)->not->toContain('TICKETBOX VERIFIED')
+        ->and($js)->not->toContain('ticketbox.vn')
+        ->and($js)->toContain('Đồ án môn Mã nguồn mở');
+});
+
 test('checkout is refused once the showtime has started', function () {
     $user = createCustomer();
     $showtime = holdCompletionSeats($user, 1);
