@@ -117,6 +117,31 @@
                     </div>
                 </div>
 
+                <!-- Buyer (Ticket Recipient) Card -->
+                <div class="bg-white rounded-3xl p-6 border border-black/10 shadow-sm space-y-4">
+                    <h3 class="font-display font-black text-sm text-black uppercase tracking-wider border-b border-black/5 pb-3">
+                        Người Nhận Vé (Nhập Khi Thanh Toán)
+                    </h3>
+                    @if($booking->buyer_name || $booking->buyer_phone || $booking->buyer_email)
+                        <div class="space-y-3 text-xs">
+                            <div class="flex justify-between items-center py-1">
+                                <span class="text-gray-500">Họ và tên:</span>
+                                <strong class="text-black text-sm">{{ $booking->buyer_name ?? 'Không cung cấp' }}</strong>
+                            </div>
+                            <div class="flex justify-between items-center py-1 border-t border-black/5">
+                                <span class="text-gray-500">Số điện thoại:</span>
+                                <span class="text-black font-medium">{{ $booking->buyer_phone ?? 'Không cung cấp' }}</span>
+                            </div>
+                            <div class="flex justify-between items-center py-1 border-t border-black/5">
+                                <span class="text-gray-500">Email:</span>
+                                <span class="text-black font-medium">{{ $booking->buyer_email ?? 'Không cung cấp' }}</span>
+                            </div>
+                        </div>
+                    @else
+                        <p class="text-xs text-gray-500">Đơn này được tạo trước khi hệ thống lưu thông tin người nhận vé.</p>
+                    @endif
+                </div>
+
                 <!-- Event & Showtime Card -->
                 <div class="bg-white rounded-3xl p-6 border border-black/10 shadow-sm space-y-4">
                     <h3 class="font-display font-black text-sm text-black uppercase tracking-wider border-b border-black/5 pb-3">
@@ -195,6 +220,16 @@
                             @endforelse
                         </tbody>
                         <tfoot class="border-t-2 border-black/10 font-bold bg-[#FAF9F6]">
+                            @if($booking->discount_amount > 0)
+                                <tr>
+                                    <td colspan="3" class="pt-4 px-4 text-gray-600 text-xs">
+                                        Mã giảm giá{{ $booking->discount ? ': '.$booking->discount->code : ' (mã đã bị xóa)' }}
+                                    </td>
+                                    <td class="pt-4 px-4 text-right text-xs text-emerald-700 font-black font-mono">
+                                        -{{ number_format($booking->discount_amount, 0, ',', '.') }}₫
+                                    </td>
+                                </tr>
+                            @endif
                             <tr>
                                 <td colspan="3" class="py-4 px-4 text-black text-sm">Tổng Cộng Thanh Toán:</td>
                                 <td class="py-4 px-4 text-right text-base text-black font-black font-mono">

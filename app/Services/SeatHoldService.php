@@ -189,6 +189,13 @@ class SeatHoldService
                 }
             }
 
+            // Giỏ vé có 1 đồng hồ chung: giữ thêm vé thì gia hạn luôn các vé đang giữ của suất này,
+            // tránh trường hợp vé cũ hết hạn trước và checkout chỉ đặt được một phần giỏ.
+            ShowtimeSeat::where('showtime_id', $showtime->id)->heldBy($user)->update(['held_until' => $heldUntil]);
+            ZoneTicket::where('showtime_id', $showtime->id)->where('status', 'held')
+                ->where('held_by_user_id', $user->id)->where('held_until', '>', now())
+                ->update(['held_until' => $heldUntil]);
+
             return $held;
         });
     }
