@@ -56,7 +56,8 @@ class Discount extends Model
             return false;
         }
 
-        if ($this->end_date && $this->end_date->isPast()) {
+        // end_date là ngày (00:00) nên phải còn hiệu lực đến hết ngày cuối cùng.
+        if ($this->end_date && $this->end_date->copy()->endOfDay()->isPast()) {
             return false;
         }
 
