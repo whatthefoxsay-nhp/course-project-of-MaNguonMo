@@ -6,8 +6,7 @@ use App\Exceptions\DiscountException;
 use App\Models\Discount;
 
 /**
- * Kiểm tra & tính tiền giảm của mã giảm giá. Tự kiểm tra ngày theo kiểu "bao gồm"
- * (mã còn dùng được trong cả ngày end_date) thay vì dựa vào Discount::isValidForOrder().
+ * Tra mã giảm giá theo code (không phân biệt hoa thường); quy tắc hợp lệ và cách tính nằm ở model Discount.
  */
 class DiscountService
 {
@@ -29,38 +28,14 @@ class DiscountService
         }
         $discount = $query->first();
 
-        if (! $discount || ! $discount->is_active) {
+        if (! $discount) {
             throw new DiscountException('Mã giảm giá không tồn tại hoặc đã ngừng áp dụng.');
         }
 
-        $today = now()->toDateString();
-        if ($discount->start_date && $discount->start_date->toDateString() > $today) {
-            throw new DiscountException('Mã giảm giá chưa đến thời gian áp dụng.');
-        }
-        if ($discount->end_date && $discount->end_date->toDateString() < $today) {
-            throw new DiscountException('Mã giảm giá đã hết hạn.');
-        }
-        if ($discount->max_uses !== null && $discount->used_count >= $discount->max_uses) {
-            throw new DiscountException('Mã giảm giá đã hết lượt sử dụng.');
-        }
-        if ($subtotal < (int) $discount->min_order_value) {
-            throw new DiscountException('Đơn hàng cần tối thiểu '.number_format((int) $discount->min_order_value, 0, ',', '.').'₫ để dùng mã này.');
+        if ($reason = $discount->unusableReason($subtotal)) {
+            throw new DiscountException($reason);
         }
 
-        return [$discount, $this->amountFor($discount, $subtotal)];
-    }
-
-    public function amountFor(Discount $discount, int $subtotal): int
-    {
-        if ($discount->discount_type === 'percentage') {
-            $amount = (int) round($subtotal * $discount->discount_value / 100);
-            if ($discount->max_discount_amount) {
-                $amount = min($amount, (int) $discount->max_discount_amount);
-            }
-        } else {
-            $amount = (int) $discount->discount_value;
-        }
-
-        return max(0, min($amount, $subtotal));
+        return [$discount, $discount->calculateDiscount($subtotal)];
     }
 }

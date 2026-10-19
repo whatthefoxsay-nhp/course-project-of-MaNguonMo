@@ -14,10 +14,15 @@ use Illuminate\Support\Facades\DB;
  * (không eager-load toàn bộ ghế + vé của mọi suất diễn).
  *
  * Doanh thu = tổng booking_items.price của các đơn "confirmed", gồm cả vé chọn ghế
- * (showtime_seat_id) lẫn vé theo khu (zone_ticket_id).
+ * (showtime_seat_id) lẫn vé theo khu (zone_ticket_id). Đơn có mã giảm giá thì phần giảm được
+ * phân bổ theo tỉ lệ giá từng vé, để tổng theo sự kiện/danh mục khớp "Tổng doanh thu" (bookings.total_price).
  */
 class SalesReportService
 {
+    /** Giá vé sau khi trừ phần giảm giá của đơn: price × total_price / (total_price + discount_amount). */
+    private const NET_ITEM_REVENUE = 'COALESCE(ROUND(SUM(booking_items.price * bookings.total_price * 1.0 '
+        .'/ NULLIF(bookings.total_price + COALESCE(bookings.discount_amount, 0), 0))), 0)';
+
     /** @var Collection<int, array{revenue: int, tickets: int}>|null */
     private ?Collection $eventTotals = null;
 
@@ -31,7 +36,7 @@ class SalesReportService
             ->join('showtimes', 'showtimes.id', '=', DB::raw('COALESCE(showtime_seats.showtime_id, zone_tickets.showtime_id)'))
             ->where('bookings.status', 'confirmed')
             ->groupBy('showtimes.event_id')
-            ->selectRaw('showtimes.event_id as event_id, SUM(booking_items.price) as revenue, COUNT(*) as tickets')
+            ->selectRaw('showtimes.event_id as event_id, '.self::NET_ITEM_REVENUE.' as revenue, COUNT(*) as tickets')
             ->toBase()
             ->get()
             ->mapWithKeys(fn ($row) => [(int) $row->event_id => ['revenue' => (int) $row->revenue, 'tickets' => (int) $row->tickets]]);

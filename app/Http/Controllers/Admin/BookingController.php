@@ -6,6 +6,7 @@ use App\Exceptions\SeatHoldException;
 use App\Http\Controllers\Controller;
 use App\Models\Booking;
 use App\Models\BookingItem;
+use App\Models\Discount;
 use App\Models\RoomZone;
 use App\Models\ShowtimeSeat;
 use App\Models\ZoneTicket;
@@ -119,6 +120,8 @@ class BookingController extends Controller
                     }
                 }
 
+                $this->syncDiscountUsage($locked, $newStatus);
+
                 $locked->update(['status' => $newStatus]);
             });
         } catch (SeatHoldException $exception) {
@@ -130,6 +133,37 @@ class BookingController extends Controller
             : "Đã xác nhận thanh toán đơn vé [{$booking->booking_code}].";
 
         return back()->with('success', $message);
+    }
+
+    /**
+     * Hủy đơn thì trả lại 1 lượt dùng mã giảm giá; xác nhận lại thì dùng lại 1 lượt (hết lượt → từ chối).
+     * Ngày hiệu lực không kiểm tra lại: mã đã hợp lệ tại thời điểm khách thanh toán.
+     *
+     * @throws SeatHoldException
+     */
+    private function syncDiscountUsage(Booking $booking, string $newStatus): void
+    {
+        if (! $booking->discount_id) {
+            return;
+        }
+
+        $discount = Discount::whereKey($booking->discount_id)->lockForUpdate()->first();
+        if (! $discount) {
+            return;
+        }
+
+        if ($newStatus === 'cancelled') {
+            if ($discount->used_count > 0) {
+                $discount->decrement('used_count');
+            }
+
+            return;
+        }
+
+        if ($discount->max_uses !== null && $discount->used_count >= $discount->max_uses) {
+            throw new SeatHoldException("Mã giảm giá {$discount->code} của đơn đã hết lượt sử dụng, không thể xác nhận lại đơn.");
+        }
+        $discount->increment('used_count');
     }
 
     /** Id ghế/vé (trong $ids) đang nằm trong một đơn "confirmed" khác đơn hiện tại. */

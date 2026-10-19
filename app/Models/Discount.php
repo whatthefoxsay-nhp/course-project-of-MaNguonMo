@@ -46,32 +46,40 @@ class Discount extends Model
             });
     }
 
-    public function isValidForOrder(int $orderAmount): bool
+    /** Lý do mã không dùng được cho đơn trị giá $orderAmount (tiếng Việt), null nếu dùng được. */
+    public function unusableReason(int $orderAmount): ?string
     {
         if (! $this->is_active) {
-            return false;
+            return 'Mã giảm giá không tồn tại hoặc đã ngừng áp dụng.';
         }
 
-        if ($this->start_date && $this->start_date->isFuture()) {
-            return false;
+        $today = now()->toDateString();
+        if ($this->start_date && $this->start_date->toDateString() > $today) {
+            return 'Mã giảm giá chưa đến thời gian áp dụng.';
         }
 
-        // end_date là ngày (00:00) nên phải còn hiệu lực đến hết ngày cuối cùng.
-        if ($this->end_date && $this->end_date->copy()->endOfDay()->isPast()) {
-            return false;
+        // end_date là ngày: mã còn hiệu lực đến hết ngày cuối cùng.
+        if ($this->end_date && $this->end_date->toDateString() < $today) {
+            return 'Mã giảm giá đã hết hạn.';
         }
 
-        if ($this->used_count >= $this->max_uses) {
-            return false;
+        if ($this->max_uses !== null && $this->used_count >= $this->max_uses) {
+            return 'Mã giảm giá đã hết lượt sử dụng.';
         }
 
-        if ($orderAmount < $this->min_order_value) {
-            return false;
+        if ($orderAmount < (int) $this->min_order_value) {
+            return 'Đơn hàng cần tối thiểu '.number_format((int) $this->min_order_value, 0, ',', '.').'₫ để dùng mã này.';
         }
 
-        return true;
+        return null;
     }
 
+    public function isValidForOrder(int $orderAmount): bool
+    {
+        return $this->unusableReason($orderAmount) === null;
+    }
+
+    /** Số tiền được giảm (không vượt quá giá trị đơn); 0 nếu mã không dùng được. */
     public function calculateDiscount(int $orderAmount): int
     {
         if (! $this->isValidForOrder($orderAmount)) {
@@ -79,13 +87,14 @@ class Discount extends Model
         }
 
         if ($this->discount_type === 'percentage') {
-            $discount = (int) round(($orderAmount * $this->discount_value) / 100);
-            if ($this->max_discount_amount && $discount > $this->max_discount_amount) {
-                return $this->max_discount_amount;
+            $amount = (int) round($orderAmount * $this->discount_value / 100);
+            if ($this->max_discount_amount) {
+                $amount = min($amount, (int) $this->max_discount_amount);
             }
-            return $discount;
+        } else {
+            $amount = (int) $this->discount_value;
         }
 
-        return min($this->discount_value, $orderAmount);
+        return max(0, min($amount, $orderAmount));
     }
 }

@@ -100,6 +100,7 @@ test('admin cannot toggle their own role', function () {
 });
 
 test('admin can reset password of a user to a random temporary password', function () {
+    config(['session.driver' => 'database']);
     $admin = User::factory()->create();
     $admin->assignRole('admin');
 
@@ -121,7 +122,8 @@ test('admin can reset password of a user to a random temporary password', functi
     $targetUser->refresh();
     expect(Illuminate\Support\Facades\Hash::check($matches[1], $targetUser->password))->toBeTrue()
         ->and($targetUser->remember_token)->not->toBe('old-remember-token')
-        ->and(Illuminate\Support\Facades\DB::table('sessions')->pluck('id')->all())->toBe(['other-session']);
+        ->and(Illuminate\Support\Facades\DB::table('sessions')->pluck('id')->all())
+        ->not->toContain('target-session')->toContain('other-session');
 });
 
 test('reset passwords differ between resets', function () {

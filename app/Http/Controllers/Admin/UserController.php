@@ -158,8 +158,11 @@ class UserController extends Controller
         $user->setRememberToken(Str::random(60));
         $user->save();
 
-        // Đăng xuất mọi phiên đang mở của tài khoản (driver session "database").
-        DB::table(config('session.table', 'sessions'))->where('user_id', $user->id)->delete();
+        // Đăng xuất mọi thiết bị: remember_token đã đổi ở trên; phiên lưu DB thì xóa luôn.
+        // Driver khác (file/redis) không tra được theo user, phiên cũ hết khi hết hạn.
+        if (config('session.driver') === 'database') {
+            DB::table(config('session.table', 'sessions'))->where('user_id', $user->id)->delete();
+        }
 
         return back()->with('success', "Đã đặt lại mật khẩu cho tài khoản [{$user->name}]. Mật khẩu tạm thời (chỉ hiển thị một lần): {$tempPassword}");
     }

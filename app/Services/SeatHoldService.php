@@ -10,6 +10,7 @@ use App\Models\ZoneTicket;
 use App\Models\User;
 use App\Support\TicketTiers;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 
 class SeatHoldService
@@ -101,7 +102,14 @@ class SeatHoldService
                 throw new SeatHoldException('Mỗi lượt đặt tối đa '.self::MAX_SEATS." chỗ (bạn đang giữ {$alreadyHeld} chỗ).");
             }
 
-            $heldUntil = now()->addMinutes(self::HOLD_MINUTES);
+            // Giỏ vé có 1 đồng hồ chung: vé giữ thêm dùng hạn của vé giữ sớm nhất (không gia hạn vé cũ,
+            // để không ai giữ ghế mãi bằng cách thêm/bỏ vé liên tục) → giỏ hết hạn cùng lúc, checkout không đặt thiếu.
+            $existingUntil = collect([
+                ShowtimeSeat::where('showtime_id', $showtime->id)->heldBy($user)->min('held_until'),
+                ZoneTicket::where('showtime_id', $showtime->id)->where('status', 'held')
+                    ->where('held_by_user_id', $user->id)->where('held_until', '>', now())->min('held_until'),
+            ])->filter()->map(fn ($value) => Carbon::parse($value))->min();
+            $heldUntil = $existingUntil ?? now()->addMinutes(self::HOLD_MINUTES);
             $held = new Collection;
 
             // 1) Ghế khách tự chọn: khóa dòng rồi mới kiểm tra còn trống (chống 2 người cùng giữ).
@@ -188,13 +196,6 @@ class SeatHoldService
                     ]);
                 }
             }
-
-            // Giỏ vé có 1 đồng hồ chung: giữ thêm vé thì gia hạn luôn các vé đang giữ của suất này,
-            // tránh trường hợp vé cũ hết hạn trước và checkout chỉ đặt được một phần giỏ.
-            ShowtimeSeat::where('showtime_id', $showtime->id)->heldBy($user)->update(['held_until' => $heldUntil]);
-            ZoneTicket::where('showtime_id', $showtime->id)->where('status', 'held')
-                ->where('held_by_user_id', $user->id)->where('held_until', '>', now())
-                ->update(['held_until' => $heldUntil]);
 
             return $held;
         });

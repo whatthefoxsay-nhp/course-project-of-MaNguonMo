@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\Booking;
+use App\Models\ShowtimeSeat;
 use App\Models\Discount;
 use App\Models\Event;
 use App\Models\Showtime;
@@ -316,16 +317,21 @@ test('deleting a discount keeps the booking but clears the link', function () {
     expect($booking->discount_id)->toBeNull()->and($booking->discount_amount)->toBe(1000);
 });
 
-test('holding another seat extends the earlier holds so checkout books the whole cart', function () {
+test('seats held later share the first hold timer instead of extending it', function () {
     $user = createCustomer();
     $showtime = completionShowtime();
     $ids = $showtime->showtimeSeats()->where('status', 'available')->orderBy('id')->take(2)->pluck('id')->all();
 
     app(SeatHoldService::class)->hold($user, $showtime, [$ids[0]]);
+    $firstUntil = ShowtimeSeat::find($ids[0])->held_until;
     $this->travel(8)->minutes();
     app(SeatHoldService::class)->hold($user, $showtime, [$ids[1]]);
-    $this->travel(5)->minutes(); // 13 phút sau lần giữ đầu tiên
 
+    // Vé cũ không được gia hạn, vé mới dùng chung hạn của vé cũ.
+    expect(ShowtimeSeat::find($ids[0])->held_until->equalTo($firstUntil))->toBeTrue()
+        ->and(ShowtimeSeat::find($ids[1])->held_until->equalTo($firstUntil))->toBeTrue();
+
+    $this->travel(1)->minutes(); // 9 phút: cả giỏ còn hạn
     $code = $this->actingAs($user)->postJson(route('checkout.store'), checkoutPayload())
         ->assertOk()->json('booking_code');
 
