@@ -14,7 +14,7 @@ class BookingController extends Controller
 {
     public function index(Request $request): View
     {
-        $query = Booking::with(['user', 'items.showtimeSeat.showtime.movie', 'items.showtimeSeat.seat', 'items.showtimeSeat.showtime.room']);
+        $query = Booking::with(['user', 'items.showtimeSeat.showtime.movie', 'items.showtimeSeat.seat', 'items.showtimeSeat.showtime.room', 'items.zoneTicket.zone', 'items.zoneTicket.showtime.movie', 'items.zoneTicket.showtime.room']);
 
         if ($request->filled('search')) {
             $search = $request->input('search');
@@ -43,6 +43,9 @@ class BookingController extends Controller
             'items.showtimeSeat.seat',
             'items.showtimeSeat.showtime.movie.category',
             'items.showtimeSeat.showtime.room',
+            'items.zoneTicket.zone',
+            'items.zoneTicket.showtime.movie.category',
+            'items.zoneTicket.showtime.room',
         ]);
 
         if ($request->wantsJson()) {
@@ -72,6 +75,11 @@ class BookingController extends Controller
                             'held_until' => null,
                         ]);
                     }
+                    if ($item->zoneTicket) {
+                        // Keep the ticket row linked to the order for its audit trail; an expired hold
+                        // no longer consumes zone inventory.
+                        $item->zoneTicket->update(['status' => 'held', 'held_by_user_id' => null, 'held_until' => now()->subSecond()]);
+                    }
                 }
             } elseif ($newStatus === 'confirmed') {
                 foreach ($booking->items as $item) {
@@ -81,6 +89,9 @@ class BookingController extends Controller
                             'held_by_user_id' => null,
                             'held_until' => null,
                         ]);
+                    }
+                    if ($item->zoneTicket) {
+                        $item->zoneTicket->update(['status' => 'booked', 'held_by_user_id' => null, 'held_until' => null]);
                     }
                 }
             }

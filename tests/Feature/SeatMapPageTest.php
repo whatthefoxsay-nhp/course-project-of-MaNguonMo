@@ -15,9 +15,11 @@ test('stadium showtime renders the stadium blueprint with real seats', function 
 
     $this->get(route('showtimes.seats', $showtime))
         ->assertOk()
-        ->assertSee('SÂN KHẤU CHÍNH')
-        ->assertSee('Khán Đài A')
-        ->assertSee('Skybox VIP Suites')
+        ->assertSee('Sơ đồ khán phòng')
+        ->assertSee('Chọn khu vé trên sơ đồ')
+        ->assertSee('Khán Đài Cat 1')
+        ->assertSee('Skybox VIP')
+        ->assertViewHas('useZoneMap', true)
         ->assertViewHas('seats', fn (array $seats) => count($seats) === 212
             && $seats[0]->id === $showtime->showtimeSeats()->orderBy('id')->value('id')
             && collect($seats)->doesntContain('type', 'standing_pit'));
@@ -29,7 +31,9 @@ test('theater showtime renders the plain seat grid instead of the stadium', func
     $this->get(route('showtimes.seats', $showtime))
         ->assertOk()
         ->assertSee('ST-1')
+        ->assertDontSee('Chọn khu vé trên sơ đồ')
         ->assertDontSee('CATWALK RUNWAY')
+        ->assertViewHas('useZoneMap', false)
         ->assertViewHas('seats', fn (array $seats) => collect($seats)->every(fn ($seat) => $seat->sector === 'general'));
 });
 
@@ -52,9 +56,11 @@ test('an expired hold is offered as available', function () {
 test('non seated events show the ticket tier selector', function () {
     $this->get(route('showtimes.seats', firstShowtimeOf('vietnam-tech-summit-ai-expo-2026')))
         ->assertOk()
-        ->assertSee('Chọn Hạng Vé & Số Lượng Tham Dự')
-        ->assertSee('Vé Tiêu Chuẩn')
-        ->assertViewHas('seats', []);
+        ->assertSee('Vé vào khu triển lãm')
+        ->assertSee('Số vé')
+        ->assertSee('Chọn khu vé trên sơ đồ')
+        ->assertViewHas('seats', [])
+        ->assertViewHas('useZoneMap', true);
 });
 
 test('showtimes of unpublished events are hidden', function () {

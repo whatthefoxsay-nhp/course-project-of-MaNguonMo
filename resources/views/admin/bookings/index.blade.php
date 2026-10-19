@@ -94,9 +94,9 @@
                         @forelse($bookings as $booking)
                             @php
                                 $firstItem = $booking->items->first();
-                                $movie = $firstItem?->showtimeSeat?->showtime?->movie;
-                                $showtime = $firstItem?->showtimeSeat?->showtime;
-                                $room = $firstItem?->showtimeSeat?->showtime?->room;
+                                $showtime = $firstItem?->showtimeSeat?->showtime ?? $firstItem?->zoneTicket?->showtime;
+                                $movie = $showtime?->movie;
+                                $room = $showtime?->room;
                                 $seatCount = $booking->items->count();
                             @endphp
                             <tr class="hover:bg-[#F2F8F4] border-l-[3px] border-l-transparent hover:border-l-amber-500 transition-all">

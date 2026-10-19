@@ -13,6 +13,7 @@ class BookingItem extends Model
     protected $fillable = [
         'booking_id',
         'showtime_seat_id',
+        'zone_ticket_id',
         'price',
     ];
 
@@ -28,5 +29,10 @@ class BookingItem extends Model
     public function showtimeSeat(): BelongsTo
     {
         return $this->belongsTo(ShowtimeSeat::class);
+    }
+
+    public function zoneTicket(): BelongsTo
+    {
+        return $this->belongsTo(ZoneTicket::class);
     }
 }

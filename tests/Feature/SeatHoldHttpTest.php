@@ -4,6 +4,7 @@ use App\Models\Event;
 use App\Models\Showtime;
 use App\Models\ShowtimeSeat;
 use App\Models\User;
+use App\Models\ZoneTicket;
 
 beforeEach(fn () => $this->seed());
 
@@ -62,7 +63,7 @@ test('standing tickets can be held by quantity', function () {
         ->postJson(route('showtimes.holds.store', concertShowtime()), ['tiers' => ['standing_pit' => 2]])
         ->assertOk();
 
-    expect(ShowtimeSeat::where('status', 'held')->count())->toBe(2);
+    expect(ZoneTicket::where('status', 'held')->count())->toBe(2);
 });
 
 test('a customer removes a seat from their cart', function () {

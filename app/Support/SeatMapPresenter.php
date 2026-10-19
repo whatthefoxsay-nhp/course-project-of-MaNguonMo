@@ -15,10 +15,10 @@ final class SeatMapPresenter
     {
         $showtime->loadMissing('room');
         $tiers = TicketTiers::for($showtime->base_price, true);
-        $isStadium = $showtime->room->layout_preset === 'mega_concert';
+        $isStadium = in_array($showtime->room->layout_preset, ['mega_concert', 'sayhi_concert', 'sayhi_concert_d2', 'outdoor_concert'], true);
 
         return $showtime->showtimeSeats()
-            ->with('seat')
+            ->with('seat.zone')
             ->orderBy('id')
             ->get()
             ->reject(fn (ShowtimeSeat $showtimeSeat) => $showtimeSeat->seat->type === 'standing_pit')
@@ -31,6 +31,9 @@ final class SeatMapPresenter
                 return (object) [
                     'id' => $showtimeSeat->id,
                     'showtime_id' => $showtime->id,
+                    'zone_id' => $seat->zone_id,
+                    'zone_code' => $seat->zone?->code,
+                    'zone_kind' => $seat->zone?->kind,
                     'block' => $seat->row_label,
                     'sector' => $sector,
                     'sector_label' => $sectorLabel,
@@ -51,6 +54,43 @@ final class SeatMapPresenter
             ->all();
     }
 
+    /** @return list<array<string, mixed>> */
+    public static function zonesForShowtime(Showtime $showtime): array
+    {
+        $showtime->loadMissing('room.zones.seats');
+        $tiers = TicketTiers::for($showtime->base_price, (bool) $showtime->event?->is_seated);
+
+        return $showtime->room->zones->values()->map(function ($zone, $index) use ($showtime, $tiers) {
+            $seatTypes = $zone->seats->pluck('type')->unique();
+            $seatCount = $zone->seats->count();
+            $availableSeats = $showtime->showtimeSeats()->whereHas('seat', fn ($query) => $query->where('zone_id', $zone->id))
+                ->where(fn ($query) => $query->where('status', 'available')->orWhere(fn ($expired) => $expired->where('status', 'held')->where('held_until', '<', now())))
+                ->count();
+            $occupiedTickets = $zone->tickets()->where('showtime_id', $showtime->id)
+                ->where(fn ($query) => $query->where('status', 'booked')->orWhere(fn ($held) => $held->where('status', 'held')->where('held_until', '>', now())))
+                ->count();
+            $tierKey = $zone->ticket_tier ?: ($zone->isStanding() && $showtime->event?->is_seated ? 'standing_pit' : 'standard_pass');
+            $tier = $tiers[$tierKey] ?? null;
+            $price = $zone->hasSeats()
+                ? TicketTiers::seatPrice($zone->seat_type, $showtime->base_price)
+                : (int) ($tier['price'] ?? $showtime->base_price);
+
+            return [
+                'id' => $zone->id,
+                'code' => $zone->code,
+                'name' => $zone->name,
+                'kind' => $zone->kind,
+                'capacity' => $zone->effectiveCapacity(),
+                'available' => $zone->hasSeats() ? $availableSeats : max(0, $zone->capacity - $occupiedTickets),
+                'price' => $price,
+                'ticket_tier' => $tierKey,
+                'seat_type' => $zone->seat_type,
+                'type_names' => $seatTypes->values()->all(),
+                'canvas' => ZoneCanvas::normalize($zone->meta, $index, $showtime->room->zones->count()),
+            ];
+        })->values()->all();
+    }
+
     /** @return array{0: string, 1: string} [sector, nhãn hiển thị] */
     private static function sector(string $row, bool $isStadium): array
     {
@@ -59,13 +99,13 @@ final class SeatMapPresenter
         }
 
         return match (true) {
-            str_starts_with($row, 'SVIP') => ['floor', 'SVIP B-Stage Hàng '.substr($row, -1)],
-            str_starts_with($row, 'FL') => ['floor', 'VIP Floor Hàng '.substr($row, 3)],
-            str_starts_with($row, 'SB') => ['skybox', 'Skybox VIP Suites (Tầng Thượng)'],
-            str_starts_with($row, 'A') => ['center_stand', 'Khán Đài A Hàng '.substr($row, 1).' (Trung Tâm Tầng 1)'],
-            str_starts_with($row, 'B') => ['upper_stand', 'Khán Đài B Hàng '.substr($row, 1).' (Trung Tâm Tầng 2)'],
-            str_starts_with($row, 'C') => ['left_stand', 'Khán Đài C Hàng '.substr($row, 1).' (Cánh Trái)'],
-            str_starts_with($row, 'D') => ['right_stand', 'Khán Đài D Hàng '.substr($row, 1).' (Cánh Phải)'],
+            str_starts_with($row, 'SVIP') => ['floor', 'SVIP Diamond Hàng '.substr($row, -1)],
+            str_starts_with($row, 'VIP') || str_starts_with($row, 'FL') => ['floor', 'VIP Gold Hàng '.substr($row, -1)],
+            str_starts_with($row, 'SB') || str_starts_with($row, 'SKYLNG') => ['skybox', 'Sky Lounge VIP Suites (Tầng Thượng)'],
+            str_starts_with($row, 'CAT1') || str_starts_with($row, 'A') => ['center_stand', 'Khán Đài CAT 1 Hàng '.substr($row, -1).' (Trung Tâm Tầng 1)'],
+            str_starts_with($row, 'CAT2') || str_starts_with($row, 'B') => ['upper_stand', 'Khán Đài CAT 2 Hàng '.substr($row, -1).' (Trung Tâm Tầng 2)'],
+            str_starts_with($row, 'CAT3-C') || str_starts_with($row, 'C') => ['left_stand', 'Khán Đài CAT 3 Hàng '.substr($row, -1).' (Cánh Trái)'],
+            str_starts_with($row, 'CAT3-D') || str_starts_with($row, 'D') => ['right_stand', 'Khán Đài CAT 3 Hàng '.substr($row, -1).' (Cánh Phải)'],
             default => ['general', "Hàng {$row}"],
         };
     }

@@ -80,7 +80,7 @@
 
         @php
             $firstItem = $booking->items->first();
-            $showtime = $firstItem?->showtimeSeat?->showtime;
+            $showtime = $firstItem?->showtimeSeat?->showtime ?? $firstItem?->zoneTicket?->showtime;
             $movie = $showtime?->movie;
             $room = $showtime?->room;
         @endphp
@@ -166,6 +166,7 @@
                             @forelse($booking->items as $idx => $item)
                                 @php
                                     $seat = $item->showtimeSeat?->seat;
+                                    $zoneTicket = $item->zoneTicket;
                                     $seatType = $seat?->type ?? 'standard';
                                     $typeBadge = match($seatType) {
                                         'svip' => 'bg-amber-100 text-amber-900 border-amber-300 font-black',
@@ -176,11 +177,11 @@
                                 <tr>
                                     <td class="py-3 px-4 text-gray-400 font-mono">{{ $idx + 1 }}</td>
                                     <td class="py-3 px-4 font-bold text-black">
-                                        {{ $seat ? "Hàng {$seat->row_label} - Ghế {$seat->seat_number}" : 'Ghế #' . $item->id }}
+                                        {{ $seat ? "Hàng {$seat->row_label} - Ghế {$seat->seat_number}" : ($zoneTicket ? $zoneTicket->zone->name.' — vé số '.$zoneTicket->id : 'Vé #' . $item->id) }}
                                     </td>
                                     <td class="py-3 px-4">
                                         <span class="px-2 py-0.5 rounded-full text-[10px] border uppercase {{ $typeBadge }}">
-                                            {{ strtoupper($seatType) }}
+                                            {{ strtoupper($zoneTicket?->zone?->ticket_tier ?? $seatType) }}
                                         </span>
                                     </td>
                                     <td class="py-3 px-4 text-right font-black text-black font-mono">

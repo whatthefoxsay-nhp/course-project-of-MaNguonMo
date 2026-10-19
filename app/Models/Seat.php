@@ -11,8 +11,15 @@ class Seat extends Model
 {
     use HasFactory;
 
+    protected static function booted(): void
+    {
+        static::saved(fn (self $seat) => $seat->zone_id ? $seat->room?->recalculateCapacity() : null);
+        static::deleted(fn (self $seat) => $seat->zone_id ? $seat->room?->recalculateCapacity() : null);
+    }
+
     protected $fillable = [
         'room_id',
+        'zone_id',
         'row_label',
         'seat_number',
         'type',
@@ -25,6 +32,11 @@ class Seat extends Model
     public function room(): BelongsTo
     {
         return $this->belongsTo(Room::class);
+    }
+
+    public function zone(): BelongsTo
+    {
+        return $this->belongsTo(RoomZone::class, 'zone_id');
     }
 
     public function showtimeSeats(): HasMany

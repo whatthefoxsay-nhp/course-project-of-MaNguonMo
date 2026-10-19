@@ -15,6 +15,8 @@ Alpine.data('seatBookingManager', (config = {}) => ({
     selectedSeats: [],
     tierQuantities: {},
     tierMeta: {},
+    zoneQuantities: {},
+    zoneMeta: {},
     basePrice: config.basePrice || 180000,
     activeZoneFilter: 'all',
     hoveredSeat: null,
@@ -29,6 +31,13 @@ Alpine.data('seatBookingManager', (config = {}) => ({
     isSubmitting: false,
     unavailableIds: [],
 
+    concertViewMode: config.defaultViewMode || 'zone',
+    selectedZone: 'svip_diamond',
+    activeVenueZone: null,
+    hoveredZone: null,
+    availableSeatsByZone: config.availableSeatsByZone || {},
+    seatInventory: config.seatInventory || {},
+
     init() {
         if (config.tiers) {
             Object.keys(config.tiers).forEach(k => {
@@ -36,9 +45,124 @@ Alpine.data('seatBookingManager', (config = {}) => ({
                 this.tierMeta[k] = config.tiers[k];
             });
         }
+        (config.zones || []).forEach(zone => {
+            this.zoneQuantities[zone.id] = 0;
+            this.zoneMeta[zone.id] = zone;
+        });
+        this.activeVenueZone = null;
         if (config.pollStatus && config.statusUrl) {
             setInterval(() => this.refreshSeatStatus(), 15000);
         }
+    },
+
+    switchViewMode(mode) {
+        this.concertViewMode = mode;
+    },
+
+    selectConcertZone(zoneKey, autoIncrement = false) {
+        this.selectedZone = zoneKey;
+        this.activeZoneFilter = zoneKey;
+        if (autoIncrement && this.getZoneSelectedCount(zoneKey) === 0) {
+            this.quickPickSeatFromZone(zoneKey);
+        }
+        const el = document.getElementById('zone-card-' + zoneKey);
+        if (el) {
+            el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+    },
+
+    setHoveredZone(zoneKey) {
+        this.hoveredZone = zoneKey;
+    },
+
+    clearHoveredZone() {
+        this.hoveredZone = null;
+    },
+
+    focusVenueZone(zoneId) {
+        this.activeVenueZone = zoneId;
+    },
+
+    focusZoneInSeatGrid(zoneKey) {
+        this.concertViewMode = 'seat';
+        this.activeZoneFilter = zoneKey;
+        const zoneName = this.tierMeta[zoneKey]?.name || zoneKey;
+        this.notify(`Đang xem vị trí từng ghế khu: ${zoneName}`, 'info');
+    },
+
+    getZoneSelectedCount(zoneKey) {
+        if (this.zoneQuantities[zoneKey] !== undefined) return this.zoneQuantities[zoneKey] || 0;
+        if (zoneKey === 'standing_pit') return this.standingCount;
+        return this.selectedSeats.filter(s => s.type === zoneKey).length;
+    },
+
+    incrementZone(zoneId) {
+        const zone = this.zoneMeta[zoneId];
+        if (!zone || this.totalTicketCount >= 8 || this.zoneQuantities[zoneId] >= zone.available) return;
+        this.zoneQuantities[zoneId]++;
+    },
+
+    decrementZone(zoneId) {
+        if (this.zoneQuantities[zoneId] > 0) this.zoneQuantities[zoneId]--;
+    },
+
+    toggleTable(zoneId, rowLabel) {
+        const rowSeats = (this.seatInventory[zoneId] || []).filter(seat => (seat.row ?? seat.row_label) === rowLabel && seat.status === 'available' && !this.unavailableIds.includes(seat.id));
+        if (!rowSeats.length) return;
+        const selected = rowSeats.filter(seat => this.isSeatSelected(seat.id));
+        if (selected.length === rowSeats.length) {
+            selected.forEach(seat => this.removeSeat(seat.id));
+            return;
+        }
+        rowSeats.filter(seat => !this.isSeatSelected(seat.id)).forEach(seat => {
+            if (this.totalTicketCount < 8) this.toggleSeat(seat.id, seat.number ?? seat.seat_number, seat.row ?? seat.row_label, seat.type, seat.typeName ?? seat.type_name, seat.status, seat.price, seat.perks);
+        });
+    },
+
+    quickPickSeatFromZone(zoneKey) {
+        if (zoneKey === 'standing_pit') {
+            return this.addStandingTicket();
+        }
+
+        if (this.totalTicketCount >= 8) {
+            this.notify('Bạn chỉ có thể chọn tối đa 8 vé cho mỗi lượt đặt.', 'warning');
+            return;
+        }
+
+        const zoneSeats = this.availableSeatsByZone[zoneKey] || [];
+        const availableSeat = zoneSeats.find(s => 
+            s.status === 'available' && 
+            !this.unavailableIds.includes(s.id) && 
+            !this.isSeatSelected(s.id)
+        );
+
+        if (!availableSeat) {
+            this.notify('Khu vực này hiện đã hết ghế trống khả dụng!', 'warning');
+            return;
+        }
+
+        this.toggleSeat(
+            availableSeat.id,
+            availableSeat.number,
+            availableSeat.row,
+            availableSeat.type,
+            availableSeat.typeName,
+            availableSeat.status,
+            availableSeat.price,
+            availableSeat.perks
+        );
+    },
+
+    quickRemoveSeatFromZone(zoneKey) {
+        if (zoneKey === 'standing_pit') {
+            return this.removeStandingTicket();
+        }
+
+        const pickedSeats = this.selectedSeats.filter(s => s.type === zoneKey);
+        if (pickedSeats.length === 0) return;
+
+        const lastSeat = pickedSeats[pickedSeats.length - 1];
+        this.removeSeat(lastSeat.id);
     },
 
     // Individual Seat Toggle for Seated Concerts
@@ -203,7 +327,11 @@ Alpine.data('seatBookingManager', (config = {}) => ({
     },
 
     get totalPrice() {
-        return this.totalSeatPrice + this.totalStandingPrice + this.totalTierPrice;
+        return this.totalSeatPrice + this.totalStandingPrice + this.totalTierPrice + this.totalZonePrice;
+    },
+
+    get totalZonePrice() {
+        return Object.entries(this.zoneQuantities).reduce((sum, [id, quantity]) => sum + quantity * (this.zoneMeta[id]?.price || 0), 0);
     },
 
     get totalTierCount() {
@@ -211,7 +339,7 @@ Alpine.data('seatBookingManager', (config = {}) => ({
     },
 
     get totalTicketCount() {
-        return this.selectedSeats.length + this.standingCount + this.totalTierCount;
+        return this.selectedSeats.length + this.standingCount + this.totalTierCount + Object.values(this.zoneQuantities).reduce((sum, count) => sum + count, 0);
     },
 
     get formattedTotalPrice() {
@@ -227,8 +355,11 @@ Alpine.data('seatBookingManager', (config = {}) => ({
         try {
             const response = await fetch(config.statusUrl, { headers: { 'Accept': 'application/json' } });
             if (!response.ok) return;
-            const { unavailable } = await response.json();
+            const { unavailable, zones_available: zonesAvailable = {} } = await response.json();
             this.unavailableIds = unavailable;
+            Object.entries(zonesAvailable).forEach(([id, available]) => {
+                if (this.zoneMeta[id]) this.zoneMeta[id].available = available;
+            });
 
             const lost = this.selectedSeats.filter(seat => unavailable.includes(seat.id));
             if (lost.length > 0) {
@@ -250,12 +381,14 @@ Alpine.data('seatBookingManager', (config = {}) => ({
             if (quantity > 0) tiers[key] = quantity;
         });
         if (this.standingCount > 0) tiers.standing_pit = this.standingCount;
+        const zones = {};
+        Object.entries(this.zoneQuantities).forEach(([id, quantity]) => { if (quantity > 0) zones[id] = quantity; });
 
         try {
             const response = await fetch(config.holdUrl, {
                 method: 'POST',
                 headers: jsonHeaders(),
-                body: JSON.stringify({ seat_ids: this.selectedSeats.map(seat => seat.id), tiers }),
+                body: JSON.stringify({ seat_ids: this.selectedSeats.map(seat => seat.id), tiers, zones }),
             });
 
             if (response.status === 401) {
@@ -502,9 +635,10 @@ Alpine.data('ticketPaymentManager', (config = {}) => ({
         }
     },
 
-    async removeItem(showtimeSeatId) {
+    async removeItem(item) {
         try {
-            const response = await fetch(config.removeUrl.replace('__ID__', showtimeSeatId), {
+            const removeUrl = item.isZoneTicket ? config.removeZoneUrl : config.removeUrl;
+            const response = await fetch(removeUrl.replace('__ID__', item.id), {
                 method: 'DELETE',
                 headers: jsonHeaders(),
             });
@@ -528,7 +662,7 @@ Alpine.data('ticketPaymentManager', (config = {}) => ({
         const movieTitle = firstItem.movie_title || 'Live Concert TicketBox 2026';
         const showtime = firstItem.showtime_str || '19:30 - 25/10/2026';
         const venue = firstItem.room_name || 'Sân Khấu Sự Kiện';
-        const seats = this.items.map(i => (i.row_label ? i.row_label + i.seat_number : i.seat_type)).join(', ') || 'Ghế C4, C5';
+        const seats = this.items.map(i => i.is_zone_ticket ? i.seat_type : (i.row_label ? i.row_label + i.seat_number : i.seat_type)).join(', ') || 'Ghế C4, C5';
 
         const canvas = document.createElement('canvas');
         canvas.width = 1200;
@@ -935,6 +1069,12 @@ Alpine.data('adminSeatMapBuilder', (config = {}) => ({
     selectedTool: 'svip_diamond',
     matrixRows: (config.initialRows && config.initialRows.length) ? JSON.parse(JSON.stringify(config.initialRows)) : [],
 
+    stageType: config.stageType || (config.preset === 'sayhi_concert_d2' ? 'runway_y' : ((config.preset === 'sayhi_concert' || config.preset === 'mega_concert') ? 'runway_t' : 'standard')),
+    standingZones: (config.standingZones && config.standingZones.length) ? JSON.parse(JSON.stringify(config.standingZones)) : [
+        { code: 'FZ-A', name: 'Super Fan Fanzone A', capacity: 30 },
+        { code: 'FZ-B', name: 'Super Fan Fanzone B', capacity: 30 },
+    ],
+
     tools: [
         { id: 'svip_diamond', name: 'SVIP Diamond', color: '#D4AF37', icon: '💎', border: 'border-amber-400' },
         { id: 'vip_gold', name: 'VIP Gold', color: '#C08497', icon: '⭐', border: 'border-pink-300' },
@@ -951,8 +1091,105 @@ Alpine.data('adminSeatMapBuilder', (config = {}) => ({
         }
     },
 
+    setStageType(type) {
+        this.stageType = type;
+        if (type === 'runway_y') {
+            this.generateYStageCutout();
+        }
+    },
+
+    addStandingZone() {
+        const nextLetter = String.fromCharCode(65 + this.standingZones.length);
+        this.standingZones.push({
+            code: 'FZ-' + nextLetter,
+            name: 'Fanzone Khu ' + nextLetter,
+            capacity: 25
+        });
+        this.syncCapacity();
+    },
+
+    removeStandingZone(idx) {
+        if (this.standingZones.length <= 1) return;
+        this.standingZones.splice(idx, 1);
+        this.syncCapacity();
+    },
+
+    get totalStandingCapacity() {
+        if (!['mega_concert', 'sayhi_concert', 'sayhi_concert_d2'].includes(this.preset)) {
+            return 0;
+        }
+        return this.standingZones.reduce((sum, z) => sum + (parseInt(z.capacity) || 0), 0);
+    },
+
+    generateYStageCutout() {
+        if (this.matrixRows.length >= 4) {
+            const rowsToCut = Math.min(4, this.matrixRows.length);
+            for (let r = 0; r < rowsToCut; r++) {
+                const totalSeats = this.matrixRows[r].seats.length;
+                const mid = Math.floor(totalSeats / 2);
+                if (r === 0) {
+                    for (let s = Math.max(0, mid - 2); s < Math.min(totalSeats, mid + 2); s++) {
+                        this.matrixRows[r].seats[s].is_aisle = true;
+                    }
+                } else if (r === 1) {
+                    if (mid > 0) this.matrixRows[r].seats[mid - 1].is_aisle = true;
+                    if (mid < totalSeats) this.matrixRows[r].seats[mid].is_aisle = true;
+                } else if (r === 2) {
+                    for (let s = Math.max(0, mid - 2); s < Math.min(totalSeats, mid + 2); s++) {
+                        this.matrixRows[r].seats[s].is_aisle = true;
+                    }
+                } else if (r === 3) {
+                    for (let s = Math.max(0, mid - 3); s < Math.min(totalSeats, mid + 3); s++) {
+                        this.matrixRows[r].seats[s].is_aisle = true;
+                    }
+                }
+            }
+        }
+        this.syncCapacity();
+    },
+
+    generateCenterAisle() {
+        this.matrixRows.forEach(r => {
+            const total = r.seats.length;
+            const mid = Math.floor(total / 2);
+            if (mid > 0) r.seats[mid - 1].is_aisle = true;
+            if (mid < total) r.seats[mid].is_aisle = true;
+        });
+        this.syncCapacity();
+    },
+
+    generateSideAisles() {
+        this.matrixRows.forEach(r => {
+            const total = r.seats.length;
+            const p1 = Math.floor(total / 3);
+            const p2 = Math.floor((total * 2) / 3);
+            if (p1 < total) r.seats[p1].is_aisle = true;
+            if (p2 < total) r.seats[p2].is_aisle = true;
+        });
+        this.syncCapacity();
+    },
+
+    restoreAllSeats() {
+        this.matrixRows.forEach(r => {
+            r.seats.forEach(s => {
+                s.is_aisle = false;
+                s.is_blocked = false;
+            });
+        });
+        this.syncCapacity();
+    },
+
+    promptRenameRow(rIdx) {
+        const current = this.matrixRows[rIdx]?.row || '';
+        const newName = prompt('Nhập tên/nhãn mới cho hàng ghế này:', current);
+        if (newName && newName.trim() !== '') {
+            this.matrixRows[rIdx].row = newName.trim();
+        }
+    },
+
     buildDefaultMatrix(preset) {
         if (preset === 'mega_concert') {
+            this.stageType = 'runway_t';
             const defs = [
                 ['SVIP-A', 12, 'svip_diamond'], ['SVIP-B', 12, 'svip_diamond'],
                 ['FL-1', 14, 'vip_gold'], ['FL-2', 14, 'vip_gold'], ['FL-3', 14, 'vip_gold'], ['FL-4', 14, 'vip_gold'],
@@ -971,7 +1208,53 @@ Alpine.data('adminSeatMapBuilder', (config = {}) => ({
                     is_blocked: false,
                 }))
             }));
+        } else if (preset === 'sayhi_concert') {
+            this.stageType = 'runway_t';
+            const defs = [
+                ['SVIP-SH1', 12, 'svip_diamond'], ['SVIP-SH2', 12, 'svip_diamond'],
+                ['VIP-SH1', 14, 'vip_gold'], ['VIP-SH2', 14, 'vip_gold'], ['VIP-SH3', 14, 'vip_gold'], ['VIP-SH4', 14, 'vip_gold'],
+                ['CAT1-A1', 16, 'cat1_stand'], ['CAT1-A2', 16, 'cat1_stand'], ['CAT1-A3', 16, 'cat1_stand'],
+                ['CAT2-B1', 14, 'cat1_stand'], ['CAT2-B2', 14, 'cat1_stand'],
+                ['CAT3-C1', 12, 'cat2_wings'], ['CAT3-C2', 12, 'cat2_wings'],
+                ['CAT3-D1', 12, 'cat2_wings'], ['CAT3-D2', 12, 'cat2_wings'],
+                ['SKYLNG', 8, 'skybox_suite'],
+            ];
+            this.matrixRows = defs.map(([label, count, type]) => ({
+                row: label,
+                seats: Array.from({ length: count }, (_, i) => ({
+                    number: i + 1,
+                    type: type,
+                    is_aisle: false,
+                    is_blocked: false,
+                }))
+            }));
+        } else if (preset === 'sayhi_concert_d2') {
+            this.stageType = 'runway_y';
+            this.standingZones = [
+                { code: 'FZ-A', name: 'Super Fan Fanzone A', capacity: 30 },
+                { code: 'FZ-B', name: 'Super Fan Fanzone B', capacity: 30 },
+            ];
+            const defs = [
+                ['SVIP-D2-1', 14, 'svip_diamond'], ['SVIP-D2-2', 14, 'svip_diamond'],
+                ['VIP-D2-1', 16, 'vip_gold'], ['VIP-D2-2', 16, 'vip_gold'], ['VIP-D2-3', 16, 'vip_gold'], ['VIP-D2-4', 16, 'vip_gold'],
+                ['CAT1-D2-1', 18, 'cat1_stand'], ['CAT1-D2-2', 18, 'cat1_stand'], ['CAT1-D2-3', 18, 'cat1_stand'],
+                ['CAT2-D2-1', 16, 'cat1_stand'], ['CAT2-D2-2', 16, 'cat1_stand'],
+                ['CAT3-C1', 14, 'cat2_wings'], ['CAT3-C2', 14, 'cat2_wings'],
+                ['CAT3-D1', 14, 'cat2_wings'], ['CAT3-D2', 14, 'cat2_wings'],
+                ['SKYLNG-1', 8, 'skybox_suite'], ['SKYLNG-2', 8, 'skybox_suite'],
+            ];
+            this.matrixRows = defs.map(([label, count, type]) => ({
+                row: label,
+                seats: Array.from({ length: count }, (_, i) => ({
+                    number: i + 1,
+                    type: type,
+                    is_aisle: false,
+                    is_blocked: false,
+                }))
+            }));
+            this.generateYStageCutout();
         } else if (preset === 'theater_hall') {
+            this.stageType = 'standard';
             const defs = [
                 ['ST-1', 16, 'vip_gold'], ['ST-2', 16, 'vip_gold'],
                 ['ST-3', 16, 'cat1_stand'], ['DC-1', 16, 'cat1_stand'], ['DC-2', 16, 'cat1_stand'],
@@ -987,6 +1270,7 @@ Alpine.data('adminSeatMapBuilder', (config = {}) => ({
                 }))
             }));
         } else if (preset === 'convention_center') {
+            this.stageType = 'standard';
             const defs = [
                 ['KN-A', 18, 'svip_diamond'], ['KN-B', 18, 'svip_diamond'],
                 ['STD-1', 18, 'cat1_stand'], ['STD-2', 18, 'cat1_stand'],
@@ -1002,6 +1286,7 @@ Alpine.data('adminSeatMapBuilder', (config = {}) => ({
                 }))
             }));
         } else {
+            this.stageType = 'standard';
             const rCount = Math.max(2, Math.min(26, parseInt(this.rows) || 10));
             const cCount = Math.max(4, Math.min(40, parseInt(this.cols) || 14));
             this.matrixRows = [];
@@ -1023,10 +1308,12 @@ Alpine.data('adminSeatMapBuilder', (config = {}) => ({
 
     selectPreset(p) {
         this.preset = p;
-        if (this.presetsMeta[p]) {
-            this.capacity = this.presetsMeta[p].capacityDefault;
-        }
         this.buildDefaultMatrix(p);
+        this.syncCapacity();
+    },
+
+    syncCapacity() {
+        this.capacity = this.activeSeatCount + this.totalStandingCapacity;
     },
 
     paintSeat(rowIdx, seatIdx) {
@@ -1043,6 +1330,7 @@ Alpine.data('adminSeatMapBuilder', (config = {}) => ({
             seat.is_blocked = false;
             seat.type = this.selectedTool;
         }
+        this.syncCapacity();
     },
 
     paintRow(rowIdx) {
@@ -1061,6 +1349,7 @@ Alpine.data('adminSeatMapBuilder', (config = {}) => ({
                 seat.type = this.selectedTool;
             }
         });
+        this.syncCapacity();
     },
 
     addRow() {
@@ -1076,11 +1365,13 @@ Alpine.data('adminSeatMapBuilder', (config = {}) => ({
                 is_blocked: false,
             }))
         });
+        this.syncCapacity();
     },
 
     removeRow(rowIdx) {
         if (this.matrixRows.length <= 1) return;
         this.matrixRows.splice(rowIdx, 1);
+        this.syncCapacity();
     },
 
     addSeatToRow(rowIdx) {
@@ -1093,12 +1384,14 @@ Alpine.data('adminSeatMapBuilder', (config = {}) => ({
             is_aisle: false,
             is_blocked: false,
         });
+        this.syncCapacity();
     },
 
     removeSeatFromRow(rowIdx) {
         const row = this.matrixRows[rowIdx];
         if (!row || row.seats.length <= 1) return;
         row.seats.pop();
+        this.syncCapacity();
     },
 
     getSeatColor(seat) {
@@ -1141,31 +1434,45 @@ Alpine.data('adminSeatMapBuilder', (config = {}) => ({
     },
 
     presetsMeta: {
+        sayhi_concert_d2: {
+            name: 'Live Concert Anh Trai "Say Hi" - Đêm 2',
+            subtitle: 'Sân khấu Runway chữ Y (Y-Stage Catwalk) & Fanzone mở rộng (310 chỗ)',
+            capacityDefault: 310,
+            icon: '🌟',
+            badge: 'badge-gold',
+        },
         mega_concert: {
             name: 'Mega Concert Stadium Arena',
-            subtitle: 'Sân vận động siêu quy mô (20.000+ chỗ, Catwalk Runway, B-Stage, GA Standing)',
-            capacityDefault: 20000,
+            subtitle: 'Sân vận động siêu quy mô (252 chỗ: 212 ghế khán đài + 40 vé đứng GA Fanzone)',
+            capacityDefault: 252,
             icon: '🏟️',
             badge: 'badge-gold',
         },
+        sayhi_concert: {
+            name: 'Live Concert Anh Trai "Say Hi"',
+            subtitle: 'Sân khấu Runway T-Stage đỉnh cao (252 chỗ: 212 ghế khán đài + 40 vé đứng Super Fan Fanzone Say Hi A/B)',
+            capacityDefault: 252,
+            icon: '🎤',
+            badge: 'badge-rose',
+        },
         theater_hall: {
             name: 'Nhà Hát & Giao Hưởng (Theater Hall)',
-            subtitle: 'Khán phòng nghệ thuật (Tầng Trệt Stalls, Dress Circle, Gallery, VIP Boxes)',
-            capacityDefault: 1200,
+            subtitle: 'Khán phòng nghệ thuật (112 chỗ: Tầng Trệt Stalls, Dress Circle, Gallery)',
+            capacityDefault: 112,
             icon: '🎭',
             badge: 'badge-rose',
         },
         convention_center: {
             name: 'Trung Tâm Hội Nghị & Expo',
-            subtitle: 'Hội trường diễn đàn (Khu Keynote VIP, Standard, Bàn tròn VIP Business)',
-            capacityDefault: 800,
+            subtitle: 'Hội trường diễn đàn (108 chỗ: Khu Keynote VIP, Standard Expo)',
+            capacityDefault: 108,
             icon: '🏢',
             badge: 'badge-sage',
         },
         custom_grid: {
             name: 'Ma Trận Tùy Chỉnh (Custom Grid)',
             subtitle: 'Tự do cấu hình số hàng, số cột và tỷ lệ phân bổ hạng vé theo yêu cầu',
-            capacityDefault: 300,
+            capacityDefault: 140,
             icon: '⚡',
             badge: 'badge-dark',
         }
@@ -1185,7 +1492,123 @@ Alpine.data('adminSeatMapBuilder', (config = {}) => ({
 
     get generatedTiers() {
         const base = parseFloat(this.basePrice) || 250000;
-        if (this.preset === 'mega_concert') {
+        if (this.preset === 'sayhi_concert_d2') {
+            return [
+                {
+                    key: 'svip_diamond',
+                    name: 'SVIP Diamond Đêm 2 (Y-Stage Runway)',
+                    label: 'SVIP Diamond D2',
+                    price: Math.round(base * 3.0),
+                    color: '#D4AF37',
+                    badge: 'badge-gold',
+                    perks: ['Ôm trọn ngã 3 sân khấu chữ Y', 'Soundcheck Pass độc quyền', 'Bộ Giftset Đêm 2 đặc biệt', 'Lối đi thảm đỏ riêng'],
+                    multiplier: 'x3.0',
+                    gate: 'Cổng VIP Kim Cương',
+                },
+                {
+                    key: 'vip_gold',
+                    name: 'VIP Gold Đêm 2 (Wings & Catwalk)',
+                    label: 'VIP Gold D2',
+                    price: Math.round(base * 2.0),
+                    color: '#C08497',
+                    badge: 'badge-rose',
+                    perks: ['Sàn Catwalk trung tâm cánh chữ Y', 'Set quà lưu niệm Đêm 2', 'Check-in line riêng'],
+                    multiplier: 'x2.0',
+                    gate: 'Cổng VIP Gold',
+                },
+                {
+                    key: 'cat1_stand',
+                    name: 'Khán Đài Khán Giả CAT 1 & 2',
+                    label: 'Khán Đài CAT 1-2',
+                    price: Math.round(base * 1.3),
+                    color: '#3A5A40',
+                    badge: 'badge-sage',
+                    perks: ['Góc nhìn trực diện sân khấu', 'Ghế đệm tiêu chuẩn', 'Bộ quạt cổ vũ Đêm 2'],
+                    multiplier: 'x1.3',
+                    gate: 'Cổng Khán Đài Đông/Tây',
+                },
+                {
+                    key: 'cat2_wings',
+                    name: 'Khán Đài CAT 3 (Tầng Cao & Cánh)',
+                    label: 'Khán Đài CAT 3',
+                    price: Math.round(base * 1.0),
+                    color: '#1F2937',
+                    badge: 'badge-dark',
+                    perks: ['Bao quát toàn cảnh sân khấu và biển lightstick', 'Hòa âm đa tầng'],
+                    multiplier: 'x1.0',
+                    gate: 'Cổng Cánh C/D',
+                },
+                {
+                    key: 'skybox_suite',
+                    name: 'Sky Lounge Diamond Đêm 2',
+                    label: 'Sky Lounge D2',
+                    price: Math.round(base * 4.0),
+                    color: '#8D6E00',
+                    badge: 'badge-gold',
+                    perks: ['Phòng VIP riêng tư tầng thượng', 'Tiệc Finger Food & Champagne', 'Quản gia phục vụ'],
+                    multiplier: 'x4.0',
+                    gate: 'Thang máy Sky Lounge',
+                },
+            ];
+        } else if (this.preset === 'sayhi_concert') {
+            return [
+                {
+                    key: 'svip_diamond',
+                    name: 'SVIP Say Hi Diamond B-Stage',
+                    label: 'SVIP Diamond',
+                    price: Math.round(base * 2.8),
+                    color: '#D4AF37',
+                    badge: 'badge-gold',
+                    perks: ['Ghế cạnh Runway & B-Stage', 'Soundcheck Pass', 'Lightstick Say Hi', 'Lối đi riêng'],
+                    multiplier: 'x2.8',
+                    gate: 'Cổng VIP Say Hi',
+                },
+                {
+                    key: 'vip_gold',
+                    name: 'VIP Gold Say Hi Floor',
+                    label: 'VIP Gold',
+                    price: Math.round(base * 1.8),
+                    color: '#C08497',
+                    badge: 'badge-rose',
+                    perks: ['Sàn Catwalk trung tâm', 'Set quà độc quyền Anh Trai Say Hi', 'Check-in VIP'],
+                    multiplier: 'x1.8',
+                    gate: 'Cổng VIP A2',
+                },
+                {
+                    key: 'cat1_stand',
+                    name: 'Khán Đài Say Hi CAT 1 (Tầng 1)',
+                    label: 'Khán Đài CAT 1',
+                    price: Math.round(base * 1.2),
+                    color: '#3A5A40',
+                    badge: 'badge-sage',
+                    perks: ['Tầm nhìn trực diện', 'Ghế đệm êm có tựa', 'Quạt & Banner sự kiện'],
+                    multiplier: 'x1.2',
+                    gate: 'Cổng Khán Đài A',
+                },
+                {
+                    key: 'cat2_wings',
+                    name: 'Khán Đài Say Hi CAT 2 & 3 (Cánh)',
+                    label: 'Khán Đài Cánh',
+                    price: Math.round(base * 1.0),
+                    color: '#1F2937',
+                    badge: 'badge-dark',
+                    perks: ['Bao quát toàn cảnh sân vận động', 'Hòa âm đa tầng'],
+                    multiplier: 'x1.0',
+                    gate: 'Cổng Khán Đài C/D',
+                },
+                {
+                    key: 'skybox_suite',
+                    name: 'Sky Lounge VIP Suites Say Hi',
+                    label: 'Sky Lounge VIP',
+                    price: Math.round(base * 3.5),
+                    color: '#8D6E00',
+                    badge: 'badge-gold',
+                    perks: ['Phòng suite riêng tầng thượng', 'Tiệc Finger Food & Rượu vang', 'Quản gia hỗ trợ'],
+                    multiplier: 'x3.5',
+                    gate: 'Thang máy VIP',
+                },
+            ];
+        } else if (this.preset === 'mega_concert') {
             return [
                 {
                     key: 'svip_diamond',
@@ -1308,8 +1731,10 @@ Alpine.data('adminSeatMapBuilder', (config = {}) => ({
     },
 
     get calculatedTotalSeats() {
-        if (this.preset === 'mega_concert') {
-            return 210;
+        if (this.preset === 'sayhi_concert_d2') {
+            return 250;
+        } else if (this.preset === 'mega_concert' || this.preset === 'sayhi_concert') {
+            return 212;
         } else if (this.preset === 'theater_hall') {
             return 112;
         } else if (this.preset === 'convention_center') {

@@ -10,6 +10,10 @@ class Room extends Model
 {
     use HasFactory;
 
+    public const ZONED_PRESET = 'zoned';
+    public const MODE_SEATS = 'seats';
+    public const MODE_ZONES = 'zones';
+
     protected $fillable = [
         'name',
         'address',
@@ -17,6 +21,7 @@ class Room extends Model
         'longitude',
         'capacity',
         'layout_preset',
+        'diagram_mode',
         'seat_config',
     ];
 
@@ -37,9 +42,41 @@ class Room extends Model
         return $this->hasMany(Showtime::class);
     }
 
+    public function zones(): HasMany
+    {
+        return $this->hasMany(RoomZone::class)->orderBy('sort_order')->orderBy('id');
+    }
+
+    /** Phòng dựng theo mô hình khu vực (sức chứa = tổng các khu). */
+    public function isZoned(): bool
+    {
+        return $this->diagram_mode === self::MODE_ZONES;
+    }
+
+    public function recalculateCapacity(): int
+    {
+        $zoneCapacity = $this->zones()->get()->sum(function (RoomZone $zone) {
+            return $zone->hasSeats() ? $zone->seats()->count() : (int) $zone->capacity;
+        });
+        $legacySeats = $this->seats()->whereNull('zone_id')->count();
+        $capacity = (int) $zoneCapacity + $legacySeats;
+
+        $this->forceFill(['capacity' => $capacity])->saveQuietly();
+
+        return $capacity;
+    }
+
     public function getPresetLabelAttribute(): string
     {
         return match ($this->layout_preset ?? 'mega_concert') {
+            self::ZONED_PRESET => '🗺️ Khán Phòng Theo Khu Vực',
+            'outdoor_concert' => '🏟️ Sân khấu ngoài trời',
+            'theater' => '🎭 Nhà hát',
+            'fixed_hall' => '🏢 Hội trường ghế cố định',
+            'conference_tables' => '🪑 Hội nghị theo bàn',
+            'admission_only' => '🎫 Vé vào cửa',
+            'sayhi_concert' => '🎤 Live Concert Anh Trai Say Hi',
+            'sayhi_concert_d2' => '🎤 Live Concert Anh Trai Say Hi - Đêm 2 (Y-Stage Runway)',
             'theater_hall' => '🎭 Nhà Hát & Giao Hưởng',
             'convention_center' => '🏢 Trung Tâm Hội Nghị & Triển Lãm',
             'custom_grid' => '⚡ Ma Trận Tùy Chỉnh',

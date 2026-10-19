@@ -13,6 +13,8 @@ use App\Models\Showtime;
 use App\Models\User;
 use App\Services\RoomSeatGenerator;
 use App\Services\ShowtimeSeatGenerator;
+use App\Services\ZoneLayoutGenerator;
+use App\Models\RoomZone;
 use App\Support\TicketTiers;
 use Carbon\Carbon;
 use Illuminate\Database\Seeder;
@@ -23,7 +25,7 @@ class DatabaseSeeder extends Seeder
     /**
      * Seed the application's database with Event categories, venues, events, showtimes and sample bookings.
      */
-    public function run(RoomSeatGenerator $roomSeats, ShowtimeSeatGenerator $showtimeSeats): void
+    public function run(RoomSeatGenerator $roomSeats, ShowtimeSeatGenerator $showtimeSeats, ZoneLayoutGenerator $zoneLayouts): void
     {
         // 1. Setup Spatie Roles
         $this->call(RoleSeeder::class);
@@ -108,9 +110,25 @@ class DatabaseSeeder extends Seeder
         $rooms = [];
         foreach (self::VENUES as $key => $venue) {
             $rooms[$key] = Room::updateOrCreate(['name' => $venue['name']], $venue);
-            if ($rooms[$key]->seats()->doesntExist()) {
-                $roomSeats->generate($rooms[$key], $venue['layout_preset'], []);
+            if ($rooms[$key]->seats()->doesntExist() && $rooms[$key]->zones()->doesntExist()) {
+                $isZoneMode = $key === 'secc' || in_array($venue['layout_preset'], ['mega_concert', 'sayhi_concert', 'sayhi_concert_d2', 'outdoor_concert'], true);
+                if ($isZoneMode) {
+                    $definitions = $key === 'secc'
+                        ? [[
+                            'code' => 'EXPO', 'name' => 'Vé vào khu triển lãm', 'kind' => RoomZone::KIND_ADMISSION,
+                            'seat_type' => 'cat1_stand', 'ticket_tier' => 'standard_pass', 'capacity' => $venue['capacity'],
+                        ]]
+                        : $this->zoneDefinitionsForPreset($roomSeats, $venue['layout_preset']);
+                    $zoneLayouts->generate($rooms[$key], $definitions);
+                } else {
+                    $roomSeats->generate($rooms[$key], $venue['layout_preset'], $rooms[$key]->seat_config ?? []);
+                }
             }
+            $rooms[$key]->forceFill([
+                'diagram_mode' => $key === 'secc' || in_array($venue['layout_preset'], ['mega_concert', 'sayhi_concert', 'sayhi_concert_d2', 'outdoor_concert'], true)
+                    ? Room::MODE_ZONES
+                    : Room::MODE_SEATS,
+            ])->saveQuietly();
         }
 
         // 5. Sự kiện (nội dung chuyển từ DemoCatalog)
@@ -164,6 +182,10 @@ class DatabaseSeeder extends Seeder
         Comment::firstOrCreate(
             ['user_id' => $admin->id, 'event_id' => $events['live-concert-anh-trai-vuot-ngan-chong-gai-2026']->id],
             ['content' => 'Sân khấu quy mô khủng, hệ thống ghế ngồi khán đài được phân luồng rất khoa học.']
+        );
+        Comment::firstOrCreate(
+            ['user_id' => $admin->id, 'event_id' => $events['live-concert-anh-trai-say-hi-2026']->id],
+            ['content' => 'Concert Anh Trai Say Hi quá đỉnh! Visual sân khấu và âm thanh bùng nổ thực sự.']
         );
 
         // 9. Create Standard Discounts / Vouchers
@@ -228,25 +250,31 @@ class DatabaseSeeder extends Seeder
             'name' => 'Sân Vận Động Quân Khu 7 (SVĐ QK7 Arena)',
             'address' => 'Số 202 Hoàng Văn Thụ, Phường 9, Quận Phú Nhuận, TP.HCM',
             'latitude' => 10.8005, 'longitude' => 106.6658,
-            'capacity' => 20000, 'layout_preset' => 'mega_concert',
+            'capacity' => 252, 'layout_preset' => 'mega_concert',
+        ],
+        'sayhi_arena' => [
+            'name' => 'Sân Vận Động Quân Khu 7 - Sân Khấu Live Concert Anh Trai "Say Hi"',
+            'address' => 'Số 202 Hoàng Văn Thụ, Phường 9, Quận Phú Nhuận, TP.HCM',
+            'latitude' => 10.8005, 'longitude' => 106.6658,
+            'capacity' => 252, 'layout_preset' => 'sayhi_concert',
         ],
         'opera' => [
             'name' => 'Nhà Hát Thành Phố (Saigon Opera House)',
             'address' => '07 Công Trường Lam Sơn, Bến Nghé, Quận 1, TP.HCM',
             'latitude' => 10.7766, 'longitude' => 106.7032,
-            'capacity' => 800, 'layout_preset' => 'theater_hall',
+            'capacity' => 112, 'layout_preset' => 'theater_hall',
         ],
         'secc' => [
             'name' => 'Trung Tâm Hội Nghị & Triển Lãm SECC Hall A',
             'address' => '799 Nguyễn Văn Linh, Tân Phú, Quận 7, TP.HCM',
             'latitude' => 10.7302, 'longitude' => 106.7218,
-            'capacity' => 3000, 'layout_preset' => 'convention_center',
+            'capacity' => 108, 'layout_preset' => 'convention_center',
         ],
         'hoabinh' => [
             'name' => 'Nhà Hát Hòa Bình Main Hall',
             'address' => '240 đường 3 Tháng 2, Phường 12, Quận 10, TP.HCM',
             'latitude' => 10.7712, 'longitude' => 106.6745,
-            'capacity' => 2500, 'layout_preset' => 'theater_hall',
+            'capacity' => 112, 'layout_preset' => 'theater_hall',
         ],
     ];
 
@@ -254,6 +282,8 @@ class DatabaseSeeder extends Seeder
     private const SCHEDULE = [
         ['live-concert-anh-trai-vuot-ngan-chong-gai-2026', 'qk7', 1, '19:00', '23:00'],
         ['live-concert-anh-trai-vuot-ngan-chong-gai-2026', 'qk7', 8, '19:00', '23:00'],
+        ['live-concert-anh-trai-say-hi-2026', 'sayhi_arena', 5, '19:00', '23:00'],
+        ['live-concert-anh-trai-say-hi-2026', 'sayhi_arena', 12, '19:00', '23:00'],
         ['saigon-autumn-music-light-festival-2026', 'qk7', 4, '17:00', '23:00'],
         ['hoa-nhac-giao-huong-saigon-philharmonic', 'opera', 2, '19:30', '21:30'],
         ['nhac-kich-les-miserables-vn', 'opera', 3, '19:30', '22:15'],
@@ -300,5 +330,61 @@ class DatabaseSeeder extends Seeder
                 $showtimeSeat->update(['status' => 'booked']);
             }
         }
+    }
+
+    /** Convert each legacy preset row into a real seated zone; GA becomes capacity inventory. */
+    private function zoneDefinitionsForPreset(RoomSeatGenerator $generator, string $preset): array
+    {
+        $groups = [];
+        $standingCapacity = 0;
+        foreach ($generator->rowsForPreset($preset) as [$rowLabel, $count, $type]) {
+            if ($type === RoomZone::STANDING_TYPE) {
+                $standingCapacity += $count;
+                continue;
+            }
+
+            $parts = preg_split('/[-_]/', trim($rowLabel));
+            $prefix = strtoupper((string) ($parts[0] ?? $rowLabel));
+            $groups[$prefix.'|'.$type][] = ['row' => $rowLabel, 'count' => $count, 'type' => $type];
+        }
+
+        $zones = [];
+        foreach ($groups as $key => $rows) {
+            [$prefix, $type] = explode('|', $key, 2);
+            $code = substr(preg_replace('/[^A-Z0-9]/i', '', $prefix).match ($type) {
+                'svip_diamond' => 'S', 'vip_gold' => 'V', 'cat1_stand' => 'C1',
+                'cat2_wings' => 'C2', 'skybox_suite' => 'SB', default => 'Z',
+            }, 0, 6);
+            $layoutRows = [];
+            foreach ($rows as $row) {
+                $seats = [];
+                for ($number = 1; $number <= $row['count']; $number++) {
+                    $seats[] = ['number' => $number, 'type' => $row['type']];
+                }
+                $layoutRows[] = ['row' => $row['row'], 'seats' => $seats];
+            }
+            $label = match ($type) {
+                'svip_diamond' => 'SVIP Diamond', 'vip_gold' => 'VIP Gold',
+                'cat1_stand' => 'Khán Đài Cat 1', 'cat2_wings' => 'Khán Đài Cat 2',
+                'skybox_suite' => 'Skybox VIP', default => 'Khu ghế',
+            };
+            $zones[] = [
+                'code' => $code,
+                'name' => $label.' '.$prefix,
+                'kind' => RoomZone::KIND_SEATED,
+                'seat_type' => $type,
+                'layout' => $layoutRows,
+            ];
+        }
+
+        if ($standingCapacity > 0) {
+            $zones[] = [
+                'code' => 'GA', 'name' => 'Khu đứng GA', 'kind' => RoomZone::KIND_STANDING,
+                'seat_type' => RoomZone::STANDING_TYPE, 'ticket_tier' => 'standing_pit',
+                'capacity' => $standingCapacity,
+            ];
+        }
+
+        return $zones;
     }
 }

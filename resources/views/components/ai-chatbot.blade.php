@@ -418,9 +418,9 @@ document.addEventListener('alpine:init', () => {
             this.sendMessage();
         },
 
-        sendMessage() {
+        async sendMessage() {
             const query = this.userInput.trim();
-            if (!query) return;
+            if (!query || this.isTyping) return;
 
             // Add user message
             this.messages.push({
@@ -433,25 +433,66 @@ document.addEventListener('alpine:init', () => {
             this.isTyping = true;
             this.scrollToBottom();
 
-            // Simulate intelligent AI processing with realistic delay
-            setTimeout(() => {
-                const response = this.generateBotResponse(query);
+            try {
+                const response = await fetch('{{ route("chatbot.message") }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '{{ csrf_token() }}',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        message: query,
+                        history: this.messages.slice(-5, -1)
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error('HTTP error ' + response.status);
+                }
+
+                const data = await response.json();
                 this.messages.push({
                     sender: 'bot',
-                    text: response.text,
+                    text: data.reply,
                     time: new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }),
-                    event: response.event || null
+                    event: null
                 });
+            } catch (error) {
+                console.warn('Gemini chatbot fallback to local engine:', error);
+                const fallback = this.generateBotResponse(query);
+                this.messages.push({
+                    sender: 'bot',
+                    text: fallback.text,
+                    time: new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }),
+                    event: fallback.event || null
+                });
+            } finally {
                 this.isTyping = false;
                 this.scrollToBottom();
-            }, 550 + Math.random() * 350);
+            }
         },
 
         generateBotResponse(query) {
             const q = query.toLowerCase();
 
-            // 1. Hot Concert / Anh Trai Vuot Ngan Chong Gai
-            if (q.includes('concert') || q.includes('anh trai') || q.includes('hot') || q.includes('gợi ý')) {
+            // 1. Hot Concert / Anh Trai Say Hi
+            if (q.includes('say hi') || q.includes('hieuthuhai') || q.includes('rhyder') || q.includes('atus')) {
+                return {
+                    text: '<p class="font-bold text-slate-900">🔥 Live Concert Anh Trai "Say Hi" 2026:</p><p>Đại nhạc hội bùng nổ của 30 Anh Trai đang mở bán vé tại <strong>Sân Vận Động Quân Khu 7 (TP.HCM)</strong> với sơ đồ phân khu chuẩn quốc tế.</p><p class="text-xs text-slate-600">✨ <em>Dàn line-up:</em> HIEUTHUHAI, Rhyder, Quang Hùng MasterD, Anh Tú Atus, Đức Phúc, Isaac, Negav, Pháp Kiều...</p>',
+                    event: {
+                        title: 'Live Concert: Anh Trai "Say Hi" 2026',
+                        date: '19:30 - Sắp diễn ra',
+                        venue: 'SVĐ Quân Khu 7, TP.HCM',
+                        price: '250.000₫',
+                        poster: 'https://picsum.photos/seed/live-concert-anh-trai-say-hi-2026/480/720',
+                        link: '/events/live-concert-anh-trai-say-hi-2026'
+                    }
+                };
+            }
+
+            // 2. Hot Concert / Anh Trai Vuot Ngan Chong Gai
+            if (q.includes('concert') || q.includes('anh trai') || q.includes('chông gai') || q.includes('hot') || q.includes('gợi ý')) {
                 return {
                     text: '<p class="font-bold text-slate-900">🔥 Sự kiện âm nhạc được quan tâm nhất:</p><p><strong>Live Concert Anh Trai Vượt Ngàn Chông Gai 2026</strong> đang mở bán các suất diễn bùng nổ tại <strong>Sân Vận Động Quân Khu 7 (TP.HCM)</strong>.</p><p class="text-xs text-slate-600">✨ <em>Dàn nghệ sĩ:</em> Soobin Hoàng Sơn, Bằng Kiều, NSND Tự Long, Hồ Ngọc Hà, Jun Phạm, Cường Seven...</p>',
                     event: {

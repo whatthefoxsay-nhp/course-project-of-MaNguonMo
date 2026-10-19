@@ -14,8 +14,15 @@ test('admin can access room builder creation page', function () {
     $admin->assignRole('admin');
 
     $response = $this->actingAs($admin)->get(route('admin.rooms.create'));
-    $response->assertStatus(200);
-    $response->assertSee('Thiết Kế & Sinh Sơ Đồ Khán Đài Mới');
+    $response->assertStatus(200)
+        ->assertSee('Sơ đồ ghế ngồi')
+        ->assertSee('Sơ đồ khu');
+
+    $this->actingAs($admin)->get(route('admin.rooms.create', ['mode' => 'seats']))
+        ->assertOk()->assertSee('Thiết Kế & Sinh Sơ Đồ Khán Đài Mới');
+
+    $this->actingAs($admin)->get(route('admin.rooms.create', ['mode' => 'zones']))
+        ->assertOk()->assertSee('Chỉnh sửa khu đang chọn');
 });
 
 test('admin can create room with mega concert preset and auto-generate seats', function () {
@@ -36,6 +43,7 @@ test('admin can create room with mega concert preset and auto-generate seats', f
     $room = Room::where('name', 'Sân Vận Động Quốc Tế Mỹ Đình')->first();
     expect($room)->not->toBeNull()
         ->and($room->layout_preset)->toBe('mega_concert')
+        ->and($room->diagram_mode)->toBe(Room::MODE_SEATS)
         ->and($room->capacity)->toBe(40000);
 
     // Verify seats were auto-generated
@@ -104,4 +112,114 @@ test('regular user cannot access room builder or create rooms', function () {
         'layout_preset' => 'custom_grid',
     ]);
     $responseStore->assertStatus(403);
+});
+
+test('admin can create room with sayhi concert preset and auto-generate seats', function () {
+    $admin = User::factory()->create();
+    $admin->assignRole('admin');
+
+    $response = $this->actingAs($admin)->post(route('admin.rooms.store'), [
+        'name' => 'Sân Khấu Say Hi Vạn Phúc City',
+        'address' => 'Khu Đô Thị Vạn Phúc, TP. Thủ Đức, TP.HCM',
+        'capacity' => 25000,
+        'layout_preset' => 'sayhi_concert',
+        'base_price' => 350000,
+    ]);
+
+    $response->assertRedirect(route('admin.rooms.index'));
+    $response->assertSessionHas('success');
+
+    $room = Room::where('name', 'Sân Khấu Say Hi Vạn Phúc City')->first();
+    expect($room)->not->toBeNull()
+        ->and($room->layout_preset)->toBe('sayhi_concert')
+        ->and($room->preset_label)->toBe('🎤 Live Concert Anh Trai Say Hi');
+
+    // 212 seats + 40 GA standing = 252 seats
+    expect($room->seats()->count())->toBe(252);
+    expect($room->seats()->where('type', 'svip_diamond')->count())->toBe(24);
+    expect($room->seats()->where('type', 'standing_pit')->count())->toBe(40);
+});
+
+test('admin can create zoned venue with assigned seats and quantity inventory capacity', function () {
+    $admin = User::factory()->create();
+    $admin->assignRole('admin');
+
+    $this->actingAs($admin)->post(route('admin.rooms.store'), [
+        'name' => 'Nhà thi đấu theo khu',
+        'address' => 'TP.HCM',
+        'layout_preset' => 'outdoor_concert',
+        'diagram_mode' => Room::MODE_ZONES,
+        'zones' => json_encode([
+            ['code' => 'A', 'name' => 'Khán đài A', 'kind' => 'seated', 'seat_type' => 'cat1_stand', 'rows' => 2, 'cols' => 10, 'meta' => ['canvas' => ['x' => 17.5, 'y' => 25, 'width' => 34, 'height' => 20, 'shape' => 'trapezoid']]],
+            ['code' => 'GA', 'name' => 'Khu đứng', 'kind' => 'standing', 'seat_type' => 'standing_pit', 'capacity' => 500],
+        ]),
+    ])->assertRedirect(route('admin.rooms.index'))->assertSessionHas('success');
+
+    $room = Room::where('name', 'Nhà thi đấu theo khu')->firstOrFail();
+    expect($room->capacity)->toBe(520)
+        ->and($room->diagram_mode)->toBe(Room::MODE_ZONES)
+        ->and($room->seats()->count())->toBe(20)
+        ->and($room->zones()->where('kind', 'standing')->first()->capacity)->toBe(500)
+        ->and($room->zones()->where('code', 'A')->first()->meta['canvas']['shape'])->toBe('trapezoid');
+});
+
+test('new room builder shows zone kinds and calculated capacity', function () {
+    $admin = User::factory()->create();
+    $admin->assignRole('admin');
+
+    $this->actingAs($admin)->get(route('admin.rooms.create', ['mode' => 'zones']))
+        ->assertOk()
+        ->assertSee('Chỉnh sửa khu đang chọn')
+        ->assertSee('Xem trước mặt bằng')
+        ->assertSee('Bố cục các khu vé')
+        ->assertSee('Vé đứng theo số lượng')
+        ->assertSee('Kéo khu để đặt vị trí')
+        ->assertSee('Hình dạng')
+        ->assertSee('Đa giác tự do')
+        ->assertSee('Thêm đỉnh')
+        ->assertSee('Tìm nhanh theo mã hoặc tên khu')
+        ->assertSee('Chỉnh sửa khu đang chọn')
+        ->assertSee('Thêm ghế vào hàng')
+        ->assertSee('Bớt ghế khỏi hàng')
+        ->assertSee('Sức chứa tổng (tính tự động)');
+});
+
+test('admin room preview exposes zone map mode for zoned concert venues', function () {
+    $admin = User::factory()->create();
+    $admin->assignRole('admin');
+    $room = Room::create([
+        'name' => 'Concert nhiều phân khu',
+        'capacity' => 0,
+        'layout_preset' => 'outdoor_concert',
+    ]);
+    app(\App\Services\ZoneLayoutGenerator::class)->generate($room, [
+        ['code' => 'PIT-L', 'name' => 'Fanzone trái', 'kind' => 'standing', 'seat_type' => 'standing_pit', 'capacity' => 300],
+        ['code' => 'PIT-R', 'name' => 'Fanzone phải', 'kind' => 'standing', 'seat_type' => 'standing_pit', 'capacity' => 300],
+    ]);
+
+    $this->actingAs($admin)->get(route('admin.rooms.index'))
+        ->assertOk()
+        ->assertSee("activeRoom?.diagram_mode === 'zones'", false)
+        ->assertSee('Mặt bằng theo vị trí và hình dạng từng khu')
+        ->assertViewHas('rooms', fn ($rooms) => $rooms->firstWhere('id', $room->id)?->blueprint_data['diagram_mode'] === Room::MODE_ZONES
+            && count($rooms->firstWhere('id', $room->id)->blueprint_data['zones']) === 2
+            && $rooms->firstWhere('id', $room->id)->blueprint_data['zones'][0]['canvas']['x'] === 5.0);
+});
+
+test('duplicating a zoned room preserves zones seats and non-seat capacity', function () {
+    $admin = User::factory()->create();
+    $admin->assignRole('admin');
+    $room = Room::create(['name' => 'Phòng gốc theo khu', 'capacity' => 0, 'layout_preset' => 'outdoor_concert']);
+    app(\App\Services\ZoneLayoutGenerator::class)->generate($room, [
+        ['code' => 'A', 'name' => 'Ghế A', 'kind' => 'seated', 'seat_type' => 'cat1_stand', 'rows' => 2, 'cols' => 2],
+        ['code' => 'GA', 'name' => 'Khu đứng', 'kind' => 'standing', 'seat_type' => 'standing_pit', 'capacity' => 10],
+    ]);
+
+    $response = $this->actingAs($admin)->post(route('admin.rooms.duplicate', $room))->assertRedirect(route('admin.rooms.index'));
+
+    $copy = Room::where('name', 'like', 'Phòng gốc theo khu (Bản Sao%')->firstOrFail();
+    expect($copy->zones)->toHaveCount(2)
+        ->and($copy->seats)->toHaveCount(4)
+        ->and($copy->seats->every(fn ($seat) => $seat->zone_id === $copy->zones->firstWhere('code', 'A')->id))->toBeTrue()
+        ->and($copy->capacity)->toBe(14);
 });

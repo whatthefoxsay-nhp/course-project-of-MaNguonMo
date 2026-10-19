@@ -56,8 +56,8 @@
 
                 <!-- Right Spotlight Feature Card -->
                 <div class="lg:col-span-5 relative">
-                    @if (isset($movies[0]))
-                        @php $leadEvent = $movies[0]; @endphp
+                    @if (isset($spotlightEvent) || isset($movies[0]))
+                        @php $leadEvent = $spotlightEvent ?? $movies[0]; @endphp
                         <div class="relative group">
                             <!-- Floating Glow behind card -->
                             <div class="absolute -inset-1.5 bg-gradient-to-r from-rose-taupe via-gold-antique to-sage-forest rounded-3xl blur-xl opacity-25 group-hover:opacity-50 transition duration-700"></div>
@@ -117,7 +117,37 @@
     </section>
 
     <!-- Main Catalog & Category Tabs Section -->
-    <section id="featured-section" class="max-w-[1440px] mx-auto px-4 sm:px-8 py-8 sm:py-12" x-data="{ currentTab: 'all' }">
+    <section 
+        id="featured-section" 
+        class="max-w-[1440px] mx-auto px-4 sm:px-8 py-8 sm:py-12" 
+        x-data="{ 
+            currentTab: '{{ $currentTab ?? 'all' }}',
+            loading: false,
+            async setTab(tab) {
+                if (this.currentTab === tab && !this.loading) return;
+                this.currentTab = tab;
+                this.loading = true;
+                try {
+                    const res = await fetch(`{{ route('home') }}?category=${tab}`, {
+                        headers: { 
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'Accept': 'application/json'
+                        }
+                    });
+                    const data = await res.json();
+                    if (data && data.html) {
+                        document.getElementById('home-events-container').innerHTML = data.html;
+                        window.history.replaceState(null, '', `?category=${tab}#featured-section`);
+                    }
+                } catch (e) {
+                    console.error('Error filtering events:', e);
+                    window.location.href = `{{ route('home') }}?category=${tab}#featured-section`;
+                } finally {
+                    this.loading = false;
+                }
+            }
+        }"
+    >
         <div class="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-8 sm:mb-10 pb-4 border-b border-black/10">
             <div>
                 <div class="flex items-center gap-2 mb-1.5">
@@ -131,36 +161,53 @@
             <!-- Tab Buttons with Alpine.js -->
             <div class="inline-flex p-1 rounded-full bg-white border border-black/10 text-xs font-bold shadow-sm shrink-0">
                 <button 
-                    @click="currentTab = 'all'" 
+                    type="button"
+                    @click="setTab('all')" 
                     :class="currentTab === 'all' ? 'bg-black text-white shadow-md' : 'text-gray-600 hover:text-black'"
-                    class="px-5 py-2 rounded-full transition-all"
+                    class="px-5 py-2 rounded-full transition-all cursor-pointer"
                 >
                     Tất cả sự kiện
                 </button>
                 <button 
-                    @click="currentTab = 'concert'" 
+                    type="button"
+                    @click="setTab('concert')" 
                     :class="currentTab === 'concert' ? 'bg-black text-white shadow-md' : 'text-gray-600 hover:text-black'"
-                    class="px-5 py-2 rounded-full transition-all"
+                    class="px-5 py-2 rounded-full transition-all cursor-pointer"
                 >
                     Concert &amp; Hòa Nhạc
                 </button>
                 <button 
-                    @click="currentTab = 'expo'" 
+                    type="button"
+                    @click="setTab('expo')" 
                     :class="currentTab === 'expo' ? 'bg-black text-white shadow-md' : 'text-gray-600 hover:text-black'"
-                    class="px-5 py-2 rounded-full transition-all"
+                    class="px-5 py-2 rounded-full transition-all cursor-pointer"
                 >
                     Hội Thảo &amp; Triển Lãm
                 </button>
             </div>
         </div>
 
-        <!-- Event Cards Grid -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
-            @foreach ($movies as $event)
-                <div>
-                    <x-movie-card :movie="$event" />
+        <!-- Event Cards Container with Loading Indicator -->
+        <div class="relative min-h-[250px]">
+            <!-- Subtle Loading Indicator -->
+            <div 
+                x-show="loading" 
+                x-transition 
+                class="absolute inset-0 bg-white/70 backdrop-blur-[2px] z-20 flex items-center justify-center rounded-3xl"
+                style="display: none;"
+            >
+                <div class="flex items-center gap-2 px-5 py-2.5 rounded-full bg-black text-white text-xs font-bold shadow-lg">
+                    <svg class="animate-spin w-4 h-4 text-white" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
+                    </svg>
+                    <span>Đang tải sự kiện...</span>
                 </div>
-            @endforeach
+            </div>
+
+            <div id="home-events-container">
+                @include('partials.home-event-grid', ['movies' => collect($movies)])
+            </div>
         </div>
 
         <!-- View All Events Link -->
