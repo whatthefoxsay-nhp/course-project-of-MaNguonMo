@@ -28,9 +28,9 @@
         x-data="ticketPaymentManager({
             totalAmount: {{ $totalPrice }},
             items: {{ Js::from($jsItems) }},
-            userName: '{{ addslashes($userName) }}',
-            userEmail: '{{ addslashes($userEmail) }}',
-            userPhone: '{{ addslashes($userPhone) }}',
+            userName: @js($userName),
+            userEmail: @js($userEmail),
+            userPhone: @js($userPhone),
             checkoutUrl: @js(route('checkout.store')),
             removeUrl: @js(route('cart.seats.destroy', '__ID__')),
             removeZoneUrl: @js(route('cart.zone-tickets.destroy', '__ID__')),
@@ -228,8 +228,8 @@
                             <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
                                 <!-- Field 1: Full Name -->
                                 <div>
-                                    <label class="block text-xs font-bold text-gray-800 mb-2 flex items-center justify-between">
-                                        <span>Họ và tên người đặt vé <span class="text-crimson font-black">*</span></span>
+                                    <label for="buyer-name" class="block text-xs font-bold text-gray-800 mb-2 flex items-center justify-between">
+                                        <span>Họ và tên người nhận vé <span class="text-crimson font-black">*</span></span>
                                     </label>
                                     <div class="relative">
                                         <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
@@ -239,6 +239,10 @@
                                         </span>
                                         <input 
                                             type="text" 
+                                            id="buyer-name"
+                                            name="buyer_name"
+                                            maxlength="100"
+                                            autocomplete="name"
                                             x-model="buyerInfo.fullName"
                                             placeholder="VD: Nguyễn Văn Kiên" 
                                             class="w-full rounded-2xl pl-10 pr-4 py-3 bg-[#FAF9F6] border border-black/10 focus:border-gold-dark focus:bg-white focus:ring-4 focus:ring-gold-antique/20 text-xs sm:text-sm font-semibold text-black placeholder-gray-400 transition-all shadow-2xs"
@@ -249,8 +253,8 @@
 
                                 <!-- Field 2: Phone Number -->
                                 <div>
-                                    <label class="block text-xs font-bold text-gray-800 mb-2 flex items-center justify-between">
-                                        <span>Số điện thoại nhận SMS vé <span class="text-crimson font-black">*</span></span>
+                                    <label for="buyer-phone" class="block text-xs font-bold text-gray-800 mb-2 flex items-center justify-between">
+                                        <span>Số điện thoại <span class="text-crimson font-black">*</span></span>
                                     </label>
                                     <div class="relative">
                                         <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
@@ -260,6 +264,10 @@
                                         </span>
                                         <input 
                                             type="tel" 
+                                            id="buyer-phone"
+                                            name="buyer_phone"
+                                            maxlength="20"
+                                            autocomplete="tel"
                                             x-model="buyerInfo.phone"
                                             placeholder="VD: 0988 123 456" 
                                             class="w-full rounded-2xl pl-10 pr-4 py-3 bg-[#FAF9F6] border border-black/10 focus:border-gold-dark focus:bg-white focus:ring-4 focus:ring-gold-antique/20 text-xs sm:text-sm font-semibold text-black placeholder-gray-400 font-mono transition-all shadow-2xs"
@@ -270,8 +278,8 @@
 
                                 <!-- Field 3: Email -->
                                 <div>
-                                    <label class="block text-xs font-bold text-gray-800 mb-2 flex items-center justify-between">
-                                        <span>Email nhận vé E-Ticket <span class="text-crimson font-black">*</span></span>
+                                    <label for="buyer-email" class="block text-xs font-bold text-gray-800 mb-2 flex items-center justify-between">
+                                        <span>Email <span class="text-gray-400 font-normal text-[11px]">(tùy chọn)</span></span>
                                     </label>
                                     <div class="relative">
                                         <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
@@ -281,90 +289,11 @@
                                         </span>
                                         <input 
                                             type="email" 
+                                            id="buyer-email"
+                                            name="buyer_email"
+                                            autocomplete="email"
                                             x-model="buyerInfo.email"
                                             placeholder="VD: kien.nguyen@example.com" 
-                                            class="w-full rounded-2xl pl-10 pr-4 py-3 bg-[#FAF9F6] border border-black/10 focus:border-gold-dark focus:bg-white focus:ring-4 focus:ring-gold-antique/20 text-xs sm:text-sm font-semibold text-black placeholder-gray-400 transition-all shadow-2xs"
-                                            required
-                                        >
-                                    </div>
-                                </div>
-
-                                <!-- Field 4: National ID Card -->
-                                <div>
-                                    <label class="block text-xs font-bold text-gray-800 mb-2 flex items-center justify-between">
-                                        <span>Số CCCD / Hộ chiếu <span class="text-gray-400 font-normal text-[11px]">(Đối soát cổng)</span></span>
-                                    </label>
-                                    <div class="relative">
-                                        <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
-                                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c1.306 0 2.417.835 2.83 2M9 14a3.001 3.001 0 00-2.83 2M15 11h3m-3 4h2" />
-                                            </svg>
-                                        </span>
-                                        <input 
-                                            type="text" 
-                                            x-model="buyerInfo.idCard"
-                                            placeholder="VD: 001201008899" 
-                                            class="w-full rounded-2xl pl-10 pr-4 py-3 bg-[#FAF9F6] border border-black/10 focus:border-gold-dark focus:bg-white focus:ring-4 focus:ring-gold-antique/20 text-xs sm:text-sm font-semibold text-black placeholder-gray-400 font-mono transition-all shadow-2xs"
-                                        >
-                                    </div>
-                                </div>
-
-                                <!-- Field 5: City -->
-                                <div>
-                                    <label class="block text-xs font-bold text-gray-800 mb-2">
-                                        Tỉnh / Thành phố
-                                    </label>
-                                    <div class="relative">
-                                        <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
-                                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                                            </svg>
-                                        </span>
-                                        <input 
-                                            type="text" 
-                                            x-model="buyerInfo.city"
-                                            placeholder="VD: Hà Nội, TP.HCM, Đà Nẵng..." 
-                                            class="w-full rounded-2xl pl-10 pr-4 py-3 bg-[#FAF9F6] border border-black/10 focus:border-gold-dark focus:bg-white focus:ring-4 focus:ring-gold-antique/20 text-xs sm:text-sm font-semibold text-black placeholder-gray-400 transition-all shadow-2xs"
-                                        >
-                                    </div>
-                                </div>
-
-                                <!-- Field 6: Address -->
-                                <div>
-                                    <label class="block text-xs font-bold text-gray-800 mb-2">
-                                        Địa chỉ liên hệ
-                                    </label>
-                                    <div class="relative">
-                                        <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
-                                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-                                            </svg>
-                                        </span>
-                                        <input 
-                                            type="text" 
-                                            x-model="buyerInfo.address"
-                                            placeholder="Số nhà, tên đường, phường/xã..." 
-                                            class="w-full rounded-2xl pl-10 pr-4 py-3 bg-[#FAF9F6] border border-black/10 focus:border-gold-dark focus:bg-white focus:ring-4 focus:ring-gold-antique/20 text-xs sm:text-sm font-semibold text-black placeholder-gray-400 transition-all shadow-2xs"
-                                        >
-                                    </div>
-                                </div>
-
-                                <!-- Field 7: Notes -->
-                                <div class="sm:col-span-2">
-                                    <label class="block text-xs font-bold text-gray-800 mb-2">
-                                        Ghi chú đơn vé (Tùy chọn)
-                                    </label>
-                                    <div class="relative">
-                                        <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
-                                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
-                                            </svg>
-                                        </span>
-                                        <input 
-                                            type="text" 
-                                            x-model="buyerInfo.notes"
-                                            placeholder="Yêu cầu hỗ trợ thêm, ghi chú nhận vé..." 
                                             class="w-full rounded-2xl pl-10 pr-4 py-3 bg-[#FAF9F6] border border-black/10 focus:border-gold-dark focus:bg-white focus:ring-4 focus:ring-gold-antique/20 text-xs sm:text-sm font-semibold text-black placeholder-gray-400 transition-all shadow-2xs"
                                         >
                                     </div>
@@ -375,7 +304,7 @@
                                     <svg class="w-4 h-4 text-gold-dark shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                                     </svg>
-                                    <span>Vé Điện Tử E-Ticket sẽ được gửi tức thì kèm mã QR bảo mật qua Email &amp; SMS sau khi giao dịch thành công.</span>
+                                    <span>Thông tin này được lưu cùng đơn vé và in trên vé điện tử. Đây là hệ thống giả lập nên không gửi Email/SMS.</span>
                                 </div>
                             </div>
                         </div>
@@ -898,23 +827,15 @@
                             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
                                 <div>
                                     <span class="text-gray-400 block text-[10px] uppercase font-bold">Họ và tên:</span>
-                                    <span class="text-black font-bold" x-text="buyerInfo.fullName">Nguyễn Văn Kiên</span>
+                                    <span class="text-black font-bold" x-text="buyerInfo.fullName"></span>
                                 </div>
                                 <div>
                                     <span class="text-gray-400 block text-[10px] uppercase font-bold">Số điện thoại:</span>
-                                    <span class="text-black font-bold font-mono" x-text="buyerInfo.phone">0988 123 456</span>
+                                    <span class="text-black font-bold font-mono" x-text="buyerInfo.phone"></span>
                                 </div>
-                                <div>
-                                    <span class="text-gray-400 block text-[10px] uppercase font-bold">Email nhận vé:</span>
-                                    <span class="text-black font-medium" x-text="buyerInfo.email">kien.nguyen@example.com</span>
-                                </div>
-                                <div>
-                                    <span class="text-gray-400 block text-[10px] uppercase font-bold">Số CCCD / CMND:</span>
-                                    <span class="text-black font-bold font-mono" x-text="buyerInfo.idCard || 'Chưa cung cấp'">001201008899</span>
-                                </div>
-                                <div class="sm:col-span-2" x-show="buyerInfo.city || buyerInfo.address">
-                                    <span class="text-gray-400 block text-[10px] uppercase font-bold">Địa chỉ:</span>
-                                    <span class="text-gray-700" x-text="(buyerInfo.address ? buyerInfo.address + ', ' : '') + (buyerInfo.city || '')">Số 18 Hoàng Diệu, Ba Đình, Hà Nội</span>
+                                <div class="sm:col-span-2">
+                                    <span class="text-gray-400 block text-[10px] uppercase font-bold">Email:</span>
+                                    <span class="text-black font-medium" x-text="buyerInfo.email || 'Không cung cấp'"></span>
                                 </div>
                             </div>
                         </div>
@@ -1174,9 +1095,8 @@
                             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
                                 <div>
                                     <span class="text-gray-400 block text-[10px] uppercase font-bold">Chủ Sở Hữu Vé</span>
-                                    <span class="text-black font-bold text-xs" x-text="buyerInfo.fullName">Nguyễn Văn Kiên</span>
-                                    <span class="text-gray-500 block text-[11px]" x-text="buyerInfo.phone + ' · ' + buyerInfo.email">0988 123 456 · kien.nguyen@example.com</span>
-                                    <span class="text-gray-500 block text-[11px]" x-show="buyerInfo.idCard" x-text="'CCCD: ' + buyerInfo.idCard">CCCD: 001201008899</span>
+                                    <span class="text-black font-bold text-xs" x-text="buyerInfo.fullName"></span>
+                                    <span class="text-gray-500 block text-[11px]" x-text="[buyerInfo.phone, buyerInfo.email].filter(Boolean).join(' · ')"></span>
                                 </div>
                                 <div>
                                     <span class="text-gray-400 block text-[10px] uppercase font-bold">Mã Tra Cứu E-Ticket</span>
@@ -1188,8 +1108,8 @@
                             <!-- Security Footer Note -->
                             <div class="bg-[#FAF9F6] rounded-2xl p-3.5 border border-black/5 text-[11px] text-gray-500 space-y-0.5">
                                 <div class="font-bold text-gray-700">Lưu ý khi tham dự sự kiện:</div>
-                                <div>• Vui lòng mang theo CCCD/Hộ chiếu trùng khớp tên trên vé khi đến cổng soát vé.</div>
-                                <div>• Mỗi mã QR chỉ quét hợp lệ 01 lần tại cổng an ninh. Tuyệt đối không chia sẻ mã QR này lên mạng xã hội.</div>
+                                <div>• Xuất trình mã đặt vé tại quầy soát vé; tên người nhận vé cần khớp với thông tin trên vé.</div>
+                                <div>• Vé điện tử được phát hành bởi hệ thống giả lập (Đồ án môn Mã nguồn mở), không có giá trị sử dụng thực tế.</div>
                             </div>
                         </div>
 

@@ -35,6 +35,9 @@ class BookingController extends Controller
                         ?? ($item->zoneTicket ? $item->zoneTicket->zone->name.' — vé số '.$item->zoneTicket->id : ''))->filter()->all(),
                     'total_price' => $booking->total_price,
                     'status' => $booking->status,
+                    'buyer_name' => $booking->buyer_name,
+                    'buyer_phone' => $booking->buyer_phone,
+                    'buyer_email' => $booking->buyer_email,
                     'created_at' => $booking->created_at,
                 ];
             })

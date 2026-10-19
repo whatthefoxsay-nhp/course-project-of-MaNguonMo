@@ -111,7 +111,7 @@ test('cart page renders checkout flow with multi-method payment and e-ticket pas
     $response->assertSee('CONG TY CP TICKETBOX VIETNAM');
     $response->assertSee('Vé Điện Tử E-Ticket Đã Được Kích Hoạt');
     $response->assertSee('Lưu vé về máy (PNG)');
-    $response->assertDontSee('giả lập');
+    $response->assertSee('giả lập');
 });
 
 test('booking history page displays e-ticket passes and png download button for authenticated user', function () {

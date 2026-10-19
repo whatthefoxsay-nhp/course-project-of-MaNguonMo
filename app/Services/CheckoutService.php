@@ -16,11 +16,13 @@ class CheckoutService
     /**
      * Thanh toán giả lập (spec mục 5): ghế đang giữ -> đơn "confirmed".
      *
+     * @param  array{name?: ?string, phone?: ?string, email?: ?string}  $buyer  người nhận vé (mặc định lấy từ tài khoản)
+     *
      * @throws SeatHoldException
      */
-    public function checkout(User $user, string $paymentMethod): Booking
+    public function checkout(User $user, string $paymentMethod, array $buyer = []): Booking
     {
-        return DB::transaction(function () use ($user, $paymentMethod) {
+        return DB::transaction(function () use ($user, $paymentMethod, $buyer) {
             $seats = ShowtimeSeat::heldBy($user)
                 ->with(['seat', 'showtime'])
                 ->lockForUpdate()
@@ -39,6 +41,9 @@ class CheckoutService
                 'total_price' => $seats->sum($priceOf) + $zoneTickets->sum('price'),
                 'status' => 'confirmed',
                 'payment_method' => $paymentMethod,
+                'buyer_name' => array_key_exists('name', $buyer) ? $buyer['name'] : $user->name,
+                'buyer_phone' => array_key_exists('phone', $buyer) ? $buyer['phone'] : $user->phone,
+                'buyer_email' => array_key_exists('email', $buyer) ? $buyer['email'] : $user->email,
             ]);
 
             foreach ($seats as $seat) {

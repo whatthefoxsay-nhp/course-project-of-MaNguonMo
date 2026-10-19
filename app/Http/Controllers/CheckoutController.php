@@ -12,7 +12,7 @@ class CheckoutController extends Controller
     public function store(CheckoutRequest $request, CheckoutService $checkout): JsonResponse
     {
         try {
-            $booking = $checkout->checkout($request->user(), $request->validated('payment_method'));
+            $booking = $checkout->checkout($request->user(), $request->validated('payment_method'), $request->buyer());
         } catch (SeatHoldException $exception) {
             return response()->json(['message' => $exception->getMessage()], 422);
         }

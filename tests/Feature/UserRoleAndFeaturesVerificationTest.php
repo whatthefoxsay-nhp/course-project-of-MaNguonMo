@@ -361,6 +361,8 @@ describe('Checkout & E-Ticket History Workflows', function () {
 
             $response = $this->actingAs($this->user)->postJson(route('checkout.store'), [
                 'payment_method' => $method,
+                'buyer_name' => 'Khách Kiểm Thử',
+                'buyer_phone' => '0901234567',
             ]);
 
             $response->assertOk();
@@ -378,6 +380,8 @@ describe('Checkout & E-Ticket History Workflows', function () {
     test('checkout is rejected if cart has expired or is empty', function () {
         $response = $this->actingAs($this->user)->postJson(route('checkout.store'), [
             'payment_method' => 'vietqr',
+            'buyer_name' => 'Khách Kiểm Thử',
+            'buyer_phone' => '0901234567',
         ]);
 
         $response->assertStatus(422);

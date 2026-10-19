@@ -500,10 +500,6 @@ Alpine.data('ticketPaymentManager', (config = {}) => ({
         fullName: config.userName || '',
         phone: config.userPhone || '',
         email: config.userEmail || '',
-        idCard: '',
-        city: '',
-        address: '',
-        notes: '',
     },
     banks: {
         TCB: {
@@ -614,12 +610,20 @@ Alpine.data('ticketPaymentManager', (config = {}) => ({
             const response = await fetch(config.checkoutUrl, {
                 method: 'POST',
                 headers: jsonHeaders(),
-                body: JSON.stringify({ payment_method: this.selectedMethod }),
+                body: JSON.stringify({
+                    payment_method: this.selectedMethod,
+                    buyer_name: this.buyerInfo.fullName.trim(),
+                    buyer_phone: this.buyerInfo.phone.trim(),
+                    buyer_email: this.buyerInfo.email.trim() || null,
+                }),
             });
             const data = await response.json();
 
             if (!response.ok) {
                 this.notify(data.message || 'Thanh toán thất bại, vui lòng thử lại.');
+                if (data.errors && (data.errors.buyer_name || data.errors.buyer_phone || data.errors.buyer_email)) {
+                    this.backToCart();
+                }
                 return;
             }
 

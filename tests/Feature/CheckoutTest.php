@@ -23,7 +23,7 @@ test('checkout turns held seats into a confirmed booking', function () {
     heldCart($user, 2);
 
     $response = $this->actingAs($user)
-        ->postJson(route('checkout.store'), ['payment_method' => 'momo'])
+        ->postJson(route('checkout.store'), ['payment_method' => 'momo', 'buyer_name' => 'Nguyễn Văn A', 'buyer_phone' => '0901234567'])
         ->assertOk()
         ->assertJsonPath('redirect', route('bookings.history'));
 
@@ -40,7 +40,7 @@ test('checkout turns held seats into a confirmed booking', function () {
 
 test('checkout with an empty cart is rejected', function () {
     $this->actingAs(createCustomer())
-        ->postJson(route('checkout.store'), ['payment_method' => 'vietqr'])
+        ->postJson(route('checkout.store'), ['payment_method' => 'vietqr', 'buyer_name' => 'Nguyễn Văn A', 'buyer_phone' => '0901234567'])
         ->assertStatus(422)
         ->assertJsonFragment(['message' => 'Giỏ vé trống hoặc đã hết thời gian giữ chỗ. Vui lòng chọn lại ghế.']);
 });
@@ -51,7 +51,7 @@ test('expired holds cannot be checked out', function () {
     ShowtimeSeat::where('held_by_user_id', $user->id)->update(['held_until' => now()->subMinute()]);
 
     $this->actingAs($user)
-        ->postJson(route('checkout.store'), ['payment_method' => 'vietqr'])
+        ->postJson(route('checkout.store'), ['payment_method' => 'vietqr', 'buyer_name' => 'Nguyễn Văn A', 'buyer_phone' => '0901234567'])
         ->assertStatus(422);
 
     expect(Booking::where('user_id', $user->id)->exists())->toBeFalse();
@@ -62,7 +62,7 @@ test('payment method must be one of the supported ones', function () {
     heldCart($user, 1);
 
     $this->actingAs($user)
-        ->postJson(route('checkout.store'), ['payment_method' => 'bitcoin'])
+        ->postJson(route('checkout.store'), ['payment_method' => 'bitcoin', 'buyer_name' => 'Nguyễn Văn A', 'buyer_phone' => '0901234567'])
         ->assertStatus(422)
         ->assertJsonValidationErrors('payment_method');
 });
@@ -71,6 +71,6 @@ test('a user cannot check out somebody else\'s held seats', function () {
     heldCart(createCustomer(), 2);
 
     $this->actingAs(createCustomer())
-        ->postJson(route('checkout.store'), ['payment_method' => 'card'])
+        ->postJson(route('checkout.store'), ['payment_method' => 'card', 'buyer_name' => 'Nguyễn Văn A', 'buyer_phone' => '0901234567'])
         ->assertStatus(422);
 });
