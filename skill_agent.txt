@@ -1,6 +1,0 @@
-superpower
-fronted-design
-code-review
-securiry review
-claude mem
-Gstack

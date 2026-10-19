@@ -44,7 +44,20 @@ expect()->extend('toBeOne', function () {
 |
 */
 
-function something()
+function createAdmin(array $attributes = []): \App\Models\User
 {
-    // ..
+    \Spatie\Permission\Models\Role::firstOrCreate(['name' => 'admin', 'guard_name' => 'web']);
+    $user = \App\Models\User::factory()->create($attributes);
+    $user->assignRole('admin');
+
+    return $user;
+}
+
+function createCustomer(array $attributes = []): \App\Models\User
+{
+    \Spatie\Permission\Models\Role::firstOrCreate(['name' => 'user', 'guard_name' => 'web']);
+    $user = \App\Models\User::factory()->create($attributes);
+    $user->assignRole('user');
+
+    return $user;
 }

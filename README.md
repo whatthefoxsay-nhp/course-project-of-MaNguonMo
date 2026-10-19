@@ -1,66 +1,105 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# TicketBox — Website quản lý đặt vé sự kiện
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Đồ án môn Mã nguồn mở. Laravel 11 · PHP 8.3 · MySQL 8.4 · Tailwind CSS + Alpine.js · Pest.
 
-## About Laravel
+Repo: https://github.com/whatthefoxsay-nhp/course-project-of-MaNguonMo
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## Tính năng chính
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+- **Khách:** tìm kiếm/lọc sự kiện theo danh mục, gợi ý tìm kiếm tức thì, chi tiết sự kiện có bản đồ Google Maps và dự báo thời tiết (địa điểm ngoài trời), xem sơ đồ ghế/sơ đồ khu, đọc bình luận, hỏi chatbot.
+- **Thành viên:** giữ ghế 10 phút có chống đặt trùng (tối đa 8 chỗ); sân vận động bán theo khu (khu ghế ngồi chọn ghế, khu đứng/vé vào cửa chọn số lượng), nhà hát chọn từng ghế, sự kiện không chọn ghế mua theo hạng vé; giỏ vé có đồng hồ đếm ngược; mã giảm giá; thanh toán **giả lập** (VietQR / MoMo / ZaloPay / Thẻ — QR chỉ là hình minh họa, không thu thông tin thẻ) với thông tin người nhận vé; vé điện tử tải PNG; lịch sử đơn; bình luận; hồ sơ + avatar.
+- **Quản trị:** danh mục, sự kiện (upload poster), khán phòng (thiết kế sơ đồ ghế hoặc sơ đồ khu, nhân bản), suất diễn (chặn chồng giờ), đơn đặt vé (xác nhận/hủy, hủy thì nhả ghế), mã giảm giá, người dùng (khóa/mở, đổi vai trò, đặt lại mật khẩu), dashboard doanh thu, báo cáo có bản in.
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+## Yêu cầu
 
-## Learning Laravel
+- PHP 8.3, Composer, Node.js 18+ và npm, MySQL 8.4 — trên Windows dùng **Laragon** là đủ.
+- Nếu shell chưa nhận `php`/`composer` của Laragon: xem mục "Tool paths" trong `docs/superpowers/plans/2026-09-07-phase0-project-setup.md`.
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+## Cài đặt (Windows + Laragon)
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+```bash
+git clone https://github.com/whatthefoxsay-nhp/course-project-of-MaNguonMo.git
+cd course-project-of-MaNguonMo
+composer install --no-security-blocking
+npm install
+cp .env.example .env          # PowerShell: Copy-Item .env.example .env
+php artisan key:generate
+```
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+`.env.example` đã đặt sẵn `DB_DATABASE=doanmnm_ticket`, `DB_USERNAME=root`, `DB_PASSWORD=` (mặc định của Laragon), `APP_TIMEZONE=Asia/Ho_Chi_Minh`, `APP_LOCALE=vi`. Sửa lại nếu máy bạn khác.
 
-## Laravel Sponsors
+### Tạo dữ liệu — chọn một trong hai cách
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+**Cách 1 — migrate + seed (khuyến nghị):** tạo database rỗng `doanmnm_ticket` (utf8mb4) trong HeidiSQL/phpMyAdmin của Laragon, rồi:
 
-### Premium Partners
+```bash
+php artisan migrate --seed
+```
 
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[WebReinvent](https://webreinvent.com/)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel/)**
-- **[Cyber-Duck](https://cyber-duck.co.uk)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Jump24](https://jump24.co.uk)**
-- **[Redberry](https://redberry.international/laravel/)**
-- **[Active Logic](https://activelogic.com)**
-- **[byte5](https://byte5.de)**
-- **[OP.GG](https://op.gg)**
+**Cách 2 — import file dump SQL** (nếu nhóm gửi kèm file `.sql`; file dump **không** được commit vào repo): import file vào database `doanmnm_ticket` bằng HeidiSQL hoặc phpMyAdmin, sau đó chạy:
 
-## Contributing
+```bash
+php artisan migrate
+```
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+để bổ sung các bảng/cột mới hơn bản dump (nếu có).
 
-## Code of Conduct
+Muốn làm sạch dữ liệu về trạng thái demo: `php artisan migrate:fresh --seed` (**xóa toàn bộ dữ liệu**).
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+### Chạy
 
-## Security Vulnerabilities
+```bash
+php artisan storage:link      # bắt buộc để hiện poster/avatar đã upload
+npm run build                 # hoặc npm run dev khi đang sửa giao diện
+php artisan serve --port=8080
+```
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+Mở http://127.0.0.1:8080
 
-## License
+Nên chạy thêm ở một cửa sổ khác để nhả ghế giữ quá hạn mỗi phút (lệnh `seats:release-expired`):
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+```bash
+php artisan schedule:work
+```
+
+Không chạy lệnh này thì ghế quá hạn vẫn được coi là trống khi người khác đặt, chỉ là dữ liệu chưa được dọn.
+
+## Khóa API (tùy chọn)
+
+| Biến `.env` | Tác dụng | Bỏ trống thì |
+|---|---|---|
+| `OPENWEATHER_API_KEY` | Dự báo thời tiết trên trang sự kiện ở địa điểm ngoài trời, cho suất trong 5 ngày tới (đăng ký miễn phí tại openweathermap.org) | Ẩn khối thời tiết |
+| `GOOGLE_MAPS_EMBED_KEY` | Bản đồ qua Google Maps Embed API | Vẫn hiện bản đồ bằng link nhúng công khai |
+| `GEMINI_API_KEY` (+ `GEMINI_MODEL`, mặc định `gemini-2.5-flash`) | Chatbot trả lời bằng Gemini dựa trên dữ liệu sự kiện | Chatbot dùng bộ câu trả lời có sẵn (FAQ) trên trình duyệt |
+
+Sau khi sửa `.env`: `php artisan config:clear`.
+
+## Tài khoản demo (mật khẩu `password`)
+
+| Vai trò | Email |
+|---|---|
+| Quản trị | admin@ticketbox.vn |
+| Thành viên | user@ticketbox.vn |
+
+Cần thêm người dùng thì đăng ký ở `/register` hoặc tạo trong `/admin/users`.
+Dữ liệu seed có sẵn 3 mã giảm giá: `TICKETBOX2026`, `VIPCONCERT30`, `EARLYBIRD50K`.
+
+## Kiểm thử
+
+```bash
+php artisan test
+```
+
+Test chạy trên SQLite in-memory (cấu hình trong `phpunit.xml`), không đụng tới database MySQL. Kết quả hiện tại: 363 test pass (1612 assertion).
+
+## Tài liệu
+
+- Đặc tả: `docs/superpowers/specs/2026-09-07-ticket-booking-platform-design.md`
+- Kiến trúc & quyết định: `docs/architecture.md`
+- Báo cáo: `docs/report/` — `erd.md` (ERD), `use-cases.md` (use case), `chuc-nang.md` (đối chiếu tiêu chí chấm), `anh-chup.md` (checklist ảnh), `kich-ban-demo.md` (kịch bản demo)
+
+## Thành viên
+
+| Họ tên | Vai trò |
+|---|---|
+| … | … |

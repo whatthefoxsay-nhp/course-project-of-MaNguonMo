@@ -1,27 +1,44 @@
-<x-admin-layout :header="'Quản Lý Mã Giảm Giá & Ưu Đãi'">
+<x-admin-layout 
+    :header="'Quản Lý Mã Giảm Giá & Ưu Đãi'"
+    :subtitle="'Tạo mới, phân bổ mã khuyến mãi và theo dõi hiệu quả sử dụng voucher ưu đãi đặt vé.'"
+>
+    <x-slot:breadcrumb>
+        <span class="text-gray-400">Tổng quan</span>
+        <span class="text-gray-300">›</span>
+        <span class="text-gray-400">Bán vé</span>
+        <span class="text-gray-300">›</span>
+        <span class="text-[#123D22] font-black">Mã giảm giá &amp; Voucher</span>
+    </x-slot:breadcrumb>
+
     <div class="space-y-6" x-data="{ createModalOpen: false, copyNotice: '' }">
 
         <!-- Top Action Bar & Header Banner -->
-        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-6 rounded-3xl border border-black/10 shadow-sm">
-            <div class="flex items-center gap-4">
-                <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-amber-500 to-orange-600 text-white flex items-center justify-center shadow-md shadow-amber-500/20 shrink-0">
+        <div class="relative bg-gradient-to-r from-white via-white to-[#F1F8F2] p-6 rounded-3xl border border-[#E3EAE4] shadow-sm overflow-hidden flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <!-- Decorative SVG Watermark -->
+            <svg class="absolute right-4 -bottom-8 w-44 h-44 text-[#123D22] opacity-[0.06] pointer-events-none transform -rotate-12" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+            </svg>
+
+            <div class="relative z-10 flex items-center gap-4">
+                <div class="w-12 h-12 rounded-2xl bg-emerald-50 border border-emerald-200/80 text-[#123D22] flex items-center justify-center shadow-xs shrink-0">
                     <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
                     </svg>
                 </div>
                 <div>
-                    <span class="text-[11px] font-black uppercase tracking-wider text-amber-700 bg-amber-50 border border-amber-200/80 px-2.5 py-0.5 rounded-full inline-block mb-1">Marketing &amp; Khuyến Mãi</span>
-                    <h2 class="font-display font-black text-xl text-black">Chương Trình Mã Giảm Giá &amp; Voucher</h2>
+                    <span class="text-[11px] font-black uppercase tracking-wider text-[#123D22] bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 rounded-full inline-block mb-1">Marketing &amp; Khuyến Mãi</span>
+                    <h2 class="font-display font-black text-xl text-slate-900">Chương Trình Mã Giảm Giá &amp; Voucher</h2>
                     <p class="text-xs text-gray-500 mt-0.5">Tạo mới, phân bổ mã khuyến mãi và theo dõi hiệu quả sử dụng voucher ưu đãi đặt vé.</p>
                 </div>
             </div>
-            <div>
+            <div class="relative z-10">
                 <button 
                     type="button" 
                     @click="createModalOpen = true"
-                    class="bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-black font-black px-5 py-3 rounded-2xl text-xs flex items-center gap-2 shadow-md shadow-amber-500/20 transition-all hover:scale-[1.02]"
+                    class="px-5 py-3 rounded-2xl text-xs font-black text-white flex items-center gap-2 shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all"
+                    style="background: linear-gradient(135deg, #123D22 0%, #1e662e 100%);"
                 >
-                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
+                    <svg class="w-4 h-4 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
                     <span>Tạo Mã Giảm Mới</span>
                 </button>
             </div>
@@ -29,17 +46,17 @@
 
         <!-- Metric KPI Cards -->
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <div class="bg-white p-5 rounded-3xl border border-black/10 shadow-sm flex items-center gap-4">
+            <div class="bg-white p-5 rounded-3xl border border-[#E3EAE4] shadow-sm flex items-center gap-4">
                 <div class="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold shrink-0">
                     <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                 </div>
                 <div>
                     <span class="text-xs text-gray-500 font-semibold">Mã Đang Hoạt Động</span>
-                    <div class="font-display font-black text-2xl text-black mt-0.5">{{ $stats['total_active'] }} <span class="text-xs text-emerald-600 font-bold">Voucher</span></div>
+                    <div class="font-display font-black text-2xl text-black mt-0.5">{{ $stats['total_active'] }} <span class="text-xs text-emerald-600 font-bold">Mã</span></div>
                 </div>
             </div>
 
-            <div class="bg-white p-5 rounded-3xl border border-black/10 shadow-sm flex items-center gap-4">
+            <div class="bg-white p-5 rounded-3xl border border-[#E3EAE4] shadow-sm flex items-center gap-4">
                 <div class="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center font-bold shrink-0">
                     <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
                 </div>
@@ -49,17 +66,17 @@
                 </div>
             </div>
 
-            <div class="bg-white p-5 rounded-3xl border border-black/10 shadow-sm flex items-center gap-4">
+            <div class="bg-white p-5 rounded-3xl border border-[#E3EAE4] shadow-sm flex items-center gap-4">
                 <div class="w-12 h-12 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center font-bold shrink-0">
-                    <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                    <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" /></svg>
                 </div>
                 <div>
-                    <span class="text-xs text-gray-500 font-semibold">Tổng Tiền Trợ Giá</span>
-                    <div class="font-display font-black text-2xl text-amber-600 mt-0.5">{{ number_format($stats['total_discount_amount'] / 1000000, 1) }}M <span class="text-xs text-gray-400 font-bold">VNĐ</span></div>
+                    <span class="text-xs text-gray-500 font-semibold">Tổng Số Voucher</span>
+                    <div class="font-display font-black text-2xl text-amber-600 mt-0.5">{{ $stats['total_vouchers'] }} <span class="text-xs text-gray-400 font-bold">Mã</span></div>
                 </div>
             </div>
 
-            <div class="bg-white p-5 rounded-3xl border border-black/10 shadow-sm flex items-center gap-4">
+            <div class="bg-white p-5 rounded-3xl border border-[#E3EAE4] shadow-sm flex items-center gap-4">
                 <div class="w-12 h-12 rounded-2xl bg-rose-50 text-rose-600 flex items-center justify-center font-bold shrink-0">
                     <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                 </div>
@@ -71,7 +88,7 @@
         </div>
 
         <!-- Filter Controls -->
-        <div class="bg-white p-5 rounded-3xl border border-black/10 shadow-sm">
+        <div class="bg-white p-5 rounded-3xl border border-[#E3EAE4] shadow-sm">
             <form method="GET" action="{{ route('admin.discounts.index') }}" class="grid grid-cols-1 sm:grid-cols-12 gap-3">
                 <div class="sm:col-span-7 relative">
                     <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-gray-400">
@@ -82,20 +99,24 @@
                         name="search" 
                         value="{{ request('search') }}" 
                         placeholder="Tìm theo mã voucher (VD: TICKETBOX2026), tiêu đề khuyến mãi..." 
-                        class="w-full bg-[#FAF9F6] border border-black/10 rounded-2xl pl-10 pr-4 py-2.5 text-xs text-black placeholder-gray-400 focus:outline-none focus:border-black focus:ring-2 focus:ring-black/10 font-medium"
+                        class="w-full bg-[#FAF9F6] border border-gray-200 rounded-2xl pl-10 pr-4 py-2.5 text-xs text-black placeholder-gray-400 focus:outline-none focus:border-amber-400 focus:ring-2 focus:ring-amber-400/20 font-medium"
                     >
                 </div>
 
                 <div class="sm:col-span-3">
-                    <select name="status" class="w-full bg-[#FAF9F6] border border-black/10 rounded-2xl px-4 py-2.5 text-xs text-black focus:outline-none focus:border-black focus:ring-2 focus:ring-black/10 font-medium">
+                    <select name="status" class="w-full bg-[#FAF9F6] border border-gray-200 rounded-2xl px-4 py-2.5 text-xs text-black focus:outline-none focus:border-amber-400 focus:ring-2 focus:ring-amber-400/20 font-medium cursor-pointer">
                         <option value="">-- Tất cả trạng thái --</option>
                         <option value="active" {{ request('status') == 'active' ? 'selected' : '' }}>Đang áp dụng</option>
-                        <option value="expired" {{ request('status') == 'expired' ? 'selected' : '' }}>Hết hạn / Đã dùng hết</option>
+                        <option value="expired" {{ request('status') == 'expired' ? 'selected' : '' }}>Hết hạn / Tạm dừng</option>
                     </select>
                 </div>
 
                 <div class="sm:col-span-2 flex gap-2">
-                    <button type="submit" class="flex-1 bg-black text-white font-bold py-2.5 px-4 rounded-2xl text-xs hover:bg-black/80 transition-colors">
+                    <button 
+                        type="submit" 
+                        class="flex-1 text-white font-bold py-2.5 px-4 rounded-2xl text-xs transition-all hover:opacity-90 shadow-sm"
+                        style="background: #123D22;"
+                    >
                         Lọc
                     </button>
                     @if(request('search') || request('status'))
@@ -108,16 +129,16 @@
         </div>
 
         <!-- Copy Success Alert -->
-        <div x-show="copyNotice" x-transition class="bg-emerald-500 text-white text-xs font-bold px-4 py-2.5 rounded-2xl shadow-lg flex items-center justify-between">
+        <div x-show="copyNotice" x-transition class="bg-emerald-500 text-white text-xs font-bold px-4 py-2.5 rounded-2xl shadow-lg flex items-center justify-between" style="display: none;">
             <span x-text="copyNotice"></span>
             <button @click="copyNotice = ''" class="text-white hover:opacity-75">&times;</button>
         </div>
 
         <!-- Table of Discount Codes -->
-        <div class="bg-white rounded-3xl border border-black/10 shadow-sm overflow-hidden">
+        <div class="bg-white rounded-3xl border border-[#E3EAE4] shadow-sm overflow-hidden">
             <div class="overflow-x-auto">
                 <table class="w-full text-left text-xs">
-                    <thead class="bg-[#FAF9F6] text-gray-500 uppercase tracking-wider font-bold border-b border-black/10">
+                    <thead class="bg-[#F6F8F6] text-neutral-600 uppercase tracking-[0.06em] font-bold border-b border-[#E3EAE4]">
                         <tr>
                             <th class="py-3.5 px-5">Mã Voucher</th>
                             <th class="py-3.5 px-5">Thông Tin &amp; Mức Giảm</th>
@@ -130,15 +151,18 @@
                     </thead>
                     <tbody class="divide-y divide-black/5 font-medium">
                         @forelse($discounts as $discount)
-                            <tr class="hover:bg-amber-50/30 transition-colors">
+                            @php
+                                $percent = $discount->max_uses > 0 ? min(100, round(($discount->used_count / $discount->max_uses) * 100)) : 0;
+                            @endphp
+                            <tr class="hover:bg-[#F2F8F4] border-l-[3px] border-l-transparent hover:border-l-amber-500 transition-all">
                                 <td class="py-4 px-5">
                                     <div class="flex items-center gap-2">
                                         <span class="font-mono font-black text-xs px-3 py-1.5 rounded-xl bg-amber-100 text-amber-900 border border-amber-300/80 shadow-xs tracking-wider">
-                                            {{ $discount['code'] }}
+                                            {{ $discount->code }}
                                         </span>
                                         <button 
                                             type="button" 
-                                            @click="navigator.clipboard.writeText('{{ $discount['code'] }}'); copyNotice = 'Đã sao chép mã {{ $discount['code'] }} vào bộ nhớ tạm!'; setTimeout(() => copyNotice = '', 3000)"
+                                            @click="navigator.clipboard.writeText(@js($discount->code)); copyNotice = @js('Đã sao chép mã ' . $discount->code . ' vào bộ nhớ tạm!'); setTimeout(() => copyNotice = '', 3000)"
                                             class="text-gray-400 hover:text-black p-1 rounded-lg hover:bg-black/5" 
                                             title="Sao chép mã"
                                         >
@@ -147,45 +171,47 @@
                                     </div>
                                 </td>
                                 <td class="py-4 px-5">
-                                    <div class="font-bold text-black text-sm">{{ $discount['title'] }}</div>
+                                    <div class="font-bold text-black text-sm">{{ $discount->title }}</div>
                                     <div class="flex items-center gap-2 mt-1">
-                                        @if($discount['discount_type'] === 'percentage')
+                                        @if($discount->discount_type === 'percentage')
                                             <span class="badge-gold text-[10px] px-2 py-0.5 rounded-full font-black">
-                                                GIẢM {{ $discount['discount_value'] }}%
+                                                GIẢM {{ $discount->discount_value }}%
                                             </span>
-                                            <span class="text-[11px] text-gray-500">Tối đa {{ number_format($discount['max_discount_amount']) }}đ</span>
+                                            @if($discount->max_discount_amount)
+                                                <span class="text-[11px] text-gray-500">Tối đa {{ number_format($discount->max_discount_amount) }}đ</span>
+                                            @endif
                                         @else
                                             <span class="badge-rose text-[10px] px-2 py-0.5 rounded-full font-black">
-                                                GIẢM {{ number_format($discount['discount_value']) }}đ
+                                                GIẢM {{ number_format($discount->discount_value) }}đ
                                             </span>
                                         @endif
                                         <span class="text-gray-300">·</span>
-                                        <span class="text-[11px] text-gray-500">Đơn từ {{ number_format($discount['min_order_value']) }}đ</span>
+                                        <span class="text-[11px] text-gray-500">Đơn từ {{ number_format($discount->min_order_value) }}đ</span>
                                     </div>
                                 </td>
                                 <td class="py-4 px-5 text-gray-700">
                                     <span class="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full bg-gray-100 text-gray-800">
                                         <svg class="w-3 h-3 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z" /></svg>
-                                        {{ $discount['applicable_to'] }}
+                                        {{ $discount->applicable_to ?? 'Tất cả sự kiện' }}
                                     </span>
                                 </td>
                                 <td class="py-4 px-5">
                                     <div class="space-y-1">
                                         <div class="flex items-center justify-between text-[11px]">
-                                            <span class="font-bold text-black">{{ $discount['used_count'] }}/{{ $discount['max_uses'] }}</span>
-                                            <span class="text-gray-500 font-semibold">{{ round(($discount['used_count'] / $discount['max_uses']) * 100) }}%</span>
+                                            <span class="font-bold text-black">{{ $discount->used_count }}/{{ $discount->max_uses }}</span>
+                                            <span class="text-gray-500 font-semibold">{{ $percent }}%</span>
                                         </div>
                                         <div class="w-28 bg-gray-200 h-1.5 rounded-full overflow-hidden">
-                                            <div class="bg-amber-500 h-full rounded-full" style="width: {{ min(100, round(($discount['used_count'] / $discount['max_uses']) * 100)) }}%"></div>
+                                            <div class="bg-amber-500 h-full rounded-full" style="width: {{ $percent }}%"></div>
                                         </div>
                                     </div>
                                 </td>
                                 <td class="py-4 px-5 text-gray-600 text-xs">
-                                    <div><span class="text-gray-400">Từ:</span> {{ date('d/m/Y', strtotime($discount['start_date'])) }}</div>
-                                    <div><span class="text-gray-400">Đến:</span> <span class="font-bold text-gray-800">{{ date('d/m/Y', strtotime($discount['end_date'])) }}</span></div>
+                                    <div><span class="text-gray-400">Từ:</span> {{ $discount->start_date ? $discount->start_date->format('d/m/Y') : 'Không hạn chế' }}</div>
+                                    <div><span class="text-gray-400">Đến:</span> <span class="font-bold text-gray-800">{{ $discount->end_date ? $discount->end_date->format('d/m/Y') : 'Vô thời hạn' }}</span></div>
                                 </td>
                                 <td class="py-4 px-5">
-                                    @if($discount['status'] === 'active')
+                                    @if($discount->is_active)
                                         <span class="px-2.5 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-700 text-[11px] font-bold inline-flex items-center gap-1.5">
                                             <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
                                             Đang kích hoạt
@@ -193,28 +219,37 @@
                                     @else
                                         <span class="px-2.5 py-1 rounded-full bg-gray-100 border border-gray-200 text-gray-500 text-[11px] font-bold inline-flex items-center gap-1.5">
                                             <span class="w-1.5 h-1.5 rounded-full bg-gray-400"></span>
-                                            Đã hết hạn
+                                            Tạm dừng
                                         </span>
                                     @endif
                                 </td>
-                                <td class="py-4 px-5 text-right">
+                                <td class="py-4 px-5 text-right whitespace-nowrap">
                                     <div class="flex items-center justify-end gap-1.5">
-                                        <button 
-                                            type="button" 
-                                            @click="alert('Chức năng sửa thông tin mã giảm giá')" 
-                                            class="p-2 rounded-xl text-gray-500 hover:text-black hover:bg-black/5 transition-colors"
-                                            title="Chỉnh sửa mã"
-                                        >
-                                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
-                                        </button>
-                                        <button 
-                                            type="button" 
-                                            @click="alert('Đã thay đổi trạng thái kích hoạt của mã')" 
-                                            class="p-2 rounded-xl text-gray-500 hover:text-amber-600 hover:bg-amber-50 transition-colors"
-                                            title="Bật / Tắt trạng thái"
-                                        >
-                                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" /></svg>
-                                        </button>
+                                        <!-- Toggle Status -->
+                                        <form method="POST" action="{{ route('admin.discounts.toggle-status', $discount) }}">
+                                            @csrf
+                                            @method('PATCH')
+                                            <button 
+                                                type="submit" 
+                                                class="p-2 rounded-xl text-gray-500 hover:text-amber-600 hover:bg-amber-50 transition-colors"
+                                                title="{{ $discount->is_active ? 'Tạm dừng mã' : 'Kích hoạt mã' }}"
+                                            >
+                                                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" /></svg>
+                                            </button>
+                                        </form>
+
+                                        <!-- Delete -->
+                                        <form method="POST" action="{{ route('admin.discounts.destroy', $discount) }}" onsubmit="return confirm('Bạn có chắc muốn xóa mã khuyến mãi [{{ $discount->code }}]?')">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button 
+                                                type="submit" 
+                                                class="p-2 rounded-xl text-gray-400 hover:text-[#CC0000] hover:bg-red-50 transition-colors"
+                                                title="Xóa mã"
+                                            >
+                                                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                                            </button>
+                                        </form>
                                     </div>
                                 </td>
                             </tr>
@@ -232,6 +267,12 @@
                     </tbody>
                 </table>
             </div>
+
+            @if($discounts->hasPages())
+                <div class="p-4 border-t border-black/5 bg-[#FAF9F6]">
+                    {{ $discounts->links() }}
+                </div>
+            @endif
         </div>
 
         <!-- Modal Tạo Mã Giảm Giá Mới -->
@@ -263,51 +304,57 @@
                     <button @click="createModalOpen = false" class="text-gray-400 hover:text-black text-xl font-bold">&times;</button>
                 </div>
 
-                <form @submit.prevent="alert('Mã giảm giá đã được tạo thành công trên hệ thống!'); createModalOpen = false;" class="space-y-4 text-xs">
+                <form method="POST" action="{{ route('admin.discounts.store') }}" class="space-y-4 text-xs">
+                    @csrf
                     <div>
                         <label class="block font-bold text-gray-700 mb-1">Mã Voucher (Code) <span class="text-rose-500">*</span></label>
-                        <input type="text" placeholder="VD: SUMMER2026, VIPCONCERT" required class="w-full bg-[#FAF9F6] border border-black/10 rounded-2xl px-4 py-2.5 font-mono uppercase font-bold text-black focus:outline-none focus:border-black">
+                        <input type="text" name="code" placeholder="VD: SUMMER2026, VIPCONCERT" required class="w-full bg-[#FAF9F6] border border-black/10 rounded-2xl px-4 py-2.5 font-mono uppercase font-bold text-black focus:outline-none focus:border-black">
                     </div>
 
                     <div>
                         <label class="block font-bold text-gray-700 mb-1">Tiêu Đề / Mô Tả Khuyến Mãi <span class="text-rose-500">*</span></label>
-                        <input type="text" placeholder="VD: Ưu đãi giảm 20% cho thành viên mới" required class="w-full bg-[#FAF9F6] border border-black/10 rounded-2xl px-4 py-2.5 font-medium text-black focus:outline-none focus:border-black">
+                        <input type="text" name="title" placeholder="VD: Ưu đãi giảm 20% cho thành viên mới" required class="w-full bg-[#FAF9F6] border border-black/10 rounded-2xl px-4 py-2.5 font-medium text-black focus:outline-none focus:border-black">
                     </div>
 
                     <div class="grid grid-cols-2 gap-3">
                         <div>
                             <label class="block font-bold text-gray-700 mb-1">Loại Giảm Giá</label>
-                            <select class="w-full bg-[#FAF9F6] border border-black/10 rounded-2xl px-4 py-2.5 font-medium text-black focus:outline-none focus:border-black">
+                            <select name="discount_type" class="w-full bg-[#FAF9F6] border border-black/10 rounded-2xl px-4 py-2.5 font-medium text-black focus:outline-none focus:border-black">
                                 <option value="percentage">Phần trăm (%)</option>
                                 <option value="fixed">Số tiền cố định (VNĐ)</option>
                             </select>
                         </div>
                         <div>
                             <label class="block font-bold text-gray-700 mb-1">Giá Trị Giảm <span class="text-rose-500">*</span></label>
-                            <input type="number" placeholder="20 hoặc 50000" required class="w-full bg-[#FAF9F6] border border-black/10 rounded-2xl px-4 py-2.5 font-medium text-black focus:outline-none focus:border-black">
+                            <input type="number" name="discount_value" placeholder="20 hoặc 50000" required class="w-full bg-[#FAF9F6] border border-black/10 rounded-2xl px-4 py-2.5 font-medium text-black focus:outline-none focus:border-black">
                         </div>
                     </div>
 
                     <div class="grid grid-cols-2 gap-3">
                         <div>
-                            <label class="block font-bold text-gray-700 mb-1">Đơn Hàng Tối Thiểu (VNĐ)</label>
-                            <input type="number" placeholder="200000" class="w-full bg-[#FAF9F6] border border-black/10 rounded-2xl px-4 py-2.5 font-medium text-black focus:outline-none focus:border-black">
+                            <label class="block font-bold text-gray-700 mb-1">Đơn Tối Thiểu (VNĐ)</label>
+                            <input type="number" name="min_order_value" value="0" class="w-full bg-[#FAF9F6] border border-black/10 rounded-2xl px-4 py-2.5 font-medium text-black focus:outline-none focus:border-black">
                         </div>
                         <div>
                             <label class="block font-bold text-gray-700 mb-1">Số Lượng Phát Hành</label>
-                            <input type="number" placeholder="500" class="w-full bg-[#FAF9F6] border border-black/10 rounded-2xl px-4 py-2.5 font-medium text-black focus:outline-none focus:border-black">
+                            <input type="number" name="max_uses" value="100" class="w-full bg-[#FAF9F6] border border-black/10 rounded-2xl px-4 py-2.5 font-medium text-black focus:outline-none focus:border-black">
                         </div>
                     </div>
 
                     <div class="grid grid-cols-2 gap-3">
                         <div>
                             <label class="block font-bold text-gray-700 mb-1">Ngày Bắt Đầu</label>
-                            <input type="date" value="{{ date('Y-m-d') }}" class="w-full bg-[#FAF9F6] border border-black/10 rounded-2xl px-4 py-2.5 font-medium text-black focus:outline-none focus:border-black">
+                            <input type="date" name="start_date" value="{{ date('Y-m-d') }}" class="w-full bg-[#FAF9F6] border border-black/10 rounded-2xl px-4 py-2.5 font-medium text-black focus:outline-none focus:border-black">
                         </div>
                         <div>
                             <label class="block font-bold text-gray-700 mb-1">Ngày Hết Hạn</label>
-                            <input type="date" value="{{ date('Y-m-d', strtotime('+3 months')) }}" class="w-full bg-[#FAF9F6] border border-black/10 rounded-2xl px-4 py-2.5 font-medium text-black focus:outline-none focus:border-black">
+                            <input type="date" name="end_date" value="{{ date('Y-m-d', strtotime('+3 months')) }}" class="w-full bg-[#FAF9F6] border border-black/10 rounded-2xl px-4 py-2.5 font-medium text-black focus:outline-none focus:border-black">
                         </div>
+                    </div>
+
+                    <div>
+                        <label class="block font-bold text-gray-700 mb-1">Phạm Vi Áp Dụng</label>
+                        <input type="text" name="applicable_to" value="Tất cả sự kiện &amp; concert" class="w-full bg-[#FAF9F6] border border-black/10 rounded-2xl px-4 py-2.5 font-medium text-black focus:outline-none focus:border-black">
                     </div>
 
                     <div class="pt-3 flex gap-3">

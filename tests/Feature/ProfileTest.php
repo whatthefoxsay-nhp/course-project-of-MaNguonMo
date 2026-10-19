@@ -20,6 +20,7 @@ test('profile information can be updated', function () {
         ->patch('/profile', [
             'name' => 'Test User',
             'email' => 'test@example.com',
+            'phone' => '0912345678',
         ]);
 
     $response
@@ -30,6 +31,7 @@ test('profile information can be updated', function () {
 
     $this->assertSame('Test User', $user->name);
     $this->assertSame('test@example.com', $user->email);
+    $this->assertSame('0912345678', $user->phone);
     $this->assertNull($user->email_verified_at);
 });
 
@@ -82,4 +84,28 @@ test('correct password must be provided to delete account', function () {
         ->assertRedirect('/profile');
 
     $this->assertNotNull($user->fresh());
+});
+
+test('account with bookings cannot be self deleted', function () {
+    $user = User::factory()->create();
+    $booking = \App\Models\Booking::create([
+        'user_id' => $user->id,
+        'total_price' => 300000,
+        'status' => 'confirmed',
+    ]);
+
+    $response = $this
+        ->actingAs($user)
+        ->from('/profile')
+        ->delete('/profile', [
+            'password' => 'password',
+        ]);
+
+    $response
+        ->assertSessionHasErrorsIn('userDeletion', 'password')
+        ->assertRedirect('/profile');
+
+    $this->assertAuthenticatedAs($user);
+    $this->assertNotNull($user->fresh());
+    $this->assertNotNull($booking->fresh());
 });

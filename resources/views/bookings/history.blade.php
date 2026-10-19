@@ -32,6 +32,12 @@
                 @foreach ($bookings as $booking)
                     @php
                         $isConfirmed = $booking->status === 'confirmed';
+                        $isCancelled = $booking->status === 'cancelled';
+                        $statusBadgeClass = match ($booking->status) {
+                            'confirmed' => 'badge-sage border border-emerald-200/80',
+                            'cancelled' => 'badge-rose',
+                            default => 'bg-amber-50 text-amber-800 border border-amber-300',
+                        };
                     @endphp
 
                     <!-- Luxury E-Ticket Boarding Pass Card -->
@@ -43,21 +49,17 @@
                             
                             <!-- Left: Event Poster & Main Details (7 Cols) -->
                             <div class="md:col-span-7 p-6 sm:p-7 flex flex-col sm:flex-row gap-5 border-b md:border-b-0 md:border-r border-dashed border-slate-200/90 relative">
-                                <img src="{{ $booking->movie->poster_path }}" alt="{{ $booking->movie->title }}" class="w-20 h-28 sm:w-28 sm:h-40 object-cover rounded-2xl bg-[#FAF9F6] shrink-0 border border-slate-200/80 shadow-xs">
+                                <img src="{{ $booking->movie->poster_url }}" alt="{{ $booking->movie->title }}" class="w-20 h-28 sm:w-28 sm:h-40 object-cover rounded-2xl bg-[#FAF9F6] shrink-0 border border-slate-200/80 shadow-xs">
 
                                 <div class="flex-1 flex flex-col justify-between min-w-0">
                                     <div>
                                         <div class="flex items-center gap-2 mb-2 flex-wrap">
-                                            @if ($isConfirmed)
-                                                <span class="badge-sage text-[10px] px-2.5 py-0.5 rounded-full font-black uppercase flex items-center gap-1 border border-emerald-200/80">
+                                            <span class="{{ $statusBadgeClass }} text-[10px] px-2.5 py-0.5 rounded-full font-black uppercase flex items-center gap-1">
+                                                @if ($isConfirmed)
                                                     <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                                                    Đã Xác Nhận
-                                                </span>
-                                            @else
-                                                <span class="badge-rose text-[10px] px-2.5 py-0.5 rounded-full font-bold">
-                                                    Đã Hủy
-                                                </span>
-                                            @endif
+                                                @endif
+                                                {{ $booking->status_label }}
+                                            </span>
                                             <span class="badge-gold text-[10px] px-2.5 py-0.5 rounded-full font-bold">
                                                 {{ $booking->movie->category->name }}
                                             </span>
@@ -80,78 +82,117 @@
                                                 <svg class="w-3.5 h-3.5 text-slate-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z" /></svg>
                                                 <span>Vị trí ghế: <strong class="text-rose-600 font-black">{{ implode(', ', $booking->seats) }}</strong></span>
                                             </div>
+                                            @if ($booking->buyer_name)
+                                                <div class="flex items-center gap-1.5">
+                                                    <svg class="w-3.5 h-3.5 text-slate-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
+                                                    <span>Người nhận vé: <strong class="text-slate-900 font-bold">{{ $booking->buyer_name }}</strong>{{ $booking->buyer_phone ? ' · '.$booking->buyer_phone : '' }}{{ $booking->buyer_email ? ' · '.$booking->buyer_email : '' }}</span>
+                                                </div>
+                                            @endif
                                         </div>
                                     </div>
 
                                     <div class="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-500 font-mono">
                                         <span>MÃ ĐẶT VÉ: <strong class="text-slate-900 font-black tracking-wider">{{ $booking->booking_code }}</strong></span>
-                                        <span class="text-emerald-700 font-sans font-bold flex items-center gap-1">
-                                            <svg class="w-3 h-3 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
-                                            Đã xác thực
-                                        </span>
+                                        @if ($isConfirmed)
+                                            <span class="text-emerald-700 font-sans font-bold flex items-center gap-1">
+                                                <svg class="w-3 h-3 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
+                                                Đã xác nhận
+                                            </span>
+                                        @else
+                                            <span class="font-sans font-bold {{ $isCancelled ? 'text-rose-700' : 'text-amber-700' }}">{{ $booking->status_label }}</span>
+                                        @endif
                                     </div>
                                 </div>
                             </div>
 
-                            <!-- Right: High-Res Real QR Code Pass Stub (5 Cols) -->
+                            <!-- Right: Ticket Stub (5 Cols) -->
                             <div class="md:col-span-5 p-6 sm:p-7 bg-gradient-to-br from-slate-50/90 via-amber-50/20 to-rose-50/10 flex flex-col items-center justify-between text-center gap-4 relative">
-                                
+
                                 <!-- Header of Stub -->
                                 <div class="w-full">
                                     <span class="text-[9px] font-black uppercase tracking-widest text-slate-400 block mb-0.5 font-mono">
-                                        GATE CHECK-IN PASS
+                                        MÃ VÉ ĐIỆN TỬ
                                     </span>
-                                    <span class="text-xs text-slate-800 font-bold block">Quét Mã Vào Cổng Khán Phòng</span>
+                                    <span class="text-xs text-slate-800 font-bold block">
+                                        @if ($isConfirmed)
+                                            Xuất trình mã này khi check-in
+                                        @elseif ($isCancelled)
+                                            Vé đã hủy, không còn hiệu lực
+                                        @else
+                                            Đơn đang chờ xác nhận
+                                        @endif
+                                    </span>
                                 </div>
 
-                                <!-- Ultra-Sharp QR Code Card with Viewfinder Styling -->
-                                <div class="p-3.5 bg-white rounded-2xl shadow-md border border-slate-200/90 space-y-2 relative group hover:border-[#C08497] transition-all">
-                                    <!-- Viewfinder HUD Corner Accents -->
-                                    <div class="w-2.5 h-2.5 border-t-2 border-l-2 border-[#C08497] absolute top-2 left-2 rounded-tl-sm pointer-events-none"></div>
-                                    <div class="w-2.5 h-2.5 border-t-2 border-r-2 border-[#C08497] absolute top-2 right-2 rounded-tr-sm pointer-events-none"></div>
-                                    <div class="w-2.5 h-2.5 border-b-2 border-l-2 border-[#C08497] absolute bottom-2 left-2 rounded-bl-sm pointer-events-none"></div>
-                                    <div class="w-2.5 h-2.5 border-b-2 border-r-2 border-[#C08497] absolute bottom-2 right-2 rounded-br-sm pointer-events-none"></div>
+                                @if ($isConfirmed)
+                                    <!-- QR Code Card with Viewfinder Styling -->
+                                    <div class="p-3.5 bg-white rounded-2xl shadow-md border border-slate-200/90 space-y-2 relative group hover:border-[#C08497] transition-all">
+                                        <!-- Viewfinder HUD Corner Accents -->
+                                        <div class="w-2.5 h-2.5 border-t-2 border-l-2 border-[#C08497] absolute top-2 left-2 rounded-tl-sm pointer-events-none"></div>
+                                        <div class="w-2.5 h-2.5 border-t-2 border-r-2 border-[#C08497] absolute top-2 right-2 rounded-tr-sm pointer-events-none"></div>
+                                        <div class="w-2.5 h-2.5 border-b-2 border-l-2 border-[#C08497] absolute bottom-2 left-2 rounded-bl-sm pointer-events-none"></div>
+                                        <div class="w-2.5 h-2.5 border-b-2 border-r-2 border-[#C08497] absolute bottom-2 right-2 rounded-br-sm pointer-events-none"></div>
 
-                                    <!-- QR Image -->
-                                    <div class="w-32 h-32 bg-white rounded-xl p-1 flex items-center justify-center overflow-hidden">
-                                        <img 
-                                            src="https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=TICKETBOX_AUTH_PASS_{{ $booking->booking_code }}" 
-                                            alt="Check-in QR Code" 
-                                            class="w-full h-full object-contain"
-                                            loading="lazy"
-                                        >
-                                    </div>
+                                        <!-- QR Image (chứa mã đặt vé) -->
+                                        <div class="w-32 h-32 bg-white rounded-xl p-1 flex items-center justify-center overflow-hidden">
+                                            <img
+                                                src="https://api.qrserver.com/v1/create-qr-code/?size=250x250&data={{ urlencode($booking->booking_code) }}"
+                                                alt="Mã QR của vé {{ $booking->booking_code }}"
+                                                class="w-full h-full object-contain"
+                                                loading="lazy"
+                                            >
+                                        </div>
 
-                                    <div class="pt-0.5">
-                                        <span class="font-mono text-xs font-black text-slate-900 block tracking-widest">{{ $booking->booking_code }}</span>
-                                        <span class="text-[9px] font-bold text-emerald-700 uppercase tracking-wider block mt-0.5">✓ HỢP LỆ ĐỐI SOÁT CỔNG</span>
+                                        <div class="pt-0.5">
+                                            <span class="font-mono text-xs font-black text-slate-900 block tracking-widest">{{ $booking->booking_code }}</span>
+                                        </div>
                                     </div>
-                                </div>
+                                @else
+                                    <div class="w-full p-4 rounded-2xl border border-dashed {{ $isCancelled ? 'border-rose-300 bg-rose-50/60 text-rose-800' : 'border-amber-300 bg-amber-50/60 text-amber-800' }} text-xs font-bold">
+                                        <span class="font-mono block tracking-widest {{ $isCancelled ? 'line-through' : '' }}">{{ $booking->booking_code }}</span>
+                                        <span class="block mt-1 uppercase text-[10px] tracking-wider">{{ $booking->status_label }}</span>
+                                    </div>
+                                @endif
 
                                 <!-- Total Price Block -->
                                 <div>
                                     <span class="text-[10px] text-slate-500 uppercase tracking-wider block font-bold">Tổng chi phí thanh toán</span>
-                                    <span class="font-display font-black text-[#976D00] text-xl sm:text-2xl">{{ number_format($booking->total_price) }}₫</span>
+                                    <span class="font-display font-black text-[#976D00] text-xl sm:text-2xl">{{ number_format($booking->total_price, 0, ',', '.') }}₫</span>
+                                    @if ($booking->discount_amount > 0)
+                                        <span class="text-[11px] text-emerald-700 font-bold block mt-0.5">
+                                            Đã giảm {{ number_format($booking->discount_amount, 0, ',', '.') }}₫{{ $booking->discount_code ? ' (mã '.$booking->discount_code.')' : '' }}
+                                        </span>
+                                    @endif
                                 </div>
 
-                                <!-- Download Ticket Button -->
-                                <button 
-                                    type="button" 
-                                    onclick="window.downloadTicketPNG({
-                                        movieTitle: '{{ addslashes($booking->movie->title) }}',
-                                        showtime: '{{ $booking->showtime->start_time->format('H:i - d/m/Y') }}',
-                                        venue: '{{ addslashes($booking->showtime->room->name ?? 'Khán Phòng Sự Kiện') }}',
-                                        seats: '{{ implode(', ', $booking->seats) }}',
-                                        orderCode: '{{ $booking->booking_code }}',
-                                        totalPrice: {{ $booking->total_price }}
-                                    })"
-                                    class="w-full py-2.5 px-4 rounded-xl bg-[#C08497] hover:bg-[#A96B7E] text-white text-xs font-black shadow-md shadow-[#C08497]/25 hover:shadow-[#C08497]/40 flex items-center justify-center gap-1.5 transition-all cursor-pointer group"
-                                >
-                                    <svg class="w-4 h-4 text-white group-hover:-translate-y-0.5 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                                    </svg>
-                                    <span>Lưu vé về máy (PNG)</span>
-                                </button>
+                                @if ($isConfirmed)
+                                    @php
+                                        $ticketData = [
+                                            'eventTitle' => $booking->movie->title,
+                                            'showtime' => $booking->showtime->start_time->format('H:i - d/m/Y'),
+                                            'venue' => $booking->showtime->room->name ?? '',
+                                            'seats' => implode(', ', $booking->seats),
+                                            'orderCode' => $booking->booking_code,
+                                            'totalPrice' => $booking->total_price,
+                                            'discountAmount' => $booking->discount_amount,
+                                            'buyerName' => $booking->buyer_name ?? auth()->user()->name,
+                                            'buyerContact' => implode(' · ', array_filter([$booking->buyer_phone, $booking->buyer_email])),
+                                            'status' => $booking->status,
+                                            'statusLabel' => $booking->status_label,
+                                        ];
+                                    @endphp
+                                    <!-- Download Ticket Button -->
+                                    <button
+                                        type="button"
+                                        onclick="window.downloadTicketPNG(@js($ticketData))"
+                                        class="w-full py-2.5 px-4 rounded-xl bg-[#C08497] hover:bg-[#A96B7E] text-white text-xs font-black shadow-md shadow-[#C08497]/25 hover:shadow-[#C08497]/40 flex items-center justify-center gap-1.5 transition-all cursor-pointer group"
+                                    >
+                                        <svg class="w-4 h-4 text-white group-hover:-translate-y-0.5 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                                        </svg>
+                                        <span>Lưu vé về máy (PNG)</span>
+                                    </button>
+                                @endif
                             </div>
 
                         </div>

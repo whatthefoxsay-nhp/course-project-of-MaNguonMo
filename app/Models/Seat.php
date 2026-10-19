@@ -11,8 +11,15 @@ class Seat extends Model
 {
     use HasFactory;
 
+    protected static function booted(): void
+    {
+        static::saved(fn (self $seat) => $seat->zone_id ? $seat->room?->recalculateCapacity() : null);
+        static::deleted(fn (self $seat) => $seat->zone_id ? $seat->room?->recalculateCapacity() : null);
+    }
+
     protected $fillable = [
         'room_id',
+        'zone_id',
         'row_label',
         'seat_number',
         'type',
@@ -27,6 +34,11 @@ class Seat extends Model
         return $this->belongsTo(Room::class);
     }
 
+    public function zone(): BelongsTo
+    {
+        return $this->belongsTo(RoomZone::class, 'zone_id');
+    }
+
     public function showtimeSeats(): HasMany
     {
         return $this->hasMany(ShowtimeSeat::class);
@@ -34,7 +46,7 @@ class Seat extends Model
 
     public function isVip(): bool
     {
-        return $this->type === 'vip';
+        return in_array($this->type, ['vip', 'vip_gold', 'svip_diamond', 'skybox_suite'], true);
     }
 
     public function getFullCodeAttribute(): string

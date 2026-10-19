@@ -5,9 +5,13 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use Illuminate\View\View;
+use Spatie\Permission\Models\Role;
 
 class UserController extends Controller
 {
@@ -62,6 +66,37 @@ class UserController extends Controller
     }
 
     /**
+     * Store a newly created user account.
+     */
+    public function store(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class],
+            'phone' => ['nullable', 'string', 'max:20', 'regex:/^[0-9+\-\s()]*$/'],
+            'password' => ['required', 'string', 'min:8'],
+            'role' => ['required', 'string', 'in:admin,user'],
+            'is_active' => ['nullable', 'boolean'],
+        ]);
+
+        $user = User::create([
+            'name' => $validated['name'],
+            'email' => $validated['email'],
+            'phone' => $validated['phone'] ?? null,
+            'password' => $validated['password'],
+            'is_active' => $request->boolean('is_active', true),
+        ]);
+
+        Role::firstOrCreate(['name' => $validated['role'], 'guard_name' => 'web']);
+        $user->assignRole($validated['role']);
+
+        $roleText = $validated['role'] === 'admin' ? 'Quản trị viên (Admin)' : 'Khách hàng (User)';
+
+        return redirect()->route('admin.users.index')
+            ->with('success', "Đã tạo thành công tài khoản {$roleText} [{$user->name}].");
+    }
+
+    /**
      * Toggle lock/unlock status of a user account via AJAX.
      */
     public function toggleStatus(Request $request, User $user): JsonResponse
@@ -89,5 +124,46 @@ class UserController extends Controller
                 'status_label' => $user->is_active ? 'Đang hoạt động' : 'Đã bị khóa',
             ],
         ]);
+    }
+
+    /**
+     * Toggle admin / user role for an account.
+     */
+    public function toggleRole(Request $request, User $user): RedirectResponse
+    {
+        if ($user->id === Auth::id()) {
+            return back()->with('error', 'Bạn không thể tự thay đổi vai trò của chính mình.');
+        }
+
+        if ($user->hasRole('admin')) {
+            $user->removeRole('admin');
+            $user->assignRole('user');
+            $roleName = 'Khách hàng (User)';
+        } else {
+            $user->removeRole('user');
+            $user->assignRole('admin');
+            $roleName = 'Quản trị viên (Admin)';
+        }
+
+        return back()->with('success', "Đã cập nhật vai trò của tài khoản [{$user->name}] thành {$roleName}.");
+    }
+
+    /**
+     * Reset password to a random temporary password and sign the user out everywhere.
+     */
+    public function resetPassword(Request $request, User $user): RedirectResponse
+    {
+        $tempPassword = Str::password(10, symbols: false);
+        $user->password = $tempPassword;
+        $user->setRememberToken(Str::random(60));
+        $user->save();
+
+        // Đăng xuất mọi thiết bị: remember_token đã đổi ở trên; phiên lưu DB thì xóa luôn.
+        // Driver khác (file/redis) không tra được theo user, phiên cũ hết khi hết hạn.
+        if (config('session.driver') === 'database') {
+            DB::table(config('session.table', 'sessions'))->where('user_id', $user->id)->delete();
+        }
+
+        return back()->with('success', "Đã đặt lại mật khẩu cho tài khoản [{$user->name}]. Mật khẩu tạm thời (chỉ hiển thị một lần): {$tempPassword}");
     }
 }

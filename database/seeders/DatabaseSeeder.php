@@ -6,31 +6,33 @@ use App\Models\Booking;
 use App\Models\BookingItem;
 use App\Models\Category;
 use App\Models\Comment;
+use App\Models\Discount;
 use App\Models\Event;
-use App\Models\Movie;
 use App\Models\Room;
-use App\Models\Seat;
 use App\Models\Showtime;
-use App\Models\ShowtimeSeat;
 use App\Models\User;
+use App\Services\RoomSeatGenerator;
+use App\Services\ShowtimeSeatGenerator;
+use App\Services\ZoneLayoutGenerator;
+use App\Models\RoomZone;
+use App\Support\TicketTiers;
 use Carbon\Carbon;
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\Hash;
 use Spatie\Permission\Models\Role;
 
 class DatabaseSeeder extends Seeder
 {
     /**
-     * Seed the application's database with Event categories and mock data:
-     * Concert, Hòa Nhạc, Hội Thảo, Triển Lãm, Fan Meeting, Nhạc Kịch, Festival, Workshop.
+     * Seed the application's database with Event categories, venues, events, showtimes and sample bookings.
      */
-    public function run(): void
+    public function run(RoomSeatGenerator $roomSeats, ShowtimeSeatGenerator $showtimeSeats, ZoneLayoutGenerator $zoneLayouts): void
     {
         // 1. Setup Spatie Roles
-        $adminRole = Role::firstOrCreate(['name' => 'admin', 'guard_name' => 'web']);
-        $userRole = Role::firstOrCreate(['name' => 'user', 'guard_name' => 'web']);
+        $this->call(RoleSeeder::class);
+        $adminRole = Role::where('name', 'admin')->first();
+        $userRole = Role::where('name', 'user')->first();
 
-        // 2. Create Users & Staff
+        // 2. Create Official Demo Users (Admin & Customer)
         $admin = User::firstOrCreate(
             ['email' => 'admin@ticketbox.vn'],
             [
@@ -43,51 +45,19 @@ class DatabaseSeeder extends Seeder
         );
         $admin->syncRoles([$adminRole]);
 
-        $subAdmin = User::firstOrCreate(
-            ['email' => 'moderator@ticketbox.vn'],
+        $demoUser = User::firstOrCreate(
+            ['email' => 'user@ticketbox.vn'],
             [
-                'name' => 'Trần Quản Lý (Moderator)',
-                'phone' => '0908889999',
-                'password' => 'password',
+                'name' => 'Nguyễn Văn Khách',
+                'phone' => '0912345678',
                 'is_active' => true,
+                'password' => 'password',
                 'email_verified_at' => now(),
             ]
         );
-        $subAdmin->syncRoles([$adminRole]);
+        $demoUser->syncRoles([$userRole]);
 
-        $sampleUsers = [
-            ['name' => 'Nguyễn Văn Khách', 'email' => 'user@ticketbox.vn', 'phone' => '0912345678', 'is_active' => true],
-            ['name' => 'Lê Thu Trang', 'email' => 'lethutrang@gmail.com', 'phone' => '0987654321', 'is_active' => true],
-            ['name' => 'Trần Đình Khôi', 'email' => 'trandinhkhoi@gmail.com', 'phone' => '0933112233', 'is_active' => false],
-            ['name' => 'Phạm Minh Hoàng', 'email' => 'phamminhhoang@gmail.com', 'phone' => '0944556677', 'is_active' => true],
-            ['name' => 'Hoàng Thu Thảo', 'email' => 'hoangthao@gmail.com', 'phone' => '0966778899', 'is_active' => true],
-            ['name' => 'Nguyễn Hải Đăng', 'email' => 'nguyenhaidang@gmail.com', 'phone' => '0911223344', 'is_active' => false],
-            ['name' => 'Vũ Minh Trí', 'email' => 'vuminhtri@gmail.com', 'phone' => '0977889900', 'is_active' => true],
-            ['name' => 'Đặng Thị Mai', 'email' => 'dangthimai@gmail.com', 'phone' => '0922334455', 'is_active' => true],
-            ['name' => 'Bùi Duy Khánh', 'email' => 'buiduykhanh@gmail.com', 'phone' => '0955667788', 'is_active' => true],
-            ['name' => 'Nguyễn Kim Ngân', 'email' => 'nguyenkimngan@gmail.com', 'phone' => '0933445566', 'is_active' => true],
-            ['name' => 'Đỗ Gia Huy', 'email' => 'dogiahuy@gmail.com', 'phone' => '0988990011', 'is_active' => true],
-        ];
-
-        $demoUser = null;
-        foreach ($sampleUsers as $uData) {
-            $u = User::firstOrCreate(
-                ['email' => $uData['email']],
-                [
-                    'name' => $uData['name'],
-                    'phone' => $uData['phone'],
-                    'is_active' => $uData['is_active'],
-                    'password' => 'password',
-                    'email_verified_at' => now(),
-                ]
-            );
-            $u->syncRoles([$userRole]);
-            if ($uData['email'] === 'user@ticketbox.vn') {
-                $demoUser = $u;
-            }
-        }
-
-        // 3. Create Event Categories according to specific categories requirements
+        // 3. Create Event Categories
         $categoriesData = [
             [
                 'name' => 'Concert',
@@ -136,244 +106,285 @@ class DatabaseSeeder extends Seeder
             $categories[$cat['slug']] = Category::updateOrCreate(['slug' => $cat['slug']], $cat);
         }
 
-        // 4. Create Event Venues / Auditoriums (Rooms)
-        $room1 = Room::updateOrCreate(
-            ['name' => 'Khán Phòng Hòa Nhạc Saigon Grand Hall'],
-            [
-                'address' => 'Nhà Hát Thành Phố, 07 Công Trường Lam Sơn, Bến Nghé, Quận 1, TP.HCM',
-                'latitude' => 10.776600,
-                'longitude' => 106.703200,
-                'capacity' => 60,
-            ]
+        // 4. Khán phòng / địa điểm
+        $rooms = [];
+        foreach (self::VENUES as $key => $venue) {
+            $rooms[$key] = Room::updateOrCreate(['name' => $venue['name']], $venue);
+            if ($rooms[$key]->seats()->doesntExist() && $rooms[$key]->zones()->doesntExist()) {
+                $isZoneMode = $key === 'secc' || in_array($venue['layout_preset'], ['mega_concert', 'sayhi_concert', 'sayhi_concert_d2', 'outdoor_concert'], true);
+                if ($isZoneMode) {
+                    $definitions = $key === 'secc'
+                        ? [[
+                            'code' => 'EXPO', 'name' => 'Vé vào khu triển lãm', 'kind' => RoomZone::KIND_ADMISSION,
+                            'seat_type' => 'cat1_stand', 'ticket_tier' => 'standard_pass', 'capacity' => $venue['capacity'],
+                        ]]
+                        : $this->zoneDefinitionsForPreset($roomSeats, $venue['layout_preset']);
+                    $zoneLayouts->generate($rooms[$key], $definitions);
+                } else {
+                    $roomSeats->generate($rooms[$key], $venue['layout_preset'], $rooms[$key]->seat_config ?? []);
+                }
+            }
+            $rooms[$key]->forceFill([
+                'diagram_mode' => $key === 'secc' || in_array($venue['layout_preset'], ['mega_concert', 'sayhi_concert', 'sayhi_concert_d2', 'outdoor_concert'], true)
+                    ? Room::MODE_ZONES
+                    : Room::MODE_SEATS,
+            ])->saveQuietly();
+        }
+
+        // 5. Sự kiện (nội dung chuyển từ DemoCatalog)
+        $events = [];
+        $basePrices = [];
+        foreach (require __DIR__.'/data/events.php' as $row) {
+            [, $type, $title, $slug, $demoCategoryId, $description, $duration, $basePrice, $isSeated, $details] = $row;
+
+            $events[$slug] = Event::updateOrCreate(['slug' => $slug], [
+                'type' => $type,
+                'title' => $title,
+                'category_id' => $categories[self::CATEGORY_BY_DEMO_ID[$demoCategoryId]]->id,
+                'description' => $description,
+                'duration_minutes' => $duration,
+                'poster_path' => "https://picsum.photos/seed/{$slug}/480/720",
+                'status' => 'published',
+                'is_seated' => $isSeated,
+                'details' => $details,
+                'release_date' => now()->toDateString(),
+            ]);
+            $basePrices[$slug] = $basePrice;
+        }
+
+        // 6. Suất diễn (không chồng giờ trong cùng khán phòng)
+        $today = Carbon::today();
+        $showtimes = [];
+        foreach (self::SCHEDULE as [$slug, $roomKey, $dayOffset, $start, $end]) {
+            $startAt = $today->copy()->addDays($dayOffset)->setTimeFromTimeString($start);
+            $showtime = Showtime::firstOrCreate(
+                ['event_id' => $events[$slug]->id, 'room_id' => $rooms[$roomKey]->id, 'start_time' => $startAt],
+                [
+                    'end_time' => $today->copy()->addDays($dayOffset)->setTimeFromTimeString($end),
+                    'base_price' => $basePrices[$slug],
+                ]
+            );
+            $showtimeSeats->generate($showtime);
+            $showtimes[$slug] ??= $showtime;
+        }
+
+        // 7. Đơn đặt vé mẫu cho tài khoản demo
+        if ($demoUser) {
+            $this->seedBooking($demoUser, $showtimes['hoa-nhac-giao-huong-saigon-philharmonic'], 2, 'TBX-89214', 'confirmed');
+            $this->seedBooking($demoUser, $showtimes['nhac-kich-les-miserables-vn'], 1, 'TBX-77102', 'cancelled');
+        }
+
+        // 8. Bình luận mẫu
+        Comment::firstOrCreate(
+            ['user_id' => $demoUser?->id ?? $admin->id, 'event_id' => $events['hoa-nhac-giao-huong-saigon-philharmonic']->id],
+            ['content' => 'Khán phòng cách âm tuyệt vời, dàn nhạc giao hưởng chơi xuất thần và rất truyền cảm hứng!']
+        );
+        Comment::firstOrCreate(
+            ['user_id' => $admin->id, 'event_id' => $events['live-concert-anh-trai-vuot-ngan-chong-gai-2026']->id],
+            ['content' => 'Sân khấu quy mô khủng, hệ thống ghế ngồi khán đài được phân luồng rất khoa học.']
+        );
+        Comment::firstOrCreate(
+            ['user_id' => $admin->id, 'event_id' => $events['live-concert-anh-trai-say-hi-2026']->id],
+            ['content' => 'Concert Anh Trai Say Hi quá đỉnh! Visual sân khấu và âm thanh bùng nổ thực sự.']
         );
 
-        $room2 = Room::updateOrCreate(
-            ['name' => 'Trung Tâm Hội Nghị & Triển Lãm SECC Hall A'],
+        // 9. Create Standard Discounts / Vouchers
+        $discountsData = [
             [
-                'address' => '799 Nguyễn Văn Linh, Tân Phú, Quận 7, TP.HCM',
-                'latitude' => 10.730200,
-                'longitude' => 106.721800,
-                'capacity' => 80,
-            ]
-        );
-
-        $room3 = Room::updateOrCreate(
-            ['name' => 'Sân Khấu Live Concert Sân Vận Động QK7'],
-            [
-                'address' => 'Sân Vận Động Quân Khu 7, Hoàng Văn Thụ, Tân Bình, TP.HCM',
-                'latitude' => 10.800500,
-                'longitude' => 106.665800,
-                'capacity' => 100,
-            ]
-        );
-
-        $room4 = Room::updateOrCreate(
-            ['name' => 'Nhà Hát Lớn Hòa Bình (Main Auditorium)'],
-            [
-                'address' => '240 đường 3 Tháng 2, Phường 12, Quận 10, TP.HCM',
-                'latitude' => 10.771200,
-                'longitude' => 106.674500,
-                'capacity' => 70,
-            ]
-        );
-
-        // 5. Generate Physical Seats for each Venue
-        $this->generateSeatsForRoom($room1, ['A', 'B', 'C', 'D', 'E', 'F'], 10, ['E', 'F']);
-        $this->generateSeatsForRoom($room2, ['A', 'B', 'C', 'D'], 20, ['A', 'B']);
-        $this->generateSeatsForRoom($room3, ['A', 'B', 'C', 'D', 'E'], 20, ['D', 'E']);
-        $this->generateSeatsForRoom($room4, ['A', 'B', 'C', 'D', 'E', 'F', 'G'], 10, ['A', 'B']);
-
-        // 6. Create Events matching the categories
-        $eventsData = [
-            [
-                'type' => 'event',
-                'title' => 'Live Concert: Anh Trai Vượt Ngàn Chông Gai 2026',
-                'slug' => 'live-concert-anh-trai-vuot-ngan-chong-gai-2026',
-                'category_id' => $categories['concert']->id,
-                'duration_minutes' => 240,
-                'description' => 'Đại nhạc hội bùng nổ quy tụ hơn 30 anh tài hàng đầu với sân khấu 360 độ, hiệu ứng pháo hoa, laser tiêu chuẩn quốc tế.',
-                'poster_path' => 'https://picsum.photos/seed/concert-anh-trai-2026/480/720',
-                'status' => 'published',
-                'release_date' => now()->addDays(15),
+                'code' => 'TICKETBOX2026',
+                'title' => 'Ưu đãi chào mừng thành viên mới 2026',
+                'discount_type' => 'percentage',
+                'discount_value' => 20,
+                'min_order_value' => 200000,
+                'max_discount_amount' => 100000,
+                'used_count' => 14,
+                'max_uses' => 500,
+                'is_active' => true,
+                'start_date' => now()->startOfYear(),
+                'end_date' => now()->endOfYear(),
+                'applicable_to' => 'Tất cả sự kiện & concert',
             ],
             [
-                'type' => 'event',
-                'title' => 'Đêm Hòa Nhạc Giao Hưởng: The Sound of Saigon Philharmonic',
-                'slug' => 'hoa-nhac-giao-huong-saigon-philharmonic',
-                'category_id' => $categories['hoa-nhac']->id,
-                'duration_minutes' => 120,
-                'description' => 'Hành trình âm nhạc thính phòng đỉnh cao đưa khán giả đắm chìm trong các kiệt tác của Mozart, Beethoven và Tchaikovsky.',
-                'poster_path' => 'https://picsum.photos/seed/symphony-philharmonic/480/720',
-                'status' => 'published',
-                'release_date' => now()->addDays(5),
+                'code' => 'VIPCONCERT30',
+                'title' => 'Giảm 30% cho khách hàng VIP đặt vé sớm',
+                'discount_type' => 'percentage',
+                'discount_value' => 30,
+                'min_order_value' => 500000,
+                'max_discount_amount' => 300000,
+                'used_count' => 8,
+                'max_uses' => 100,
+                'is_active' => true,
+                'start_date' => now()->subMonths(1),
+                'end_date' => now()->addMonths(6),
+                'applicable_to' => 'Vé VIP & Super VIP',
             ],
             [
-                'type' => 'event',
-                'title' => 'Vietnam Tech Summit & Global AI Expo 2026',
-                'slug' => 'vietnam-tech-summit-ai-expo-2026',
-                'category_id' => $categories['hoi-thao']->id,
-                'duration_minutes' => 480,
-                'description' => 'Diễn đàn trí tuệ nhân tạo và công nghệ tương lai hàng đầu với hơn 50 diễn giả chuyên gia từ Google, OpenAI, Microsoft và Nvidia.',
-                'poster_path' => 'https://picsum.photos/seed/tech-summit-expo/480/720',
-                'status' => 'published',
-                'release_date' => now()->addDays(10),
-            ],
-            [
-                'type' => 'event',
-                'title' => 'Triển Lãm Đa Giác Quan: Van Gogh & Impressionism Experience',
-                'slug' => 'trien-lam-nghe-thuat-van-gogh-impressionism',
-                'category_id' => $categories['trien-lam']->id,
-                'duration_minutes' => 90,
-                'description' => 'Không gian ánh sáng tương tác đa giác quan 360 độ đưa người xem đắm chìm vào thế giới hội họa kiệt tác của Vincent Van Gogh.',
-                'poster_path' => 'https://picsum.photos/seed/van-gogh-exhibition/480/720',
-                'status' => 'published',
-                'release_date' => now()->addDays(2),
-            ],
-            [
-                'type' => 'event',
-                'title' => 'Fan Meeting 2026: Gặp Gỡ & Ký Tặng Dàn Cast Running Man VN',
-                'slug' => 'fan-meeting-running-man-vn-2026',
-                'category_id' => $categories['fan-meeting']->id,
-                'duration_minutes' => 150,
-                'description' => 'Đêm fan meeting độc quyền giao lưu, ký tặng fansign 1:1, biểu diễn âm nhạc acoustic và chụp ảnh polaroid cùng thần tượng.',
-                'poster_path' => 'https://picsum.photos/seed/fan-meeting-special/480/720',
-                'status' => 'published',
-                'release_date' => now()->addDays(12),
-            ],
-            [
-                'type' => 'event',
-                'title' => 'Vở Nhạc Kịch Broadway: Những Người Khốn Khổ (Les Misérables VN)',
-                'slug' => 'nhac-kich-les-miserables-vn',
-                'category_id' => $categories['san-khau-kich']->id,
-                'duration_minutes' => 165,
-                'description' => 'Tác phẩm nhạc kịch kinh điển thế giới được chuyển soạn công phu với dàn hợp xướng 80 người và phục trang hoàng gia lộng lẫy.',
-                'poster_path' => 'https://picsum.photos/seed/les-miserables-musical/480/720',
-                'status' => 'published',
-                'release_date' => now()->addDays(8),
-            ],
-            [
-                'type' => 'event',
-                'title' => 'Saigon Autumn Music & Light Festival 2026',
-                'slug' => 'saigon-autumn-music-light-festival-2026',
-                'category_id' => $categories['festival']->id,
-                'duration_minutes' => 360,
-                'description' => 'Lễ hội âm nhạc ngoài trời kết hợp trình diễn nghệ thuật ánh sáng 3D mapping quy mô 20.000 khán giả bên bờ sông Sài Gòn.',
-                'poster_path' => 'https://picsum.photos/seed/music-festival-light/480/720',
-                'status' => 'published',
-                'release_date' => now()->addDays(20),
-            ],
-            [
-                'type' => 'event',
-                'title' => 'Masterclass: Nghệ Thuật Kể Chuyện & Sáng Tạo Phim Bằng AI',
-                'slug' => 'masterclass-sang-tao-phim-ai-2026',
-                'category_id' => $categories['workshop']->id,
-                'duration_minutes' => 240,
-                'description' => 'Buổi workshop thực hành 1 ngày cùng các đạo diễn và giám đốc sáng tạo hàng đầu về ứng dụng AI tạo sinh trong truyền thông.',
-                'poster_path' => 'https://picsum.photos/seed/workshop-masterclass/480/720',
-                'status' => 'published',
-                'release_date' => now()->addDays(6),
+                'code' => 'EARLYBIRD50K',
+                'title' => 'Voucher giảm 50.000đ khi đặt trước 7 ngày',
+                'discount_type' => 'fixed',
+                'discount_value' => 50000,
+                'min_order_value' => 300000,
+                'max_discount_amount' => 50000,
+                'used_count' => 32,
+                'max_uses' => 1000,
+                'is_active' => true,
+                'start_date' => now()->subMonths(2),
+                'end_date' => now()->addMonths(8),
+                'applicable_to' => 'Live Concert & Liveshow',
             ],
         ];
 
-        $createdEvents = [];
-        foreach ($eventsData as $eData) {
-            $createdEvents[] = Event::updateOrCreate(['slug' => $eData['slug']], $eData);
-        }
-
-        // 7. Create Event Schedules / Showtimes
-        $now = Carbon::today();
-
-        // Showtime 1: Concert in Stadium (Tomorrow 19:00)
-        $st1 = Showtime::firstOrCreate(
-            ['event_id' => $createdEvents[0]->id, 'room_id' => $room3->id, 'start_time' => $now->copy()->addDay()->setTime(19, 00)],
-            ['end_time' => $now->copy()->addDay()->setTime(23, 00), 'base_price' => 250000]
-        );
-        $this->generateShowtimeSeats($st1);
-
-        // Showtime 2: Symphony in Saigon Grand Hall (Today 19:30)
-        $st2 = Showtime::firstOrCreate(
-            ['event_id' => $createdEvents[1]->id, 'room_id' => $room1->id, 'start_time' => $now->copy()->setTime(19, 30)],
-            ['end_time' => $now->copy()->setTime(21, 30), 'base_price' => 180000]
-        );
-        $this->generateShowtimeSeats($st2);
-
-        // Showtime 3: Tech Summit in SECC (In 3 days 08:30)
-        $st3 = Showtime::firstOrCreate(
-            ['event_id' => $createdEvents[2]->id, 'room_id' => $room2->id, 'start_time' => $now->copy()->addDays(3)->setTime(8, 30)],
-            ['end_time' => $now->copy()->addDays(3)->setTime(17, 00), 'base_price' => 300000]
-        );
-        $this->generateShowtimeSeats($st3);
-
-        // Showtime 4: Fan Meeting in Hoa Binh Theatre (In 5 days 18:30)
-        $st4 = Showtime::firstOrCreate(
-            ['event_id' => $createdEvents[4]->id, 'room_id' => $room4->id, 'start_time' => $now->copy()->addDays(5)->setTime(18, 30)],
-            ['end_time' => $now->copy()->addDays(5)->setTime(21, 00), 'base_price' => 220000]
-        );
-        $this->generateShowtimeSeats($st4);
-
-        // Showtime 5: Van Gogh Exhibition in SECC (In 2 days 09:00)
-        $st5 = Showtime::firstOrCreate(
-            ['event_id' => $createdEvents[3]->id, 'room_id' => $room2->id, 'start_time' => $now->copy()->addDays(2)->setTime(9, 00)],
-            ['end_time' => $now->copy()->addDays(2)->setTime(18, 00), 'base_price' => 150000]
-        );
-        $this->generateShowtimeSeats($st5);
-
-        // 8. Create Sample Confirmed Bookings for demoUser
-        if ($demoUser) {
-            $sampleSeat1 = $st2->showtimeSeats()->first();
-            if ($sampleSeat1) {
-                $sampleSeat1->update(['status' => 'booked']);
-
-                $booking = Booking::firstOrCreate(
-                    ['booking_code' => 'TBX-89214'],
-                    [
-                        'user_id' => $demoUser->id,
-                        'total_price' => 180000,
-                        'status' => 'confirmed',
-                    ]
-                );
-
-                BookingItem::firstOrCreate(
-                    ['booking_id' => $booking->id, 'showtime_seat_id' => $sampleSeat1->id],
-                    ['price' => 180000]
-                );
-            }
-        }
-
-        // 9. Create Sample Comments
-        Comment::firstOrCreate(
-            ['user_id' => $demoUser ? $demoUser->id : $admin->id, 'event_id' => $createdEvents[1]->id],
-            ['content' => 'Khán phòng cách âm tuyệt vời, dàn nhạc giao hưởng chơi xuất thần và rất truyền cảm hứng!']
-        );
-
-        Comment::firstOrCreate(
-            ['user_id' => $admin->id, 'event_id' => $createdEvents[0]->id],
-            ['content' => 'Sân khấu quy mô khủng, hệ thống ghế ngồi khán đài được phân luồng rất khoa học.']
-        );
-    }
-
-    private function generateSeatsForRoom(Room $room, array $rows, int $seatsPerRow, array $vipRows = []): void
-    {
-        foreach ($rows as $row) {
-            for ($num = 1; $num <= $seatsPerRow; $num++) {
-                $isVip = in_array($row, $vipRows, true);
-                Seat::firstOrCreate(
-                    ['room_id' => $room->id, 'row_label' => $row, 'seat_number' => $num],
-                    ['type' => $isVip ? 'vip' : 'normal']
-                );
-            }
+        foreach ($discountsData as $d) {
+            Discount::firstOrCreate(['code' => $d['code']], $d);
         }
     }
 
-    private function generateShowtimeSeats(Showtime $showtime): void
+    /** id danh mục trong DemoCatalog -> slug danh mục đã seed ở bước 3 */
+    private const CATEGORY_BY_DEMO_ID = [
+        1 => 'concert', 2 => 'hoa-nhac', 3 => 'hoi-thao', 4 => 'trien-lam',
+        5 => 'fan-meeting', 6 => 'san-khau-kich', 7 => 'festival', 8 => 'workshop',
+    ];
+
+    private const VENUES = [
+        'qk7' => [
+            'name' => 'Sân Vận Động Quân Khu 7 (SVĐ QK7 Arena)',
+            'address' => 'Số 202 Hoàng Văn Thụ, Phường 9, Quận Phú Nhuận, TP.HCM',
+            'latitude' => 10.8005, 'longitude' => 106.6658,
+            'capacity' => 252, 'layout_preset' => 'mega_concert',
+        ],
+        'sayhi_arena' => [
+            'name' => 'Sân Vận Động Quân Khu 7 - Sân Khấu Live Concert Anh Trai "Say Hi"',
+            'address' => 'Số 202 Hoàng Văn Thụ, Phường 9, Quận Phú Nhuận, TP.HCM',
+            'latitude' => 10.8005, 'longitude' => 106.6658,
+            'capacity' => 252, 'layout_preset' => 'sayhi_concert',
+        ],
+        'opera' => [
+            'name' => 'Nhà Hát Thành Phố (Saigon Opera House)',
+            'address' => '07 Công Trường Lam Sơn, Bến Nghé, Quận 1, TP.HCM',
+            'latitude' => 10.7766, 'longitude' => 106.7032,
+            'capacity' => 112, 'layout_preset' => 'theater_hall',
+        ],
+        'secc' => [
+            'name' => 'Trung Tâm Hội Nghị & Triển Lãm SECC Hall A',
+            'address' => '799 Nguyễn Văn Linh, Tân Phú, Quận 7, TP.HCM',
+            'latitude' => 10.7302, 'longitude' => 106.7218,
+            'capacity' => 108, 'layout_preset' => 'convention_center',
+        ],
+        'hoabinh' => [
+            'name' => 'Nhà Hát Hòa Bình Main Hall',
+            'address' => '240 đường 3 Tháng 2, Phường 12, Quận 10, TP.HCM',
+            'latitude' => 10.7712, 'longitude' => 106.6745,
+            'capacity' => 112, 'layout_preset' => 'theater_hall',
+        ],
+    ];
+
+    /** [slug sự kiện, khán phòng, cách hôm nay (ngày), giờ bắt đầu, giờ kết thúc] */
+    private const SCHEDULE = [
+        ['live-concert-anh-trai-vuot-ngan-chong-gai-2026', 'qk7', 1, '19:00', '23:00'],
+        ['live-concert-anh-trai-vuot-ngan-chong-gai-2026', 'qk7', 8, '19:00', '23:00'],
+        ['live-concert-anh-trai-say-hi-2026', 'sayhi_arena', 5, '19:00', '23:00'],
+        ['live-concert-anh-trai-say-hi-2026', 'sayhi_arena', 12, '19:00', '23:00'],
+        ['saigon-autumn-music-light-festival-2026', 'qk7', 4, '17:00', '23:00'],
+        ['hoa-nhac-giao-huong-saigon-philharmonic', 'opera', 2, '19:30', '21:30'],
+        ['nhac-kich-les-miserables-vn', 'opera', 3, '19:30', '22:15'],
+        ['nhac-kich-les-miserables-vn', 'opera', 10, '19:30', '22:15'],
+        ['vietnam-tech-summit-ai-expo-2026', 'secc', 5, '08:30', '17:00'],
+        ['trien-lam-nghe-thuat-van-gogh-impressionism', 'secc', 6, '09:00', '18:00'],
+        ['trien-lam-nghe-thuat-van-gogh-impressionism', 'secc', 7, '09:00', '18:00'],
+        ['masterclass-sang-tao-phim-ai-2026', 'secc', 11, '09:00', '17:00'],
+        ['fan-meeting-running-man-vn-2026', 'hoabinh', 3, '18:30', '21:00'],
+    ];
+
+    private function seedBooking(User $user, Showtime $showtime, int $seatCount, string $code, string $status): void
     {
-        $seats = Seat::where('room_id', $showtime->room_id)->get();
-        foreach ($seats as $seat) {
-            ShowtimeSeat::firstOrCreate(
-                ['showtime_id' => $showtime->id, 'seat_id' => $seat->id],
-                ['status' => 'available']
-            );
+        if (Booking::where('booking_code', $code)->exists()) {
+            return;
         }
+
+        $seats = $showtime->showtimeSeats()->with('seat')
+            ->where('status', 'available')
+            ->orderBy('id')
+            ->take($seatCount)
+            ->get();
+
+        $prices = $seats->mapWithKeys(fn ($showtimeSeat) => [
+            $showtimeSeat->id => TicketTiers::seatPrice($showtimeSeat->seat->type, $showtime->base_price),
+        ]);
+
+        $booking = Booking::create([
+            'user_id' => $user->id,
+            'booking_code' => $code,
+            'total_price' => $prices->sum(),
+            'status' => $status,
+            'payment_method' => 'vietqr',
+        ]);
+
+        foreach ($seats as $showtimeSeat) {
+            BookingItem::create([
+                'booking_id' => $booking->id,
+                'showtime_seat_id' => $showtimeSeat->id,
+                'price' => $prices[$showtimeSeat->id],
+            ]);
+
+            if ($status === 'confirmed') {
+                $showtimeSeat->update(['status' => 'booked']);
+            }
+        }
+    }
+
+    /** Convert each legacy preset row into a real seated zone; GA becomes capacity inventory. */
+    private function zoneDefinitionsForPreset(RoomSeatGenerator $generator, string $preset): array
+    {
+        $groups = [];
+        $standingCapacity = 0;
+        foreach ($generator->rowsForPreset($preset) as [$rowLabel, $count, $type]) {
+            if ($type === RoomZone::STANDING_TYPE) {
+                $standingCapacity += $count;
+                continue;
+            }
+
+            $parts = preg_split('/[-_]/', trim($rowLabel));
+            $prefix = strtoupper((string) ($parts[0] ?? $rowLabel));
+            $groups[$prefix.'|'.$type][] = ['row' => $rowLabel, 'count' => $count, 'type' => $type];
+        }
+
+        $zones = [];
+        foreach ($groups as $key => $rows) {
+            [$prefix, $type] = explode('|', $key, 2);
+            $code = substr(preg_replace('/[^A-Z0-9]/i', '', $prefix).match ($type) {
+                'svip_diamond' => 'S', 'vip_gold' => 'V', 'cat1_stand' => 'C1',
+                'cat2_wings' => 'C2', 'skybox_suite' => 'SB', default => 'Z',
+            }, 0, 6);
+            $layoutRows = [];
+            foreach ($rows as $row) {
+                $seats = [];
+                for ($number = 1; $number <= $row['count']; $number++) {
+                    $seats[] = ['number' => $number, 'type' => $row['type']];
+                }
+                $layoutRows[] = ['row' => $row['row'], 'seats' => $seats];
+            }
+            $label = match ($type) {
+                'svip_diamond' => 'SVIP Diamond', 'vip_gold' => 'VIP Gold',
+                'cat1_stand' => 'Khán Đài Cat 1', 'cat2_wings' => 'Khán Đài Cat 2',
+                'skybox_suite' => 'Skybox VIP', default => 'Khu ghế',
+            };
+            $zones[] = [
+                'code' => $code,
+                'name' => $label.' '.$prefix,
+                'kind' => RoomZone::KIND_SEATED,
+                'seat_type' => $type,
+                'layout' => $layoutRows,
+            ];
+        }
+
+        if ($standingCapacity > 0) {
+            $zones[] = [
+                'code' => 'GA', 'name' => 'Khu đứng GA', 'kind' => RoomZone::KIND_STANDING,
+                'seat_type' => RoomZone::STANDING_TYPE, 'ticket_tier' => 'standing_pit',
+                'capacity' => $standingCapacity,
+            ];
+        }
+
+        return $zones;
     }
 }
-

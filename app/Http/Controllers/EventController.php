@@ -2,7 +2,12 @@
 
 namespace App\Http\Controllers;
 
-use App\Support\DemoCatalog;
+use App\Models\Category;
+use App\Models\Event;
+use App\Models\Showtime;
+use App\Services\WeatherService;
+use App\Support\MapEmbed;
+use App\Support\TicketTiers;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
@@ -10,43 +15,73 @@ class EventController extends Controller
 {
     public function index(Request $request): View
     {
-        $query = trim((string) $request->query('q'));
-        $categoryId = $request->query('category');
+        $validated = $request->validate([
+            'q' => ['nullable', 'string', 'max:100'],
+            'category' => ['nullable', 'integer'],
+        ]);
 
-        $events = collect(DemoCatalog::events())
-            ->when($query !== '', fn ($items) => $items->filter(
-                fn ($event) => str_contains(mb_strtolower($event->title), mb_strtolower($query))
-            ))
-            ->when($categoryId, fn ($items) => $items->filter(
-                fn ($event) => (string) $event->category->id === (string) $categoryId
-            ))
-            ->values();
+        $query = trim((string) ($validated['q'] ?? ''));
+        $categoryId = $validated['category'] ?? null;
 
-        $viewName = view()->exists('events.index') ? 'events.index' : 'movies.index';
+        $events = Event::published()
+            ->with('category')
+            ->withMin('showtimes', 'base_price')
+            ->withMin(['showtimes as next_showtime_at' => fn ($q) => $q->where('start_time', '>', now())], 'start_time')
+            ->when($query !== '', fn ($builder) => $builder->where(function ($where) use ($query) {
+                $where->where('title', 'like', "%{$query}%")
+                    ->orWhere('description', 'like', "%{$query}%");
+            }))
+            ->when($categoryId, fn ($builder) => $builder->where('category_id', $categoryId))
+            ->latest('release_date')
+            ->paginate(9)
+            ->withQueryString();
 
-        return view($viewName, [
+        return view('events.index', [
             'events' => $events,
             'movies' => $events,
-            'categories' => DemoCatalog::categories(),
+            'categories' => Category::orderBy('name')->get(),
             'query' => $query,
             'categoryId' => $categoryId,
         ]);
     }
 
-    public function show(string $slug): View
+    public function show(Request $request, string $slug, WeatherService $weatherService): View
     {
-        $event = DemoCatalog::eventBySlug($slug);
+        $event = Event::published()
+            ->with('category')
+            ->withMin('showtimes', 'base_price')
+            ->where('slug', $slug)
+            ->firstOrFail();
 
-        abort_if($event === null, 404);
+        $showtimes = $event->showtimes()
+            ->with('room')
+            ->where('start_time', '>', now())
+            ->orderBy('start_time')
+            ->get();
+        Showtime::primeSessionLabels($event, $showtimes);
 
-        $isSeatedConcert = $event->is_seated_concert ?? true;
-        $viewName = view()->exists('events.show') ? 'events.show' : 'movies.show';
+        // Bản đồ + thời tiết theo khán phòng của suất gần nhất.
+        // Thời tiết chỉ cho địa điểm ngoài trời; không có dự báo thật thì view ẩn hẳn khối thời tiết.
+        $nextShowtime = $showtimes->first();
+        $venue = $nextShowtime?->room;
 
-        return view($viewName, [
+        // Trang đầu bình luận render sẵn; các trang sau tải AJAX qua route comments.index.
+        $commentsPage = CommentController::page($event, $request->user());
+
+        return view('events.show', [
+            'comments' => $commentsPage['data'],
+            'commentsTotal' => $commentsPage['total'],
+            'commentsNextUrl' => $commentsPage['next_page_url'],
             'event' => $event,
             'movie' => $event,
-            'showtimes' => DemoCatalog::showtimesForEvent($event->id),
-            'ticketTiers' => DemoCatalog::ticketTiers($event->base_price ?? 180000, $isSeatedConcert),
+            // View đang dùng !empty($showtimes) và $showtimes[0] nên truyền array, không truyền Collection.
+            'showtimes' => $showtimes->all(),
+            'ticketTiers' => TicketTiers::for($event->base_price ?? 180000, $event->is_seated),
+            'venue' => $venue,
+            'mapUrl' => $venue ? MapEmbed::url($venue) : null,
+            'directionsUrl' => $venue ? MapEmbed::directionsUrl($venue) : null,
+            'weather' => $venue?->isOutdoor() ? $weatherService->forecastFor($venue, $nextShowtime->start_time) : null,
+            'weatherShowtime' => $nextShowtime,
         ]);
     }
 }

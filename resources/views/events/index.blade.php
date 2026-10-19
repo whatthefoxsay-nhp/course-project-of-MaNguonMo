@@ -1,4 +1,4 @@
-<x-site-layout :title="'Danh Sách Sự Kiện, Concert & Hội Thảo - TicketBox'">
+<x-site-layout :title="'Danh Sách Sự Kiện, Concert & Hội Thảo'">
     @php
         $eventList = $events ?? $movies ?? collect();
     @endphp
@@ -84,6 +84,10 @@
                 @foreach ($eventList as $event)
                     <x-event-card :event="$event" />
                 @endforeach
+            </div>
+
+            <div class="mt-10">
+                {{ $eventList->links('vendor.pagination.custom') }}
             </div>
         @endif
 

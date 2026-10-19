@@ -5,7 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <title>{{ $title ?? 'Đặt Vé Sự Kiện, Concert & Hội Thảo Trực Tuyến' }} - TicketBox Official</title>
+    {{-- Một hậu tố thương hiệu duy nhất, kể cả khi view con đã tự thêm "- TicketBox". --}}
+    <title>{{ preg_replace('/\s*-\s*TicketBox(\s+\S+)?\s*$/u', '', $title ?? 'Đặt Vé Sự Kiện, Concert & Hội Thảo Trực Tuyến') }} - TicketBox</title>
 
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -21,10 +22,16 @@
 >
     <!-- Background Ambient Luxury Glows (Depth & Texture) -->
     <div class="fixed inset-0 pointer-events-none z-0 overflow-hidden">
-        <div class="absolute -top-[20%] -left-[10%] w-[55vw] h-[55vw] rounded-full bg-[#C08497]/8 blur-[130px]"></div>
-        <div class="absolute top-[30%] -right-[15%] w-[50vw] h-[50vw] rounded-full bg-[#D4AF37]/8 blur-[140px]"></div>
-        <div class="absolute bottom-[10%] left-[15%] w-[45vw] h-[45vw] rounded-full bg-[#3A5A40]/6 blur-[130px]"></div>
+        <div class="absolute -top-[20%] -left-[10%] w-[55vw] h-[55vw] rounded-full bg-[#C08497]/[0.08] blur-[130px]"></div>
+        <div class="absolute top-[30%] -right-[15%] w-[50vw] h-[50vw] rounded-full bg-[#D4AF37]/[0.08] blur-[140px]"></div>
+        <div class="absolute bottom-[10%] left-[15%] w-[45vw] h-[45vw] rounded-full bg-[#3A5A40]/[0.06] blur-[130px]"></div>
     </div>
+
+    @php
+        $navCartCount = auth()->check() ? \App\Models\ShowtimeSeat::heldBy(auth()->user())->count() : 0;
+        $upcomingShowtimes = $upcomingShowtimes ?? collect();
+        $soonShowtimes = $upcomingShowtimes->filter(fn ($s) => \App\Support\UpcomingShowtimes::isSoon($s));
+    @endphp
 
     <!-- Full-Width Modern Luxury Navbar -->
     <header class="sticky top-0 z-40 w-full bg-white/95 backdrop-blur-xl border-b border-black/10 shadow-sm transition-all">
@@ -55,103 +62,94 @@
             </div>
 
             <!-- Center: Multi-Category Event Navigation Links (Desktop) -->
-            <nav class="hidden lg:flex items-center gap-1 xl:gap-2 text-xs xl:text-sm font-semibold min-w-0">
-                <a href="{{ route('home') }}" class="px-2.5 xl:px-3.5 py-1.5 xl:py-2 rounded-full transition-colors whitespace-nowrap {{ request()->routeIs('home') ? 'bg-[#000000] text-white font-bold' : 'text-gray-700 hover:text-black hover:bg-black/5' }}">
+            <nav class="hidden lg:flex items-center gap-1 xl:gap-2 text-xs xl:text-sm font-semibold shrink-0">
+                <a href="{{ route('home') }}" class="px-2.5 xl:px-3 py-1.5 rounded-full transition-colors whitespace-nowrap {{ request()->routeIs('home') ? 'bg-[#000000] text-white font-bold' : 'text-gray-700 hover:text-black hover:bg-black/5' }}">
                     Trang chủ
                 </a>
 
-                @if (auth()->user()?->hasRole('admin'))
-                    <a href="{{ route('admin.dashboard') }}" class="px-2.5 xl:px-3.5 py-1.5 xl:py-2 rounded-full transition-colors text-gold-dark font-bold hover:text-black hover:bg-[#FFF8E1] inline-flex items-center gap-1.5 whitespace-nowrap">
-                        <span>Trang Quản Trị</span>
-                    </a>
-                @else
-                    <!-- Concert & Events Dropdown with seamless hover bridge -->
-                    <div 
-                        class="relative" 
-                        x-data="{ open: false, timeout: null }" 
-                        @mouseenter="clearTimeout(timeout); open = true" 
-                        @mouseleave="timeout = setTimeout(() => { open = false }, 200)"
+                <!-- Concert & Events Dropdown with seamless hover bridge -->
+                <div 
+                    class="relative" 
+                    x-data="{ open: false, timeout: null }" 
+                    @mouseenter="clearTimeout(timeout); open = true" 
+                    @mouseleave="timeout = setTimeout(() => { open = false }, 200)"
+                >
+                    <button 
+                        @click="open = !open"
+                        class="flex items-center gap-1 px-2.5 xl:px-3 py-1.5 rounded-full text-gray-700 hover:text-black hover:bg-black/5 transition-colors whitespace-nowrap {{ request()->routeIs('events.*', 'movies.*') ? 'text-black font-bold bg-black/5' : '' }}"
                     >
-                        <button 
-                            @click="open = !open"
-                            class="flex items-center gap-1 px-2.5 xl:px-3.5 py-1.5 xl:py-2 rounded-full text-gray-700 hover:text-black hover:bg-black/5 transition-colors whitespace-nowrap {{ request()->routeIs('movies.*') ? 'text-black font-bold bg-black/5' : '' }}"
-                        >
-                            <span>Khám Phá Sự Kiện</span>
-                            <svg class="w-3.5 h-3.5 opacity-60 transition-transform duration-200" :class="open ? 'rotate-180' : ''" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-                            </svg>
-                        </button>
+                        <span class="hidden 2xl:inline">Khám Phá </span><span>Sự Kiện</span>
+                        <svg class="w-3.5 h-3.5 opacity-60 transition-transform duration-200" :class="open ? 'rotate-180' : ''" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                        </svg>
+                    </button>
 
-                        <!-- Dropdown panel with seamless hover hit area (pt-2 wrapper) -->
-                        <div 
-                            x-show="open" 
-                            x-transition:enter="ease-out duration-150" 
-                            x-transition:enter-start="opacity-0 translate-y-1" 
-                            x-transition:enter-end="opacity-100 translate-y-0"
-                            x-transition:leave="ease-in duration-100"
-                            x-transition:leave-start="opacity-100 translate-y-0"
-                            x-transition:leave-end="opacity-0 translate-y-1"
-                            @click.away="open = false"
-                            class="absolute left-0 top-full pt-1.5 w-72 z-50"
-                            style="display: none;"
-                        >
-                            <div class="bg-white rounded-3xl p-3 border border-black/10 shadow-[0_20px_45px_-15px_rgba(0,0,0,0.18)] text-xs space-y-1 max-h-[80vh] overflow-y-auto">
-                                <a href="{{ route('movies.index') }}" class="flex items-center justify-between px-3.5 py-2.5 rounded-2xl text-gray-800 hover:bg-[#FAF9F6] font-semibold transition-colors">
-                                    <span>Tất cả sự kiện &amp; show diễn</span>
-                                    <span class="badge-rose text-[9px] px-2 py-0.5 rounded-full font-bold">Hot</span>
-                                </a>
-                                <a href="{{ route('movies.index', ['q' => 'Concert']) }}" class="flex items-center justify-between px-3.5 py-2 rounded-2xl text-gray-800 hover:bg-[#FAF9F6] font-semibold transition-colors">
-                                    <span>Live Concert</span>
-                                    <span class="badge-gold text-[9px] px-2 py-0.5 rounded-full font-bold">VIP</span>
-                                </a>
-                                <a href="{{ route('movies.index', ['q' => 'Hòa Nhạc']) }}" class="block px-3.5 py-2 rounded-2xl text-gray-700 hover:bg-[#FAF9F6] font-medium transition-colors">
-                                    Hòa Nhạc &amp; Giao Hưởng
-                                </a>
-                                <a href="{{ route('movies.index', ['q' => 'Hội Thảo']) }}" class="block px-3.5 py-2 rounded-2xl text-gray-700 hover:bg-[#FAF9F6] font-medium transition-colors">
-                                    Hội Thảo &amp; Diễn Đàn
-                                </a>
-                                <a href="{{ route('movies.index', ['q' => 'Triển Lãm']) }}" class="block px-3.5 py-2 rounded-2xl text-gray-700 hover:bg-[#FAF9F6] font-medium transition-colors">
-                                    Triển Lãm &amp; Trải Nghiệm
-                                </a>
-                                <a href="{{ route('movies.index', ['q' => 'Fan Meeting']) }}" class="flex items-center justify-between px-3.5 py-2 rounded-2xl text-gray-800 hover:bg-[#FAF9F6] font-semibold transition-colors">
-                                    <span>Fan Meeting &amp; Ký Tặng</span>
-                                    <span class="bg-pink-100 text-pink-800 text-[9px] px-2 py-0.5 rounded-full font-bold">Exclusive</span>
-                                </a>
-                                <a href="{{ route('movies.index', ['q' => 'Nhạc Kịch']) }}" class="block px-3.5 py-2 rounded-2xl text-gray-700 hover:bg-[#FAF9F6] font-medium transition-colors">
-                                    Nhạc Kịch &amp; Sân Khấu
-                                </a>
-                                <a href="{{ route('movies.index', ['q' => 'Festival']) }}" class="block px-3.5 py-2 rounded-2xl text-gray-700 hover:bg-[#FAF9F6] font-medium transition-colors">
-                                    Festival &amp; Lễ Hội
-                                </a>
-                                <a href="{{ route('movies.index', ['q' => 'Masterclass']) }}" class="block px-3.5 py-2 rounded-2xl text-gray-700 hover:bg-[#FAF9F6] font-medium transition-colors">
-                                    Workshop &amp; Masterclass
-                                </a>
-                            </div>
+                    <!-- Dropdown panel with seamless hover hit area (pt-2 wrapper) -->
+                    <div 
+                        x-show="open" 
+                        x-transition:enter="ease-out duration-150" 
+                        x-transition:enter-start="opacity-0 translate-y-1" 
+                        x-transition:enter-end="opacity-100 translate-y-0"
+                        x-transition:leave="ease-in duration-100"
+                        x-transition:leave-start="opacity-100 translate-y-0"
+                        x-transition:leave-end="opacity-0 translate-y-1"
+                        @click.away="open = false"
+                        class="absolute left-0 top-full pt-1.5 w-72 z-50"
+                        style="display: none;"
+                    >
+                        <div class="bg-white rounded-3xl p-3 border border-black/10 shadow-[0_20px_45px_-15px_rgba(0,0,0,0.18)] text-xs space-y-1 max-h-[80vh] overflow-y-auto">
+                            <a href="{{ route('events.index') }}" class="flex items-center justify-between px-3.5 py-2.5 rounded-2xl text-gray-800 hover:bg-[#FAF9F6] font-semibold transition-colors">
+                                <span>Tất cả sự kiện &amp; show diễn</span>
+                                <span class="badge-rose text-[9px] px-2 py-0.5 rounded-full font-bold">Hot</span>
+                            </a>
+                            <a href="{{ route('events.index', ['q' => 'Concert']) }}" class="flex items-center justify-between px-3.5 py-2 rounded-2xl text-gray-800 hover:bg-[#FAF9F6] font-semibold transition-colors">
+                                <span>Live Concert</span>
+                                <span class="badge-gold text-[9px] px-2 py-0.5 rounded-full font-bold">VIP</span>
+                            </a>
+                            <a href="{{ route('events.index', ['q' => 'Hòa Nhạc']) }}" class="block px-3.5 py-2 rounded-2xl text-gray-700 hover:bg-[#FAF9F6] font-medium transition-colors">
+                                Hòa Nhạc &amp; Giao Hưởng
+                            </a>
+                            <a href="{{ route('events.index', ['q' => 'Hội Thảo']) }}" class="block px-3.5 py-2 rounded-2xl text-gray-700 hover:bg-[#FAF9F6] font-medium transition-colors">
+                                Hội Thảo &amp; Diễn Đàn
+                            </a>
+                            <a href="{{ route('events.index', ['q' => 'Triển Lãm']) }}" class="block px-3.5 py-2 rounded-2xl text-gray-700 hover:bg-[#FAF9F6] font-medium transition-colors">
+                                Triển Lãm &amp; Trải Nghiệm
+                            </a>
+                            <a href="{{ route('events.index', ['q' => 'Fan Meeting']) }}" class="flex items-center justify-between px-3.5 py-2 rounded-2xl text-gray-800 hover:bg-[#FAF9F6] font-semibold transition-colors">
+                                <span>Fan Meeting &amp; Ký Tặng</span>
+                                <span class="bg-pink-100 text-pink-800 text-[9px] px-2 py-0.5 rounded-full font-bold">Exclusive</span>
+                            </a>
+                            <a href="{{ route('events.index', ['q' => 'Nhạc Kịch']) }}" class="block px-3.5 py-2 rounded-2xl text-gray-700 hover:bg-[#FAF9F6] font-medium transition-colors">
+                                Nhạc Kịch &amp; Sân Khấu
+                            </a>
+                            <a href="{{ route('events.index', ['q' => 'Festival']) }}" class="block px-3.5 py-2 rounded-2xl text-gray-700 hover:bg-[#FAF9F6] font-medium transition-colors">
+                                Festival &amp; Lễ Hội
+                            </a>
+                            <a href="{{ route('events.index', ['q' => 'Masterclass']) }}" class="block px-3.5 py-2 rounded-2xl text-gray-700 hover:bg-[#FAF9F6] font-medium transition-colors">
+                                Workshop &amp; Masterclass
+                            </a>
                         </div>
                     </div>
+                </div>
 
-                    <!-- Lịch Diễn & Khán Phòng -->
-                    <a href="{{ route('movies.index') }}" class="px-2.5 xl:px-3.5 py-1.5 xl:py-2 rounded-full text-gray-700 hover:text-black hover:bg-black/5 transition-colors whitespace-nowrap">
-                        Lịch Diễn &amp; Khán Phòng
-                    </a>
+                <!-- Lịch Diễn & Khán Phòng -->
+                <a href="{{ route('events.index') }}" class="px-2.5 xl:px-3 py-1.5 rounded-full text-gray-700 hover:text-black hover:bg-black/5 transition-colors whitespace-nowrap">
+                    <span>Lịch Diễn</span><span class="hidden 2xl:inline"> &amp; Khán Phòng</span>
+                </a>
 
-                    <!-- Ưu đãi & Voucher -->
-                    <a href="#footer-offers" class="flex items-center gap-1 px-2.5 xl:px-3.5 py-1.5 xl:py-2 rounded-full text-gold-dark hover:text-black hover:bg-[#FFF8E1] transition-colors font-bold whitespace-nowrap">
-                        <span>Ưu Đãi VIP</span>
-                        <span class="badge-gold text-[9px] px-1.5 py-0.5 rounded-full font-black">SALE</span>
-                    </a>
-
-                    @auth
-                        <a href="{{ route('bookings.history') }}" class="relative inline-flex items-center gap-1.5 px-2.5 xl:px-3.5 py-1.5 xl:py-2 rounded-full transition-colors whitespace-nowrap {{ request()->routeIs('bookings.*') ? 'bg-[#000000] text-white font-bold' : 'text-gray-700 hover:text-black hover:bg-black/5' }}">
-                            <span>Vé của tôi</span>
-                            <!-- Event Countdown / Notification Pill (12h - 24h) -->
-                            <span class="flex h-2 w-2 relative" title="Có 1 sự kiện sắp diễn ra trong 12 tiếng">
+                @auth
+                    <a href="{{ route('bookings.history') }}" class="relative inline-flex items-center gap-1.5 px-2.5 xl:px-3 py-1.5 rounded-full transition-colors whitespace-nowrap {{ request()->routeIs('bookings.*') ? 'bg-[#000000] text-white font-bold' : 'text-gray-700 hover:text-black hover:bg-black/5' }}">
+                        <span>Vé của tôi</span>
+                        @if ($soonShowtimes->isNotEmpty())
+                            <!-- Nhắc suất diễn đã đặt vé sắp diễn ra trong 24 giờ tới -->
+                            <span class="flex h-2 w-2 relative" title="Có {{ $soonShowtimes->count() }} suất diễn bạn đã đặt vé sắp diễn ra trong 24 giờ tới">
                                 <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-taupe opacity-75"></span>
                                 <span class="relative inline-flex rounded-full h-2 w-2 bg-rose-taupe"></span>
                             </span>
-                        </a>
-                    @endauth
-                @endif
+                        @endif
+                    </a>
+                @endauth
+
             </nav>
 
             <!-- Right: Search Modal Trigger + Notification Bell + Cart + Auth / Profile -->
@@ -160,13 +158,13 @@
                 <button 
                     type="button"
                     @click="open()" 
-                    class="bg-[#FAF9F6] hover:bg-white border border-black/10 hover:border-black/25 px-2.5 sm:px-3.5 py-1.5 sm:py-2 rounded-full text-xs flex items-center gap-2 text-gray-500 hover:text-black transition-all shadow-sm group w-28 sm:w-36 md:w-44 lg:w-36 xl:w-52 shrink min-w-0"
+                    class="bg-[#FAF9F6] hover:bg-white border border-black/10 hover:border-black/25 px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-full text-xs flex items-center gap-2 text-gray-500 hover:text-black transition-all shadow-sm group w-28 sm:w-32 lg:w-28 xl:w-36 2xl:w-48 shrink min-w-0"
                     title="Tìm kiếm sự kiện"
                 >
                     <svg class="w-3.5 h-3.5 sm:w-4 sm:h-4 text-gray-400 group-hover:text-black transition-colors shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                     </svg>
-                    <span class="truncate font-medium text-[11px] sm:text-xs">Tìm sự kiện, concert...</span>
+                    <span class="truncate font-medium text-[11px] sm:text-xs">Tìm sự kiện...</span>
                 </button>
 
                 @auth
@@ -180,38 +178,56 @@
                             <svg class="w-4 h-4 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
                             </svg>
-                            <!-- Ping Alert for Event in 12h -->
-                            <span class="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-rose-taupe"></span>
+                            @if ($soonShowtimes->isNotEmpty())
+                                <span class="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-rose-taupe"></span>
+                            @endif
                         </button>
 
                         <div 
                             x-show="open" 
                             @click.away="open = false" 
-                            x-transition:enter="ease-out duration-150"
-                            x-transition:enter-start="opacity-0 scale-95"
-                            x-transition:enter-end="opacity-100 scale-100"
-                            x-transition:leave="ease-in duration-100"
-                            x-transition:leave-start="opacity-100 scale-100"
-                            x-transition:leave-end="opacity-0 scale-95"
+                            x-transition:enter="ease-out duration-150" 
+                            x-transition:enter-start="opacity-0 scale-95" 
+                            x-transition:enter-end="opacity-100 scale-100" 
+                            x-transition:leave="ease-in duration-100" 
+                            x-transition:leave-start="opacity-100 scale-100" 
+                            x-transition:leave-end="opacity-0 scale-95" 
                             class="absolute right-0 top-full pt-1.5 w-80 z-50"
                             style="display: none;"
                         >
                             <div class="bg-white rounded-3xl p-4 border border-black/10 shadow-[0_20px_45px_-15px_rgba(0,0,0,0.18)] text-xs space-y-3">
                                 <div class="flex items-center justify-between pb-2 border-b border-black/10">
                                     <h4 class="font-display font-black text-black text-sm">Thông Báo Sự Kiện</h4>
-                                    <span class="badge-rose text-[9px] px-2 py-0.5 rounded-full font-bold">1 Nhắc Nhở</span>
+                                    @if ($upcomingShowtimes->isNotEmpty())
+                                        <span class="badge-rose text-[9px] px-2 py-0.5 rounded-full font-bold">{{ $upcomingShowtimes->count() }} suất sắp tới</span>
+                                    @endif
                                 </div>
 
-                                <a href="{{ route('bookings.history') }}" class="block p-3 rounded-2xl bg-[#FFF8E1] hover:bg-[#F5F5DC] border border-[#D8D8A8] transition-colors space-y-1">
-                                    <div class="flex items-center justify-between text-[10px]">
-                                        <span class="badge-gold px-2 py-0.5 rounded-full font-black">SẮP DIỄN RA TRONG 12H</span>
-                                        <span class="text-gray-500 font-bold">Hôm nay 19:30</span>
-                                    </div>
-                                    <h5 class="font-display font-black text-xs text-black">Live Concert Acoustic 2026</h5>
-                                    <p class="text-[11px] text-gray-600 leading-tight">
-                                        Khán phòng Saigon Grand Hall. Vui lòng mở mã QR vé điện tử để làm thủ tục check-in.
+                                @forelse ($upcomingShowtimes as $upcoming)
+                                    @php
+                                        $isSoon = \App\Support\UpcomingShowtimes::isSoon($upcoming);
+                                        $startsAt = $upcoming->start_time;
+                                        $dayLabel = $startsAt->isToday() ? 'Hôm nay' : ($startsAt->isTomorrow() ? 'Ngày mai' : $startsAt->format('d/m/Y'));
+                                    @endphp
+                                    <a href="{{ route('bookings.history') }}" class="block p-3 rounded-2xl transition-colors space-y-1 {{ $isSoon ? 'bg-[#FFF8E1] hover:bg-[#F5F5DC] border border-[#D8D8A8]' : 'bg-[#FAF9F6] hover:bg-white border border-black/10' }}">
+                                        <div class="flex items-center justify-between text-[10px]">
+                                            @if ($isSoon)
+                                                <span class="badge-gold px-2 py-0.5 rounded-full font-black">SẮP DIỄN RA TRONG 24H</span>
+                                            @else
+                                                <span class="badge-sage px-2 py-0.5 rounded-full font-black">SẮP TỚI</span>
+                                            @endif
+                                            <span class="text-gray-500 font-bold">{{ $dayLabel }} {{ $startsAt->format('H:i') }}</span>
+                                        </div>
+                                        <h5 class="font-display font-black text-xs text-black">{{ $upcoming->event?->title ?? 'Sự kiện' }}</h5>
+                                        @if ($upcoming->room?->name)
+                                            <p class="text-[11px] text-gray-600 leading-tight">{{ $upcoming->room->name }}</p>
+                                        @endif
+                                    </a>
+                                @empty
+                                    <p class="py-3 text-center text-[11px] text-gray-500">
+                                        Bạn chưa có suất diễn nào sắp tới.
                                     </p>
-                                </a>
+                                @endforelse
 
                                 <div class="text-center pt-1">
                                     <a href="{{ route('bookings.history') }}" class="text-[11px] font-bold text-rose-taupe hover:underline">
@@ -232,9 +248,11 @@
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 10.5V6a3.75 3.75 0 10-7.5 0v4.5m11.356-1.993l1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 01-1.12-1.243l1.264-12A1.125 1.125 0 015.513 7.5h12.974c.576 0 1.059.435 1.119 1.007z" />
                     </svg>
-                    <span class="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-rose-taupe text-white text-[9px] font-bold flex items-center justify-center border-2 border-white shadow-sm">
-                        1
-                    </span>
+                    @if ($navCartCount > 0)
+                        <span class="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-rose-taupe text-white text-[9px] font-bold flex items-center justify-center border-2 border-white shadow-sm">
+                            {{ $navCartCount > 9 ? '9+' : $navCartCount }}
+                        </span>
+                    @endif
                 </a>
 
                 <!-- User Account Profile / Auth -->
@@ -244,9 +262,13 @@
                             @click="open = !open" 
                             class="flex items-center gap-1.5 sm:gap-2 pl-1 sm:pl-1.5 pr-2 sm:pr-3 py-1 sm:py-1.5 rounded-full bg-[#FAF9F6] border border-black/10 hover:border-black/25 text-xs font-bold text-black shadow-sm shrink-0"
                         >
-                            <span class="w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-gold-antique text-black flex items-center justify-center text-[11px] sm:text-xs font-black shadow-sm shrink-0">
-                                {{ strtoupper(substr(Auth::user()->name, 0, 1)) }}
-                            </span>
+                            @if (Auth::user()->avatar_url)
+                                <img src="{{ Auth::user()->avatar_url }}" alt="" class="w-6 h-6 sm:w-7 sm:h-7 rounded-full object-cover border border-black/10 shadow-sm shrink-0">
+                            @else
+                                <span class="w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-gold-antique text-black flex items-center justify-center text-[10px] sm:text-[11px] font-black shadow-sm shrink-0">
+                                    {{ Auth::user()->initials }}
+                                </span>
+                            @endif
                             <span class="hidden sm:inline max-w-[70px] md:max-w-[90px] xl:max-w-[130px] truncate">{{ Auth::user()->name }}</span>
                             <svg class="w-3 h-3 sm:w-3.5 sm:h-3.5 text-gray-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
                         </button>
@@ -270,16 +292,16 @@
                                         <svg class="w-4 h-4 text-gold-dark" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>
                                         Trang Quản Trị Admin
                                     </a>
-                                @else
-                                    <a href="{{ route('bookings.history') }}" class="flex items-center gap-2 px-3 py-2 rounded-xl text-gray-800 hover:bg-[#FAF9F6] font-semibold">
-                                        <svg class="w-4 h-4 text-sage-forest" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z" /></svg>
-                                        Vé đã đặt (E-Tickets)
-                                    </a>
-                                    <a href="{{ route('profile.edit') }}" class="flex items-center gap-2 px-3 py-2 rounded-xl text-gray-800 hover:bg-[#FAF9F6] font-semibold">
-                                        <svg class="w-4 h-4 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
-                                        Hồ sơ cá nhân &amp; Cài đặt
-                                    </a>
+                                    <div class="my-1 border-t border-black/5"></div>
                                 @endif
+                                <a href="{{ route('bookings.history') }}" class="flex items-center gap-2 px-3 py-2 rounded-xl text-gray-800 hover:bg-[#FAF9F6] font-semibold">
+                                    <svg class="w-4 h-4 text-sage-forest" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z" /></svg>
+                                    Vé đã đặt (E-Tickets)
+                                </a>
+                                <a href="{{ route('profile.edit') }}" class="flex items-center gap-2 px-3 py-2 rounded-xl text-gray-800 hover:bg-[#FAF9F6] font-semibold">
+                                    <svg class="w-4 h-4 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
+                                    Hồ sơ cá nhân &amp; Cài đặt
+                                </a>
                                 <div class="my-1 border-t border-black/10"></div>
                                 <form method="POST" action="{{ route('logout') }}">
                                     @csrf
@@ -312,34 +334,44 @@
             style="display: none;"
         >
             <a href="{{ route('home') }}" class="block px-3 py-2 rounded-xl text-black font-bold hover:bg-[#FAF9F6]">Trang chủ</a>
+            <a href="{{ route('events.index') }}" class="block px-3 py-2 rounded-xl text-gray-700 font-medium hover:bg-[#FAF9F6]">Khám Phá Sự Kiện</a>
+            <a href="{{ route('events.index', ['q' => 'Concert']) }}" class="block px-3 py-2 rounded-xl text-gray-700 font-medium hover:bg-[#FAF9F6]">Live Concert &amp; Đại Nhạc Hội</a>
+            <a href="{{ route('cart.index') }}" class="flex items-center justify-between px-3 py-2 rounded-xl text-gold-dark font-bold hover:bg-[#FAF9F6]">
+                <span>Giỏ Vé Của Bạn</span>
+                @if ($navCartCount > 0)
+                    <span class="badge-rose text-[10px] px-2 py-0.5 rounded-full font-black">{{ $navCartCount }}</span>
+                @endif
+            </a>
+
             @if (auth()->user()?->hasRole('admin'))
-                <a href="{{ route('admin.dashboard') }}" class="block px-3 py-2 rounded-xl text-gold-dark font-black hover:bg-[#FAF9F6]">Trang Quản Trị</a>
-            @else
-                <a href="{{ route('movies.index') }}" class="block px-3 py-2 rounded-xl text-gray-700 font-medium hover:bg-[#FAF9F6]">Khám Phá Sự Kiện</a>
-                <a href="{{ route('movies.index', ['q' => 'Concert']) }}" class="block px-3 py-2 rounded-xl text-gray-700 font-medium hover:bg-[#FAF9F6]">Live Concert &amp; Đại Nhạc Hội</a>
-                <a href="{{ route('cart.index') }}" class="block px-3 py-2 rounded-xl text-gold-dark font-bold hover:bg-[#FAF9F6]">Giỏ Vé Của Bạn</a>
-                @auth
-                    <a href="{{ route('bookings.history') }}" class="block px-3 py-2 rounded-xl text-sage-forest font-bold hover:bg-[#FAF9F6]">Vé Của Tôi (E-Ticket)</a>
-                    <a href="{{ route('profile.edit') }}" class="block px-3 py-2 rounded-xl text-gray-800 font-bold hover:bg-[#FAF9F6]">Hồ Sơ Cá Nhân &amp; Cài Đặt</a>
-                    <form method="POST" action="{{ route('logout') }}" class="pt-2 border-t border-black/10">
-                        @csrf
-                        <button type="submit" class="w-full text-left px-3 py-2 rounded-xl text-crimson font-bold hover:bg-red-50">
-                            Đăng xuất
-                        </button>
-                    </form>
-                @else
-                    <div class="pt-2 border-t border-black/10 flex items-center gap-3">
-                        <a href="{{ route('login') }}" class="flex-1 text-center py-2 rounded-xl bg-black/5 font-bold text-gray-800">Đăng nhập</a>
-                        <a href="{{ route('register') }}" class="flex-1 text-center py-2 rounded-xl btn-rose font-bold">Đăng ký</a>
-                    </div>
-                @endauth
+                <a href="{{ route('admin.dashboard') }}" class="flex items-center justify-between px-3 py-2 rounded-xl text-gold-dark font-black bg-[#FFF8E1] hover:bg-[#FFF3CD]">
+                    <span>Trang Quản Trị Admin</span>
+                    <span class="badge-gold text-[9px] px-2 py-0.5 rounded-full font-black">QUẢN TRỊ</span>
+                </a>
             @endif
+
+            @auth
+                <a href="{{ route('bookings.history') }}" class="block px-3 py-2 rounded-xl text-sage-forest font-bold hover:bg-[#FAF9F6]">Vé Của Tôi (E-Ticket)</a>
+                <a href="{{ route('profile.edit') }}" class="block px-3 py-2 rounded-xl text-gray-800 font-bold hover:bg-[#FAF9F6]">Hồ Sơ Cá Nhân &amp; Cài Đặt</a>
+                <form method="POST" action="{{ route('logout') }}" class="pt-2 border-t border-black/10">
+                    @csrf
+                    <button type="submit" class="w-full text-left px-3 py-2 rounded-xl text-crimson font-bold hover:bg-red-50">
+                        Đăng xuất
+                    </button>
+                </form>
+            @else
+                <div class="pt-2 border-t border-black/10 flex items-center gap-3">
+                    <a href="{{ route('login') }}" class="flex-1 text-center py-2 rounded-xl bg-black/5 font-bold text-gray-800">Đăng nhập</a>
+                    <a href="{{ route('register') }}" class="flex-1 text-center py-2 rounded-xl btn-rose font-bold">Đăng ký</a>
+                </div>
+            @endauth
         </div>
     </header>
 
-    <!-- Global Search Modal (Bright Dialog) -->
-    <div 
-        x-show="isOpen" 
+    <!-- Global Search Modal (Bright Dialog) — gợi ý AJAX qua route search.suggestions -->
+    <div
+        x-show="isOpen"
+        @keydown.escape.window="if (isOpen) close()"
         x-transition:enter="ease-out duration-300"
         x-transition:enter-start="opacity-0"
         x-transition:enter-end="opacity-100"
@@ -347,6 +379,9 @@
         x-transition:leave-start="opacity-100"
         x-transition:leave-end="opacity-0"
         class="fixed inset-0 z-50 flex items-start justify-center pt-20 px-4"
+        role="dialog"
+        aria-modal="true"
+        aria-label="Tìm kiếm sự kiện"
         style="display: none;"
     >
         <div class="fixed inset-0 bg-black/60 backdrop-blur-sm" @click="close()"></div>
@@ -355,30 +390,62 @@
                 <svg class="w-5 h-5 text-gold-dark" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                 </svg>
-                <form action="{{ route('movies.index') }}" method="GET" class="flex-1">
-                    <input 
+                <form action="{{ route('events.index') }}" method="GET" class="flex-1">
+                    <input
                         id="global-search-input"
-                        type="text" 
+                        type="text"
                         name="q"
+                        maxlength="100"
+                        autocomplete="off"
+                        data-suggest-url="{{ route('search.suggestions') }}"
                         x-model="query"
                         @input="handleSearch()"
-                        placeholder="Tìm kiếm sự kiện, concert, hòa nhạc, hội thảo, triển lãm..." 
+                        placeholder="Tìm kiếm sự kiện, concert, hòa nhạc, hội thảo, triển lãm..."
                         class="w-full bg-transparent border-0 text-black placeholder-gray-400 focus:ring-0 text-base font-semibold"
                     >
                 </form>
-                <button @click="close()" class="text-xs text-gray-600 hover:text-black px-3 py-1 rounded-xl bg-[#F5F5DC] border border-[#D8D8A8] font-bold">ESC</button>
+                <button type="button" @click="close()" title="Đóng (Esc)" class="text-xs text-gray-600 hover:text-black px-3 py-1 rounded-xl bg-[#F5F5DC] border border-[#D8D8A8] font-bold">ESC</button>
             </div>
 
-            <!-- Quick Suggestions -->
-            <div class="mt-4">
-                <span class="text-[11px] font-bold uppercase tracking-wider text-gray-500 block mb-2">Gợi ý danh mục &amp; sự kiện nổi bật</span>
+            <!-- Live Search Results (AJAX) -->
+            <div class="mt-4" x-show="query.trim().length >= 2" style="display: none;" aria-live="polite">
+                <div x-show="isLoading" class="flex items-center gap-2 text-xs text-gray-500 py-2">
+                    <svg class="w-4 h-4 animate-spin text-gold-dark" fill="none" viewBox="0 0 24 24" aria-hidden="true">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+                    </svg>
+                    <span>Đang tìm…</span>
+                </div>
+                <p x-show="!isLoading && hasError" class="text-xs text-[#CC0000] font-semibold py-2">Không thể tải gợi ý lúc này, nhấn Enter để tìm kiếm.</p>
+                <p x-show="!isLoading && !hasError && results.length === 0" class="text-xs text-gray-500 py-2">
+                    Không tìm thấy sự kiện phù hợp với "<span class="font-bold text-black" x-text="query.trim()"></span>".
+                </p>
+                <ul x-show="!isLoading && results.length > 0" class="divide-y divide-black/5">
+                    <template x-for="item in results" :key="item.url">
+                        <li>
+                            <a :href="item.url" class="flex items-center gap-3 py-2.5 px-2 rounded-xl hover:bg-[#FAF9F6]">
+                                <img :src="item.poster_url" alt="" loading="lazy" class="w-10 h-14 object-cover rounded-lg border border-black/10 shrink-0">
+                                <div class="min-w-0">
+                                    <p class="text-sm font-bold text-black truncate" x-text="item.title"></p>
+                                    <p class="text-[11px] text-gray-500">
+                                        <span x-text="item.category"></span>
+                                        <span x-show="item.price_from" x-text="' · Từ ' + item.price_from"></span>
+                                    </p>
+                                </div>
+                            </a>
+                        </li>
+                    </template>
+                </ul>
+                <a x-show="!isLoading" :href="'{{ route('events.index') }}?q=' + encodeURIComponent(query.trim())" class="mt-3 inline-block text-xs font-bold text-gold-dark hover:underline">Xem tất cả kết quả &rarr;</a>
+            </div>
+
+            <!-- Popular events (tải AJAX khi mở modal) -->
+            <div class="mt-4" x-show="query.trim().length < 2 && popular.length > 0" style="display: none;">
+                <span class="text-[11px] font-bold uppercase tracking-wider text-gray-500 block mb-2">Sự kiện nổi bật</span>
                 <div class="flex flex-wrap gap-2">
-                    <a href="{{ route('movies.index', ['q' => 'Concert']) }}" class="badge-gold px-3.5 py-1 rounded-full text-xs font-bold">Live Concert</a>
-                    <a href="{{ route('movies.index', ['q' => 'Hòa Nhạc']) }}" class="badge-rose px-3.5 py-1 rounded-full text-xs font-bold">Hòa Nhạc Giao Hưởng</a>
-                    <a href="{{ route('movies.index', ['q' => 'Hội Thảo']) }}" class="badge-sage px-3.5 py-1 rounded-full text-xs font-bold">Hội Thảo Công Nghệ</a>
-                    <a href="{{ route('movies.index', ['q' => 'Triển Lãm']) }}" class="badge-beige px-3.5 py-1 rounded-full text-xs font-bold">Triển Lãm Đa Giác Quan</a>
-                    <a href="{{ route('movies.index', ['q' => 'Fan Meeting']) }}" class="badge-purple px-3.5 py-1 rounded-full text-xs font-bold">Fan Meeting Nghệ Sĩ</a>
-                    <a href="{{ route('movies.index', ['q' => 'Masterclass']) }}" class="badge-sage px-3.5 py-1 rounded-full text-xs font-bold">Workshop AI</a>
+                    <template x-for="item in popular" :key="item.url">
+                        <a :href="item.url" class="badge-gold px-3.5 py-1 rounded-full text-xs font-bold max-w-full truncate" x-text="item.title"></a>
+                    </template>
                 </div>
             </div>
         </div>
@@ -404,18 +471,13 @@
                     </div>
 
                     <p class="text-xs text-gray-400 leading-relaxed max-w-sm">
-                        Nền tảng công nghệ quản lý và phân phối vé điện tử cho Live Concert, Hòa Nhạc Thính Phòng và Hội Thảo Quốc Tế.
+                        Website quản lý đặt vé sự kiện, concert và hội thảo — đồ án môn Mã nguồn mở. Đây là sản phẩm học tập, không phải dịch vụ bán vé thương mại.
                     </p>
 
                     <div class="flex flex-wrap items-center gap-4 text-xs text-gray-300 pt-1 font-medium">
                         <div class="flex items-center gap-1.5">
-                            <span class="text-gold-antique font-bold">Hotline:</span>
-                            <span class="text-white font-black">1900 6408</span>
-                        </div>
-                        <span class="text-gray-600">·</span>
-                        <div class="flex items-center gap-1.5">
-                            <span class="text-gold-antique font-bold">Hỗ trợ:</span>
-                            <span class="text-rose-light font-semibold">support@ticketbox.vn</span>
+                            <span class="text-gold-antique font-bold">Liên hệ:</span>
+                            <span class="text-rose-light font-semibold">hotro@example.com</span>
                         </div>
                     </div>
                 </div>
@@ -424,42 +486,44 @@
                 <div class="lg:col-span-7 grid grid-cols-2 sm:grid-cols-3 gap-6 text-xs">
                     <!-- Col 1: Khám Phá -->
                     <div class="space-y-2.5">
-                        <h4 class="font-display text-white text-[11px] font-black uppercase tracking-wider text-gold-light">
+                        <h4 class="font-display text-[11px] font-black uppercase tracking-wider text-gold-light">
                             Khám Phá Sự Kiện
                         </h4>
                         <ul class="space-y-2 text-gray-400 font-medium">
-                            <li><a href="{{ route('movies.index', ['q' => 'Concert']) }}" class="hover:text-gold-antique transition-colors">Live Concert &amp; Liveshow</a></li>
-                            <li><a href="{{ route('movies.index', ['q' => 'Hòa Nhạc']) }}" class="hover:text-gold-antique transition-colors">Hòa Nhạc Giao Hưởng</a></li>
-                            <li><a href="{{ route('movies.index', ['q' => 'Summit']) }}" class="hover:text-gold-antique transition-colors">Hội Thảo &amp; Diễn Đàn</a></li>
-                            <li><a href="{{ route('movies.index', ['q' => 'Triển Lãm']) }}" class="hover:text-gold-antique transition-colors">Triển Lãm Nghệ Thuật</a></li>
+                            <li><a href="{{ route('events.index', ['q' => 'Concert']) }}" class="hover:text-gold-antique transition-colors">Live Concert &amp; Liveshow</a></li>
+                            <li><a href="{{ route('events.index', ['q' => 'Hòa Nhạc']) }}" class="hover:text-gold-antique transition-colors">Hòa Nhạc Giao Hưởng</a></li>
+                            <li><a href="{{ route('events.index', ['q' => 'Summit']) }}" class="hover:text-gold-antique transition-colors">Hội Thảo &amp; Diễn Đàn</a></li>
+                            <li><a href="{{ route('events.index', ['q' => 'Triển Lãm']) }}" class="hover:text-gold-antique transition-colors">Triển Lãm Nghệ Thuật</a></li>
                         </ul>
                     </div>
 
                     <!-- Col 2: Dành Cho Khách Hàng -->
                     <div class="space-y-2.5">
-                        <h4 class="font-display text-white text-[11px] font-black uppercase tracking-wider text-gold-light">
+                        <h4 class="font-display text-[11px] font-black uppercase tracking-wider text-gold-light">
                             Khách Hàng
                         </h4>
                         <ul class="space-y-2 text-gray-400 font-medium">
-                            <li><a href="{{ route('movies.index') }}" class="hover:text-gold-antique transition-colors">Hướng dẫn mua vé</a></li>
-                            <li><a href="{{ route('bookings.history') }}" class="hover:text-gold-antique transition-colors">Mã vé điện tử (E-Ticket)</a></li>
-                            <li><a href="{{ route('cart.index') }}" class="hover:text-gold-antique transition-colors">Quy trình giữ chỗ 10 phút</a></li>
+                            <li><a href="{{ route('events.index') }}" class="hover:text-gold-antique transition-colors">Tất cả sự kiện</a></li>
+                            <li><a href="{{ route('cart.index') }}" class="hover:text-gold-antique transition-colors">Giỏ vé của bạn</a></li>
+                            <li><a href="{{ route('bookings.history') }}" class="hover:text-gold-antique transition-colors">Vé đã đặt (E-Ticket)</a></li>
                             <li><a href="{{ route('home') }}#faq" class="hover:text-gold-antique transition-colors">Câu hỏi thường gặp (FAQ)</a></li>
                         </ul>
                     </div>
 
-                    <!-- Col 3: Dành Cho Đối Tác & Quản Trị -->
+                    <!-- Col 3: Tài Khoản -->
                     <div class="space-y-2.5">
-                        <h4 class="font-display text-white text-[11px] font-black uppercase tracking-wider text-gold-light">
-                            Đối Tác &amp; Ban Tổ Chức
+                        <h4 class="font-display text-[11px] font-black uppercase tracking-wider text-gold-light">
+                            Tài Khoản
                         </h4>
                         <ul class="space-y-2 text-gray-400 font-medium">
-                            <li><a href="{{ route('home') }}#organizers" class="hover:text-gold-antique transition-colors">Đăng ký mở bán vé</a></li>
-                            <li><a href="{{ route('home') }}#scanners" class="hover:text-gold-antique transition-colors">Giải pháp soát vé QR Code</a></li>
                             @auth
+                                <li><a href="{{ route('profile.edit') }}" class="hover:text-gold-antique transition-colors">Hồ sơ cá nhân</a></li>
                                 @if (Auth::user()->hasRole('admin'))
                                     <li><a href="{{ route('admin.dashboard') }}" class="text-gold-light font-bold hover:underline">Vào Bảng Quản Trị Admin</a></li>
                                 @endif
+                            @else
+                                <li><a href="{{ route('login') }}" class="hover:text-gold-antique transition-colors">Đăng nhập</a></li>
+                                <li><a href="{{ route('register') }}" class="hover:text-gold-antique transition-colors">Đăng ký tài khoản</a></li>
                             @endauth
                         </ul>
                     </div>
@@ -468,17 +532,8 @@
             </div>
 
             <!-- Compact Bottom Bar -->
-            <div class="mt-8 pt-6 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-3 text-[11px] text-gray-400 font-medium">
-                <div>
-                    © 2026 TicketBox Vietnam JSC. Nền tảng đặt vé Sự kiện &amp; Hội thảo chuyên nghiệp.
-                </div>
-                <div class="flex items-center gap-4 text-gray-400">
-                    <a href="#" class="hover:text-white transition-colors">Điều khoản</a>
-                    <span>·</span>
-                    <a href="#" class="hover:text-white transition-colors">Bảo mật</a>
-                    <span>·</span>
-                    <a href="#" class="hover:text-white transition-colors">Quy chế hoạt động</a>
-                </div>
+            <div class="mt-8 pt-6 border-t border-white/10 text-center sm:text-left text-[11px] text-gray-400 font-medium">
+                © {{ date('Y') }} TicketBox — Đồ án môn Mã nguồn mở. Sản phẩm phục vụ mục đích học tập.
             </div>
         </div>
     </footer>

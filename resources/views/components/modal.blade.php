@@ -58,13 +58,13 @@ $maxWidth = [
         x-transition:leave-start="opacity-100"
         x-transition:leave-end="opacity-0"
     >
-        <div class="absolute inset-0 bg-obsidian-950/80 backdrop-blur-md"></div>
+        <div class="absolute inset-0 bg-black/60 backdrop-blur-sm"></div>
     </div>
 
     <!-- Modal Content -->
     <div
         x-show="show"
-        class="relative glass-dark-elevated rounded-3xl border border-white/20 p-6 sm:p-8 overflow-hidden transform transition-all w-full {{ $maxWidth }} mx-auto shadow-2xl z-10 text-white"
+        class="relative bg-white rounded-3xl border border-black/10 overflow-hidden transform transition-all w-full {{ $maxWidth }} mx-auto shadow-2xl z-10 text-slate-900"
         x-transition:enter="ease-out duration-300"
         x-transition:enter-start="opacity-0 scale-95 translate-y-4"
         x-transition:enter-end="opacity-100 scale-100 translate-y-0"

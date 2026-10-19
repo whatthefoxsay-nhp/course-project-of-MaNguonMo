@@ -31,4 +31,22 @@ class Comment extends Model
     {
         return $this->event();
     }
+
+    /**
+     * Dữ liệu an toàn để trả về cho trình duyệt (AJAX + trang chi tiết sự kiện).
+     * Nội dung là văn bản thô; phía giao diện luôn render bằng x-text.
+     */
+    public function toPublicArray(?User $viewer): array
+    {
+        return [
+            'id' => $this->id,
+            'user' => $this->user?->name ?? 'Người dùng',
+            'initials' => $this->user?->initials ?? '?',
+            'avatar_url' => $this->user?->avatar_url,
+            'time' => $this->created_at?->locale('vi')->diffForHumans() ?? 'Vừa xong',
+            'created_at' => $this->created_at?->toIso8601String(),
+            'text' => $this->content,
+            'can_delete' => $viewer !== null && $viewer->can('delete', $this),
+        ];
+    }
 }

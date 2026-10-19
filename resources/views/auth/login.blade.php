@@ -35,7 +35,18 @@
         </div>
     @endif
 
-    <form method="POST" action="{{ route('login') }}" class="space-y-4 sm:space-y-5" x-data="{ emailVal: '{{ old('email') }}', passVal: '' }">
+    <form method="POST" action="{{ route('login') }}" class="space-y-4 sm:space-y-5" x-data="{ 
+        emailVal: @js(old('email', '')),
+        showPass: false,
+        fillAccount(email, pass) {
+            this.emailVal = email;
+            const passEl = document.getElementById('password');
+            if (passEl) {
+                passEl.value = pass;
+                passEl.dispatchEvent(new Event('input', { bubbles: true }));
+            }
+        }
+    }">
         @csrf
 
         <!-- Email Address -->
@@ -64,7 +75,7 @@
         </div>
 
         <!-- Password -->
-        <div class="space-y-1.5" x-data="{ showPass: false }">
+        <div class="space-y-1.5">
             <div class="flex items-center justify-between">
                 <label for="password" class="block text-xs font-bold text-slate-700 uppercase tracking-wider">
                     Mật Khẩu <span class="text-rose-600 font-black">*</span>
@@ -87,7 +98,6 @@
                     id="password" 
                     :type="showPass ? 'text' : 'password'" 
                     name="password" 
-                    x-model="passVal"
                     required 
                     placeholder="••••••••"
                     class="w-full bg-[#FAF9F6] focus:bg-white border border-slate-200/90 focus:border-[#C08497] focus:ring-4 focus:ring-[#C08497]/15 rounded-2xl py-3 pl-11 pr-11 text-xs sm:text-sm text-slate-900 placeholder-slate-400 transition-all font-semibold shadow-2xs"
@@ -130,7 +140,8 @@
             </span>
         </button>
 
-        <!-- Quick Demo One-Click Login Box (Antique Gold for Admin, Forest Sage for User) -->
+        <!-- Quick Demo One-Click Login Box: chỉ hiện ở môi trường local -->
+        @if (app()->environment('local'))
         <div class="pt-5 border-t border-slate-100">
             <span class="text-[10px] font-black uppercase tracking-wider text-slate-400 block text-center mb-2.5">
                 Đăng nhập nhanh tài khoản mẫu:
@@ -139,7 +150,7 @@
                 <!-- Admin Demo Quick Button (Antique Gold) -->
                 <button 
                     type="button" 
-                    @click="emailVal = 'admin@ticketbox.vn'; passVal = 'password';"
+                    @click="fillAccount('admin@ticketbox.vn', 'password')"
                     class="p-3.5 rounded-2xl bg-gradient-to-br from-amber-50/90 via-orange-50/40 to-amber-100/60 hover:from-amber-100 hover:to-orange-100/80 border border-amber-200/80 hover:border-amber-300 text-left transition-all shadow-2xs group cursor-pointer"
                 >
                     <div class="text-xs text-slate-900 font-black flex items-center justify-between">
@@ -155,7 +166,7 @@
                 <!-- User Demo Quick Button (Forest Sage) -->
                 <button 
                     type="button" 
-                    @click="emailVal = 'user@ticketbox.vn'; passVal = 'password';"
+                    @click="fillAccount('user@ticketbox.vn', 'password')"
                     class="p-3.5 rounded-2xl bg-gradient-to-br from-emerald-50/90 via-teal-50/40 to-emerald-100/60 hover:from-emerald-100 hover:to-teal-100/80 border border-emerald-200/80 hover:border-emerald-300 text-left transition-all shadow-2xs group cursor-pointer"
                 >
                     <div class="text-xs text-slate-900 font-black flex items-center justify-between">
@@ -169,6 +180,7 @@
                 </button>
             </div>
         </div>
+        @endif
 
         <!-- Register Link -->
         <div class="text-center pt-2 text-xs text-slate-500 font-medium">

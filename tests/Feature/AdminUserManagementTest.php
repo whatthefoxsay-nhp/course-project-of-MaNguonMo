@@ -2,9 +2,6 @@
 
 use App\Models\User;
 use Database\Seeders\RoleSeeder;
-use Illuminate\Foundation\Testing\RefreshDatabase;
-
-uses(RefreshDatabase::class);
 
 beforeEach(function () {
     $this->seed(RoleSeeder::class);
@@ -75,3 +72,123 @@ test('admin cannot lock their own account', function () {
         'success' => false,
     ]);
 });
+
+test('admin can toggle role between user and admin', function () {
+    $admin = User::factory()->create();
+    $admin->assignRole('admin');
+
+    $targetUser = User::factory()->create();
+    $targetUser->assignRole('user');
+
+    $this->actingAs($admin)->patch(route('admin.users.toggle-role', $targetUser))
+        ->assertRedirect();
+    expect($targetUser->fresh()->hasRole('admin'))->toBeTrue();
+
+    // Toggle back
+    $this->actingAs($admin)->patch(route('admin.users.toggle-role', $targetUser))
+        ->assertRedirect();
+    expect($targetUser->fresh()->hasRole('user'))->toBeTrue();
+});
+
+test('admin cannot toggle their own role', function () {
+    $admin = User::factory()->create();
+    $admin->assignRole('admin');
+
+    $this->actingAs($admin)->patch(route('admin.users.toggle-role', $admin))
+        ->assertRedirect();
+    expect($admin->fresh()->hasRole('admin'))->toBeTrue();
+});
+
+test('admin can reset password of a user to a random temporary password', function () {
+    config(['session.driver' => 'database']);
+    $admin = User::factory()->create();
+    $admin->assignRole('admin');
+
+    $targetUser = User::factory()->create(['password' => 'old_secret_pwd', 'remember_token' => 'old-remember-token']);
+    $other = User::factory()->create();
+    Illuminate\Support\Facades\DB::table('sessions')->insert([
+        ['id' => 'target-session', 'user_id' => $targetUser->id, 'ip_address' => null, 'user_agent' => null, 'payload' => '', 'last_activity' => time()],
+        ['id' => 'other-session', 'user_id' => $other->id, 'ip_address' => null, 'user_agent' => null, 'payload' => '', 'last_activity' => time()],
+    ]);
+
+    $response = $this->actingAs($admin)->post(route('admin.users.reset-password', $targetUser));
+
+    $response->assertRedirect();
+    $message = session('success');
+    expect($message)->toMatch('/: [A-Za-z0-9]{10}$/')
+        ->and($message)->not->toContain('TicketBox@');
+
+    preg_match('/: ([A-Za-z0-9]{10})$/', $message, $matches);
+    $targetUser->refresh();
+    expect(Illuminate\Support\Facades\Hash::check($matches[1], $targetUser->password))->toBeTrue()
+        ->and($targetUser->remember_token)->not->toBe('old-remember-token')
+        ->and(Illuminate\Support\Facades\DB::table('sessions')->pluck('id')->all())
+        ->not->toContain('target-session')->toContain('other-session');
+});
+
+test('reset passwords differ between resets', function () {
+    $admin = User::factory()->create();
+    $admin->assignRole('admin');
+    $targetUser = User::factory()->create();
+
+    $this->actingAs($admin)->post(route('admin.users.reset-password', $targetUser));
+    $first = session('success');
+    $this->actingAs($admin)->post(route('admin.users.reset-password', $targetUser));
+
+    expect(session('success'))->not->toBe($first);
+});
+
+test('admin can create a new user account with specified role and status', function () {
+    $admin = User::factory()->create();
+    $admin->assignRole('admin');
+
+    $response = $this->actingAs($admin)->post(route('admin.users.store'), [
+        'name' => 'Nguyen Staff',
+        'email' => 'staff@ticketbox.vn',
+        'phone' => '0987654321',
+        'password' => 'StaffPassword123',
+        'role' => 'admin',
+        'is_active' => '1',
+    ]);
+
+    $response->assertRedirect(route('admin.users.index'));
+    $response->assertSessionHas('success');
+
+    $newUser = User::where('email', 'staff@ticketbox.vn')->first();
+    expect($newUser)->not->toBeNull()
+        ->and($newUser->name)->toBe('Nguyen Staff')
+        ->and($newUser->phone)->toBe('0987654321')
+        ->and($newUser->is_active)->toBeTrue()
+        ->and($newUser->hasRole('admin'))->toBeTrue();
+});
+
+test('admin cannot create a user with duplicate email', function () {
+    $admin = User::factory()->create();
+    $admin->assignRole('admin');
+
+    User::factory()->create(['email' => 'existing@ticketbox.vn']);
+
+    $response = $this->actingAs($admin)->post(route('admin.users.store'), [
+        'name' => 'Duplicate Person',
+        'email' => 'existing@ticketbox.vn',
+        'password' => 'ValidPassword123',
+        'role' => 'user',
+    ]);
+
+    $response->assertSessionHasErrors(['email']);
+});
+
+test('regular user cannot create user accounts via admin endpoint', function () {
+    $regularUser = User::factory()->create();
+    $regularUser->assignRole('user');
+
+    $response = $this->actingAs($regularUser)->post(route('admin.users.store'), [
+        'name' => 'Hacker Admin',
+        'email' => 'hacker@test.vn',
+        'password' => 'Hacker12345',
+        'role' => 'admin',
+    ]);
+
+    $response->assertForbidden();
+});
+

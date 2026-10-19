@@ -25,7 +25,7 @@
 
                     <!-- CTAs & Quick Feature Badges -->
                     <div class="pt-2 flex flex-wrap items-center gap-3 sm:gap-4">
-                        <a href="{{ route('movies.index') }}" class="btn-rose px-8 py-3.5 rounded-full font-black text-sm flex items-center gap-2 shadow-md hover:shadow-lg transition-all">
+                        <a href="{{ route('events.index') }}" class="btn-rose px-8 py-3.5 rounded-full font-black text-sm flex items-center gap-2 shadow-md hover:shadow-lg transition-all">
                             <span>Khám phá sự kiện ngay</span>
                             <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3" />
@@ -37,34 +37,36 @@
                         </a>
                     </div>
 
-                    <!-- Statistics Strip -->
-                    <div class="pt-6 border-t border-black/10 grid grid-cols-3 gap-4 sm:gap-6 max-w-lg text-left">
-                        <div>
-                            <span class="font-display font-black text-2xl sm:text-3xl text-gold-dark block">50K+</span>
-                            <span class="text-[11px] sm:text-xs text-gray-500 font-semibold">Vé đã phát hành</span>
+                    <!-- Statistics Strip (số liệu thật từ HomeController::stats) -->
+                    @isset($stats)
+                        <div class="pt-6 border-t border-black/10 grid grid-cols-3 gap-4 sm:gap-6 max-w-lg text-left">
+                            <div>
+                                <span class="font-display font-black text-2xl sm:text-3xl text-gold-dark block">{{ number_format($stats['events_on_sale'], 0, ',', '.') }}</span>
+                                <span class="text-[11px] sm:text-xs text-gray-500 font-semibold">Sự kiện đang mở bán</span>
+                            </div>
+                            <div>
+                                <span class="font-display font-black text-2xl sm:text-3xl text-rose-taupe block">{{ number_format($stats['tickets_sold'], 0, ',', '.') }}</span>
+                                <span class="text-[11px] sm:text-xs text-gray-500 font-semibold">Vé đã bán</span>
+                            </div>
+                            <div>
+                                <span class="font-display font-black text-2xl sm:text-3xl text-sage-forest block">{{ number_format($stats['venues'], 0, ',', '.') }}</span>
+                                <span class="text-[11px] sm:text-xs text-gray-500 font-semibold">Khán phòng &amp; địa điểm</span>
+                            </div>
                         </div>
-                        <div>
-                            <span class="font-display font-black text-2xl sm:text-3xl text-rose-taupe block">100+</span>
-                            <span class="text-[11px] sm:text-xs text-gray-500 font-semibold">Show diễn độc quyền</span>
-                        </div>
-                        <div>
-                            <span class="font-display font-black text-2xl sm:text-3xl text-sage-forest block">4.9/5</span>
-                            <span class="text-[11px] sm:text-xs text-gray-500 font-semibold">Độ hài lòng khán giả</span>
-                        </div>
-                    </div>
+                    @endisset
                 </div>
 
                 <!-- Right Spotlight Feature Card -->
                 <div class="lg:col-span-5 relative">
-                    @if (isset($movies[0]))
-                        @php $leadEvent = $movies[0]; @endphp
+                    @if (isset($spotlightEvent) || isset($movies[0]))
+                        @php $leadEvent = $spotlightEvent ?? $movies[0]; @endphp
                         <div class="relative group">
                             <!-- Floating Glow behind card -->
                             <div class="absolute -inset-1.5 bg-gradient-to-r from-rose-taupe via-gold-antique to-sage-forest rounded-3xl blur-xl opacity-25 group-hover:opacity-50 transition duration-700"></div>
                             
                             <div class="relative bg-white rounded-3xl p-4 sm:p-5 border border-black/10 overflow-hidden shadow-2xl">
                                 <div class="aspect-[16/10] sm:aspect-[4/3] rounded-2xl overflow-hidden bg-[#FAF9F6] relative">
-                                    <img src="{{ $leadEvent->poster_path }}" alt="{{ $leadEvent->title }}" class="w-full h-full object-cover group-hover:scale-105 transition duration-700 ease-out">
+                                    <img src="{{ $leadEvent->poster_url }}" alt="{{ $leadEvent->title }}" class="w-full h-full object-cover group-hover:scale-105 transition duration-700 ease-out">
                                     
                                     <div class="absolute inset-0 bg-gradient-to-t from-black/75 via-black/15 to-transparent"></div>
                                     
@@ -97,10 +99,15 @@
                                     
                                     <div class="mt-4 pt-3.5 border-t border-black/10 flex items-center justify-between">
                                         <div>
-                                            <span class="text-[10px] text-gray-400 font-semibold block">Giá vé từ</span>
-                                            <span class="font-display font-black text-black text-lg">{{ number_format($leadEvent->base_price ?? 250000, 0, ',', '.') }}₫</span>
+                                            @if ($leadEvent->base_price !== null)
+                                                <span class="text-[10px] text-gray-400 font-semibold block">Giá vé từ</span>
+                                                <span class="font-display font-black text-black text-lg">{{ number_format($leadEvent->base_price, 0, ',', '.') }}₫</span>
+                                            @else
+                                                <span class="text-[10px] text-gray-400 font-semibold block">Giá vé</span>
+                                                <span class="font-display font-black text-gray-500 text-sm">Đang cập nhật</span>
+                                            @endif
                                         </div>
-                                        <a href="{{ route('movies.show', $leadEvent->slug) }}" class="btn-gold px-5 py-2.5 rounded-xl text-xs font-black shadow-sm flex items-center gap-1.5 hover:shadow-md transition-all">
+                                        <a href="{{ route('events.show', $leadEvent->slug) }}" class="btn-gold px-5 py-2.5 rounded-xl text-xs font-black shadow-sm flex items-center gap-1.5 hover:shadow-md transition-all">
                                             <span>Chọn chỗ ngồi</span>
                                             <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3" />
@@ -117,7 +124,37 @@
     </section>
 
     <!-- Main Catalog & Category Tabs Section -->
-    <section id="featured-section" class="max-w-[1440px] mx-auto px-4 sm:px-8 py-8 sm:py-12" x-data="{ currentTab: 'all' }">
+    <section 
+        id="featured-section" 
+        class="max-w-[1440px] mx-auto px-4 sm:px-8 py-8 sm:py-12" 
+        x-data="{ 
+            currentTab: @js($currentTab ?? 'all'),
+            loading: false,
+            async setTab(tab) {
+                if (this.currentTab === tab && !this.loading) return;
+                this.currentTab = tab;
+                this.loading = true;
+                try {
+                    const res = await fetch(`{{ route('home') }}?category=${tab}`, {
+                        headers: { 
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'Accept': 'application/json'
+                        }
+                    });
+                    const data = await res.json();
+                    if (data && data.html) {
+                        document.getElementById('home-events-container').innerHTML = data.html;
+                        window.history.replaceState(null, '', `?category=${tab}#featured-section`);
+                    }
+                } catch (e) {
+                    console.error('Error filtering events:', e);
+                    window.location.href = `{{ route('home') }}?category=${tab}#featured-section`;
+                } finally {
+                    this.loading = false;
+                }
+            }
+        }"
+    >
         <div class="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-8 sm:mb-10 pb-4 border-b border-black/10">
             <div>
                 <div class="flex items-center gap-2 mb-1.5">
@@ -131,41 +168,58 @@
             <!-- Tab Buttons with Alpine.js -->
             <div class="inline-flex p-1 rounded-full bg-white border border-black/10 text-xs font-bold shadow-sm shrink-0">
                 <button 
-                    @click="currentTab = 'all'" 
+                    type="button"
+                    @click="setTab('all')" 
                     :class="currentTab === 'all' ? 'bg-black text-white shadow-md' : 'text-gray-600 hover:text-black'"
-                    class="px-5 py-2 rounded-full transition-all"
+                    class="px-5 py-2 rounded-full transition-all cursor-pointer"
                 >
                     Tất cả sự kiện
                 </button>
                 <button 
-                    @click="currentTab = 'concert'" 
+                    type="button"
+                    @click="setTab('concert')" 
                     :class="currentTab === 'concert' ? 'bg-black text-white shadow-md' : 'text-gray-600 hover:text-black'"
-                    class="px-5 py-2 rounded-full transition-all"
+                    class="px-5 py-2 rounded-full transition-all cursor-pointer"
                 >
                     Concert &amp; Hòa Nhạc
                 </button>
                 <button 
-                    @click="currentTab = 'expo'" 
+                    type="button"
+                    @click="setTab('expo')" 
                     :class="currentTab === 'expo' ? 'bg-black text-white shadow-md' : 'text-gray-600 hover:text-black'"
-                    class="px-5 py-2 rounded-full transition-all"
+                    class="px-5 py-2 rounded-full transition-all cursor-pointer"
                 >
                     Hội Thảo &amp; Triển Lãm
                 </button>
             </div>
         </div>
 
-        <!-- Event Cards Grid -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
-            @foreach ($movies as $event)
-                <div>
-                    <x-movie-card :movie="$event" />
+        <!-- Event Cards Container with Loading Indicator -->
+        <div class="relative min-h-[250px]">
+            <!-- Subtle Loading Indicator -->
+            <div 
+                x-show="loading" 
+                x-transition 
+                class="absolute inset-0 bg-white/70 backdrop-blur-[2px] z-20 flex items-center justify-center rounded-3xl"
+                style="display: none;"
+            >
+                <div class="flex items-center gap-2 px-5 py-2.5 rounded-full bg-black text-white text-xs font-bold shadow-lg">
+                    <svg class="animate-spin w-4 h-4 text-white" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
+                    </svg>
+                    <span>Đang tải sự kiện...</span>
                 </div>
-            @endforeach
+            </div>
+
+            <div id="home-events-container">
+                @include('partials.home-event-grid', ['movies' => collect($movies)])
+            </div>
         </div>
 
         <!-- View All Events Link -->
         <div class="mt-12 text-center">
-            <a href="{{ route('movies.index') }}" class="inline-flex items-center gap-2.5 px-8 py-3.5 rounded-full bg-white border border-black/15 text-black font-black text-xs hover:border-black hover:bg-black hover:text-white shadow-sm hover:shadow-md transition-all">
+            <a href="{{ route('events.index') }}" class="inline-flex items-center gap-2.5 px-8 py-3.5 rounded-full bg-white border border-black/15 text-black font-black text-xs hover:border-black hover:bg-black hover:text-white shadow-sm hover:shadow-md transition-all">
                 <span>Xem toàn bộ lịch diễn &amp; sự kiện 2026</span>
                 <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
@@ -192,7 +246,7 @@
                         Hệ thống sơ đồ khán phòng và sân khấu thông minh với công nghệ khóa vị trí chống trùng vé (Double-booking Prevention), giữ chỗ trong 10 phút để bạn hoàn tất thanh toán an toàn.
                     </p>
                     <div class="pt-2 flex flex-wrap gap-4">
-                        <a href="{{ route('movies.index') }}" class="btn-rose px-7 py-3.5 rounded-full text-xs font-black text-white shadow-md hover:shadow-lg transition-all">
+                        <a href="{{ route('events.index') }}" class="btn-rose px-7 py-3.5 rounded-full text-xs font-black text-white shadow-md hover:shadow-lg transition-all">
                             Chọn sự kiện yêu thích ngay &rarr;
                         </a>
                     </div>
@@ -228,7 +282,7 @@
     </section>
 
     <!-- FAQ Accordion Section with Alpine.js -->
-    <section class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-14" x-data="{ activeFaq: null }">
+    <section id="faq" class="scroll-mt-24 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-14" x-data="{ activeFaq: null }">
         <div class="text-center mb-10">
             <span class="text-xs font-black uppercase tracking-wider text-rose-taupe">Hỏi &amp; Đáp</span>
             <h2 class="font-serif text-3xl font-black text-black mt-1">Câu Hỏi Thường Gặp Khi Đặt Vé Sự Kiện</h2>
@@ -244,7 +298,7 @@
                     <span>Vé sự kiện của tôi được giữ trong thời gian bao lâu sau khi chọn chỗ?</span>
                     <span class="text-xl font-black text-gold-dark shrink-0" x-text="activeFaq === 1 ? '−' : '+'">+</span>
                 </button>
-                <div x-show="activeFaq === 1" x-collapse class="px-6 pb-5 pt-3.5 text-sm sm:text-base text-slate-800 font-medium leading-relaxed border-t border-slate-100 bg-[#FAF9F6]/70">
+                <div x-show="activeFaq === 1" x-transition.opacity.duration.200ms style="display: none;" class="px-6 pb-5 pt-3.5 text-sm sm:text-base text-slate-800 font-medium leading-relaxed border-t border-slate-100 bg-[#FAF9F6]/70">
                     Sau khi chọn chỗ ngồi và thêm vào giỏ vé, hệ thống sẽ tạm khóa chỗ độc quyền cho bạn trong 10 phút để tránh bị người khác đặt trùng. Sau 10 phút nếu chưa thanh toán, vé sẽ tự động giải phóng.
                 </div>
             </div>
@@ -258,7 +312,7 @@
                     <span>Làm sao để tôi kiểm tra lại mã vé E-Ticket khi đến sự kiện?</span>
                     <span class="text-xl font-black text-gold-dark shrink-0" x-text="activeFaq === 2 ? '−' : '+'">+</span>
                 </button>
-                <div x-show="activeFaq === 2" x-collapse class="px-6 pb-5 pt-3.5 text-sm sm:text-base text-slate-800 font-medium leading-relaxed border-t border-slate-100 bg-[#FAF9F6]/70">
+                <div x-show="activeFaq === 2" x-transition.opacity.duration.200ms style="display: none;" class="px-6 pb-5 pt-3.5 text-sm sm:text-base text-slate-800 font-medium leading-relaxed border-t border-slate-100 bg-[#FAF9F6]/70">
                     Bạn có thể đăng nhập vào tài khoản và truy cập trang "Vé của tôi" (My Bookings) ở thanh điều hướng để xem mã vé điện tử QR Code cùng thông tin khán phòng và cửa vào sự kiện.
                 </div>
             </div>
@@ -272,7 +326,7 @@
                     <span>Sự kiện ngoài trời có hiển thị thông tin thời tiết và bản đồ định vị không?</span>
                     <span class="text-xl font-black text-gold-dark shrink-0" x-text="activeFaq === 3 ? '−' : '+'">+</span>
                 </button>
-                <div x-show="activeFaq === 3" x-collapse class="px-6 pb-5 pt-3.5 text-sm sm:text-base text-slate-800 font-medium leading-relaxed border-t border-slate-100 bg-[#FAF9F6]/70">
+                <div x-show="activeFaq === 3" x-transition.opacity.duration.200ms style="display: none;" class="px-6 pb-5 pt-3.5 text-sm sm:text-base text-slate-800 font-medium leading-relaxed border-t border-slate-100 bg-[#FAF9F6]/70">
                     Có! Đối với các sự kiện ngoài trời, hệ thống tự động tích hợp dự báo thời tiết và bản đồ chỉ đường Google Maps ngay trên trang chi tiết sự kiện.
                 </div>
             </div>

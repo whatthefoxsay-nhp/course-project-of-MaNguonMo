@@ -1,5 +1,3 @@
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;0,900;1,600&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap');
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -9,13 +7,19 @@
     --bg-surface-cream: #FAF9F6;
     --bg-beige: #F5F5DC;
     --bg-beige-subtle: #FDFDF7;
+    --bg-toolbar: #F5F1E8;
+    --sidebar-ink: #141210;
     --color-black: #000000;
+    --color-text-main: #1C1917;
+    --color-text-secondary: #78716C;
+    --color-text-muted: #A8A29E;
     --color-charcoal: #1F2937;
     --accent-rose: #C08497;
     --accent-gold: #D4AF37;
+    --accent-gold-dark: #A8871F;
     --accent-sage: #3A5A40;
-    --accent-crimson: #CC0000;
-    --border-light: rgba(0, 0, 0, 0.08);
+    --accent-crimson: #B91C1C;
+    --border-light: rgba(0, 0, 0, 0.06);
     --border-beige: rgba(212, 175, 55, 0.25);
 }
 
@@ -249,6 +253,18 @@
         border: 1px solid #D8D8A8;
         font-weight: 600;
     }
+    .badge-purple {
+        background: #F3E8FF;
+        color: #6B21A8;
+        border: 1px solid #D8B4FE;
+        font-weight: 700;
+    }
+    .badge-slate {
+        background: #F1F5F9;
+        color: #334155;
+        border: 1px solid #CBD5E1;
+        font-weight: 700;
+    }
 }
 
 /* Shimmer animation utility */
@@ -291,4 +307,49 @@
 .scrollbar-none {
     -ms-overflow-style: none;
     scrollbar-width: none;
+}
+
+@layer components {
+    .admin-card {
+        @apply bg-white rounded-[20px] border border-stone-200/90 shadow-admin-card transition-all duration-200;
+    }
+    .admin-card-hover {
+        @apply hover:-translate-y-0.5 hover:shadow-admin-card-hover hover:border-[#D4AF37]/50;
+    }
+    .kpi-card {
+        @apply bg-white rounded-[20px] p-6 border border-stone-200/90 shadow-admin-card transition-all duration-200 hover:-translate-y-0.5 hover:shadow-admin-card-hover hover:border-[#D4AF37]/50;
+    }
+    .kpi-card-hero {
+        @apply bg-[#141210] text-white rounded-[20px] p-6 border border-[#D4AF37]/40 shadow-admin-hero transition-all duration-200 hover:-translate-y-0.5 hover:border-[#D4AF37]/70;
+    }
+    .admin-eyebrow {
+        @apply text-[11px] font-bold uppercase tracking-[0.08em] text-[#57534E];
+    }
+    .admin-metric {
+        @apply font-display font-bold tabular-nums text-3xl sm:text-4xl text-[#1C1917];
+    }
+    .admin-input {
+        @apply w-full bg-[#FAF9F6] border border-black/10 rounded-xl px-4 py-2.5 text-xs text-[#1C1917] placeholder-[#A8A29E] font-medium focus:outline-none focus:border-[#D4AF37] focus:ring-2 focus:ring-[#D4AF37]/20 transition-all duration-150;
+    }
+    .admin-btn-primary {
+        @apply inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold bg-[#141210] text-white border border-[#D4AF37]/50 hover:border-[#D4AF37] hover:bg-[#1C1917] shadow-sm transition-all duration-150;
+    }
+    .admin-btn-secondary {
+        @apply inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-xs font-semibold bg-white text-[#1C1917] border border-stone-200 hover:bg-[#F5F1E8] hover:border-stone-300 shadow-sm transition-all duration-150;
+    }
+    .admin-btn-rose {
+        @apply inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold bg-[#C08497] text-white border border-transparent hover:bg-[#A36579] shadow-sm transition-all duration-150;
+    }
+    .badge-semantic-sage {
+        @apply px-2.5 py-1 rounded-full bg-emerald-50 border border-emerald-300 text-emerald-800 text-[11px] font-bold inline-flex items-center gap-1.5 shadow-sm;
+    }
+    .badge-semantic-gold {
+        @apply px-2.5 py-1 rounded-full bg-amber-50 border border-amber-300 text-amber-900 text-[11px] font-bold inline-flex items-center gap-1.5 shadow-sm;
+    }
+    .badge-semantic-crimson {
+        @apply px-2.5 py-1 rounded-full bg-rose-50 border border-rose-300 text-rose-800 text-[11px] font-bold inline-flex items-center gap-1.5 shadow-sm;
+    }
+    .badge-semantic-neutral {
+        @apply px-2.5 py-1 rounded-full bg-stone-100 border border-stone-300 text-stone-800 text-[11px] font-semibold inline-flex items-center gap-1.5 shadow-sm;
+    }
 }
