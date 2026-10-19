@@ -184,6 +184,8 @@ class RoomController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'address' => 'nullable|string|max:500',
+            'latitude' => 'nullable|numeric|between:-90,90',
+            'longitude' => 'nullable|numeric|between:-180,180',
             'capacity' => 'required|integer|min:10|max:50000',
             'layout_preset' => 'required|string|in:'.implode(',', RoomSeatGenerator::PRESETS),
             'base_price' => 'nullable|numeric|min:10000',
@@ -228,6 +230,8 @@ class RoomController extends Controller
         $room = Room::create([
             'name' => $validated['name'],
             'address' => $validated['address'] ?? 'Trung tâm Tổ chức Sự kiện',
+            'latitude' => $validated['latitude'] ?? null,
+            'longitude' => $validated['longitude'] ?? null,
             'capacity' => (int) $validated['capacity'],
             'layout_preset' => $validated['layout_preset'],
             'diagram_mode' => Room::MODE_SEATS,
@@ -253,6 +257,8 @@ class RoomController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'address' => 'nullable|string|max:500',
+            'latitude' => 'nullable|numeric|between:-90,90',
+            'longitude' => 'nullable|numeric|between:-180,180',
             'capacity' => 'required|integer|min:10|max:50000',
             'layout_preset' => 'required|string|in:'.implode(',', RoomSeatGenerator::PRESETS),
             'base_price' => 'nullable|numeric|min:10000',
@@ -299,6 +305,8 @@ class RoomController extends Controller
             $room->update([
                 'name' => $validated['name'],
                 'address' => $validated['address'] ?? $room->address,
+                'latitude' => $validated['latitude'] ?? null,
+                'longitude' => $validated['longitude'] ?? null,
                 'capacity' => (int) $validated['capacity'],
             ]);
 
@@ -309,6 +317,8 @@ class RoomController extends Controller
         $room->update([
             'name' => $validated['name'],
             'address' => $validated['address'] ?? $room->address,
+            'latitude' => $validated['latitude'] ?? null,
+            'longitude' => $validated['longitude'] ?? null,
             'capacity' => (int) $validated['capacity'],
             'layout_preset' => $validated['layout_preset'],
             'diagram_mode' => Room::MODE_SEATS,
@@ -330,6 +340,8 @@ class RoomController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'address' => 'nullable|string|max:500',
+            'latitude' => 'nullable|numeric|between:-90,90',
+            'longitude' => 'nullable|numeric|between:-180,180',
             'layout_preset' => 'required|string|in:'.implode(',', array_merge(VenuePresets::PRESETS, [Room::ZONED_PRESET])),
             'zones' => 'required|json',
         ]);
@@ -359,6 +371,8 @@ class RoomController extends Controller
         $room->fill([
             'name' => $validated['name'],
             'address' => $validated['address'] ?? 'Trung tâm Tổ chức Sự kiện',
+            'latitude' => $validated['latitude'] ?? null,
+            'longitude' => $validated['longitude'] ?? null,
             'layout_preset' => $validated['layout_preset'] === Room::ZONED_PRESET ? 'outdoor_concert' : $validated['layout_preset'],
             'diagram_mode' => Room::MODE_ZONES,
             'seat_config' => ['base_price' => 250000],

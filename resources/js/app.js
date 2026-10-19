@@ -1055,9 +1055,9 @@ window.downloadTicketPNG = function(bookingData) {
 // Admin Auto Seat Map & Ticket Tier Builder Alpine Component
 Alpine.data('adminSeatMapBuilder', (config = {}) => ({
     preset: config.preset || 'mega_concert',
-    roomName: config.roomName || 'Sân Vận Động Quân Khu 7 (SVĐ QK7 Arena)',
-    roomAddress: config.roomAddress || 'Số 202 Hoàng Văn Thụ, Phường 9, Phú Nhuận, TP.HCM',
-    capacity: config.capacity || 20000,
+    roomName: config.roomName || '',
+    roomAddress: config.roomAddress || '',
+    capacity: config.capacity || 0,
     basePrice: config.basePrice || 250000,
     rows: config.rows || 10,
     cols: config.cols || 14,
@@ -1088,6 +1088,10 @@ Alpine.data('adminSeatMapBuilder', (config = {}) => ({
     init() {
         if (!this.matrixRows || this.matrixRows.length === 0) {
             this.buildDefaultMatrix(this.preset);
+        }
+        // Phòng mới: sức chứa lấy theo sơ đồ mặc định vừa dựng, không dùng số giả định.
+        if (!this.capacity) {
+            this.syncCapacity();
         }
     },
 
