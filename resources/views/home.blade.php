@@ -282,7 +282,7 @@
     </section>
 
     <!-- FAQ Accordion Section with Alpine.js -->
-    <section class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-14" x-data="{ activeFaq: null }">
+    <section id="faq" class="scroll-mt-24 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-14" x-data="{ activeFaq: null }">
         <div class="text-center mb-10">
             <span class="text-xs font-black uppercase tracking-wider text-rose-taupe">Hỏi &amp; Đáp</span>
             <h2 class="font-serif text-3xl font-black text-black mt-1">Câu Hỏi Thường Gặp Khi Đặt Vé Sự Kiện</h2>
@@ -298,7 +298,7 @@
                     <span>Vé sự kiện của tôi được giữ trong thời gian bao lâu sau khi chọn chỗ?</span>
                     <span class="text-xl font-black text-gold-dark shrink-0" x-text="activeFaq === 1 ? '−' : '+'">+</span>
                 </button>
-                <div x-show="activeFaq === 1" x-collapse class="px-6 pb-5 pt-3.5 text-sm sm:text-base text-slate-800 font-medium leading-relaxed border-t border-slate-100 bg-[#FAF9F6]/70">
+                <div x-show="activeFaq === 1" x-transition.opacity.duration.200ms style="display: none;" class="px-6 pb-5 pt-3.5 text-sm sm:text-base text-slate-800 font-medium leading-relaxed border-t border-slate-100 bg-[#FAF9F6]/70">
                     Sau khi chọn chỗ ngồi và thêm vào giỏ vé, hệ thống sẽ tạm khóa chỗ độc quyền cho bạn trong 10 phút để tránh bị người khác đặt trùng. Sau 10 phút nếu chưa thanh toán, vé sẽ tự động giải phóng.
                 </div>
             </div>
@@ -312,7 +312,7 @@
                     <span>Làm sao để tôi kiểm tra lại mã vé E-Ticket khi đến sự kiện?</span>
                     <span class="text-xl font-black text-gold-dark shrink-0" x-text="activeFaq === 2 ? '−' : '+'">+</span>
                 </button>
-                <div x-show="activeFaq === 2" x-collapse class="px-6 pb-5 pt-3.5 text-sm sm:text-base text-slate-800 font-medium leading-relaxed border-t border-slate-100 bg-[#FAF9F6]/70">
+                <div x-show="activeFaq === 2" x-transition.opacity.duration.200ms style="display: none;" class="px-6 pb-5 pt-3.5 text-sm sm:text-base text-slate-800 font-medium leading-relaxed border-t border-slate-100 bg-[#FAF9F6]/70">
                     Bạn có thể đăng nhập vào tài khoản và truy cập trang "Vé của tôi" (My Bookings) ở thanh điều hướng để xem mã vé điện tử QR Code cùng thông tin khán phòng và cửa vào sự kiện.
                 </div>
             </div>
@@ -326,7 +326,7 @@
                     <span>Sự kiện ngoài trời có hiển thị thông tin thời tiết và bản đồ định vị không?</span>
                     <span class="text-xl font-black text-gold-dark shrink-0" x-text="activeFaq === 3 ? '−' : '+'">+</span>
                 </button>
-                <div x-show="activeFaq === 3" x-collapse class="px-6 pb-5 pt-3.5 text-sm sm:text-base text-slate-800 font-medium leading-relaxed border-t border-slate-100 bg-[#FAF9F6]/70">
+                <div x-show="activeFaq === 3" x-transition.opacity.duration.200ms style="display: none;" class="px-6 pb-5 pt-3.5 text-sm sm:text-base text-slate-800 font-medium leading-relaxed border-t border-slate-100 bg-[#FAF9F6]/70">
                     Có! Đối với các sự kiện ngoài trời, hệ thống tự động tích hợp dự báo thời tiết và bản đồ chỉ đường Google Maps ngay trên trang chi tiết sự kiện.
                 </div>
             </div>

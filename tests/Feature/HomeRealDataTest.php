@@ -37,6 +37,19 @@ test('event card shows real venue and sale status', function () {
         ->assertSee('Sân Vận Động Quân Khu 7', false);
 });
 
+test('site does not impersonate the real Ticketbox company', function () {
+    $this->get(route('events.index'))
+        ->assertOk()
+        ->assertDontSee('1900 6408')
+        ->assertDontSee('TicketBox Vietnam JSC')
+        ->assertDontSee('support@ticketbox.vn')
+        ->assertDontSee('href="#"', false)
+        ->assertSee('Đồ án môn Mã nguồn mở')
+        ->assertSee('<title>Danh Sách Sự Kiện, Concert &amp; Hội Thảo - TicketBox</title>', false);
+
+    $this->get(route('home'))->assertSee('id="faq"', false);
+});
+
 test('home category tab value is escaped as a javascript literal', function () {
     $this->get(route('home', ['category' => "x';alert(1);'"]))
         ->assertOk()

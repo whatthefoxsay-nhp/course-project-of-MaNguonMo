@@ -91,7 +91,7 @@
                             <div class="space-y-2">
                                 <div>
                                     <span class="text-[10px] text-gray-500 font-bold uppercase block">Ban Tổ Chức Chính:</span>
-                                    <strong class="text-black font-bold">{{ $movie->organizers['lead'] ?? 'TicketBox Vietnam' }}</strong>
+                                    <strong class="text-black font-bold">{{ $movie->organizers['lead'] ?? 'Ban tổ chức sự kiện' }}</strong>
                                 </div>
                                 @if (!empty($movie->organizers['sponsor']))
                                     <div class="pt-1.5 border-t border-black/5">
