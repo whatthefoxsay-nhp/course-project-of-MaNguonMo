@@ -40,4 +40,15 @@ return [
         'model' => env('GEMINI_MODEL', 'gemini-2.5-flash'),
     ],
 
+    'google_maps' => [
+        // Có key: dùng Maps Embed API. Để trống: dùng link nhúng công khai (không cần key).
+        'embed_key' => env('GOOGLE_MAPS_EMBED_KEY'),
+    ],
+
+    'openweather' => [
+        // Để trống: ẩn khối dự báo thời tiết trên trang chi tiết sự kiện.
+        'key' => env('OPENWEATHER_API_KEY'),
+        'base_url' => env('OPENWEATHER_BASE_URL', 'https://api.openweathermap.org/data/2.5'),
+    ],
+
 ];

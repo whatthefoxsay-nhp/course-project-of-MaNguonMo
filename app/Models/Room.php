@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Support\VenuePresets;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -51,6 +52,15 @@ class Room extends Model
     public function isZoned(): bool
     {
         return $this->diagram_mode === self::MODE_ZONES;
+    }
+
+    /**
+     * Địa điểm ngoài trời (sân vận động / sân khấu ngoài trời) — suy ra từ mẫu bố cục
+     * vì chưa có cờ trong nhà/ngoài trời riêng. Dùng để quyết định có hiện dự báo thời tiết.
+     */
+    public function isOutdoor(): bool
+    {
+        return VenuePresets::normalize((string) $this->layout_preset) === 'outdoor_concert';
     }
 
     public function recalculateCapacity(): int
