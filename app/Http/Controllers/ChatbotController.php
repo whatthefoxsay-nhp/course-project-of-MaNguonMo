@@ -15,6 +15,11 @@ class ChatbotController extends Controller
             'history' => 'nullable|array|max:10',
         ]);
 
+        // Chưa có GEMINI_API_KEY: báo client dùng bộ trả lời có sẵn (FAQ) thay vì hiện lỗi cấu hình.
+        if (! $gemini->isConfigured()) {
+            return response()->json(['reply' => null, 'fallback' => true]);
+        }
+
         $replyHtml = $gemini->reply(
             $validated['message'],
             $validated['history'] ?? []

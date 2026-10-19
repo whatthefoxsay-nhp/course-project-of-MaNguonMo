@@ -89,3 +89,14 @@ it('sends strict scope instructions and low temperature in gemini payload', func
     });
 });
 
+
+test('chatbot tells the client to use canned answers when no Gemini key is configured', function () {
+    config(['services.gemini.api_key' => '']);
+    Http::fake();
+
+    $this->postJson(route('chatbot.message'), ['message' => 'Có sự kiện nào cuối tuần?'])
+        ->assertOk()
+        ->assertExactJson(['reply' => null, 'fallback' => true]);
+
+    Http::assertNothingSent();
+});

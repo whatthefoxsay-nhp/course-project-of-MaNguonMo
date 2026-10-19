@@ -452,6 +452,9 @@ document.addEventListener('alpine:init', () => {
                 }
 
                 const data = await response.json();
+                if (data.fallback || !data.reply) {
+                    throw new Error('Gemini chưa được cấu hình');
+                }
                 this.messages.push({
                     sender: 'bot',
                     text: data.reply,

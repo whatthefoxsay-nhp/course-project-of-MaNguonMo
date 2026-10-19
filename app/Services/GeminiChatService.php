@@ -24,6 +24,11 @@ class GeminiChatService
         $this->model = $model ?: 'gemini-2.5-flash';
     }
 
+    public function isConfigured(): bool
+    {
+        return $this->apiKey !== '';
+    }
+
     public function reply(string $userMessage, array $conversationHistory = []): string
     {
         if (empty($this->apiKey)) {
