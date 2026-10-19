@@ -164,7 +164,7 @@
                                 <td class="py-3 px-3.5 whitespace-nowrap">
                                     <div class="flex items-center gap-2.5">
                                         <div class="w-8 h-8 rounded-xl {{ $isAdmin ? 'bg-gradient-to-br from-amber-400 to-amber-600 text-black shadow-xs ring-2 ring-amber-300' : 'bg-gradient-to-br from-slate-700 to-slate-900 text-white shadow-xs' }} flex items-center justify-center font-display font-black text-xs shrink-0">
-                                            {{ strtoupper(substr($user->name, 0, 1)) }}
+                                            {{ mb_strtoupper(mb_substr($user->name, 0, 1)) }}
                                         </div>
                                         <div class="min-w-0 max-w-[130px] sm:max-w-[160px]">
                                             <div class="flex items-center gap-1.5">
@@ -220,7 +220,7 @@
                                             <span class="text-[11px] text-gray-400 italic">Tài khoản của bạn</span>
                                         @else
                                             <!-- Toggle Role -->
-                                            <form method="POST" action="{{ route('admin.users.toggle-role', $user) }}" onsubmit="return confirm('Bạn có chắc muốn đổi vai trò của [{{ addslashes($user->name) }}]?')">
+                                            <form method="POST" action="{{ route('admin.users.toggle-role', $user) }}" onsubmit="return confirm(@js('Bạn có chắc muốn đổi vai trò của [' . $user->name . ']?'))">
                                                 @csrf
                                                 @method('PATCH')
                                                 <button 
@@ -234,7 +234,7 @@
                                             </form>
 
                                             <!-- Reset Password -->
-                                            <form method="POST" action="{{ route('admin.users.reset-password', $user) }}" onsubmit="return confirm('Đặt lại mật khẩu cho [{{ addslashes($user->name) }}] về mặc định (TicketBox@2026)?')">
+                                            <form method="POST" action="{{ route('admin.users.reset-password', $user) }}" onsubmit="return confirm(@js('Đặt lại mật khẩu cho [' . $user->name . '] về mặc định (TicketBox@2026)?'))">
                                                 @csrf
                                                 <button 
                                                     type="submit" 
@@ -249,7 +249,7 @@
                                             <button 
                                                 id="user-action-btn-{{ $user->id }}"
                                                 type="button" 
-                                                @click="openConfirm({{ $user->id }}, '{{ addslashes($user->name) }}', {{ $user->is_active ? 'true' : 'false' }})"
+                                                @click="openConfirm({{ $user->id }}, @js($user->name), {{ $user->is_active ? 'true' : 'false' }})"
                                                 class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all shadow-sm whitespace-nowrap {{ $user->is_active ? 'bg-rose-50 text-rose-800 border border-rose-200 hover:bg-rose-100' : 'bg-emerald-50 text-emerald-800 border border-emerald-200 hover:bg-emerald-100' }}"
                                                 title="{{ $user->is_active ? 'Khóa tài khoản này' : 'Mở khóa tài khoản này' }}"
                                             >
@@ -550,12 +550,16 @@
                 showConfirmModal: false,
                 isSubmitting: false,
                 targetUser: { id: null, name: '', is_active: true },
+                // Trạng thái mới nhất sau mỗi lần khóa/mở khóa (giá trị render từ server có thể đã cũ).
+                activeStates: {},
+                toggleUrlTemplate: @js(route('admin.users.toggle-status', ['user' => '__USER__'])),
                 showToast: false,
                 toastMessage: '',
                 toastType: 'success',
 
                 openConfirm(id, name, isActive) {
-                    this.targetUser = { id: id, name: name, is_active: isActive };
+                    const current = Object.prototype.hasOwnProperty.call(this.activeStates, id) ? this.activeStates[id] : isActive;
+                    this.targetUser = { id: id, name: name, is_active: current };
                     this.showConfirmModal = true;
                 },
 
@@ -576,18 +580,18 @@
                     this.isSubmitting = true;
 
                     try {
-                        const response = await fetch(`/admin/users/${this.targetUser.id}/toggle-status`, {
-                            method: 'PATCH',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-                                'Accept': 'application/json'
-                            }
+                        // axios (resources/js/bootstrap.js) tự gửi X-Requested-With và XSRF token từ cookie.
+                        const url = this.toggleUrlTemplate.replace('__USER__', encodeURIComponent(this.targetUser.id));
+                        const response = await window.axios.patch(url, null, {
+                            headers: { 'Accept': 'application/json' },
+                            validateStatus: () => true,
                         });
 
-                        const data = await response.json();
+                        const data = response.data || {};
 
-                        if (response.ok && data.success) {
+                        if (response.status >= 200 && response.status < 300 && data.success) {
+                            this.activeStates[this.targetUser.id] = !!data.user.is_active;
+
                             const badgeEl = document.getElementById(`user-status-badge-${this.targetUser.id}`);
                             const btnEl = document.getElementById(`user-action-btn-${this.targetUser.id}`);
 
