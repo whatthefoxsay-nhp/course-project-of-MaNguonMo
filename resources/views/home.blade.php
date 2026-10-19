@@ -37,21 +37,23 @@
                         </a>
                     </div>
 
-                    <!-- Statistics Strip -->
-                    <div class="pt-6 border-t border-black/10 grid grid-cols-3 gap-4 sm:gap-6 max-w-lg text-left">
-                        <div>
-                            <span class="font-display font-black text-2xl sm:text-3xl text-gold-dark block">50K+</span>
-                            <span class="text-[11px] sm:text-xs text-gray-500 font-semibold">Vé đã phát hành</span>
+                    <!-- Statistics Strip (số liệu thật từ HomeController::stats) -->
+                    @isset($stats)
+                        <div class="pt-6 border-t border-black/10 grid grid-cols-3 gap-4 sm:gap-6 max-w-lg text-left">
+                            <div>
+                                <span class="font-display font-black text-2xl sm:text-3xl text-gold-dark block">{{ number_format($stats['events_on_sale'], 0, ',', '.') }}</span>
+                                <span class="text-[11px] sm:text-xs text-gray-500 font-semibold">Sự kiện đang mở bán</span>
+                            </div>
+                            <div>
+                                <span class="font-display font-black text-2xl sm:text-3xl text-rose-taupe block">{{ number_format($stats['tickets_sold'], 0, ',', '.') }}</span>
+                                <span class="text-[11px] sm:text-xs text-gray-500 font-semibold">Vé đã bán</span>
+                            </div>
+                            <div>
+                                <span class="font-display font-black text-2xl sm:text-3xl text-sage-forest block">{{ number_format($stats['venues'], 0, ',', '.') }}</span>
+                                <span class="text-[11px] sm:text-xs text-gray-500 font-semibold">Khán phòng &amp; địa điểm</span>
+                            </div>
                         </div>
-                        <div>
-                            <span class="font-display font-black text-2xl sm:text-3xl text-rose-taupe block">100+</span>
-                            <span class="text-[11px] sm:text-xs text-gray-500 font-semibold">Show diễn độc quyền</span>
-                        </div>
-                        <div>
-                            <span class="font-display font-black text-2xl sm:text-3xl text-sage-forest block">4.9/5</span>
-                            <span class="text-[11px] sm:text-xs text-gray-500 font-semibold">Độ hài lòng khán giả</span>
-                        </div>
-                    </div>
+                    @endisset
                 </div>
 
                 <!-- Right Spotlight Feature Card -->
@@ -97,8 +99,13 @@
                                     
                                     <div class="mt-4 pt-3.5 border-t border-black/10 flex items-center justify-between">
                                         <div>
-                                            <span class="text-[10px] text-gray-400 font-semibold block">Giá vé từ</span>
-                                            <span class="font-display font-black text-black text-lg">{{ number_format($leadEvent->base_price ?? 250000, 0, ',', '.') }}₫</span>
+                                            @if ($leadEvent->base_price !== null)
+                                                <span class="text-[10px] text-gray-400 font-semibold block">Giá vé từ</span>
+                                                <span class="font-display font-black text-black text-lg">{{ number_format($leadEvent->base_price, 0, ',', '.') }}₫</span>
+                                            @else
+                                                <span class="text-[10px] text-gray-400 font-semibold block">Giá vé</span>
+                                                <span class="font-display font-black text-gray-500 text-sm">Đang cập nhật</span>
+                                            @endif
                                         </div>
                                         <a href="{{ route('movies.show', $leadEvent->slug) }}" class="btn-gold px-5 py-2.5 rounded-xl text-xs font-black shadow-sm flex items-center gap-1.5 hover:shadow-md transition-all">
                                             <span>Chọn chỗ ngồi</span>
@@ -121,7 +128,7 @@
         id="featured-section" 
         class="max-w-[1440px] mx-auto px-4 sm:px-8 py-8 sm:py-12" 
         x-data="{ 
-            currentTab: '{{ $currentTab ?? 'all' }}',
+            currentTab: @js($currentTab ?? 'all'),
             loading: false,
             async setTab(tab) {
                 if (this.currentTab === tab && !this.loading) return;

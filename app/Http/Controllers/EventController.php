@@ -23,6 +23,7 @@ class EventController extends Controller
         $events = Event::published()
             ->with('category')
             ->withMin('showtimes', 'base_price')
+            ->withMin(['showtimes as next_showtime_at' => fn ($q) => $q->where('start_time', '>', now())], 'start_time')
             ->when($query !== '', fn ($builder) => $builder->where(function ($where) use ($query) {
                 $where->where('title', 'like', "%{$query}%")
                     ->orWhere('description', 'like', "%{$query}%");
