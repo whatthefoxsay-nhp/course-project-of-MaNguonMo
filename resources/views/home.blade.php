@@ -25,7 +25,7 @@
 
                     <!-- CTAs & Quick Feature Badges -->
                     <div class="pt-2 flex flex-wrap items-center gap-3 sm:gap-4">
-                        <a href="{{ route('movies.index') }}" class="btn-rose px-8 py-3.5 rounded-full font-black text-sm flex items-center gap-2 shadow-md hover:shadow-lg transition-all">
+                        <a href="{{ route('events.index') }}" class="btn-rose px-8 py-3.5 rounded-full font-black text-sm flex items-center gap-2 shadow-md hover:shadow-lg transition-all">
                             <span>Khám phá sự kiện ngay</span>
                             <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3" />
@@ -107,7 +107,7 @@
                                                 <span class="font-display font-black text-gray-500 text-sm">Đang cập nhật</span>
                                             @endif
                                         </div>
-                                        <a href="{{ route('movies.show', $leadEvent->slug) }}" class="btn-gold px-5 py-2.5 rounded-xl text-xs font-black shadow-sm flex items-center gap-1.5 hover:shadow-md transition-all">
+                                        <a href="{{ route('events.show', $leadEvent->slug) }}" class="btn-gold px-5 py-2.5 rounded-xl text-xs font-black shadow-sm flex items-center gap-1.5 hover:shadow-md transition-all">
                                             <span>Chọn chỗ ngồi</span>
                                             <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3" />
@@ -219,7 +219,7 @@
 
         <!-- View All Events Link -->
         <div class="mt-12 text-center">
-            <a href="{{ route('movies.index') }}" class="inline-flex items-center gap-2.5 px-8 py-3.5 rounded-full bg-white border border-black/15 text-black font-black text-xs hover:border-black hover:bg-black hover:text-white shadow-sm hover:shadow-md transition-all">
+            <a href="{{ route('events.index') }}" class="inline-flex items-center gap-2.5 px-8 py-3.5 rounded-full bg-white border border-black/15 text-black font-black text-xs hover:border-black hover:bg-black hover:text-white shadow-sm hover:shadow-md transition-all">
                 <span>Xem toàn bộ lịch diễn &amp; sự kiện 2026</span>
                 <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
@@ -246,7 +246,7 @@
                         Hệ thống sơ đồ khán phòng và sân khấu thông minh với công nghệ khóa vị trí chống trùng vé (Double-booking Prevention), giữ chỗ trong 10 phút để bạn hoàn tất thanh toán an toàn.
                     </p>
                     <div class="pt-2 flex flex-wrap gap-4">
-                        <a href="{{ route('movies.index') }}" class="btn-rose px-7 py-3.5 rounded-full text-xs font-black text-white shadow-md hover:shadow-lg transition-all">
+                        <a href="{{ route('events.index') }}" class="btn-rose px-7 py-3.5 rounded-full text-xs font-black text-white shadow-md hover:shadow-lg transition-all">
                             Chọn sự kiện yêu thích ngay &rarr;
                         </a>
                     </div>

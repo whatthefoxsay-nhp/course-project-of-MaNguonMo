@@ -131,7 +131,7 @@
                         <span class="text-gray-400 group-hover:text-black">&rarr;</span>
                     </a>
 
-                    <a href="{{ route('movies.index') }}" class="flex items-center justify-between px-3.5 py-2.5 rounded-2xl text-slate-800 hover:bg-[#FAF9F6] font-semibold text-xs transition-colors group">
+                    <a href="{{ route('events.index') }}" class="flex items-center justify-between px-3.5 py-2.5 rounded-2xl text-slate-800 hover:bg-[#FAF9F6] font-semibold text-xs transition-colors group">
                         <div class="flex items-center gap-2.5">
                             <div class="w-7 h-7 rounded-xl bg-[#FFF8E1] text-gold-dark flex items-center justify-center group-hover:scale-105 transition-transform">
                                 <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">

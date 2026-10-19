@@ -5,7 +5,7 @@
         <nav class="flex items-center gap-2 text-xs text-gray-500 font-semibold">
             <a href="{{ route('home') }}" class="hover:text-black transition-colors">Trang chủ</a>
             <span>/</span>
-            <a href="{{ route('movies.index') }}" class="hover:text-black transition-colors">Khám phá sự kiện</a>
+            <a href="{{ route('events.index') }}" class="hover:text-black transition-colors">Khám phá sự kiện</a>
             <span>/</span>
             <span class="text-rose-taupe line-clamp-1 font-bold">{{ $movie->title }}</span>
         </nav>

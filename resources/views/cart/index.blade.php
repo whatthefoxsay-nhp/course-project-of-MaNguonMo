@@ -136,7 +136,7 @@
                 <p class="text-xs text-gray-500 max-w-sm mx-auto leading-relaxed">
                     Bạn chưa giữ vé nào trong phiên này. Hãy khám phá danh sách đại nhạc hội concert và sự kiện hấp dẫn để đặt chỗ ngay.
                 </p>
-                <a href="{{ route('movies.index') }}" class="btn-rose inline-flex items-center gap-2 px-7 py-3 rounded-full text-xs font-bold shadow-md">
+                <a href="{{ route('events.index') }}" class="btn-rose inline-flex items-center gap-2 px-7 py-3 rounded-full text-xs font-bold shadow-md">
                     <span>Khám phá sự kiện ngay</span>
                     <span>&rarr;</span>
                 </a>
@@ -1011,7 +1011,7 @@
                         <span>Xem trong danh sách "Vé của tôi"</span>
                     </a>
 
-                    <a href="{{ route('movies.index') }}" class="btn-rose px-7 py-3 rounded-2xl text-xs font-bold flex items-center gap-2 shadow-md">
+                    <a href="{{ route('events.index') }}" class="btn-rose px-7 py-3 rounded-2xl text-xs font-bold flex items-center gap-2 shadow-md">
                         <span>Khám phá thêm sự kiện khác</span>
                         <span>&rarr;</span>
                     </a>

@@ -390,7 +390,7 @@
                 <svg class="w-5 h-5 text-gold-dark" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                 </svg>
-                <form action="{{ route('movies.index') }}" method="GET" class="flex-1">
+                <form action="{{ route('events.index') }}" method="GET" class="flex-1">
                     <input
                         id="global-search-input"
                         type="text"
@@ -436,7 +436,7 @@
                         </li>
                     </template>
                 </ul>
-                <a x-show="!isLoading" :href="'{{ route('movies.index') }}?q=' + encodeURIComponent(query.trim())" class="mt-3 inline-block text-xs font-bold text-gold-dark hover:underline">Xem tất cả kết quả &rarr;</a>
+                <a x-show="!isLoading" :href="'{{ route('events.index') }}?q=' + encodeURIComponent(query.trim())" class="mt-3 inline-block text-xs font-bold text-gold-dark hover:underline">Xem tất cả kết quả &rarr;</a>
             </div>
 
             <!-- Popular events (tải AJAX khi mở modal) -->

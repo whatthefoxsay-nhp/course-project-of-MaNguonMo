@@ -152,7 +152,7 @@
                             </a>
 
                             <!-- Duplicate Venue Button -->
-                            <form method="POST" action="{{ route('admin.rooms.duplicate', $room) }}" onsubmit="return confirm('Bạn có muốn nhân bản khán phòng [{{ addslashes($room->name) }}] thành một sơ đồ mới để tùy chỉnh không?')">
+                            <form method="POST" action="{{ route('admin.rooms.duplicate', $room) }}" onsubmit="return confirm(@js('Bạn có muốn nhân bản khán phòng [' . $room->name . '] thành một sơ đồ mới để tùy chỉnh không?'))">
                                 @csrf
                                 <button type="submit" class="p-2.5 rounded-2xl text-xs font-bold text-indigo-700 bg-indigo-50 border border-indigo-200 hover:bg-indigo-600 hover:text-white transition-all flex items-center justify-center cursor-pointer" title="Nhân bản khán phòng & sơ đồ này">
                                     <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -161,7 +161,7 @@
                                 </button>
                             </form>
 
-                            <form method="POST" action="{{ route('admin.rooms.destroy', $room) }}" onsubmit="return confirm('Bạn có chắc muốn xóa khán phòng [{{ addslashes($room->name) }}]?')">
+                            <form method="POST" action="{{ route('admin.rooms.destroy', $room) }}" onsubmit="return confirm(@js('Bạn có chắc muốn xóa khán phòng [' . $room->name . ']?'))">
                                 @csrf
                                 @method('DELETE')
                                 <button type="submit" class="p-2.5 rounded-2xl text-xs font-bold text-[#CC0000] border border-[#CC0000]/30 hover:bg-[#CC0000] hover:text-white transition-all flex items-center justify-center" title="Xóa khán phòng">

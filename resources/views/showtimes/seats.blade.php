@@ -6,15 +6,15 @@
             <nav class="flex items-center gap-2 text-xs text-gray-500 font-semibold">
                 <a href="{{ route('home') }}" class="hover:text-black transition-colors">Trang chủ</a>
                 <span>/</span>
-                <a href="{{ route('movies.index') }}" class="hover:text-black transition-colors">Khám phá sự kiện</a>
+                <a href="{{ route('events.index') }}" class="hover:text-black transition-colors">Khám phá sự kiện</a>
                 <span>/</span>
-                <a href="{{ route('movies.show', $movie->slug) }}" class="hover:text-black transition-colors line-clamp-1">{{ $movie->title }}</a>
+                <a href="{{ route('events.show', $movie->slug) }}" class="hover:text-black transition-colors line-clamp-1">{{ $movie->title }}</a>
                 <span>/</span>
                 <span class="text-rose-taupe font-bold">Chọn Chỗ &amp; Đặt Vé</span>
             </nav>
 
             <a 
-                href="{{ route('movies.show', $movie->slug) }}" 
+                href="{{ route('events.show', $movie->slug) }}" 
                 class="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-white border border-black/10 hover:border-black text-xs font-bold text-gray-700 hover:text-black transition-all shadow-sm"
             >
                 <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>

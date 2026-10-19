@@ -121,10 +121,10 @@
     >
         <!-- Flash session message bridge to toast -->
         @if (session('success'))
-            <div x-init="showToast('{{ addslashes(session('success')) }}', 'success')"></div>
+            <div x-init="showToast(@js(session('success')), 'success')"></div>
         @endif
         @if (session('error'))
-            <div x-init="showToast('{{ addslashes(session('error')) }}', 'error')"></div>
+            <div x-init="showToast(@js(session('error')), 'error')"></div>
         @endif
 
         <!-- 1. Stats Cards Grid (4 KPI Cards) -->

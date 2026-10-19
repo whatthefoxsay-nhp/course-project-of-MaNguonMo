@@ -31,8 +31,8 @@
     <div 
         x-data="adminSeatMapBuilder({
             preset: '{{ $preset }}',
-            roomName: '{{ addslashes($room->name ?? '') }}',
-            roomAddress: '{{ addslashes($room->address ?? '') }}',
+            roomName: @js($room->name ?? ''),
+            roomAddress: @js($room->address ?? ''),
             capacity: {{ (int) ($room->capacity ?? 0) }},
             basePrice: {{ $basePrice }},
             rows: {{ $rows }},
