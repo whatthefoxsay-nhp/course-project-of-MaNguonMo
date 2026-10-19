@@ -102,17 +102,21 @@
                 </div>
             </div>
 
-            <!-- Countdown Timer Component -->
-            <div 
-                x-data="countdownTimer(0, {{ $expiresInSeconds }})" 
-                class="bg-[#FFF8E1] rounded-2xl px-4 py-2 border border-[#FFE082] flex items-center gap-2.5 shrink-0"
-            >
-                <div class="w-2 h-2 rounded-full bg-gold-dark animate-ping"></div>
-                <div class="text-xs">
-                    <span class="text-gray-600 uppercase font-bold text-[10px]">Giữ vé trong:</span>
-                    <span class="font-display font-black text-gold-dark text-sm ml-1" x-text="minutes + ':' + seconds">10:00</span>
+            <!-- Countdown Timer Component (ẩn khi giỏ trống; dừng hẳn sau khi thanh toán xong) -->
+            @if (! empty($items) && $expiresInSeconds > 0)
+                <div
+                    x-data="countdownTimer(0, @js($expiresInSeconds))"
+                    x-show="!stopped"
+                    @checkout-completed.window="stop()"
+                    class="bg-[#FFF8E1] rounded-2xl px-4 py-2 border border-[#FFE082] flex items-center gap-2.5 shrink-0"
+                >
+                    <div class="w-2 h-2 rounded-full bg-gold-dark animate-ping"></div>
+                    <div class="text-xs">
+                        <span class="text-gray-600 uppercase font-bold text-[10px]">Giữ vé trong:</span>
+                        <span class="font-display font-black text-gold-dark text-sm ml-1" x-text="minutes + ':' + seconds">{{ sprintf('%02d:%02d', intdiv($expiresInSeconds, 60), $expiresInSeconds % 60) }}</span>
+                    </div>
                 </div>
-            </div>
+            @endif
         </div>
 
         @if (empty($items))

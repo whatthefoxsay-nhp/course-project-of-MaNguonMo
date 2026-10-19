@@ -461,9 +461,11 @@ Alpine.data('countdownTimer', (initialMinutes = 10, initialSeconds = null) => ({
     totalSeconds: initialSeconds ?? initialMinutes * 60,
     timerInterval: null,
     expired: false,
+    stopped: false,
 
     init() {
         this.timerInterval = setInterval(() => {
+            if (this.stopped) return;
             if (this.totalSeconds > 0) {
                 this.totalSeconds--;
                 return;
@@ -475,6 +477,12 @@ Alpine.data('countdownTimer', (initialMinutes = 10, initialSeconds = null) => ({
                 window.location.reload();
             }
         }, 1000);
+    },
+
+    // Gọi khi thanh toán xong (sự kiện "checkout-completed"): dừng hẳn, không reload trang vé điện tử.
+    stop() {
+        this.stopped = true;
+        clearInterval(this.timerInterval);
     },
 
     get minutes() {
@@ -642,6 +650,7 @@ Alpine.data('ticketPaymentManager', (config = {}) => ({
             this.orderCode = data.booking_code;
             this.paidAmount = data.total_price;
             this.paymentSuccess = true;
+            window.dispatchEvent(new CustomEvent('checkout-completed'));
             this.step = 'e_ticket';
             window.scrollTo({ top: 0, behavior: 'smooth' });
             this.notify(data.message);

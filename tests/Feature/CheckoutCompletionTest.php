@@ -120,6 +120,21 @@ test('the payment step only shows a labelled demo QR and collects no card data',
         ->and($js)->toContain('DEMO THANH TOAN GIA LAP');
 });
 
+test('the hold countdown is hidden for an empty cart and stops after checkout', function () {
+    $this->actingAs(createCustomer())->get(route('cart.index'))
+        ->assertOk()
+        ->assertDontSee('Giữ vé trong:')
+        ->assertDontSee('countdownTimer(', false);
+
+    $user = createCustomer();
+    holdCompletionSeats($user, 1);
+    $this->actingAs($user)->get(route('cart.index'))
+        ->assertSee('Giữ vé trong:')
+        ->assertSee('@checkout-completed.window="stop()"', false);
+
+    expect(file_get_contents(resource_path('js/app.js')))->toContain("new CustomEvent('checkout-completed')");
+});
+
 test('checkout is refused once the showtime has started', function () {
     $user = createCustomer();
     $showtime = holdCompletionSeats($user, 1);
