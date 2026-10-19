@@ -28,6 +28,8 @@
 
     @php
         $navCartCount = auth()->check() ? \App\Models\ShowtimeSeat::heldBy(auth()->user())->count() : 0;
+        $upcomingShowtimes = $upcomingShowtimes ?? collect();
+        $soonShowtimes = $upcomingShowtimes->filter(fn ($s) => \App\Support\UpcomingShowtimes::isSoon($s));
     @endphp
 
     <!-- Full-Width Modern Luxury Navbar -->
@@ -137,11 +139,13 @@
                 @auth
                     <a href="{{ route('bookings.history') }}" class="relative inline-flex items-center gap-1.5 px-2.5 xl:px-3 py-1.5 rounded-full transition-colors whitespace-nowrap {{ request()->routeIs('bookings.*') ? 'bg-[#000000] text-white font-bold' : 'text-gray-700 hover:text-black hover:bg-black/5' }}">
                         <span>Vé của tôi</span>
-                        <!-- Event Countdown / Notification Pill (12h - 24h) -->
-                        <span class="flex h-2 w-2 relative" title="Có 1 sự kiện sắp diễn ra trong 12 tiếng">
-                            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-taupe opacity-75"></span>
-                            <span class="relative inline-flex rounded-full h-2 w-2 bg-rose-taupe"></span>
-                        </span>
+                        @if ($soonShowtimes->isNotEmpty())
+                            <!-- Nhắc suất diễn đã đặt vé sắp diễn ra trong 24 giờ tới -->
+                            <span class="flex h-2 w-2 relative" title="Có {{ $soonShowtimes->count() }} suất diễn bạn đã đặt vé sắp diễn ra trong 24 giờ tới">
+                                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-taupe opacity-75"></span>
+                                <span class="relative inline-flex rounded-full h-2 w-2 bg-rose-taupe"></span>
+                            </span>
+                        @endif
                     </a>
                 @endauth
 
@@ -173,8 +177,9 @@
                             <svg class="w-4 h-4 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
                             </svg>
-                            <!-- Ping Alert for Event in 12h -->
-                            <span class="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-rose-taupe"></span>
+                            @if ($soonShowtimes->isNotEmpty())
+                                <span class="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-rose-taupe"></span>
+                            @endif
                         </button>
 
                         <div 
@@ -192,19 +197,36 @@
                             <div class="bg-white rounded-3xl p-4 border border-black/10 shadow-[0_20px_45px_-15px_rgba(0,0,0,0.18)] text-xs space-y-3">
                                 <div class="flex items-center justify-between pb-2 border-b border-black/10">
                                     <h4 class="font-display font-black text-black text-sm">Thông Báo Sự Kiện</h4>
-                                    <span class="badge-rose text-[9px] px-2 py-0.5 rounded-full font-bold">1 Nhắc Nhở</span>
+                                    @if ($upcomingShowtimes->isNotEmpty())
+                                        <span class="badge-rose text-[9px] px-2 py-0.5 rounded-full font-bold">{{ $upcomingShowtimes->count() }} suất sắp tới</span>
+                                    @endif
                                 </div>
 
-                                <a href="{{ route('bookings.history') }}" class="block p-3 rounded-2xl bg-[#FFF8E1] hover:bg-[#F5F5DC] border border-[#D8D8A8] transition-colors space-y-1">
-                                    <div class="flex items-center justify-between text-[10px]">
-                                        <span class="badge-gold px-2 py-0.5 rounded-full font-black">SẮP DIỄN RA TRONG 12H</span>
-                                        <span class="text-gray-500 font-bold">Hôm nay 19:30</span>
-                                    </div>
-                                    <h5 class="font-display font-black text-xs text-black">Live Concert Acoustic 2026</h5>
-                                    <p class="text-[11px] text-gray-600 leading-tight">
-                                        Khán phòng Saigon Grand Hall. Vui lòng mở mã QR vé điện tử để làm thủ tục check-in.
+                                @forelse ($upcomingShowtimes as $upcoming)
+                                    @php
+                                        $isSoon = \App\Support\UpcomingShowtimes::isSoon($upcoming);
+                                        $startsAt = $upcoming->start_time;
+                                        $dayLabel = $startsAt->isToday() ? 'Hôm nay' : ($startsAt->isTomorrow() ? 'Ngày mai' : $startsAt->format('d/m/Y'));
+                                    @endphp
+                                    <a href="{{ route('bookings.history') }}" class="block p-3 rounded-2xl transition-colors space-y-1 {{ $isSoon ? 'bg-[#FFF8E1] hover:bg-[#F5F5DC] border border-[#D8D8A8]' : 'bg-[#FAF9F6] hover:bg-white border border-black/10' }}">
+                                        <div class="flex items-center justify-between text-[10px]">
+                                            @if ($isSoon)
+                                                <span class="badge-gold px-2 py-0.5 rounded-full font-black">SẮP DIỄN RA TRONG 24H</span>
+                                            @else
+                                                <span class="badge-sage px-2 py-0.5 rounded-full font-black">SẮP TỚI</span>
+                                            @endif
+                                            <span class="text-gray-500 font-bold">{{ $dayLabel }} {{ $startsAt->format('H:i') }}</span>
+                                        </div>
+                                        <h5 class="font-display font-black text-xs text-black">{{ $upcoming->event?->title ?? 'Sự kiện' }}</h5>
+                                        @if ($upcoming->room?->name)
+                                            <p class="text-[11px] text-gray-600 leading-tight">{{ $upcoming->room->name }}</p>
+                                        @endif
+                                    </a>
+                                @empty
+                                    <p class="py-3 text-center text-[11px] text-gray-500">
+                                        Bạn chưa có suất diễn nào sắp tới.
                                     </p>
-                                </a>
+                                @endforelse
 
                                 <div class="text-center pt-1">
                                     <a href="{{ route('bookings.history') }}" class="text-[11px] font-bold text-rose-taupe hover:underline">
