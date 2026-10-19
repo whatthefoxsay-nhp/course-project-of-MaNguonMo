@@ -80,8 +80,8 @@ class ShowtimeController extends Controller
 
     public function destroy(Showtime $showtime): RedirectResponse
     {
-        if ($showtime->showtimeSeats()->where('status', 'booked')->exists()) {
-            return back()->with('error', 'Suất diễn đã có vé bán ra, không thể xóa.');
+        if ($showtime->hasBookingItems() || $showtime->showtimeSeats()->where('status', 'booked')->exists()) {
+            return back()->with('error', 'Suất diễn đã phát sinh đơn đặt vé (kể cả đơn đã hủy), không thể xóa.');
         }
 
         $showtime->delete();

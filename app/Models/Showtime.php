@@ -50,6 +50,12 @@ class Showtime extends Model
         return $this->hasMany(ZoneTicket::class);
     }
 
+    /** Suất diễn đã phát sinh đơn vé (kể cả đơn đã hủy) — xóa/đổi sự kiện sẽ làm hỏng lịch sử đơn. */
+    public function hasBookingItems(): bool
+    {
+        return BookingItem::forShowtimes([$this->id])->exists();
+    }
+
     public function availableSeatsCount(): int
     {
         return $this->showtimeSeats()->where('status', 'available')->count();
