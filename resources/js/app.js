@@ -530,6 +530,15 @@ Alpine.data('searchModal', () => ({
     query: '',
     results: [],
     isLoading: false,
+    hasError: false,
+    popular: [],
+    popularLoaded: false,
+    searchTimer: null,
+    searchController: null,
+
+    suggestUrl() {
+        return document.getElementById('global-search-input')?.dataset.suggestUrl;
+    },
 
     open() {
         this.isOpen = true;
@@ -537,24 +546,71 @@ Alpine.data('searchModal', () => ({
             const input = document.getElementById('global-search-input');
             if (input) input.focus();
         });
+        this.loadPopular();
     },
 
     close() {
         this.isOpen = false;
         this.query = '';
         this.results = [];
+        this.isLoading = false;
+        this.hasError = false;
+        clearTimeout(this.searchTimer);
+        this.searchController?.abort();
+        this.searchController = null;
     },
 
+    // Sự kiện nổi bật hiện khi chưa gõ (tải 1 lần khi mở modal lần đầu)
+    async loadPopular() {
+        if (this.popularLoaded || !this.suggestUrl()) return;
+        this.popularLoaded = true;
+        try {
+            const response = await fetch(this.suggestUrl(), { headers: { 'Accept': 'application/json' } });
+            if (response.ok) {
+                this.popular = (await response.json()).popular || [];
+            }
+        } catch (error) {
+            this.popularLoaded = false;
+        }
+    },
+
+    // Gợi ý tìm kiếm AJAX, debounce 250ms; huỷ request cũ khi gõ tiếp
     handleSearch() {
-        if (!this.query.trim()) {
+        clearTimeout(this.searchTimer);
+        this.searchController?.abort();
+        this.searchController = null;
+        const query = this.query.trim();
+        this.hasError = false;
+
+        if (query.length < 2) {
             this.results = [];
+            this.isLoading = false;
             return;
         }
+
         this.isLoading = true;
-        // Mock debounce / fast client search query
-        setTimeout(() => {
-            this.isLoading = false;
-        }, 200);
+        this.searchTimer = setTimeout(async () => {
+            const controller = new AbortController();
+            this.searchController = controller;
+            try {
+                const response = await fetch(`${this.suggestUrl()}?q=${encodeURIComponent(query)}`, {
+                    headers: { 'Accept': 'application/json' },
+                    signal: controller.signal,
+                });
+                const data = await response.json().catch(() => ({}));
+                this.results = response.ok ? (data.results || []) : [];
+                this.hasError = !response.ok;
+            } catch (error) {
+                if (error.name === 'AbortError') return;
+                this.results = [];
+                this.hasError = true;
+            } finally {
+                if (this.searchController === controller) {
+                    this.isLoading = false;
+                    this.searchController = null;
+                }
+            }
+        }, 250);
     }
 }));
 

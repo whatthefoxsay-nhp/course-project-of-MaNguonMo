@@ -17,6 +17,7 @@ use App\Http\Controllers\EventController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\MovieController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\SearchSuggestionController;
 use App\Http\Controllers\SeatHoldController;
 use App\Http\Controllers\ChatbotController;
 use App\Http\Controllers\ShowtimeController;
@@ -29,6 +30,10 @@ Route::get('/events/{slug}', [EventController::class, 'show'])->name('events.sho
 Route::get('/events/{event:slug}/comments', [CommentController::class, 'index'])
     ->middleware('throttle:60,1')
     ->name('comments.index');
+
+Route::get('/search/suggestions', SearchSuggestionController::class)
+    ->middleware('throttle:60,1')
+    ->name('search.suggestions');
 
 // Backward compatibility routes for movies
 Route::get('/movies', [EventController::class, 'index'])->name('movies.index');
