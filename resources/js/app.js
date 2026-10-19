@@ -51,8 +51,20 @@ Alpine.data('seatBookingManager', (config = {}) => ({
         });
         this.activeVenueZone = null;
         if (config.pollStatus && config.statusUrl) {
-            setInterval(() => this.refreshSeatStatus(), 15000);
+            // Chỉ poll khi tab đang hiển thị; quay lại tab thì cập nhật ngay.
+            this._statusPollTimer = setInterval(() => {
+                if (document.visibilityState === 'visible') this.refreshSeatStatus();
+            }, 15000);
+            this._onVisibilityChange = () => {
+                if (document.visibilityState === 'visible') this.refreshSeatStatus();
+            };
+            document.addEventListener('visibilitychange', this._onVisibilityChange);
         }
+    },
+
+    destroy() {
+        if (this._statusPollTimer) clearInterval(this._statusPollTimer);
+        if (this._onVisibilityChange) document.removeEventListener('visibilitychange', this._onVisibilityChange);
     },
 
     switchViewMode(mode) {
@@ -1727,20 +1739,6 @@ Alpine.data('adminSeatMapBuilder', (config = {}) => ({
                     gate: 'Cổng Chính',
                 },
             ];
-        }
-    },
-
-    get calculatedTotalSeats() {
-        if (this.preset === 'sayhi_concert_d2') {
-            return 250;
-        } else if (this.preset === 'mega_concert' || this.preset === 'sayhi_concert') {
-            return 212;
-        } else if (this.preset === 'theater_hall') {
-            return 112;
-        } else if (this.preset === 'convention_center') {
-            return 108;
-        } else {
-            return this.rows * this.cols;
         }
     },
 
