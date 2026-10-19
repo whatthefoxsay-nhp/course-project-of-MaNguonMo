@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Category;
 use App\Models\Event;
+use App\Models\Showtime;
 use App\Support\TicketTiers;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -54,6 +55,7 @@ class EventController extends Controller
             ->where('start_time', '>', now())
             ->orderBy('start_time')
             ->get();
+        Showtime::primeSessionLabels($event, $showtimes);
 
         return view('events.show', [
             'event' => $event,

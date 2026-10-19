@@ -24,6 +24,7 @@ class ShowtimeController extends Controller
             ->where('start_time', '>', now())
             ->orderBy('start_time')
             ->get();
+        Showtime::primeSessionLabels($event, $allShowtimes->concat([$showtime]));
 
         return view('showtimes.seats', [
             'showtime' => $showtime,
