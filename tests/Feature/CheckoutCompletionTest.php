@@ -97,3 +97,43 @@ test('the cart buyer form no longer asks for national id or address', function (
         ->assertDontSee('CCCD')
         ->assertDontSee('Địa chỉ liên hệ');
 });
+
+test('checkout is refused once the showtime has started', function () {
+    $user = createCustomer();
+    $showtime = holdCompletionSeats($user, 1);
+    $showtime->update(['start_time' => now()->subMinute()]);
+
+    $this->actingAs($user)->postJson(route('checkout.store'), checkoutPayload())
+        ->assertStatus(422)
+        ->assertJsonPath('message', 'Suất diễn đã bắt đầu, không thể thanh toán.');
+
+    expect(Booking::where('user_id', $user->id)->exists())->toBeFalse();
+});
+
+test('checkout is refused when the event is no longer published', function () {
+    $user = createCustomer();
+    $showtime = holdCompletionSeats($user, 1);
+    $showtime->event->update(['status' => 'draft']);
+
+    $this->actingAs($user)->postJson(route('checkout.store'), checkoutPayload())
+        ->assertStatus(422)
+        ->assertJsonPath('message', 'Sự kiện hiện không mở bán, không thể thanh toán.');
+
+    expect(Booking::where('user_id', $user->id)->exists())->toBeFalse();
+});
+
+test('holding another seat extends the earlier holds so checkout books the whole cart', function () {
+    $user = createCustomer();
+    $showtime = completionShowtime();
+    $ids = $showtime->showtimeSeats()->where('status', 'available')->orderBy('id')->take(2)->pluck('id')->all();
+
+    app(SeatHoldService::class)->hold($user, $showtime, [$ids[0]]);
+    $this->travel(8)->minutes();
+    app(SeatHoldService::class)->hold($user, $showtime, [$ids[1]]);
+    $this->travel(5)->minutes(); // 13 phút sau lần giữ đầu tiên
+
+    $code = $this->actingAs($user)->postJson(route('checkout.store'), checkoutPayload())
+        ->assertOk()->json('booking_code');
+
+    expect(Booking::firstWhere('booking_code', $code)->items()->count())->toBe(2);
+});

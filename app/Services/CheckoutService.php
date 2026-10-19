@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Exceptions\SeatHoldException;
 use App\Models\Booking;
+use App\Models\Showtime;
 use App\Models\ShowtimeSeat;
 use App\Models\ZoneTicket;
 use App\Models\User;
@@ -33,6 +34,8 @@ class CheckoutService
             if ($seats->isEmpty() && $zoneTickets->isEmpty()) {
                 throw new SeatHoldException('Giỏ vé trống hoặc đã hết thời gian giữ chỗ. Vui lòng chọn lại ghế.');
             }
+
+            $this->ensureShowtimesBookable($seats->pluck('showtime')->concat($zoneTickets->pluck('showtime')));
 
             $priceOf = fn (ShowtimeSeat $seat) => $seat->price_override ?? $seat->effective_price;
 
@@ -73,5 +76,27 @@ class CheckoutService
 
             return $booking;
         });
+    }
+
+    /**
+     * Kiểm tra lại lúc thanh toán: suất chưa bắt đầu và sự kiện vẫn đang mở bán
+     * (admin có thể ẩn sự kiện hoặc suất đã qua giờ trong lúc khách đang giữ vé).
+     *
+     * @param  iterable<int, Showtime|null>  $showtimes
+     *
+     * @throws SeatHoldException
+     */
+    private function ensureShowtimesBookable(iterable $showtimes): void
+    {
+        foreach (collect($showtimes)->filter()->unique('id') as $showtime) {
+            $showtime->loadMissing('event');
+
+            if ($showtime->event?->status !== 'published') {
+                throw new SeatHoldException('Sự kiện hiện không mở bán, không thể thanh toán.');
+            }
+            if ($showtime->start_time->isPast()) {
+                throw new SeatHoldException('Suất diễn đã bắt đầu, không thể thanh toán.');
+            }
+        }
     }
 }
