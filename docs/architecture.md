@@ -15,6 +15,7 @@ Cập nhật file này mỗi khi kiến trúc hoặc yêu cầu dự án thay đ
   - **Admin CRUD (Plan 1)**: danh mục, sự kiện (upload poster), suất diễn (chặn trùng giờ, tự sinh ghế theo suất), bảo vệ khán phòng có vé bán ra.
   - **Engine đặt vé (Plan 3)**: giữ ghế AJAX chống đặt trùng, giỏ vé, thanh toán giả lập, lịch sử — đã bỏ hoàn toàn dữ liệu giả DemoCatalog.
   - **API ngoài (Plan 5)**: bản đồ Google Maps + nút chỉ đường trên trang chi tiết; dự báo thời tiết OpenWeatherMap cho địa điểm ngoài trời; admin nhập tọa độ khán phòng.
+  - **Tương tác AJAX (Plan 4)**: bình luận thêm/xóa/tải thêm không tải lại trang (policy chủ bình luận hoặc admin), gợi ý tìm kiếm theo từng ký tự trong modal header, cập nhật SĐT + ảnh đại diện (xem mục 6).
   - **Giao diện & Trải nghiệm (Luxury Light Theme)**: Hoàn thiện hệ thống giao diện tone sáng sang trọng với bảng màu tương phản cao `#000000`, `#F5F5DC`, `#FFFFFF`, `#C08497`, `#D4AF37`, `#3A5A40`, `#CC0000`.
 
 ---
@@ -67,4 +68,28 @@ Cập nhật file này mỗi khi kiến trúc hoặc yêu cầu dự án thay đ
 
 Môi trường dev: `php artisan schedule:work` (hoặc chạy tay `php artisan seats:release-expired`).
 Kể cả không chạy lịch, ghế giữ quá hạn vẫn được coi là trống khi người khác giữ — lịch chỉ để dọn dữ liệu và hiển thị đúng.
+
+---
+
+## 6. Tương tác AJAX (Plan 4)
+
+Tất cả endpoint nằm trong `routes/web.php` (session + CSRF qua header `X-CSRF-TOKEN`, helper `jsonHeaders()` trong `resources/js/app.js`).
+
+| Tính năng | Route | Bảo vệ | Ghi chú |
+| :--- | :--- | :--- | :--- |
+| Danh sách bình luận | `GET /events/{event:slug}/comments` → `comments.index` | public, `throttle:60,1` | Cursor pagination theo `id` giảm dần, 10/trang: `{data, total, next_page_url}`. Sự kiện chưa `published` → 404. |
+| Gửi bình luận | `POST /events/{event:slug}/comments` → `comments.store` | `auth`, `throttle:10,1` | `StoreCommentRequest`: trim, 3–1000 ký tự. 201 → `{comment}`. |
+| Xóa bình luận | `DELETE /comments/{comment}` → `comments.destroy` | `auth`, `throttle:30,1`, `CommentPolicy@delete` | Chủ bình luận hoặc admin; người khác → 403. |
+| Gợi ý tìm kiếm | `GET /search/suggestions?q=` → `search.suggestions` | public, `throttle:60,1` | `q` ≥ 2 ký tự: tối đa 6 sự kiện `published` khớp tiêu đề (escape `%`/`_`). `q` ngắn: `results: []` + `popular` (6 sự kiện mới). `q` > 100 ký tự → 422. |
+| Ảnh đại diện | `PATCH /profile` → `profile.update` (multipart) | `auth` | jpg/png/webp ≤ 2MB, lưu disk `public` thư mục `avatars/`, xóa file cũ sau khi lưu. |
+
+- **Bình luận** (`events/show.blade.php`, Alpine `eventComments`): trang đầu được nhúng sẵn bằng `@js(...)` (cùng dữ liệu
+  `Comment::toPublicArray()` với API), nút "Xem thêm" gọi `comments.index`. Nội dung người dùng luôn render bằng `x-text`
+  (không `x-html`). Khách thấy lời mời đăng nhập thay cho ô nhập. Huy hiệu ở đầu trang hiển thị số bình luận thật
+  (schema không có cột điểm đánh giá nên đã bỏ "4.9/5" giả).
+- **Tìm kiếm** (`layouts/site.blade.php`, Alpine `searchModal`): debounce 250ms, huỷ request cũ bằng `AbortController`,
+  trạng thái đang tải / không có kết quả / lỗi; phím `Esc` đóng modal; Enter vẫn gửi form tới `events.index?q=`.
+- **Avatar**: `User::avatar_url` (URL disk public, URL ngoài nếu cột chứa http(s), hoặc `null`) và `User::initials`
+  (tối đa 2 chữ cái đầu, dùng `mb_substr`/`mb_strtoupper` cho tên tiếng Việt). Không gọi dịch vụ avatar bên ngoài.
+  Cần chạy `php artisan storage:link` một lần trên mỗi máy để `/storage/avatars/...` hiển thị được.
 

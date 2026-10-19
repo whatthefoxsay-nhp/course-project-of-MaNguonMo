@@ -56,9 +56,13 @@
                     <div class="relative text-center">
                         <!-- Big Avatar with luxury gradient border -->
                         <div class="w-24 h-24 rounded-3xl bg-gradient-to-tr from-gold-antique via-rose-taupe to-sage-forest p-[2.5px] shadow-lg mx-auto">
-                            <div class="w-full h-full rounded-[21px] bg-[#FAF9F6] flex items-center justify-center font-display font-black text-3xl text-black">
-                                {{ strtoupper(substr($user->name, 0, 1)) }}
-                            </div>
+                            @if ($user->avatar_url)
+                                <img src="{{ $user->avatar_url }}" alt="Ảnh đại diện của {{ $user->name }}" class="w-full h-full rounded-[21px] object-cover bg-[#FAF9F6]">
+                            @else
+                                <div class="w-full h-full rounded-[21px] bg-[#FAF9F6] flex items-center justify-center font-display font-black text-3xl text-black">
+                                    {{ $user->initials }}
+                                </div>
+                            @endif
                         </div>
 
                         <h2 class="mt-4 font-display font-black text-lg sm:text-xl text-slate-900 tracking-tight">

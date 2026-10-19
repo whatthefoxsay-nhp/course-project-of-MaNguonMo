@@ -43,7 +43,7 @@ class EventController extends Controller
         ]);
     }
 
-    public function show(string $slug, WeatherService $weatherService): View
+    public function show(Request $request, string $slug, WeatherService $weatherService): View
     {
         $event = Event::published()
             ->with('category')
@@ -62,7 +62,13 @@ class EventController extends Controller
         $nextShowtime = $showtimes->first();
         $venue = $nextShowtime?->room;
 
+        // Trang đầu bình luận render sẵn; các trang sau tải AJAX qua route comments.index.
+        $commentsPage = CommentController::page($event, $request->user());
+
         return view('events.show', [
+            'comments' => $commentsPage['data'],
+            'commentsTotal' => $commentsPage['total'],
+            'commentsNextUrl' => $commentsPage['next_page_url'],
             'event' => $event,
             'movie' => $event,
             // View đang dùng !empty($showtimes) và $showtimes[0] nên truyền array, không truyền Collection.

@@ -12,10 +12,12 @@ use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\BookingController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\CheckoutController;
+use App\Http\Controllers\CommentController;
 use App\Http\Controllers\EventController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\MovieController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\SearchSuggestionController;
 use App\Http\Controllers\SeatHoldController;
 use App\Http\Controllers\ChatbotController;
 use App\Http\Controllers\ShowtimeController;
@@ -25,6 +27,13 @@ Route::get('/', [HomeController::class, 'index'])->name('home');
 
 Route::get('/events', [EventController::class, 'index'])->name('events.index');
 Route::get('/events/{slug}', [EventController::class, 'show'])->name('events.show');
+Route::get('/events/{event:slug}/comments', [CommentController::class, 'index'])
+    ->middleware('throttle:60,1')
+    ->name('comments.index');
+
+Route::get('/search/suggestions', SearchSuggestionController::class)
+    ->middleware('throttle:60,1')
+    ->name('search.suggestions');
 
 // Backward compatibility routes for movies
 Route::get('/movies', [EventController::class, 'index'])->name('movies.index');
@@ -48,6 +57,12 @@ Route::middleware('auth')->group(function () {
         ->middleware('throttle:10,1')
         ->name('checkout.store');
     Route::get('/bookings', [BookingController::class, 'history'])->name('bookings.history');
+    Route::post('/events/{event:slug}/comments', [CommentController::class, 'store'])
+        ->middleware('throttle:10,1')
+        ->name('comments.store');
+    Route::delete('/comments/{comment}', [CommentController::class, 'destroy'])
+        ->middleware('throttle:30,1')
+        ->name('comments.destroy');
 });
 
 Route::get('/dashboard', function () {

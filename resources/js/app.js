@@ -423,11 +423,122 @@ Alpine.data('seatBookingManager', (config = {}) => ({
 }));
 
 // Quick Search Modal Alpine Component
+// Bình luận sự kiện: tải thêm / gửi / xóa không tải lại trang.
+// Nội dung người dùng luôn render bằng x-text trong view (không x-html) để tránh XSS.
+Alpine.data('eventComments', (config = {}) => ({
+    comments: config.comments || [],
+    total: config.total || 0,
+    nextPageUrl: config.nextPageUrl || null,
+    newComment: '',
+    isPosting: false,
+    isLoadingMore: false,
+    error: '',
+
+    commentError(response, data, fallback) {
+        if (response.status === 401) return 'Phiên đăng nhập đã hết, vui lòng đăng nhập lại.';
+        if (response.status === 419) return 'Phiên làm việc đã hết hạn, vui lòng tải lại trang.';
+        if (response.status === 429) return 'Bạn thao tác quá nhanh, vui lòng thử lại sau ít phút.';
+        return data?.errors?.content?.[0] || data?.message || fallback;
+    },
+
+    async loadMore() {
+        if (!this.nextPageUrl || this.isLoadingMore) return;
+        this.isLoadingMore = true;
+        this.error = '';
+
+        try {
+            const response = await fetch(this.nextPageUrl, { headers: { 'Accept': 'application/json' } });
+            const data = await response.json().catch(() => ({}));
+
+            if (!response.ok) {
+                this.error = this.commentError(response, data, 'Không thể tải thêm bình luận.');
+                return;
+            }
+
+            const known = new Set(this.comments.map(item => item.id));
+            this.comments.push(...data.data.filter(item => !known.has(item.id)));
+            this.nextPageUrl = data.next_page_url;
+            this.total = data.total;
+        } catch (error) {
+            this.error = 'Mất kết nối tới máy chủ, vui lòng thử lại.';
+        } finally {
+            this.isLoadingMore = false;
+        }
+    },
+
+    async submit() {
+        if (!config.canComment) {
+            window.location.href = config.loginUrl;
+            return;
+        }
+
+        const content = this.newComment.trim();
+        if (!content || this.isPosting) return;
+
+        this.isPosting = true;
+        this.error = '';
+
+        try {
+            const response = await fetch(config.storeUrl, {
+                method: 'POST',
+                headers: jsonHeaders(),
+                body: JSON.stringify({ content }),
+            });
+            const data = await response.json().catch(() => ({}));
+
+            if (!response.ok) {
+                this.error = this.commentError(response, data, 'Không thể gửi bình luận.');
+                return;
+            }
+
+            this.comments.unshift(data.comment);
+            this.total++;
+            this.newComment = '';
+        } catch (error) {
+            this.error = 'Mất kết nối tới máy chủ, vui lòng thử lại.';
+        } finally {
+            this.isPosting = false;
+        }
+    },
+
+    async remove(comment) {
+        if (!confirm('Xóa bình luận này?')) return;
+        this.error = '';
+
+        try {
+            const response = await fetch(config.destroyUrl.replace('__ID__', comment.id), {
+                method: 'DELETE',
+                headers: jsonHeaders(),
+            });
+            const data = await response.json().catch(() => ({}));
+
+            if (!response.ok) {
+                this.error = this.commentError(response, data, 'Không thể xóa bình luận này.');
+                return;
+            }
+
+            this.comments = this.comments.filter(item => item.id !== comment.id);
+            this.total = Math.max(0, this.total - 1);
+        } catch (error) {
+            this.error = 'Mất kết nối tới máy chủ, vui lòng thử lại.';
+        }
+    },
+}));
+
 Alpine.data('searchModal', () => ({
     isOpen: false,
     query: '',
     results: [],
     isLoading: false,
+    hasError: false,
+    popular: [],
+    popularLoaded: false,
+    searchTimer: null,
+    searchController: null,
+
+    suggestUrl() {
+        return document.getElementById('global-search-input')?.dataset.suggestUrl;
+    },
 
     open() {
         this.isOpen = true;
@@ -435,24 +546,71 @@ Alpine.data('searchModal', () => ({
             const input = document.getElementById('global-search-input');
             if (input) input.focus();
         });
+        this.loadPopular();
     },
 
     close() {
         this.isOpen = false;
         this.query = '';
         this.results = [];
+        this.isLoading = false;
+        this.hasError = false;
+        clearTimeout(this.searchTimer);
+        this.searchController?.abort();
+        this.searchController = null;
     },
 
+    // Sự kiện nổi bật hiện khi chưa gõ (tải 1 lần khi mở modal lần đầu)
+    async loadPopular() {
+        if (this.popularLoaded || !this.suggestUrl()) return;
+        this.popularLoaded = true;
+        try {
+            const response = await fetch(this.suggestUrl(), { headers: { 'Accept': 'application/json' } });
+            if (response.ok) {
+                this.popular = (await response.json()).popular || [];
+            }
+        } catch (error) {
+            this.popularLoaded = false;
+        }
+    },
+
+    // Gợi ý tìm kiếm AJAX, debounce 250ms; huỷ request cũ khi gõ tiếp
     handleSearch() {
-        if (!this.query.trim()) {
+        clearTimeout(this.searchTimer);
+        this.searchController?.abort();
+        this.searchController = null;
+        const query = this.query.trim();
+        this.hasError = false;
+
+        if (query.length < 2) {
             this.results = [];
+            this.isLoading = false;
             return;
         }
+
         this.isLoading = true;
-        // Mock debounce / fast client search query
-        setTimeout(() => {
-            this.isLoading = false;
-        }, 200);
+        this.searchTimer = setTimeout(async () => {
+            const controller = new AbortController();
+            this.searchController = controller;
+            try {
+                const response = await fetch(`${this.suggestUrl()}?q=${encodeURIComponent(query)}`, {
+                    headers: { 'Accept': 'application/json' },
+                    signal: controller.signal,
+                });
+                const data = await response.json().catch(() => ({}));
+                this.results = response.ok ? (data.results || []) : [];
+                this.hasError = !response.ok;
+            } catch (error) {
+                if (error.name === 'AbortError') return;
+                this.results = [];
+                this.hasError = true;
+            } finally {
+                if (this.searchController === controller) {
+                    this.isLoading = false;
+                    this.searchController = null;
+                }
+            }
+        }, 250);
     }
 }));
 

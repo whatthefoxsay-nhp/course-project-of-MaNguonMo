@@ -7,6 +7,8 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Illuminate\View\View;
 
 class ProfileController extends Controller
@@ -26,13 +28,25 @@ class ProfileController extends Controller
      */
     public function update(ProfileUpdateRequest $request): RedirectResponse
     {
-        $request->user()->fill($request->validated());
+        $user = $request->user();
+        $user->fill($request->safe()->except('avatar'));
 
-        if ($request->user()->isDirty('email')) {
-            $request->user()->email_verified_at = null;
+        if ($user->isDirty('email')) {
+            $user->email_verified_at = null;
         }
 
-        $request->user()->save();
+        $oldAvatar = null;
+        if ($request->hasFile('avatar')) {
+            $oldAvatar = $user->avatar;
+            $user->avatar = $request->file('avatar')->store('avatars', 'public');
+        }
+
+        $user->save();
+
+        // Chỉ xóa file cũ sau khi lưu thành công; bỏ qua URL ngoài (dữ liệu seed cũ).
+        if ($oldAvatar && ! Str::startsWith($oldAvatar, ['http://', 'https://'])) {
+            Storage::disk('public')->delete($oldAvatar);
+        }
 
         return Redirect::route('profile.edit')->with('status', 'profile-updated');
     }
@@ -51,6 +65,10 @@ class ProfileController extends Controller
         Auth::logout();
 
         $user->delete();
+
+        if ($user->avatar && ! Str::startsWith($user->avatar, ['http://', 'https://'])) {
+            Storage::disk('public')->delete($user->avatar);
+        }
 
         $request->session()->invalidate();
         $request->session()->regenerateToken();

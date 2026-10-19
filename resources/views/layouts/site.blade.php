@@ -239,9 +239,13 @@
                             @click="open = !open" 
                             class="flex items-center gap-1.5 sm:gap-2 pl-1 sm:pl-1.5 pr-2 sm:pr-3 py-1 sm:py-1.5 rounded-full bg-[#FAF9F6] border border-black/10 hover:border-black/25 text-xs font-bold text-black shadow-sm shrink-0"
                         >
-                            <span class="w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-gold-antique text-black flex items-center justify-center text-[11px] sm:text-xs font-black shadow-sm shrink-0">
-                                {{ strtoupper(substr(Auth::user()->name, 0, 1)) }}
-                            </span>
+                            @if (Auth::user()->avatar_url)
+                                <img src="{{ Auth::user()->avatar_url }}" alt="" class="w-6 h-6 sm:w-7 sm:h-7 rounded-full object-cover border border-black/10 shadow-sm shrink-0">
+                            @else
+                                <span class="w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-gold-antique text-black flex items-center justify-center text-[10px] sm:text-[11px] font-black shadow-sm shrink-0">
+                                    {{ Auth::user()->initials }}
+                                </span>
+                            @endif
                             <span class="hidden sm:inline max-w-[70px] md:max-w-[90px] xl:max-w-[130px] truncate">{{ Auth::user()->name }}</span>
                             <svg class="w-3 h-3 sm:w-3.5 sm:h-3.5 text-gray-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
                         </button>
@@ -341,9 +345,10 @@
         </div>
     </header>
 
-    <!-- Global Search Modal (Bright Dialog) -->
-    <div 
-        x-show="isOpen" 
+    <!-- Global Search Modal (Bright Dialog) — gợi ý AJAX qua route search.suggestions -->
+    <div
+        x-show="isOpen"
+        @keydown.escape.window="if (isOpen) close()"
         x-transition:enter="ease-out duration-300"
         x-transition:enter-start="opacity-0"
         x-transition:enter-end="opacity-100"
@@ -351,6 +356,9 @@
         x-transition:leave-start="opacity-100"
         x-transition:leave-end="opacity-0"
         class="fixed inset-0 z-50 flex items-start justify-center pt-20 px-4"
+        role="dialog"
+        aria-modal="true"
+        aria-label="Tìm kiếm sự kiện"
         style="display: none;"
     >
         <div class="fixed inset-0 bg-black/60 backdrop-blur-sm" @click="close()"></div>
@@ -360,29 +368,61 @@
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                 </svg>
                 <form action="{{ route('movies.index') }}" method="GET" class="flex-1">
-                    <input 
+                    <input
                         id="global-search-input"
-                        type="text" 
+                        type="text"
                         name="q"
+                        maxlength="100"
+                        autocomplete="off"
+                        data-suggest-url="{{ route('search.suggestions') }}"
                         x-model="query"
                         @input="handleSearch()"
-                        placeholder="Tìm kiếm sự kiện, concert, hòa nhạc, hội thảo, triển lãm..." 
+                        placeholder="Tìm kiếm sự kiện, concert, hòa nhạc, hội thảo, triển lãm..."
                         class="w-full bg-transparent border-0 text-black placeholder-gray-400 focus:ring-0 text-base font-semibold"
                     >
                 </form>
-                <button @click="close()" class="text-xs text-gray-600 hover:text-black px-3 py-1 rounded-xl bg-[#F5F5DC] border border-[#D8D8A8] font-bold">ESC</button>
+                <button type="button" @click="close()" title="Đóng (Esc)" class="text-xs text-gray-600 hover:text-black px-3 py-1 rounded-xl bg-[#F5F5DC] border border-[#D8D8A8] font-bold">ESC</button>
             </div>
 
-            <!-- Quick Suggestions -->
-            <div class="mt-4">
-                <span class="text-[11px] font-bold uppercase tracking-wider text-gray-500 block mb-2">Gợi ý danh mục &amp; sự kiện nổi bật</span>
+            <!-- Live Search Results (AJAX) -->
+            <div class="mt-4" x-show="query.trim().length >= 2" style="display: none;" aria-live="polite">
+                <div x-show="isLoading" class="flex items-center gap-2 text-xs text-gray-500 py-2">
+                    <svg class="w-4 h-4 animate-spin text-gold-dark" fill="none" viewBox="0 0 24 24" aria-hidden="true">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+                    </svg>
+                    <span>Đang tìm…</span>
+                </div>
+                <p x-show="!isLoading && hasError" class="text-xs text-[#CC0000] font-semibold py-2">Không thể tải gợi ý lúc này, nhấn Enter để tìm kiếm.</p>
+                <p x-show="!isLoading && !hasError && results.length === 0" class="text-xs text-gray-500 py-2">
+                    Không tìm thấy sự kiện phù hợp với "<span class="font-bold text-black" x-text="query.trim()"></span>".
+                </p>
+                <ul x-show="!isLoading && results.length > 0" class="divide-y divide-black/5">
+                    <template x-for="item in results" :key="item.url">
+                        <li>
+                            <a :href="item.url" class="flex items-center gap-3 py-2.5 px-2 rounded-xl hover:bg-[#FAF9F6]">
+                                <img :src="item.poster_url" alt="" loading="lazy" class="w-10 h-14 object-cover rounded-lg border border-black/10 shrink-0">
+                                <div class="min-w-0">
+                                    <p class="text-sm font-bold text-black truncate" x-text="item.title"></p>
+                                    <p class="text-[11px] text-gray-500">
+                                        <span x-text="item.category"></span>
+                                        <span x-show="item.price_from" x-text="' · Từ ' + item.price_from"></span>
+                                    </p>
+                                </div>
+                            </a>
+                        </li>
+                    </template>
+                </ul>
+                <a x-show="!isLoading" :href="'{{ route('movies.index') }}?q=' + encodeURIComponent(query.trim())" class="mt-3 inline-block text-xs font-bold text-gold-dark hover:underline">Xem tất cả kết quả &rarr;</a>
+            </div>
+
+            <!-- Popular events (tải AJAX khi mở modal) -->
+            <div class="mt-4" x-show="query.trim().length < 2 && popular.length > 0" style="display: none;">
+                <span class="text-[11px] font-bold uppercase tracking-wider text-gray-500 block mb-2">Sự kiện nổi bật</span>
                 <div class="flex flex-wrap gap-2">
-                    <a href="{{ route('movies.index', ['q' => 'Concert']) }}" class="badge-gold px-3.5 py-1 rounded-full text-xs font-bold">Live Concert</a>
-                    <a href="{{ route('movies.index', ['q' => 'Hòa Nhạc']) }}" class="badge-rose px-3.5 py-1 rounded-full text-xs font-bold">Hòa Nhạc Giao Hưởng</a>
-                    <a href="{{ route('movies.index', ['q' => 'Hội Thảo']) }}" class="badge-sage px-3.5 py-1 rounded-full text-xs font-bold">Hội Thảo Công Nghệ</a>
-                    <a href="{{ route('movies.index', ['q' => 'Triển Lãm']) }}" class="badge-beige px-3.5 py-1 rounded-full text-xs font-bold">Triển Lãm Đa Giác Quan</a>
-                    <a href="{{ route('movies.index', ['q' => 'Fan Meeting']) }}" class="badge-purple px-3.5 py-1 rounded-full text-xs font-bold">Fan Meeting Nghệ Sĩ</a>
-                    <a href="{{ route('movies.index', ['q' => 'Masterclass']) }}" class="badge-sage px-3.5 py-1 rounded-full text-xs font-bold">Workshop AI</a>
+                    <template x-for="item in popular" :key="item.url">
+                        <a :href="item.url" class="badge-gold px-3.5 py-1 rounded-full text-xs font-bold max-w-full truncate" x-text="item.title"></a>
+                    </template>
                 </div>
             </div>
         </div>
