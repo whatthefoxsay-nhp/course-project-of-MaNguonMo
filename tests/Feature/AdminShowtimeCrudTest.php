@@ -103,6 +103,51 @@ test('a showtime with sold seats cannot be deleted', function () {
     expect(Showtime::count())->toBe(1);
 });
 
+test('the event of a showtime with booking items cannot be changed', function () {
+    $room = roomWithSeats();
+    $showtime = Showtime::factory()->for($room)->create();
+    app(ShowtimeSeatGenerator::class)->generate($showtime);
+    \App\Models\Booking::create(['user_id' => createCustomer()->id, 'total_price' => 200000, 'status' => 'cancelled'])
+        ->items()->create(['showtime_seat_id' => $showtime->showtimeSeats()->first()->id, 'price' => 200000]);
+    $originalEvent = $showtime->event_id;
+
+    $this->actingAs(createAdmin())
+        ->put(route('admin.showtimes.update', $showtime), showtimePayload($room, [
+            'start_time' => $showtime->start_time->format('Y-m-d\TH:i'),
+            'end_time' => $showtime->end_time->format('Y-m-d\TH:i'),
+        ]))
+        ->assertSessionHas('error');
+
+    expect($showtime->fresh()->event_id)->toBe($originalEvent);
+});
+
+test('an already started showtime can still be edited without moving its start time', function () {
+    $room = roomWithSeats();
+    $start = now()->subHour()->startOfMinute();
+    $showtime = Showtime::factory()->for($room)->create(['start_time' => $start, 'end_time' => $start->copy()->addHours(3)]);
+
+    $this->actingAs(createAdmin())
+        ->put(route('admin.showtimes.update', $showtime), showtimePayload($room, [
+            'event_id' => $showtime->event_id,
+            'start_time' => $start->format('Y-m-d\TH:i'),
+            'end_time' => $start->copy()->addHours(4)->format('Y-m-d\TH:i'),
+            'base_price' => 300000,
+        ]))
+        ->assertSessionHasNoErrors()
+        ->assertSessionHas('success');
+
+    expect($showtime->fresh()->base_price)->toBe(300000);
+
+    // Đổi giờ bắt đầu sang quá khứ vẫn bị chặn.
+    $this->actingAs(createAdmin())
+        ->put(route('admin.showtimes.update', $showtime), showtimePayload($room, [
+            'event_id' => $showtime->event_id,
+            'start_time' => $start->copy()->subDay()->format('Y-m-d\TH:i'),
+            'end_time' => $start->copy()->addHours(4)->format('Y-m-d\TH:i'),
+        ]))
+        ->assertSessionHasErrors('start_time');
+});
+
 test('the showtime list filters by event', function () {
     $a = Showtime::factory()->create();
     $b = Showtime::factory()->create();

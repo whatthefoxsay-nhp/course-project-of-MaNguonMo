@@ -102,17 +102,41 @@ test('admin cannot toggle their own role', function () {
     expect($admin->fresh()->hasRole('admin'))->toBeTrue();
 });
 
-test('admin can reset password of a user to default temporary password', function () {
+test('admin can reset password of a user to a random temporary password', function () {
     $admin = User::factory()->create();
     $admin->assignRole('admin');
 
-    $targetUser = User::factory()->create(['password' => 'old_secret_pwd']);
+    $targetUser = User::factory()->create(['password' => 'old_secret_pwd', 'remember_token' => 'old-remember-token']);
+    $other = User::factory()->create();
+    Illuminate\Support\Facades\DB::table('sessions')->insert([
+        ['id' => 'target-session', 'user_id' => $targetUser->id, 'ip_address' => null, 'user_agent' => null, 'payload' => '', 'last_activity' => time()],
+        ['id' => 'other-session', 'user_id' => $other->id, 'ip_address' => null, 'user_agent' => null, 'payload' => '', 'last_activity' => time()],
+    ]);
 
     $response = $this->actingAs($admin)->post(route('admin.users.reset-password', $targetUser));
 
     $response->assertRedirect();
-    $tempPassword = 'TicketBox@' . date('Y');
-    expect(Illuminate\Support\Facades\Hash::check($tempPassword, $targetUser->fresh()->password))->toBeTrue();
+    $message = session('success');
+    expect($message)->toMatch('/: [A-Za-z0-9]{10}$/')
+        ->and($message)->not->toContain('TicketBox@');
+
+    preg_match('/: ([A-Za-z0-9]{10})$/', $message, $matches);
+    $targetUser->refresh();
+    expect(Illuminate\Support\Facades\Hash::check($matches[1], $targetUser->password))->toBeTrue()
+        ->and($targetUser->remember_token)->not->toBe('old-remember-token')
+        ->and(Illuminate\Support\Facades\DB::table('sessions')->pluck('id')->all())->toBe(['other-session']);
+});
+
+test('reset passwords differ between resets', function () {
+    $admin = User::factory()->create();
+    $admin->assignRole('admin');
+    $targetUser = User::factory()->create();
+
+    $this->actingAs($admin)->post(route('admin.users.reset-password', $targetUser));
+    $first = session('success');
+    $this->actingAs($admin)->post(route('admin.users.reset-password', $targetUser));
+
+    expect(session('success'))->not->toBe($first);
 });
 
 test('admin can create a new user account with specified role and status', function () {

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Category;
 use App\Models\Event;
+use App\Models\Showtime;
 use App\Services\WeatherService;
 use App\Support\MapEmbed;
 use App\Support\TicketTiers;
@@ -56,6 +57,7 @@ class EventController extends Controller
             ->where('start_time', '>', now())
             ->orderBy('start_time')
             ->get();
+        Showtime::primeSessionLabels($event, $showtimes);
 
         // Bản đồ + thời tiết theo khán phòng của suất gần nhất.
         // Thời tiết chỉ cho địa điểm ngoài trời; không có dự báo thật thì view ẩn hẳn khối thời tiết.

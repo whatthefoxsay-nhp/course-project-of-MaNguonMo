@@ -62,8 +62,16 @@ class ShowtimeController extends Controller
     public function update(ShowtimeRequest $request, Showtime $showtime, ShowtimeSeatGenerator $seats): RedirectResponse
     {
         $roomChanged = (int) $request->validated('room_id') !== $showtime->room_id;
+        $eventChanged = (int) $request->validated('event_id') !== $showtime->event_id;
 
-        if ($roomChanged && $showtime->showtimeSeats()->whereIn('status', ['held', 'booked'])->exists()) {
+        if ($eventChanged && $showtime->hasBookingItems()) {
+            return back()->withInput()->with('error', 'Suất diễn đã phát sinh đơn đặt vé, không thể đổi sang sự kiện khác.');
+        }
+
+        // Sinh lại ghế sẽ cascade xóa booking_items (kể cả đơn đã hủy) và bỏ rơi vé theo khu của phòng cũ.
+        if ($roomChanged && ($showtime->hasBookingItems()
+            || $showtime->zoneTickets()->exists()
+            || $showtime->showtimeSeats()->whereIn('status', ['held', 'booked'])->exists())) {
             return back()->withInput()->with('error', 'Suất diễn đã có ghế được giữ hoặc đã bán, không thể đổi khán phòng.');
         }
 
@@ -80,8 +88,8 @@ class ShowtimeController extends Controller
 
     public function destroy(Showtime $showtime): RedirectResponse
     {
-        if ($showtime->showtimeSeats()->where('status', 'booked')->exists()) {
-            return back()->with('error', 'Suất diễn đã có vé bán ra, không thể xóa.');
+        if ($showtime->hasBookingItems() || $showtime->showtimeSeats()->where('status', 'booked')->exists()) {
+            return back()->with('error', 'Suất diễn đã phát sinh đơn đặt vé (kể cả đơn đã hủy), không thể xóa.');
         }
 
         $showtime->delete();

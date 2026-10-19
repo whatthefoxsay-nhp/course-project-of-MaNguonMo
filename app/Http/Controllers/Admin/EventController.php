@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\EventRequest;
+use App\Models\BookingItem;
 use App\Models\Category;
 use App\Models\Event;
 use App\Models\ShowtimeSeat;
@@ -86,12 +87,12 @@ class EventController extends Controller
 
     public function destroy(Event $event): RedirectResponse
     {
-        $hasSoldTickets = ShowtimeSeat::whereIn('showtime_id', $event->showtimes()->select('id'))
-            ->where('status', 'booked')
-            ->exists();
+        $showtimeIds = $event->showtimes()->select('id');
+        $hasBookings = BookingItem::forShowtimes($showtimeIds)->exists()
+            || ShowtimeSeat::whereIn('showtime_id', $showtimeIds)->where('status', 'booked')->exists();
 
-        if ($hasSoldTickets) {
-            return back()->with('error', 'Sự kiện đã có vé bán ra, không thể xóa. Hãy chuyển trạng thái sang "Lưu trữ".');
+        if ($hasBookings) {
+            return back()->with('error', 'Sự kiện đã phát sinh đơn đặt vé (kể cả đơn đã hủy), không thể xóa. Hãy chuyển trạng thái sang "Lưu trữ".');
         }
 
         $this->deleteStoredPoster($event);

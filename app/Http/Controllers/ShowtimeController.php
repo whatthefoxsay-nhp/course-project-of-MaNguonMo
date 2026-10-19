@@ -24,6 +24,7 @@ class ShowtimeController extends Controller
             ->where('start_time', '>', now())
             ->orderBy('start_time')
             ->get();
+        Showtime::primeSessionLabels($event, $allShowtimes->concat([$showtime]));
 
         return view('showtimes.seats', [
             'showtime' => $showtime,
@@ -38,6 +39,9 @@ class ShowtimeController extends Controller
 
     public function seatStatus(Showtime $showtime): JsonResponse
     {
+        // Giống trang chọn ghế: sự kiện chưa/không còn mở bán thì không lộ dữ liệu suất diễn.
+        abort_unless($showtime->event()->where('status', 'published')->exists(), 404);
+
         $unavailable = $showtime->showtimeSeats()
             ->where(fn ($query) => $query->where('status', 'booked')
                 ->orWhere(fn ($held) => $held->where('status', 'held')->where('held_until', '>', now())))

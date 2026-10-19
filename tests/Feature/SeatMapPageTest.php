@@ -68,4 +68,13 @@ test('showtimes of unpublished events are hidden', function () {
     $showtime->event->update(['status' => 'draft']);
 
     $this->get(route('showtimes.seats', $showtime))->assertNotFound();
+    $this->getJson(route('showtimes.seat-status', $showtime))->assertNotFound();
+});
+
+test('seat status of published events is available', function () {
+    $showtime = firstShowtimeOf('fan-meeting-running-man-vn-2026');
+
+    $this->getJson(route('showtimes.seat-status', $showtime))
+        ->assertOk()
+        ->assertJsonStructure(['unavailable', 'zones_available']);
 });

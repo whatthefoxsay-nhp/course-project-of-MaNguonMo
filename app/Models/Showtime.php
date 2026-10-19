@@ -50,24 +50,57 @@ class Showtime extends Model
         return $this->hasMany(ZoneTicket::class);
     }
 
+    /** Suất diễn đã phát sinh đơn vé (kể cả đơn đã hủy) — xóa/đổi sự kiện sẽ làm hỏng lịch sử đơn. */
+    public function hasBookingItems(): bool
+    {
+        return BookingItem::forShowtimes([$this->id])->exists();
+    }
+
     public function availableSeatsCount(): int
     {
         return $this->showtimeSeats()->where('status', 'available')->count();
     }
 
+    /**
+     * Gắn sẵn sự kiện (kèm toàn bộ suất diễn) cho các suất cần hiển thị session_label,
+     * tránh mỗi suất tự query lại sự kiện + danh sách suất (N+1).
+     *
+     * @param  iterable<Showtime>  $showtimes
+     */
+    public static function primeSessionLabels(Event $event, iterable $showtimes): void
+    {
+        if (! $event->relationLoaded('showtimes')) {
+            $event->setRelation('showtimes', $event->showtimes()->orderBy('start_time')->get());
+        }
+
+        foreach ($showtimes as $showtime) {
+            $showtime->setRelation('event', $event);
+        }
+    }
+
+    /** @return array{0: int, 1: int} [thứ tự suất (từ 1), tổng số suất của sự kiện] */
+    private function sessionPosition(): array
+    {
+        $event = $this->event;
+        if (! $event) {
+            return [1, 0];
+        }
+        if (! $event->relationLoaded('showtimes')) {
+            $event->setRelation('showtimes', $event->showtimes()->orderBy('start_time')->get());
+        }
+
+        $showtimes = $event->showtimes->sortBy('start_time')->values();
+        $index = $showtimes->search(fn ($s) => $s->id === $this->id);
+
+        return [($index !== false ? $index : 0) + 1, $showtimes->count()];
+    }
+
     public function getSessionLabelAttribute(): string
     {
-        $showtimes = $this->relationLoaded('event') && $this->event && $this->event->relationLoaded('showtimes')
-            ? $this->event->showtimes->sortBy('start_time')->values()
-            : ($this->event ? $this->event->showtimes()->orderBy('start_time')->get() : collect());
-
-        $total = $showtimes->count();
+        [$num, $total] = $this->sessionPosition();
         if ($total <= 1) {
             return 'Suất Diễn Duy Nhất';
         }
-
-        $index = $showtimes->search(fn ($s) => $s->id === $this->id);
-        $num = ($index !== false ? $index : 0) + 1;
 
         $categorySlug = $this->event?->category?->slug ?? '';
         if ($categorySlug === 'concert') {
@@ -85,17 +118,10 @@ class Showtime extends Model
 
     public function getSessionShortLabelAttribute(): string
     {
-        $showtimes = $this->relationLoaded('event') && $this->event && $this->event->relationLoaded('showtimes')
-            ? $this->event->showtimes->sortBy('start_time')->values()
-            : ($this->event ? $this->event->showtimes()->orderBy('start_time')->get() : collect());
-
-        $total = $showtimes->count();
+        [$num, $total] = $this->sessionPosition();
         if ($total <= 1) {
             return 'Suất Duy Nhất';
         }
-
-        $index = $showtimes->search(fn ($s) => $s->id === $this->id);
-        $num = ($index !== false ? $index : 0) + 1;
 
         $categorySlug = $this->event?->category?->slug ?? '';
         if ($categorySlug === 'concert') {

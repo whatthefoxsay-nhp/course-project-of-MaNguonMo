@@ -234,7 +234,7 @@
                                             </form>
 
                                             <!-- Reset Password -->
-                                            <form method="POST" action="{{ route('admin.users.reset-password', $user) }}" onsubmit="return confirm('Đặt lại mật khẩu cho [{{ addslashes($user->name) }}] về mặc định (TicketBox@2026)?')">
+                                            <form method="POST" action="{{ route('admin.users.reset-password', $user) }}" onsubmit="return confirm('Đặt lại mật khẩu cho [{{ addslashes($user->name) }}] bằng một mật khẩu ngẫu nhiên? Tài khoản sẽ bị đăng xuất khỏi mọi thiết bị.')">
                                                 @csrf
                                                 <button 
                                                     type="submit" 

@@ -79,6 +79,10 @@ class SeatHoldService
         }
 
         return DB::transaction(function () use ($user, $showtime, $event, $showtimeSeatIds, $tierQuantities, $zoneQuantities, $requestedSeats) {
+            // Khóa dòng user: 2 request giữ chỗ song song của cùng 1 user chạy tuần tự, nên phép
+            // đếm MAX_SEATS bên dưới không bị cả hai cùng đọc số cũ rồi cùng vượt giới hạn.
+            User::whereKey($user->id)->lockForUpdate()->first();
+
             // Mỗi user chỉ giữ ghế của 1 suất tại 1 thời điểm.
             ShowtimeSeat::where('held_by_user_id', $user->id)
                 ->where('status', 'held')
@@ -217,7 +221,11 @@ class SeatHoldService
         $seats = ShowtimeSeat::where('status', 'held')
             ->where('held_until', '<', now())
             ->update(self::RELEASED);
-        $zones = ZoneTicket::where('status', 'held')->where('held_until', '<', now())->delete();
+        // Vé của đơn đã hủy cũng là "held" hết hạn nhưng phải giữ lại để đơn còn tra cứu/khôi phục được.
+        $zones = ZoneTicket::where('status', 'held')->where('held_until', '<', now())
+            ->whereNotExists(fn ($query) => $query->selectRaw('1')->from('booking_items')
+                ->whereColumn('booking_items.zone_ticket_id', 'zone_tickets.id'))
+            ->delete();
 
         return $seats + $zones;
     }

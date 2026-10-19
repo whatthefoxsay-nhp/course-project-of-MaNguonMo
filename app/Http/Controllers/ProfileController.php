@@ -62,6 +62,13 @@ class ProfileController extends Controller
 
         $user = $request->user();
 
+        // bookings.user_id cascade -> xóa tài khoản sẽ xóa luôn đơn/vé đã thanh toán (ghế kẹt "booked").
+        if ($user->bookings()->exists()) {
+            return back()->withErrors([
+                'password' => 'Tài khoản đã có lịch sử đặt vé nên không thể tự xóa. Vui lòng liên hệ quản trị viên để được hỗ trợ.',
+            ], 'userDeletion');
+        }
+
         Auth::logout();
 
         $user->delete();

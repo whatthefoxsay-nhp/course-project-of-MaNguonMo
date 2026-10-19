@@ -33,9 +33,4 @@ class Category extends Model
     {
         return $this->hasMany(Event::class);
     }
-
-    public function movies(): HasMany
-    {
-        return $this->events();
-    }
 }
