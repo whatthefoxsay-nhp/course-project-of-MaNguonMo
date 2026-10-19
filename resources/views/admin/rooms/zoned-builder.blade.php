@@ -30,6 +30,14 @@
                     <label class="text-sm font-semibold">Địa chỉ
                         <input name="address" maxlength="500" value="{{ old('address', $room->address) }}" class="mt-1 w-full rounded-xl border-gray-300">
                     </label>
+                    <label class="text-sm font-semibold">Vĩ độ (latitude)
+                        <input type="number" step="any" min="-90" max="90" name="latitude" value="{{ old('latitude', $room->latitude) }}" placeholder="VD: 21.0205" class="mt-1 w-full rounded-xl border-gray-300 font-mono">
+                        @error('latitude')<span class="mt-1 block text-xs font-bold text-red-600">{{ $message }}</span>@enderror
+                    </label>
+                    <label class="text-sm font-semibold">Kinh độ (longitude)
+                        <input type="number" step="any" min="-180" max="180" name="longitude" value="{{ old('longitude', $room->longitude) }}" placeholder="VD: 105.7642" class="mt-1 w-full rounded-xl border-gray-300 font-mono">
+                        @error('longitude')<span class="mt-1 block text-xs font-bold text-red-600">{{ $message }}</span>@enderror
+                    </label>
                     <label class="text-sm font-semibold">Mẫu khởi tạo
                         <select x-model="preset" @change="loadPreset()" class="mt-1 w-full rounded-xl border-gray-300">
                             <option value="outdoor_concert">Sân khấu ngoài trời</option>

@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\Category;
 use App\Models\Event;
+use App\Services\WeatherService;
+use App\Support\MapEmbed;
 use App\Support\TicketTiers;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -41,7 +43,7 @@ class EventController extends Controller
         ]);
     }
 
-    public function show(string $slug): View
+    public function show(string $slug, WeatherService $weatherService): View
     {
         $event = Event::published()
             ->with('category')
@@ -55,12 +57,22 @@ class EventController extends Controller
             ->orderBy('start_time')
             ->get();
 
+        // Bản đồ + thời tiết theo khán phòng của suất gần nhất.
+        // Thời tiết chỉ cho địa điểm ngoài trời; không có dự báo thật thì view ẩn hẳn khối thời tiết.
+        $nextShowtime = $showtimes->first();
+        $venue = $nextShowtime?->room;
+
         return view('events.show', [
             'event' => $event,
             'movie' => $event,
             // View đang dùng !empty($showtimes) và $showtimes[0] nên truyền array, không truyền Collection.
             'showtimes' => $showtimes->all(),
             'ticketTiers' => TicketTiers::for($event->base_price ?? 180000, $event->is_seated),
+            'venue' => $venue,
+            'mapUrl' => $venue ? MapEmbed::url($venue) : null,
+            'directionsUrl' => $venue ? MapEmbed::directionsUrl($venue) : null,
+            'weather' => $venue?->isOutdoor() ? $weatherService->forecastFor($venue, $nextShowtime->start_time) : null,
+            'weatherShowtime' => $nextShowtime,
         ]);
     }
 }

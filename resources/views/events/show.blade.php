@@ -251,8 +251,8 @@
                                         </div>
                                         <div class="space-y-1">
                                             <span class="text-[10px] text-gray-500 font-bold uppercase">Sân khấu / Khán phòng:</span>
-                                            <h4 class="font-display font-black text-sm text-black">{{ $movie->venue_name ?? (!empty($showtimes) ? $showtimes[0]->room->name : 'Sân Vận Động Quân Khu 7') }}</h4>
-                                            <p class="text-xs text-gray-600 leading-relaxed">{{ $movie->venue_address ?? (!empty($showtimes) ? $showtimes[0]->room->address : '202 Hoàng Văn Thụ, Phường 9, Phú Nhuận, TP.HCM') }}</p>
+                                            <h4 class="font-display font-black text-sm text-black">{{ $movie->venue_name ?? $venue?->name ?? 'Đang cập nhật' }}</h4>
+                                            <p class="text-xs text-gray-600 leading-relaxed">{{ $movie->venue_address ?? $venue?->address ?? 'Đang cập nhật' }}</p>
                                         </div>
                                     </div>
 
@@ -594,45 +594,75 @@
                         @endif
 
                         <!-- 7. WEATHER INTEGRATION & LOCATION QUICK VIEW -->
-                        <div class="mt-8 grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <!-- Location Card -->
-                            <div class="bg-[#FAF9F6] rounded-3xl p-5 border border-black/10 shadow-sm">
-                                <div class="flex items-center gap-2 mb-3">
-                                    <svg class="w-4 h-4 text-gold-dark" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                                    </svg>
-                                    <span class="text-xs font-bold text-black uppercase tracking-wider">Địa Điểm Tổ Chức Sự Kiện</span>
-                                </div>
-                                <div class="h-28 rounded-2xl bg-white border border-black/10 flex flex-col items-center justify-center text-center p-3 text-xs text-gray-600 shadow-inner">
-                                    <span class="font-bold text-black text-sm">{{ $movie->venue_name ?? (!empty($showtimes) ? $showtimes[0]->room->name : 'Sân Vận Động Quân Khu 7') }}</span>
-                                    <span class="text-[11px] text-gray-500 mt-1">{{ $movie->venue_address ?? (!empty($showtimes) ? ($showtimes[0]->room->address ?? 'TP. Hồ Chí Minh') : 'TP. Hồ Chí Minh') }}</span>
-                                </div>
-                            </div>
+                        {{-- Bản đồ Google Maps (mọi địa điểm có tọa độ/địa chỉ) + dự báo OpenWeatherMap (chỉ địa điểm ngoài trời, chỉ khi có dự báo thật) --}}
+                        @php
+                            $venueName = $movie->venue_name ?? $venue?->name;
+                            $venueAddress = $movie->venue_address ?? $venue?->address;
+                        @endphp
+                        @if ($mapUrl || $weather)
+                            <div class="mt-8 grid grid-cols-1 {{ $mapUrl && $weather ? 'sm:grid-cols-2' : '' }} gap-4">
+                                @if ($mapUrl)
+                                    <!-- Location Card (Google Maps) -->
+                                    <div class="bg-[#FAF9F6] rounded-3xl p-5 border border-black/10 shadow-sm">
+                                        <div class="flex items-center justify-between gap-2 mb-3">
+                                            <div class="flex items-center gap-2">
+                                                <svg class="w-4 h-4 text-gold-dark" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                                                </svg>
+                                                <span class="text-xs font-bold text-black uppercase tracking-wider">Bản Đồ Địa Điểm</span>
+                                            </div>
+                                            @if ($directionsUrl)
+                                                <a href="{{ $directionsUrl }}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1 rounded-full bg-black px-3 py-1 text-[11px] font-bold text-white hover:bg-gray-800 transition">
+                                                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" /></svg>
+                                                    Chỉ đường
+                                                </a>
+                                            @endif
+                                        </div>
+                                        @if ($venueName)
+                                            <p class="text-sm font-bold text-black">{{ $venueName }}</p>
+                                        @endif
+                                        @if ($venueAddress)
+                                            <p class="text-[11px] text-gray-500 mb-3">{{ $venueAddress }}</p>
+                                        @endif
+                                        <iframe
+                                            src="{{ $mapUrl }}"
+                                            class="w-full h-56 rounded-2xl border border-black/10"
+                                            loading="lazy"
+                                            referrerpolicy="no-referrer-when-downgrade"
+                                            allowfullscreen
+                                            title="Bản đồ địa điểm {{ $venueName }}"
+                                        ></iframe>
+                                    </div>
+                                @endif
 
-                            <!-- Weather Card -->
-                            <div class="bg-[#FAF9F6] rounded-3xl p-5 border border-black/10 shadow-sm">
-                                <div class="flex items-center gap-2 mb-3">
-                                    <svg class="w-4 h-4 text-sage-forest" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 00-9.78 2.096A4.001 4.001 0 003 15z" />
-                                    </svg>
-                                    <span class="text-xs font-bold text-black uppercase tracking-wider">Dự Báo Thời Tiết Sự Kiện</span>
-                                </div>
-                                <div class="h-28 rounded-2xl bg-white border border-black/10 flex items-center justify-around p-3 text-xs shadow-inner">
-                                    <div class="text-center">
-                                        <svg class="w-8 h-8 text-gold-dark mx-auto mb-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
-                                        </svg>
-                                        <span class="text-black font-bold">28°C · Nắng nhẹ</span>
+                                @if ($weather)
+                                    <!-- Weather Card (OpenWeatherMap) — chỉ hiện khi có dự báo thật -->
+                                    <div class="bg-[#FAF9F6] rounded-3xl p-5 border border-black/10 shadow-sm">
+                                        <div class="flex items-center gap-2 mb-3">
+                                            <svg class="w-4 h-4 text-sage-forest" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 00-9.78 2.096A4.001 4.001 0 003 15z" />
+                                            </svg>
+                                            <span class="text-xs font-bold text-black uppercase tracking-wider">Dự Báo Thời Tiết Sự Kiện</span>
+                                        </div>
+                                        <div class="rounded-2xl bg-white border border-black/10 p-4 flex items-center gap-4 shadow-inner">
+                                            <img src="{{ $weather['icon_url'] }}" alt="{{ $weather['description'] }}" class="w-16 h-16 shrink-0" loading="lazy">
+                                            <div class="space-y-0.5 text-xs">
+                                                <div class="font-display font-black text-2xl text-black">{{ $weather['temp'] }}°C</div>
+                                                <div class="font-bold text-black">{{ $weather['description'] }}</div>
+                                                <div class="text-gray-600">Độ ẩm: {{ $weather['humidity'] }}% · Gió: {{ $weather['wind_kmh'] }} km/h</div>
+                                                <div class="{{ $weather['is_favorable'] ? 'text-sage-forest' : 'text-[#CC0000]' }} font-bold">
+                                                    {{ $weather['is_favorable'] ? 'Thuận lợi tổ chức' : 'Có thể mưa — nhớ mang áo mưa' }}
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <p class="mt-2 text-[10px] text-gray-500">
+                                            Dự báo lúc {{ $weather['forecast_at']->format('H:i d/m') }} cho suất {{ $weatherShowtime->start_time->format('H:i d/m/Y') }} · Nguồn: OpenWeatherMap
+                                        </p>
                                     </div>
-                                    <div class="text-left text-[11px] text-gray-600 space-y-0.5 border-l border-black/10 pl-3">
-                                        <div>Độ ẩm: 65%</div>
-                                        <div>Gió: 12 km/h</div>
-                                        <div class="text-sage-forest font-bold">Thuận lợi tổ chức</div>
-                                    </div>
-                                </div>
+                                @endif
                             </div>
-                        </div>
+                        @endif
 
                         <!-- 8. COMMENTS / REVIEWS SECTION -->
                         <div class="mt-10 pt-8 border-t border-black/10" x-data="{ newComment: '', comments: [{ user: 'Nguyễn Hoàng', time: '2 giờ trước', text: 'Dàn âm thanh L-Acoustics và visual pháo hoa đỉnh chóp, khuyên mọi người nên mua hạng SVIP hoặc VIP Floor!' }, { user: 'Trần Thảo', time: '1 ngày trước', text: 'Live concert tuyệt vời, chỗ ngồi khán đài A tầm nhìn cực rộng và bãi giữ xe rộng rãi.' }] }">
