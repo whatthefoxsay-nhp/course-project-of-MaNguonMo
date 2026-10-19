@@ -522,7 +522,8 @@ describe('Users Management & Account Security', function () {
 
         $this->actingAs($this->admin)->post(route('admin.users.reset-password', $user));
 
-        $tempPassword = 'TicketBox@'.date('Y');
+        preg_match('/: ([A-Za-z0-9]{10})$/', session('success'), $matches);
+        $tempPassword = $matches[1];
         $user->refresh();
 
         expect(Hash::check($tempPassword, $user->password))->toBeTrue();
