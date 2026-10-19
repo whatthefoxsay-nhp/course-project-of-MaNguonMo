@@ -217,7 +217,11 @@ class SeatHoldService
         $seats = ShowtimeSeat::where('status', 'held')
             ->where('held_until', '<', now())
             ->update(self::RELEASED);
-        $zones = ZoneTicket::where('status', 'held')->where('held_until', '<', now())->delete();
+        // Vé của đơn đã hủy cũng là "held" hết hạn nhưng phải giữ lại để đơn còn tra cứu/khôi phục được.
+        $zones = ZoneTicket::where('status', 'held')->where('held_until', '<', now())
+            ->whereNotExists(fn ($query) => $query->selectRaw('1')->from('booking_items')
+                ->whereColumn('booking_items.zone_ticket_id', 'zone_tickets.id'))
+            ->delete();
 
         return $seats + $zones;
     }

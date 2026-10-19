@@ -57,7 +57,6 @@
                     <select name="status" class="w-full bg-[#FAF9F6] border border-gray-200 rounded-2xl px-4 py-2.5 text-xs text-black focus:outline-none focus:border-amber-400 focus:ring-2 focus:ring-amber-400/20 font-medium cursor-pointer">
                         <option value="">-- Tất cả trạng thái --</option>
                         <option value="confirmed" {{ request('status') === 'confirmed' ? 'selected' : '' }}>Đã xác nhận</option>
-                        <option value="pending" {{ request('status') === 'pending' ? 'selected' : '' }}>Đang giữ chỗ</option>
                         <option value="cancelled" {{ request('status') === 'cancelled' ? 'selected' : '' }}>Đã hủy</option>
                     </select>
                 </div>
