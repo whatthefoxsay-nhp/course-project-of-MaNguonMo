@@ -31,7 +31,7 @@
     <div 
         class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12"
         x-data="ticketPaymentManager({
-            totalAmount: {{ $totalPrice }},
+            totalAmount: @js($totalPrice),
             items: {{ Js::from($jsItems) }},
             userName: @js($userName),
             userEmail: @js($userEmail),
@@ -202,7 +202,7 @@
                                             <button
                                                 type="button"
                                                 x-show="step === 'cart'"
-                                                @click="removeItem({ id: {{ $item->id }}, isZoneTicket: {{ ($item->is_zone_ticket ?? false) ? 'true' : 'false' }} })"
+                                                @click="removeItem(@js(['id' => $item->id, 'isZoneTicket' => (bool) ($item->is_zone_ticket ?? false)]))"
                                                 class="mt-1 text-[11px] font-bold text-[#CC0000] hover:underline block"
                                             >
                                                 Bỏ vé
