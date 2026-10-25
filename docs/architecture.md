@@ -208,5 +208,20 @@ Tất cả endpoint nằm trong `routes/web.php` (session + CSRF qua header `X-C
 | Google Maps | `GOOGLE_MAPS_EMBED_KEY` (tùy chọn) | `app/Support/MapEmbed.php` | Có key dùng Maps Embed API; không có thì dùng link nhúng công khai `maps.google.com/maps?q=…&output=embed`; luôn kèm nút "Chỉ đường". |
 | OpenWeatherMap | `OPENWEATHER_API_KEY` (tùy chọn) | `app/Services/WeatherService.php` | Dự báo 5 ngày/3 giờ, chọn mốc gần giờ diễn nhất (lệch ≤ 3 giờ), timeout 5 giây, cache 30 phút theo tọa độ (lỗi nhớ 5 phút). Thiếu key / API lỗi / suất ngoài 5 ngày → **ẩn hẳn** khối thời tiết. Chỉ áp dụng địa điểm ngoài trời (`Room::isOutdoor()`: mẫu chuẩn hóa về `outdoor_concert`). |
 | Google Gemini (chatbot) | `GEMINI_API_KEY` (tùy chọn), `GEMINI_MODEL` (mặc định `gemini-2.5-flash`) | `app/Services/GeminiChatService.php`, `ChatbotController`, `resources/views/components/ai-chatbot.blade.php` | `POST /chatbot/message` (`throttle:30,1`). Prompt kèm tối đa 8 sự kiện `published` từ DB; câu trả lời Markdown được escape HTML trước khi render. Thiếu key → server trả `{fallback: true}`; thiếu key hoặc request lỗi mạng/HTTP → widget dùng bộ trả lời theo từ khóa viết sẵn (`generateBotResponse`, chạy offline trong trình duyệt). |
+| Google OAuth 2.0 | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_REDIRECT_URI` | `app/Http/Controllers/Auth/GoogleAuthController.php`, `routes/auth.php` | Đăng nhập/Đăng ký 1 chạm. Tự động liên kết khi email đã xác minh (`email_verified = true`). Lỗi mạng/callback trả về login kèm thông báo tiếng Việt. |
 
 Bản đồ và thời tiết hiển thị ở `resources/views/events/show.blade.php`; admin nhập vĩ độ/kinh độ trong form khán phòng (cả ma trận ghế lẫn sơ đồ khu).
+
+---
+
+## 11. Đăng nhập / Đăng ký Google (OAuth 2.0)
+
+- **Thư viện**: `laravel/socialite`
+- **Cơ chế**:
+  - Người dùng bấm nút **Tiếp tục với Google** ở trang `/login` hoặc `/register`.
+  - Google chuyển hướng về `/auth/google/callback`.
+  - Nếu đã có tài khoản với `google_id` này: đăng nhập ngay.
+  - Nếu đã có tài khoản với email tương ứng và Google xác nhận `email_verified = true`: tự động liên kết `google_id`, giữ nguyên mật khẩu cũ và lịch sử vé.
+  - Nếu là tài khoản mới: tạo tài khoản mới với role `user`, mật khẩu ngẫu nhiên bảo mật, và `email_verified_at = now()`.
+  - Nếu tài khoản đang bị khóa (`is_active = false`): từ chối đăng nhập và trả thông báo tiếng Việt.
+
