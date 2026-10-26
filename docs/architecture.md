@@ -38,6 +38,10 @@ Cập nhật file này mỗi khi kiến trúc hoặc yêu cầu dự án thay đ
 | **2026-10-26** | **Sơ đồ theo khu vực (Plan 8)** | Thêm bảng `seat_zones`; `seats.zone_id` + `seats.pos_col`. Thay 6 loại ghế "concert" cố định, `SeatMapPresenter` và hạng vé VIP/Standard/Combo bằng khu do admin đặt (xem mục 2a) | Mỗi loại sự kiện có cách bố trí khác nhau; admin tự đặt tên, giá, màu từng khu. |
 | **2026-10-26** | **Đổi trạng thái đơn (admin)** | Chỉ cho `pending→confirmed`, `pending→cancelled`, `confirmed→cancelled`; xác nhận bị từ chối nếu ghế đã thuộc đơn khác hoặc người khác đang giữ | Chặn bán trùng ghế khi xác nhận lại đơn đã hủy. |
 
+| **2026-10-26** | **Tương tác AJAX (Plan 4)** | Bình luận thêm/xóa không tải lại (`CommentController` JSON, `CommentPolicy`: chủ bình luận hoặc admin, throttle 10/phút, render bằng `x-text`); gợi ý tìm kiếm `GET /search/suggestions` (≥ 2 ký tự, tối đa 6, debounce 250ms); upload ảnh đại diện (disk `public/avatars`, ≤ 1MB) | Spec mục 2 "AJAX bình luận, tìm kiếm gợi ý" và "Upload avatar". |
+| **2026-10-26** | **API ngoài (Plan 5)** | Google Maps: Maps Embed API khi có `GOOGLE_MAPS_EMBED_KEY`, không có key thì dùng link nhúng công khai (`MapEmbed`). OpenWeatherMap: dự báo 5 ngày/3 giờ, chọn mốc gần giờ diễn nhất, cache 30 phút, lỗi/thiếu key → hiện "Chưa có dự báo" (`WeatherService`). Admin nhập tọa độ địa điểm | Trang không phụ thuộc API ngoài sống hay chết; demo được khi chưa có key Maps. |
+| **2026-10-26** | **Phạm vi thời tiết** | Hiển thị cho mọi địa điểm có tọa độ, không chỉ sự kiện ngoài trời | Chưa có cờ trong nhà/ngoài trời; thêm cờ là mở rộng phạm vi. |
+
 ### 2a. Sơ đồ chỗ ngồi theo khu vực
 
 ```
@@ -70,7 +74,7 @@ seats(+ zone_id, + pos_col)   -- pos_col = vị trí ô trong hàng; ô trống 
 ---
 
 ## 4. Kiểm thử & Độ bao phủ (Test Suite)
-- Toàn bộ tính năng đều được kiểm thử bằng Pest PHP (`php artisan test`): **245 tests / 1692 assertions (Pass 100%, 2026-10-26)**.
+- Toàn bộ tính năng đều được kiểm thử bằng Pest PHP (`php artisan test`): **278 tests / 1792 assertions (Pass 100%, 2026-10-26)**.
 - Bao gồm Feature Test cho:
   - Admin: Dashboard Real Data, Booking Management & Seat Release, Discount CRUD, Room Safety, Locked User, Category CRUD, Event CRUD, Showtime CRUD, User Role & Password Management.
   - Public & Engine: Public Catalog, Seat Map Page, Ticket Tiers & Seat Pricing, SeatHoldService, SeatHoldHttp, Checkout, Cart & Booking History.
