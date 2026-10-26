@@ -588,7 +588,7 @@
 
                         <!-- 7. WEATHER INTEGRATION & LOCATION QUICK VIEW -->
                         <div class="mt-8 grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <!-- Location Card -->
+                            <!-- Location Card (Google Maps) -->
                             <div class="bg-[#FAF9F6] rounded-3xl p-5 border border-black/10 shadow-sm">
                                 <div class="flex items-center gap-2 mb-3">
                                     <svg class="w-4 h-4 text-gold-dark" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -597,13 +597,22 @@
                                     </svg>
                                     <span class="text-xs font-bold text-black uppercase tracking-wider">Địa Điểm Tổ Chức Sự Kiện</span>
                                 </div>
-                                <div class="h-28 rounded-2xl bg-white border border-black/10 flex flex-col items-center justify-center text-center p-3 text-xs text-gray-600 shadow-inner">
-                                    <span class="font-bold text-black text-sm">{{ $movie->venue_name ?? (!empty($showtimes) ? $showtimes[0]->room->name : 'Sân Vận Động Quân Khu 7') }}</span>
-                                    <span class="text-[11px] text-gray-500 mt-1">{{ $movie->venue_address ?? (!empty($showtimes) ? ($showtimes[0]->room->address ?? 'TP. Hồ Chí Minh') : 'TP. Hồ Chí Minh') }}</span>
-                                </div>
+                                <p class="text-sm font-bold text-black">{{ $movie->venue_name ?? $weatherShowtime?->room->name ?? 'Đang cập nhật' }}</p>
+                                <p class="text-[11px] text-gray-500 mb-3">{{ $movie->venue_address ?? $weatherShowtime?->room->address }}</p>
+                                @if ($mapUrl)
+                                    <iframe
+                                        src="{{ $mapUrl }}"
+                                        class="w-full h-48 rounded-2xl border border-black/10"
+                                        loading="lazy"
+                                        referrerpolicy="no-referrer-when-downgrade"
+                                        title="Bản đồ địa điểm"
+                                    ></iframe>
+                                @else
+                                    <div class="h-48 rounded-2xl bg-white border border-black/10 flex items-center justify-center text-xs text-gray-500">Chưa có bản đồ cho địa điểm này.</div>
+                                @endif
                             </div>
 
-                            <!-- Weather Card -->
+                            <!-- Weather Card (OpenWeatherMap) -->
                             <div class="bg-[#FAF9F6] rounded-3xl p-5 border border-black/10 shadow-sm">
                                 <div class="flex items-center gap-2 mb-3">
                                     <svg class="w-4 h-4 text-sage-forest" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -611,19 +620,26 @@
                                     </svg>
                                     <span class="text-xs font-bold text-black uppercase tracking-wider">Dự Báo Thời Tiết Sự Kiện</span>
                                 </div>
-                                <div class="h-28 rounded-2xl bg-white border border-black/10 flex items-center justify-around p-3 text-xs shadow-inner">
-                                    <div class="text-center">
-                                        <svg class="w-8 h-8 text-gold-dark mx-auto mb-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
-                                        </svg>
-                                        <span class="text-black font-bold">28°C · Nắng nhẹ</span>
+                                @if ($weather)
+                                    <div class="rounded-2xl bg-white border border-black/10 p-4 flex items-center gap-4 shadow-inner">
+                                        <img src="{{ $weather['icon_url'] }}" alt="{{ $weather['description'] }}" class="w-16 h-16">
+                                        <div class="space-y-0.5 text-xs">
+                                            <div class="font-display font-black text-2xl text-black">{{ $weather['temp'] }}°C</div>
+                                            <div class="font-bold text-black">{{ $weather['description'] }}</div>
+                                            <div class="text-gray-600">Độ ẩm: {{ $weather['humidity'] }}% · Gió: {{ $weather['wind_kmh'] }} km/h</div>
+                                            <div class="{{ $weather['is_favorable'] ? 'text-sage-forest' : 'text-[#CC0000]' }} font-bold">
+                                                {{ $weather['is_favorable'] ? 'Thuận lợi tổ chức' : 'Có thể mưa — nhớ mang áo mưa' }}
+                                            </div>
+                                        </div>
                                     </div>
-                                    <div class="text-left text-[11px] text-gray-600 space-y-0.5 border-l border-black/10 pl-3">
-                                        <div>Độ ẩm: 65%</div>
-                                        <div>Gió: 12 km/h</div>
-                                        <div class="text-sage-forest font-bold">Thuận lợi tổ chức</div>
+                                    <p class="mt-2 text-[10px] text-gray-500">
+                                        Dự báo lúc {{ $weather['forecast_at']->timezone(config('app.timezone'))->format('H:i d/m') }} cho suất {{ $weatherShowtime->start_time->format('H:i d/m/Y') }} · Nguồn: OpenWeatherMap
+                                    </p>
+                                @else
+                                    <div class="h-28 rounded-2xl bg-white border border-black/10 flex items-center justify-center text-center p-3 text-xs text-gray-500 shadow-inner">
+                                        Chưa có dự báo — dự báo chỉ có trong vòng {{ \App\Services\WeatherService::FORECAST_DAYS }} ngày trước giờ diễn.
                                     </div>
-                                </div>
+                                @endif
                             </div>
                         </div>
 

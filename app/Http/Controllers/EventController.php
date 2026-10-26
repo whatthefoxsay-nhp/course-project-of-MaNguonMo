@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\Category;
 use App\Models\Event;
+use App\Services\WeatherService;
+use App\Support\MapEmbed;
 use App\Support\SeatMap;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -41,7 +43,7 @@ class EventController extends Controller
         ]);
     }
 
-    public function show(Request $request, string $slug): View
+    public function show(Request $request, string $slug, WeatherService $weatherService): View
     {
         $event = Event::published()
             ->with('category')
@@ -63,12 +65,18 @@ class EventController extends Controller
             ->map(fn ($comment) => $comment->toPublicArray($request->user()))
             ->all();
 
+        $nextShowtime = $showtimes->first();
+        $venue = $nextShowtime?->room;
+
         return view('events.show', [
             'event' => $event,
             'movie' => $event,
             // View đang dùng !empty($showtimes) và $showtimes[0] nên truyền array, không truyền Collection.
             'showtimes' => $showtimes->all(),
             'comments' => $comments,
+            'mapUrl' => $venue ? MapEmbed::url($venue) : null,
+            'weather' => $venue ? $weatherService->forecastFor($venue, $nextShowtime->start_time) : null,
+            'weatherShowtime' => $nextShowtime,
             'zoneCards' => $showtimes->isEmpty() ? [] : SeatMap::zoneCards($showtimes->first()),
         ]);
     }
