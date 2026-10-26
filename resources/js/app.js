@@ -256,6 +256,7 @@ Alpine.data('searchModal', () => ({
     query: '',
     results: [],
     isLoading: false,
+    searchTimer: null,
 
     open() {
         this.isOpen = true;
@@ -269,18 +270,37 @@ Alpine.data('searchModal', () => ({
         this.isOpen = false;
         this.query = '';
         this.results = [];
+        clearTimeout(this.searchTimer);
     },
 
+    // Gợi ý tìm kiếm AJAX, debounce 250ms
     handleSearch() {
-        if (!this.query.trim()) {
+        clearTimeout(this.searchTimer);
+        const query = this.query.trim();
+
+        if (query.length < 2) {
             this.results = [];
+            this.isLoading = false;
             return;
         }
+
         this.isLoading = true;
-        // Mock debounce / fast client search query
-        setTimeout(() => {
-            this.isLoading = false;
-        }, 200);
+        this.searchTimer = setTimeout(async () => {
+            const url = document.getElementById('global-search-input')?.dataset.suggestUrl;
+            try {
+                const response = await fetch(`${url}?q=${encodeURIComponent(query)}`, {
+                    headers: { 'Accept': 'application/json' },
+                });
+                const data = await response.json();
+                if (query === this.query.trim()) {
+                    this.results = response.ok ? data.results : [];
+                }
+            } catch (error) {
+                this.results = [];
+            } finally {
+                this.isLoading = false;
+            }
+        }, 250);
     }
 }));
 

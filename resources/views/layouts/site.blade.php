@@ -362,6 +362,8 @@
                 <form action="{{ route('movies.index') }}" method="GET" class="flex-1">
                     <input 
                         id="global-search-input"
+                        data-suggest-url="{{ route('search.suggestions') }}"
+                        autocomplete="off"
                         type="text" 
                         name="q"
                         x-model="query"
@@ -371,6 +373,28 @@
                     >
                 </form>
                 <button @click="close()" class="text-xs text-gray-600 hover:text-black px-3 py-1 rounded-xl bg-[#F5F5DC] border border-[#D8D8A8] font-bold">ESC</button>
+            </div>
+
+            <!-- Live Search Results (AJAX) -->
+            <div class="mt-4" x-show="query.trim().length >= 2" style="display: none;">
+                <p x-show="isLoading" class="text-xs text-gray-500 py-2">Đang tìm…</p>
+                <p x-show="!isLoading && results.length === 0" class="text-xs text-gray-500 py-2">Không tìm thấy sự kiện phù hợp.</p>
+                <ul x-show="!isLoading && results.length > 0" class="divide-y divide-black/5">
+                    <template x-for="item in results" :key="item.url">
+                        <li>
+                            <a :href="item.url" class="flex items-center gap-3 py-2.5 px-2 rounded-xl hover:bg-[#FAF9F6]">
+                                <img :src="item.poster_url" alt="" class="w-10 h-14 object-cover rounded-lg border border-black/10">
+                                <div class="min-w-0">
+                                    <p class="text-sm font-bold text-black truncate" x-text="item.title"></p>
+                                    <p class="text-[11px] text-gray-500">
+                                        <span x-text="item.category"></span>
+                                        <span x-show="item.price_from" x-text="' · Từ ' + item.price_from"></span>
+                                    </p>
+                                </div>
+                            </a>
+                        </li>
+                    </template>
+                </ul>
             </div>
 
             <!-- Quick Suggestions -->

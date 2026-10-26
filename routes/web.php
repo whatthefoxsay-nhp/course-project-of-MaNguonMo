@@ -17,6 +17,7 @@ use App\Http\Controllers\EventController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\MovieController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\SearchSuggestionController;
 use App\Http\Controllers\SeatHoldController;
 use App\Http\Controllers\ShowtimeController;
 use Illuminate\Support\Facades\Route;
@@ -25,6 +26,9 @@ Route::get('/', [HomeController::class, 'index'])->name('home');
 
 Route::get('/events', [EventController::class, 'index'])->name('events.index');
 Route::get('/events/{slug}', [EventController::class, 'show'])->name('events.show');
+Route::get('/search/suggestions', SearchSuggestionController::class)
+    ->middleware('throttle:60,1')
+    ->name('search.suggestions');
 
 // Backward compatibility routes for movies
 Route::get('/movies', [EventController::class, 'index'])->name('movies.index');
