@@ -72,11 +72,11 @@
 
             <div class="relative overflow-x-auto">
                 <div :style="`transform: scale(${zoomScale}); transform-origin: top center; transition: transform 0.25s;`"
-                     class="pb-8 space-y-8 min-w-max mx-auto flex flex-col items-center">
+                     class="pb-8 space-y-8 min-w-max mx-auto flex flex-col" style="align-items: safe center;">
                     <x-seat-map.stage :preset="$seatMap['preset']" />
 
                     @foreach ($levels as $level => $zones)
-                        <div class="w-full flex flex-wrap justify-center items-start gap-4 sm:gap-6 {{ $loop->first ? 'pt-6' : '' }}">
+                        <div class="w-full flex items-start gap-4 sm:gap-6 {{ $loop->first ? 'pt-6' : '' }}" style="justify-content: safe center;">
                             @foreach ($zones as $zone)
                                 <div class="transition-opacity duration-300" :class="isZoneDimmed(@js($zone['code'])) ? 'opacity-20' : ''">
                                     @if ($zone['kind'] === 'standing')

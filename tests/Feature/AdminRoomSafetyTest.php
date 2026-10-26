@@ -6,6 +6,7 @@ use App\Models\Room;
 use App\Models\Showtime;
 use App\Models\ShowtimeSeat;
 use App\Services\RoomSeatGenerator;
+use App\Support\LayoutTemplates;
 
 function roomWithSoldTicket(): array
 {
@@ -58,8 +59,7 @@ test('updating a room that already has showtimes keeps seats and sold tickets', 
             'address' => 'Địa chỉ mới',
             'capacity' => 500,
             'layout_preset' => 'custom_grid',
-            'rows' => 10,
-            'cols' => 10,
+            'layout' => json_encode(LayoutTemplates::get('custom_grid', ['rows' => 10, 'cols' => 10])),
         ])
         ->assertRedirect(route('admin.rooms.index'))
         ->assertSessionHas('warning');

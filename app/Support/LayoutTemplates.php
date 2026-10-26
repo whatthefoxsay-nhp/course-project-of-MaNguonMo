@@ -123,7 +123,7 @@ final class LayoutTemplates
                 'Hai hàng ghế đầu ngay trước sân khấu.', ['Lối check-in riêng', 'Quà tặng độc quyền']),
             self::zone('GA-R', 'Fanzone đứng phải', 'standing', 1, -20000, '#99334D', 'Cổng Fanzone 2',
                 'Khu đứng sát cánh phải sân khấu.', ['Vòng tay LED'], 40),
-            self::zone('VIP', 'VIP mặt sàn', 'seated', 2, 80000, '#E5A93C', 'Cổng VIP 2',
+            self::zone('VIP', 'VIP mặt sàn', 'seated', 2, 80000, '#E07A5F', 'Cổng VIP 2',
                 'Ghế mặt sàn trung tâm, nhìn thẳng sân khấu.', ['Lanyard VIP']),
             self::zone('KD-C', 'Khán đài C (cánh trái)', 'seated', 3, 0, '#1F2937', 'Cổng C',
                 'Khán đài cánh trái, giá phổ thông.'),
