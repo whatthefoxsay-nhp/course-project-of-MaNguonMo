@@ -1,66 +1,80 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# TicketBox — Website quản lý đặt vé sự kiện
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Đồ án môn Mã nguồn mở. Laravel 11 · PHP 8.3 · MySQL 8.4 · Tailwind CSS + Alpine.js · Pest.
 
-## About Laravel
+## Tính năng chính
+- **Khách:** tìm kiếm/lọc sự kiện, gợi ý tìm kiếm khi gõ, chi tiết sự kiện có bản đồ Google Maps và dự báo thời tiết tại giờ diễn, sơ đồ chỗ ngồi tương tác.
+- **Thành viên:** giữ chỗ 10 phút (chống đặt trùng), chọn ghế / chọn cả bàn / chọn số lượng vé khu đứng tùy loại sự kiện, giỏ vé, thanh toán giả lập (VietQR/MoMo/ZaloPay/Thẻ), vé điện tử, lịch sử, bình luận, hồ sơ + ảnh đại diện.
+- **Quản trị:** danh mục, sự kiện (upload poster), địa điểm với trình dựng sơ đồ theo khu (6 mẫu: sân vận động, nhà hát, hội trường, bàn tiệc, không gian mở, lưới tùy chỉnh), suất diễn, đơn đặt vé, mã giảm giá, người dùng (khóa/mở, đổi vai trò), dashboard, báo cáo.
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## Cài đặt (Windows + Laragon)
+```bash
+git clone git@github.com:whatthefoxsay-nhp/course-project-of-MaNguonMo.git DoAnMNM
+cd DoAnMNM
+composer install --no-security-blocking
+npm install
+cp .env.example .env
+php artisan key:generate
+```
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+Sửa `.env` để dùng MySQL của Laragon (tạo database `doanmnm_ticket` trong HeidiSQL trước):
+```
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=doanmnm_ticket
+DB_USERNAME=root
+DB_PASSWORD=
+```
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+```bash
+php artisan migrate --seed
+php artisan storage:link
+npm run build
+php artisan serve --port=8080
+```
+Mở http://127.0.0.1:8080
 
-## Learning Laravel
+Tùy chọn: chạy `php artisan schedule:work` ở cửa sổ khác để dọn chỗ giữ quá hạn mỗi phút
+(không chạy cũng không sao: chỗ giữ quá hạn vẫn được coi là trống).
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+Muốn làm lại dữ liệu demo từ đầu: `php artisan migrate:fresh --seed` (xóa toàn bộ dữ liệu cũ).
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+## Khóa API (tùy chọn)
+- `OPENWEATHER_API_KEY` — dự báo thời tiết trên trang sự kiện (đăng ký miễn phí tại openweathermap.org; key mới có thể mất tới ~1 giờ mới hoạt động). Bỏ trống thì trang hiện "Chưa có dự báo".
+- `GOOGLE_MAPS_EMBED_KEY` — bản đồ qua Maps Embed API; bỏ trống vẫn hiện bản đồ bằng link nhúng công khai.
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+Sau khi sửa `.env`: `php artisan config:clear`. Không commit key lên git.
 
-## Laravel Sponsors
+## Tài khoản demo (mật khẩu `password`)
+| Vai trò | Email |
+|---|---|
+| Quản trị | admin@ticketbox.vn |
+| Thành viên | user@ticketbox.vn |
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+## Dữ liệu demo
+8 sự kiện ở 8 địa điểm, mỗi loại sự kiện một kiểu bố trí chỗ ngồi:
 
-### Premium Partners
+| Sự kiện | Kiểu bố trí |
+|---|---|
+| Concert Anh Trai Vượt Ngàn Chông Gai | Sân vận động: 2 khu đứng, SVIP, VIP mặt sàn, khán đài, Skybox |
+| Hòa nhạc giao hưởng, nhạc kịch Les Misérables, Fan meeting | Nhà hát: tầng trệt, tầng lửng, ban công |
+| Vietnam Tech Summit | Hội trường (mua theo khu, không chọn ghế) |
+| Masterclass AI | Bàn tiệc / workshop (chọn ghế quanh bàn) |
+| Triển lãm Van Gogh, Festival | Không gian mở (vé vào cửa theo sức chứa) |
 
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[WebReinvent](https://webreinvent.com/)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel/)**
-- **[Cyber-Duck](https://cyber-duck.co.uk)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Jump24](https://jump24.co.uk)**
-- **[Redberry](https://redberry.international/laravel/)**
-- **[Active Logic](https://activelogic.com)**
-- **[byte5](https://byte5.de)**
-- **[OP.GG](https://op.gg)**
+## Kiểm thử
+```bash
+php artisan test
+```
+Test không gọi API thật (`Http::fake`, key được để trống trong `phpunit.xml`).
 
-## Contributing
+## Tài liệu
+- Đặc tả: `docs/superpowers/specs/2026-09-07-ticket-booking-platform-design.md`
+- Kiến trúc & quyết định: `docs/architecture.md`
+- Báo cáo: `docs/report/` (ERD, use case, chức năng, checklist ảnh chụp, kịch bản demo)
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
-
-## Code of Conduct
-
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
-
-## Security Vulnerabilities
-
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
-
-## License
-
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+## Thành viên
+| Họ tên | Vai trò |
+|---|---|
+| … | … |
