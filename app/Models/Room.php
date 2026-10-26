@@ -32,6 +32,12 @@ class Room extends Model
         return $this->hasMany(Seat::class);
     }
 
+    /** Khu vực của sơ đồ, theo thứ tự vẽ: tầng (level) rồi trái → phải (sort_order). */
+    public function zones(): HasMany
+    {
+        return $this->hasMany(SeatZone::class)->orderBy('level')->orderBy('sort_order')->orderBy('id');
+    }
+
     public function showtimes(): HasMany
     {
         return $this->hasMany(Showtime::class);
