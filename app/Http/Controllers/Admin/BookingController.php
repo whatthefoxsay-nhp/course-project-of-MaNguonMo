@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Booking;
+use App\Models\BookingItem;
+use App\Models\ShowtimeSeat;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -52,44 +54,61 @@ class BookingController extends Controller
         return view('admin.bookings.show', compact('booking'));
     }
 
+    /** Trạng thái được phép chuyển tới; "cancelled" là trạng thái cuối. */
+    private const TRANSITIONS = [
+        'pending' => ['confirmed', 'cancelled'],
+        'confirmed' => ['cancelled'],
+        'cancelled' => [],
+    ];
+
     public function updateStatus(Request $request, Booking $booking): RedirectResponse
     {
         $validated = $request->validate([
             'status' => 'required|in:confirmed,cancelled,pending',
         ]);
-
         $newStatus = $validated['status'];
 
-        DB::transaction(function () use ($booking, $newStatus) {
-            $booking->update(['status' => $newStatus]);
+        if (! in_array($newStatus, self::TRANSITIONS[$booking->status] ?? [], true)) {
+            return back()->with('error', "Không thể chuyển đơn [{$booking->booking_code}] từ trạng thái \"{$booking->status}\" sang \"{$newStatus}\".");
+        }
 
-            if ($newStatus === 'cancelled') {
-                foreach ($booking->items as $item) {
-                    if ($item->showtimeSeat) {
-                        $item->showtimeSeat->update([
-                            'status' => 'available',
-                            'held_by_user_id' => null,
-                            'held_until' => null,
-                        ]);
-                    }
-                }
-            } elseif ($newStatus === 'confirmed') {
-                foreach ($booking->items as $item) {
-                    if ($item->showtimeSeat) {
-                        $item->showtimeSeat->update([
-                            'status' => 'booked',
-                            'held_by_user_id' => null,
-                            'held_until' => null,
-                        ]);
-                    }
+        $conflict = DB::transaction(function () use ($booking, $newStatus) {
+            $seats = ShowtimeSeat::whereIn('id', $booking->items()->pluck('showtime_seat_id'))
+                ->lockForUpdate()
+                ->get();
+
+            if ($newStatus === 'confirmed') {
+                $takenByOtherBooking = BookingItem::whereIn('showtime_seat_id', $seats->pluck('id'))
+                    ->where('booking_id', '!=', $booking->id)
+                    ->whereHas('booking', fn ($query) => $query->where('status', '!=', 'cancelled'))
+                    ->exists();
+                $heldByOtherUser = $seats->contains(fn (ShowtimeSeat $seat) => $seat->status === 'held'
+                    && $seat->held_by_user_id !== null
+                    && $seat->held_by_user_id !== $booking->user_id
+                    && $seat->held_until?->isFuture());
+
+                if ($takenByOtherBooking || $heldByOtherUser) {
+                    return true;
                 }
             }
+
+            $booking->update(['status' => $newStatus]);
+
+            $seatState = $newStatus === 'cancelled'
+                ? ['status' => 'available', 'held_by_user_id' => null, 'held_until' => null, 'price_override' => null]
+                : ['status' => 'booked', 'held_by_user_id' => null, 'held_until' => null];
+            ShowtimeSeat::whereIn('id', $seats->pluck('id'))->update($seatState);
+
+            return false;
         });
+
+        if ($conflict) {
+            return back()->with('error', "Không thể xác nhận đơn [{$booking->booking_code}]: có ghế đã thuộc về đơn khác hoặc đang được người khác giữ.");
+        }
 
         $message = match ($newStatus) {
             'cancelled' => "Đã hủy đơn vé [{$booking->booking_code}] và giải phóng toàn bộ ghế liên quan.",
-            'confirmed' => "Đã xác nhận thanh toán đơn vé [{$booking->booking_code}].",
-            default => "Đã chuyển trạng thái đơn vé [{$booking->booking_code}] sang đang giữ chỗ.",
+            default => "Đã xác nhận thanh toán đơn vé [{$booking->booking_code}].",
         };
 
         return back()->with('success', $message);

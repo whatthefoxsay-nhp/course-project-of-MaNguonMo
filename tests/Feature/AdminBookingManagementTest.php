@@ -154,3 +154,52 @@ test('regular user cannot access admin booking show or update status', function 
         'status' => 'cancelled',
     ])->assertStatus(403);
 });
+
+test('a cancelled booking cannot be confirmed again once its seat is resold', function () {
+    $this->actingAs($this->admin)->patch(route('admin.bookings.update-status', $this->booking), [
+        'status' => 'cancelled',
+    ]);
+
+    $buyer = User::factory()->create();
+    $buyer->assignRole('user');
+    $resale = Booking::create(['user_id' => $buyer->id, 'total_price' => 300000, 'status' => 'confirmed']);
+    BookingItem::create(['booking_id' => $resale->id, 'showtime_seat_id' => $this->stSeat1->id, 'price' => 300000]);
+    $this->stSeat1->update(['status' => 'booked']);
+
+    $this->actingAs($this->admin)->patch(route('admin.bookings.update-status', $this->booking), [
+        'status' => 'confirmed',
+    ])->assertRedirect()->assertSessionHas('error');
+
+    expect($this->booking->fresh()->status)->toBe('cancelled');
+});
+
+test('confirming a pending booking is refused when another user holds one of its seats', function () {
+    $this->booking->update(['status' => 'pending']);
+    $other = User::factory()->create();
+    $this->stSeat1->update(['status' => 'held', 'held_by_user_id' => $other->id, 'held_until' => now()->addMinutes(5)]);
+
+    $this->actingAs($this->admin)->patch(route('admin.bookings.update-status', $this->booking), [
+        'status' => 'confirmed',
+    ])->assertSessionHas('error');
+
+    expect($this->booking->fresh()->status)->toBe('pending');
+    expect($this->stSeat1->fresh()->held_by_user_id)->toBe($other->id);
+});
+
+test('setting the same status again changes nothing', function () {
+    $this->actingAs($this->admin)->patch(route('admin.bookings.update-status', $this->booking), ['status' => 'cancelled']);
+    $this->stSeat1->update(['status' => 'held', 'held_by_user_id' => $this->admin->id, 'held_until' => now()->addMinutes(5)]);
+
+    $this->actingAs($this->admin)->patch(route('admin.bookings.update-status', $this->booking), ['status' => 'cancelled'])
+        ->assertSessionHas('error');
+
+    expect($this->stSeat1->fresh()->status)->toBe('held');
+});
+
+test('cancelling clears the price override of released seats', function () {
+    $this->stSeat1->update(['price_override' => 999000]);
+
+    $this->actingAs($this->admin)->patch(route('admin.bookings.update-status', $this->booking), ['status' => 'cancelled']);
+
+    expect($this->stSeat1->fresh()->price_override)->toBeNull();
+});
