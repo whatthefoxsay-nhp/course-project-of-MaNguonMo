@@ -285,6 +285,63 @@ Alpine.data('searchModal', () => ({
 }));
 
 // Countdown timer component for cart
+// Bình luận sự kiện: gửi / xóa không tải lại trang
+Alpine.data('eventComments', (config = {}) => ({
+    comments: config.comments || [],
+    newComment: '',
+    isPosting: false,
+    error: '',
+
+    async submit() {
+        const content = this.newComment.trim();
+        if (!content || this.isPosting) return;
+
+        if (!config.canComment) {
+            window.location.href = config.loginUrl;
+            return;
+        }
+
+        this.isPosting = true;
+        this.error = '';
+
+        try {
+            const response = await fetch(config.storeUrl, {
+                method: 'POST',
+                headers: jsonHeaders(),
+                body: JSON.stringify({ content }),
+            });
+            const data = await response.json();
+
+            if (!response.ok) {
+                this.error = data.errors?.content?.[0] || data.message || 'Không thể gửi bình luận.';
+                return;
+            }
+
+            this.comments.unshift(data.comment);
+            this.newComment = '';
+        } catch (error) {
+            this.error = 'Mất kết nối tới máy chủ, vui lòng thử lại.';
+        } finally {
+            this.isPosting = false;
+        }
+    },
+
+    async remove(comment) {
+        if (!confirm('Xóa bình luận này?')) return;
+
+        const response = await fetch(config.destroyUrl.replace('__ID__', comment.id), {
+            method: 'DELETE',
+            headers: jsonHeaders(),
+        });
+
+        if (response.ok) {
+            this.comments = this.comments.filter(item => item.id !== comment.id);
+        } else {
+            this.error = 'Không thể xóa bình luận này.';
+        }
+    },
+}));
+
 Alpine.data('countdownTimer', (initialMinutes = 10, initialSeconds = null) => ({
     totalSeconds: initialSeconds ?? initialMinutes * 60,
     timerInterval: null,

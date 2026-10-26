@@ -41,7 +41,7 @@ class EventController extends Controller
         ]);
     }
 
-    public function show(string $slug): View
+    public function show(Request $request, string $slug): View
     {
         $event = Event::published()
             ->with('category')
@@ -55,11 +55,20 @@ class EventController extends Controller
             ->orderBy('start_time')
             ->get();
 
+        $comments = $event->comments()
+            ->with('user')
+            ->latest()
+            ->take(30)
+            ->get()
+            ->map(fn ($comment) => $comment->toPublicArray($request->user()))
+            ->all();
+
         return view('events.show', [
             'event' => $event,
             'movie' => $event,
             // View đang dùng !empty($showtimes) và $showtimes[0] nên truyền array, không truyền Collection.
             'showtimes' => $showtimes->all(),
+            'comments' => $comments,
             'zoneCards' => $showtimes->isEmpty() ? [] : SeatMap::zoneCards($showtimes->first()),
         ]);
     }

@@ -628,39 +628,55 @@
                         </div>
 
                         <!-- 8. COMMENTS / REVIEWS SECTION -->
-                        <div class="mt-10 pt-8 border-t border-black/10" x-data="{ newComment: '', comments: [{ user: 'Nguyễn Hoàng', time: '2 giờ trước', text: 'Dàn âm thanh L-Acoustics và visual pháo hoa đỉnh chóp, khuyên mọi người nên mua hạng SVIP hoặc VIP Floor!' }, { user: 'Trần Thảo', time: '1 ngày trước', text: 'Live concert tuyệt vời, chỗ ngồi khán đài A tầm nhìn cực rộng và bãi giữ xe rộng rãi.' }] }">
+                        <div class="mt-10 pt-8 border-t border-black/10"
+                             x-data="eventComments({
+                                 comments: @js($comments),
+                                 storeUrl: @js(route('comments.store', $movie->slug)),
+                                 destroyUrl: @js(route('comments.destroy', '__ID__')),
+                                 loginUrl: @js(route('login')),
+                                 canComment: @js(auth()->check()),
+                             })">
                             <div class="flex items-center justify-between mb-4">
                                 <h3 class="font-display font-black text-lg text-black">Đánh Giá &amp; Cảm Nhận Khán Giả</h3>
                                 <span class="text-xs text-gray-500" x-text="comments.length + ' bình luận'"></span>
                             </div>
 
                             <!-- Comment Input Form -->
-                            <div class="bg-[#FAF9F6] rounded-2xl p-3 border border-black/10 mb-6 flex gap-2">
-                                <input 
-                                    type="text" 
+                            <form @submit.prevent="submit()" class="bg-[#FAF9F6] rounded-2xl p-3 border border-black/10 mb-2 flex gap-2">
+                                <input
+                                    type="text"
                                     x-model="newComment"
-                                    @keydown.enter="if(newComment.trim()) { comments.unshift({ user: 'Bạn', time: 'Vừa xong', text: newComment }); newComment = ''; }"
-                                    placeholder="Chia sẻ cảm nhận của bạn về sự kiện này..." 
+                                    maxlength="1000"
+                                    placeholder="{{ auth()->check() ? 'Chia sẻ cảm nhận của bạn về sự kiện này...' : 'Đăng nhập để bình luận...' }}"
                                     class="bg-transparent border-0 flex-1 text-xs text-black placeholder-gray-500 focus:ring-0 font-medium"
                                 >
-                                <button 
-                                    type="button" 
-                                    @click="if(newComment.trim()) { comments.unshift({ user: 'Bạn', time: 'Vừa xong', text: newComment }); newComment = ''; }"
-                                    class="btn-rose px-5 py-2 rounded-xl text-xs font-bold shrink-0 shadow-sm"
-                                >
-                                    Gửi
-                                </button>
-                            </div>
+                                <button
+                                    type="submit"
+                                    :disabled="isPosting"
+                                    class="btn-rose px-5 py-2 rounded-xl text-xs font-bold shrink-0 shadow-sm disabled:opacity-50"
+                                    x-text="isPosting ? 'Đang gửi...' : 'Gửi'"
+                                >Gửi</button>
+                            </form>
+                            <p x-show="error" x-text="error" class="text-[11px] font-bold text-[#CC0000] mb-4" style="display: none;"></p>
 
                             <!-- Comment list -->
-                            <div class="space-y-3">
-                                <template x-for="(c, idx) in comments" :key="idx">
+                            <div class="space-y-3 mt-4">
+                                <p x-show="comments.length === 0" class="text-xs text-gray-500">Chưa có bình luận nào. Hãy là người đầu tiên!</p>
+                                <template x-for="c in comments" :key="c.id">
                                     <div class="bg-[#FAF9F6] rounded-2xl p-4 border border-black/10 space-y-1 shadow-sm">
-                                        <div class="flex items-center justify-between text-xs">
-                                            <span class="font-bold text-black" x-text="c.user"></span>
-                                            <span class="text-[10px] text-gray-500" x-text="c.time"></span>
+                                        <div class="flex items-center justify-between text-xs gap-3">
+                                            <div class="flex items-center gap-2 min-w-0">
+                                                <template x-if="c.avatar_url">
+                                                    <img :src="c.avatar_url" alt="" class="w-6 h-6 rounded-full object-cover">
+                                                </template>
+                                                <span class="font-bold text-black truncate" x-text="c.user"></span>
+                                            </div>
+                                            <div class="flex items-center gap-3 shrink-0">
+                                                <span class="text-[10px] text-gray-500" x-text="c.time"></span>
+                                                <button type="button" x-show="c.can_delete" @click="remove(c)" class="text-[10px] font-bold text-[#CC0000] hover:underline">Xóa</button>
+                                            </div>
                                         </div>
-                                        <p class="text-xs text-gray-700" x-text="c.text"></p>
+                                        <p class="text-xs text-gray-700 whitespace-pre-line" x-text="c.text"></p>
                                     </div>
                                 </template>
                             </div>
