@@ -70,6 +70,7 @@ php artisan test
 Test không gọi API thật (`Http::fake`, key được để trống trong `phpunit.xml`).
 
 ## Tài liệu
+- **Cho thành viên nhóm — cách chạy sau khi pull, lỗi tồn đọng cần nhận:** `docs/HUONG-DAN-NHOM.md`
 - Đặc tả: `docs/superpowers/specs/2026-09-07-ticket-booking-platform-design.md`
 - Kiến trúc & quyết định: `docs/architecture.md`
 - Báo cáo: `docs/report/` (ERD, use case, chức năng, checklist ảnh chụp, kịch bản demo)
