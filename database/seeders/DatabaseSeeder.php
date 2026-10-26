@@ -109,7 +109,7 @@ class DatabaseSeeder extends Seeder
         foreach (self::VENUES as $key => $venue) {
             $rooms[$key] = Room::updateOrCreate(['name' => $venue['name']], $venue);
             if ($rooms[$key]->seats()->doesntExist()) {
-                $roomSeats->generate($rooms[$key], $venue['layout_preset'], []);
+                $roomSeats->generate($rooms[$key], $venue['layout_preset']);
             }
         }
 
@@ -248,21 +248,46 @@ class DatabaseSeeder extends Seeder
             'latitude' => 10.7712, 'longitude' => 106.6745,
             'capacity' => 2500, 'layout_preset' => 'theater_hall',
         ],
+        // Các địa điểm dưới đây lấy theo venue_name trong chi tiết sự kiện; tọa độ gần đúng (dữ liệu demo).
+        'nguyendu' => [
+            'name' => 'Nhà Thi Đấu Thể Dục Thể Thao Nguyễn Du',
+            'address' => '116 Nguyễn Du, Phường Bến Thành, Quận 1, TP.HCM',
+            'latitude' => 10.7745, 'longitude' => 106.6950,
+            'capacity' => 1500, 'layout_preset' => 'theater_hall',
+        ],
+        'toong' => [
+            'name' => 'Không Gian Sáng Tạo Toong Co-working Space',
+            'address' => '126 Nguyễn Thị Minh Khai, Phường 6, Quận 3, TP.HCM',
+            'latitude' => 10.7790, 'longitude' => 106.6925,
+            'capacity' => 100, 'layout_preset' => 'banquet_hall',
+        ],
+        'artlight' => [
+            'name' => 'Art Light Museum Saigon',
+            'address' => 'Tầng 4, TTTM Gigamall, 240-242 Phạm Văn Đồng, TP. Thủ Đức, TP.HCM',
+            'latitude' => 10.8275, 'longitude' => 106.7215,
+            'capacity' => 350, 'layout_preset' => 'open_space',
+        ],
+        'thuthiem' => [
+            'name' => 'Công Viên Bờ Sông Sài Gòn (Thủ Thiêm Arena)',
+            'address' => 'Đường Trần Bạch Đằng, Khu Đô Thị Mới Thủ Thiêm, TP. Thủ Đức, TP.HCM',
+            'latitude' => 10.7795, 'longitude' => 106.7115,
+            'capacity' => 350, 'layout_preset' => 'open_space',
+        ],
     ];
 
     /** [slug sự kiện, khán phòng, cách hôm nay (ngày), giờ bắt đầu, giờ kết thúc] */
     private const SCHEDULE = [
         ['live-concert-anh-trai-vuot-ngan-chong-gai-2026', 'qk7', 1, '19:00', '23:00'],
         ['live-concert-anh-trai-vuot-ngan-chong-gai-2026', 'qk7', 8, '19:00', '23:00'],
-        ['saigon-autumn-music-light-festival-2026', 'qk7', 4, '17:00', '23:00'],
+        ['saigon-autumn-music-light-festival-2026', 'thuthiem', 4, '17:00', '23:00'],
         ['hoa-nhac-giao-huong-saigon-philharmonic', 'opera', 2, '19:30', '21:30'],
-        ['nhac-kich-les-miserables-vn', 'opera', 3, '19:30', '22:15'],
-        ['nhac-kich-les-miserables-vn', 'opera', 10, '19:30', '22:15'],
+        ['nhac-kich-les-miserables-vn', 'hoabinh', 3, '19:30', '22:15'],
+        ['nhac-kich-les-miserables-vn', 'hoabinh', 10, '19:30', '22:15'],
         ['vietnam-tech-summit-ai-expo-2026', 'secc', 5, '08:30', '17:00'],
-        ['trien-lam-nghe-thuat-van-gogh-impressionism', 'secc', 6, '09:00', '18:00'],
-        ['trien-lam-nghe-thuat-van-gogh-impressionism', 'secc', 7, '09:00', '18:00'],
-        ['masterclass-sang-tao-phim-ai-2026', 'secc', 11, '09:00', '17:00'],
-        ['fan-meeting-running-man-vn-2026', 'hoabinh', 3, '18:30', '21:00'],
+        ['trien-lam-nghe-thuat-van-gogh-impressionism', 'artlight', 6, '09:00', '18:00'],
+        ['trien-lam-nghe-thuat-van-gogh-impressionism', 'artlight', 7, '09:00', '18:00'],
+        ['masterclass-sang-tao-phim-ai-2026', 'toong', 11, '09:00', '17:00'],
+        ['fan-meeting-running-man-vn-2026', 'nguyendu', 3, '18:30', '21:00'],
     ];
 
     private function seedBooking(User $user, Showtime $showtime, int $seatCount, string $code, string $status): void
