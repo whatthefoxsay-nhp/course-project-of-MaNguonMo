@@ -111,6 +111,19 @@
                             <input type="text" name="address" value="{{ old('address', $room->address) }}"
                                    placeholder="VD: 07 Công Trường Lam Sơn, Quận 1" class="glass-input w-full rounded-xl px-4 py-2.5">
                         </label>
+                        <div class="grid grid-cols-2 gap-3">
+                            <label class="block">
+                                <span class="block text-gray-700 font-bold uppercase tracking-wider mb-1.5">Vĩ độ (latitude)</span>
+                                <input type="number" step="0.000001" name="latitude" value="{{ old('latitude', $room->latitude) }}"
+                                       placeholder="10.8005" class="glass-input w-full rounded-xl px-4 py-2.5 font-mono">
+                            </label>
+                            <label class="block">
+                                <span class="block text-gray-700 font-bold uppercase tracking-wider mb-1.5">Kinh độ (longitude)</span>
+                                <input type="number" step="0.000001" name="longitude" value="{{ old('longitude', $room->longitude) }}"
+                                       placeholder="106.6658" class="glass-input w-full rounded-xl px-4 py-2.5 font-mono">
+                            </label>
+                            <p class="col-span-2 text-[11px] text-gray-500">Lấy từ Google Maps: chuột phải vào địa điểm → bấm dòng tọa độ để sao chép. Dùng cho bản đồ và dự báo thời tiết.</p>
+                        </div>
                         <label class="block">
                             <span class="block text-gray-700 font-bold uppercase tracking-wider mb-1.5">Sức chứa công bố <span class="text-crimson">*</span></span>
                             <input type="number" name="capacity" value="{{ old('capacity', $room->capacity) }}" min="10" max="50000" required

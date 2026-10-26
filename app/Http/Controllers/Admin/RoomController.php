@@ -156,6 +156,8 @@ class RoomController extends Controller
             'name' => $request->validated('name'),
             'address' => $request->validated('address') ?: 'Trung tâm Tổ chức Sự kiện',
             'capacity' => (int) $request->validated('capacity'),
+            'latitude' => $request->validated('latitude'),
+            'longitude' => $request->validated('longitude'),
             'layout_preset' => $request->validated('layout_preset'),
         ];
     }

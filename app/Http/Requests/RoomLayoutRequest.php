@@ -34,6 +34,8 @@ class RoomLayoutRequest extends FormRequest
             'name' => 'required|string|max:255',
             'address' => 'nullable|string|max:500',
             'capacity' => 'required|integer|min:10|max:50000',
+            'latitude' => 'nullable|numeric|between:-90,90',
+            'longitude' => 'nullable|numeric|between:-180,180',
             'layout_preset' => 'required|string|in:'.implode(',', LayoutTemplates::PRESETS),
             'layout' => 'required|string|max:200000',
         ];
