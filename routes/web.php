@@ -12,6 +12,7 @@ use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\BookingController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\CheckoutController;
+use App\Http\Controllers\CommentController;
 use App\Http\Controllers\EventController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\MovieController;
@@ -41,6 +42,10 @@ Route::middleware('auth')->group(function () {
         ->middleware('throttle:10,1')
         ->name('checkout.store');
     Route::get('/bookings', [BookingController::class, 'history'])->name('bookings.history');
+    Route::post('/events/{event:slug}/comments', [CommentController::class, 'store'])
+        ->middleware('throttle:10,1')
+        ->name('comments.store');
+    Route::delete('/comments/{comment}', [CommentController::class, 'destroy'])->name('comments.destroy');
 });
 
 Route::get('/dashboard', function () {
