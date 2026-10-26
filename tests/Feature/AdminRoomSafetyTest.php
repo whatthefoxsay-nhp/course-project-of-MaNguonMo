@@ -32,16 +32,20 @@ test('generator builds a custom grid with the requested size', function () {
 
     expect($count)->toBe(12)
         ->and($room->seats()->count())->toBe(12)
-        ->and($room->seats()->where('row_label', 'A')->value('type'))->toBe('svip_diamond');
+        ->and($room->seats()->where('row_label', 'A')->value('type'))->toBe('VIP');
 });
 
-test('mega concert preset includes a hidden standing row', function () {
+test('mega concert preset puts hidden standing places in two fanzones', function () {
     $room = Room::factory()->create();
 
     app(RoomSeatGenerator::class)->generate($room, 'mega_concert', []);
 
-    expect($room->seats()->where('row_label', RoomSeatGenerator::STANDING_ROW)->where('type', 'standing_pit')->count())
-        ->toBe(RoomSeatGenerator::STANDING_CAPACITY);
+    foreach (['GA-L', 'GA-R'] as $code) {
+        $zone = $room->zones()->where('code', $code)->first();
+        expect($zone->kind)->toBe('standing')
+            ->and($zone->capacity)->toBe(40)
+            ->and($zone->seats()->whereNull('pos_col')->count())->toBe(40);
+    }
 });
 
 test('updating a room that already has showtimes keeps seats and sold tickets', function () {

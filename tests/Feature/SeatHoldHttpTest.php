@@ -53,13 +53,15 @@ test('the second customer gets a clear conflict message', function () {
 
 test('an empty selection is rejected', function () {
     $this->actingAs(createCustomer())
-        ->postJson(route('showtimes.holds.store', concertShowtime()), ['seat_ids' => [], 'tiers' => []])
+        ->postJson(route('showtimes.holds.store', concertShowtime()), ['seat_ids' => [], 'zones' => []])
         ->assertStatus(422);
 });
 
 test('standing tickets can be held by quantity', function () {
     $this->actingAs(createCustomer())
-        ->postJson(route('showtimes.holds.store', concertShowtime()), ['tiers' => ['standing_pit' => 2]])
+        ->postJson(route('showtimes.holds.store', $showtime = concertShowtime()), [
+            'zones' => [$showtime->room->zones()->where('code', 'GA-L')->value('id') => 2],
+        ])
         ->assertOk();
 
     expect(ShowtimeSeat::where('status', 'held')->count())->toBe(2);

@@ -10,18 +10,16 @@ const jsonHeaders = () => ({
     'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content ?? '',
 });
 
-// Global Multi-Tier Seat Map & Ticket Booking Alpine Component
+// Sơ đồ chọn chỗ theo khu: ghế đánh số / ghế quanh bàn (chọn từng ghế) + khu bán theo số lượng
 Alpine.data('seatBookingManager', (config = {}) => ({
-    selectedSeats: [],
-    tierQuantities: {},
-    tierMeta: {},
-    basePrice: config.basePrice || 180000,
+    maxTickets: 8,
+    zoneMeta: config.zones || {},      // { zoneId: { name, price, kind, color, available } }
+    selectedSeats: [],                 // [{ id, code, zoneId, zoneName, price, color }]
+    zoneQuantities: {},                // { zoneId: số vé }
     activeZoneFilter: 'all',
     hoveredSeat: null,
     hoverTimeout: null,
     zoomScale: 1,
-    standingCount: 0,
-    standingPrice: config.standingPrice || 0,
     notificationMessage: '',
     notificationType: 'info',
     showToast: false,
@@ -30,56 +28,57 @@ Alpine.data('seatBookingManager', (config = {}) => ({
     unavailableIds: [],
 
     init() {
-        if (config.tiers) {
-            Object.keys(config.tiers).forEach(k => {
-                this.tierQuantities[k] = 0;
-                this.tierMeta[k] = config.tiers[k];
-            });
-        }
+        Object.keys(this.zoneMeta).forEach(id => { this.zoneQuantities[id] = 0; });
         if (config.pollStatus && config.statusUrl) {
             setInterval(() => this.refreshSeatStatus(), 15000);
         }
     },
 
-    // Individual Seat Toggle for Seated Concerts
-    toggleSeat(seatId, seatNumber, rowLabel, type, typeName, status, price, perks = []) {
-        if (status === 'booked') {
-            this.notify(`Ghế ${rowLabel}${seatNumber} đã được bán. Vui lòng chọn ghế khác!`, 'error');
+    // ----- Ghế chọn trên sơ đồ -----
+    toggleSeat(seat) {
+        if (seat.status === 'booked') {
+            this.notify(`Ghế ${seat.code} đã được bán. Vui lòng chọn ghế khác!`, 'error');
+            return;
+        }
+        if (seat.status === 'held' || this.unavailableIds.includes(seat.id)) {
+            this.notify(`Ghế ${seat.code} đang có người giữ chỗ.`, 'warning');
             return;
         }
 
-        if (status === 'held') {
-            this.notify(`Ghế ${rowLabel}${seatNumber} đang có người giữ chỗ trong 10 phút.`, 'warning');
-            return;
-        }
-
-        if (this.unavailableIds.includes(seatId)) {
-            this.notify(`Ghế ${rowLabel}${seatNumber} vừa có người giữ. Vui lòng chọn ghế khác!`, 'warning');
-            return;
-        }
-
-        const index = this.selectedSeats.findIndex(s => s.id === seatId);
+        const index = this.selectedSeats.findIndex(s => s.id === seat.id);
         if (index > -1) {
             this.selectedSeats.splice(index, 1);
-            this.notify(`Đã bỏ chọn ghế ${rowLabel}${seatNumber}`, 'info');
-        } else {
-            if (this.totalTicketCount >= 8) {
-                this.notify('Bạn chỉ có thể chọn tối đa 8 vé cho mỗi lượt đặt.', 'warning');
-                return;
-            }
-
-            const seatPrice = price || this.basePrice;
-            this.selectedSeats.push({
-                id: seatId,
-                number: seatNumber,
-                row: rowLabel,
-                type: type,
-                typeName: typeName || type.toUpperCase(),
-                price: seatPrice,
-                perks: perks || []
-            });
-            this.notify(`Đã chọn ${rowLabel}${seatNumber} (${typeName || type.toUpperCase()}) - ${this.formatCurrency(seatPrice)}`, 'success');
+            this.notify(`Đã bỏ chọn ghế ${seat.code}`, 'info');
+            return;
         }
+        if (this.totalTicketCount >= this.maxTickets) {
+            this.notify(`Bạn chỉ có thể chọn tối đa ${this.maxTickets} vé cho mỗi lượt đặt.`, 'warning');
+            return;
+        }
+        this.selectedSeats.push(seat);
+        this.notify(`Đã chọn ${seat.code} (${seat.zoneName}) - ${this.formatCurrency(seat.price)}`, 'success');
+    },
+
+    // Chọn / bỏ cả bàn (chỉ các ghế còn trống)
+    toggleTable(seats) {
+        const free = seats.filter(s => s.status === 'available' && !this.unavailableIds.includes(s.id));
+        if (free.length === 0) {
+            this.notify('Bàn này đã hết ghế trống.', 'warning');
+            return;
+        }
+        if (free.every(s => this.isSeatSelected(s.id))) {
+            this.selectedSeats = this.selectedSeats.filter(s => !free.some(f => f.id === s.id));
+            this.notify('Đã bỏ chọn cả bàn.', 'info');
+            return;
+        }
+        const toAdd = free.filter(s => !this.isSeatSelected(s.id));
+        const room = this.maxTickets - this.totalTicketCount;
+        if (toAdd.length > room) {
+            this.notify(`Mỗi lượt đặt tối đa ${this.maxTickets} vé — chỉ thêm được ${room} ghế nữa.`, 'warning');
+            return;
+        }
+        this.selectedSeats.push(...toAdd);
+        this.notify(`Đã chọn ${toAdd.length} ghế của bàn.`, 'success');
     },
 
     isSeatSelected(seatId) {
@@ -87,68 +86,48 @@ Alpine.data('seatBookingManager', (config = {}) => ({
     },
 
     removeSeat(seatId) {
-        const index = this.selectedSeats.findIndex(s => s.id === seatId);
-        if (index > -1) {
-            const seat = this.selectedSeats[index];
-            this.selectedSeats.splice(index, 1);
-            this.notify(`Đã bỏ chọn ${seat.row}${seat.number}`, 'info');
-        }
+        this.selectedSeats = this.selectedSeats.filter(s => s.id !== seatId);
     },
 
-    // Non-Concert Ticket Tier Quantity Steppers
-    incrementTier(tierKey, tierPrice, tierName) {
-        if (this.totalTicketCount >= 8) {
-            this.notify('Bạn chỉ có thể chọn tối đa 8 vé cho mỗi lượt đặt.', 'warning');
+    // ----- Khu bán theo số lượng -----
+    incrementZone(zoneId) {
+        const zone = this.zoneMeta[zoneId];
+        if (!zone) return;
+        if (this.totalTicketCount >= this.maxTickets) {
+            this.notify(`Bạn chỉ có thể chọn tối đa ${this.maxTickets} vé cho mỗi lượt đặt.`, 'warning');
             return;
         }
-        if (!this.tierQuantities[tierKey]) {
-            this.tierQuantities[tierKey] = 0;
+        if (this.zoneCount(zoneId) >= zone.available) {
+            this.notify(`Khu ${zone.name} chỉ còn ${zone.available} chỗ.`, 'warning');
+            return;
         }
-        this.tierQuantities[tierKey]++;
-        this.notify(`Đã thêm 1 vé ${tierName} (${this.formatCurrency(tierPrice)})`, 'success');
+        this.zoneQuantities[zoneId] = this.zoneCount(zoneId) + 1;
+        this.notify(`Đã thêm 1 vé ${zone.name} (${this.formatCurrency(zone.price)})`, 'success');
     },
 
-    decrementTier(tierKey) {
-        if (this.tierQuantities[tierKey] && this.tierQuantities[tierKey] > 0) {
-            this.tierQuantities[tierKey]--;
-            this.notify('Đã giảm số lượng vé', 'info');
+    decrementZone(zoneId) {
+        if (this.zoneCount(zoneId) > 0) {
+            this.zoneQuantities[zoneId]--;
         }
     },
 
-    getTierCount(tierKey) {
-        return this.tierQuantities[tierKey] || 0;
+    zoneCount(zoneId) {
+        return this.zoneQuantities[zoneId] || 0;
     },
 
     clearAll() {
         this.selectedSeats = [];
-        this.standingCount = 0;
-        Object.keys(this.tierQuantities).forEach(k => {
-            this.tierQuantities[k] = 0;
-        });
+        Object.keys(this.zoneQuantities).forEach(id => { this.zoneQuantities[id] = 0; });
         this.notify('Đã xóa toàn bộ vé đang chọn.', 'info');
     },
 
-    addStandingTicket() {
-        if (this.totalTicketCount >= 8) {
-            this.notify('Bạn chỉ có thể chọn tối đa 8 vé cho mỗi lượt đặt.', 'warning');
-            return;
-        }
-        this.standingCount++;
-        this.notify(`Đã thêm 1 vé Khu Đứng GA Fanzone (${this.formatCurrency(this.standingPrice)})`, 'success');
+    // ----- Hiển thị -----
+    setZoneFilter(code) {
+        this.activeZoneFilter = code;
     },
 
-    removeStandingTicket() {
-        if (this.standingCount > 0) {
-            this.standingCount--;
-            this.notify('Đã giảm 1 vé Khu Đứng GA Fanzone', 'info');
-        }
-    },
-
-    setZoneFilter(zone) {
-        this.activeZoneFilter = zone;
-        if (zone !== 'all') {
-            this.notify(`Đang lọc khu vực: ${zone.toUpperCase()}`, 'info');
-        }
+    isZoneDimmed(code) {
+        return this.activeZoneFilter !== 'all' && this.activeZoneFilter !== code;
     },
 
     setHoveredSeat(seatData) {
@@ -160,62 +139,47 @@ Alpine.data('seatBookingManager', (config = {}) => ({
     },
 
     clearHoveredSeat() {
-        if (this.hoverTimeout) {
-            clearTimeout(this.hoverTimeout);
-        }
-        this.hoverTimeout = setTimeout(() => {
-            this.hoveredSeat = null;
-        }, 120);
+        if (this.hoverTimeout) clearTimeout(this.hoverTimeout);
+        this.hoverTimeout = setTimeout(() => { this.hoveredSeat = null; }, 120);
     },
 
     zoomIn() {
-        if (this.zoomScale < 1.4) {
-            this.zoomScale = parseFloat((this.zoomScale + 0.1).toFixed(1));
-        }
+        if (this.zoomScale < 1.4) this.zoomScale = parseFloat((this.zoomScale + 0.1).toFixed(1));
     },
 
     zoomOut() {
-        if (this.zoomScale > 0.8) {
-            this.zoomScale = parseFloat((this.zoomScale - 0.1).toFixed(1));
-        }
+        if (this.zoomScale > 0.6) this.zoomScale = parseFloat((this.zoomScale - 0.1).toFixed(1));
     },
 
     resetZoom() {
         this.zoomScale = 1;
     },
 
+    get zonePills() {
+        return Object.entries(this.zoneQuantities)
+            .filter(([, count]) => count > 0)
+            .map(([id, count]) => ({ id, count, name: this.zoneMeta[id]?.name ?? '', price: (this.zoneMeta[id]?.price ?? 0) * count }));
+    },
+
     get totalSeatPrice() {
         return this.selectedSeats.reduce((sum, seat) => sum + seat.price, 0);
     },
 
-    get totalStandingPrice() {
-        return this.standingCount * this.standingPrice;
-    },
-
-    get totalTierPrice() {
-        let sum = 0;
-        Object.keys(this.tierQuantities).forEach(k => {
-            const count = this.tierQuantities[k] || 0;
-            const price = this.tierMeta[k]?.price || this.basePrice;
-            sum += count * price;
-        });
-        return sum;
+    get totalZonePrice() {
+        return Object.entries(this.zoneQuantities)
+            .reduce((sum, [id, count]) => sum + count * (this.zoneMeta[id]?.price ?? 0), 0);
     },
 
     get totalPrice() {
-        return this.totalSeatPrice + this.totalStandingPrice + this.totalTierPrice;
-    },
-
-    get totalTierCount() {
-        return Object.values(this.tierQuantities).reduce((a, b) => a + b, 0);
+        return this.totalSeatPrice + this.totalZonePrice;
     },
 
     get totalTicketCount() {
-        return this.selectedSeats.length + this.standingCount + this.totalTierCount;
+        return this.selectedSeats.length + Object.values(this.zoneQuantities).reduce((a, b) => a + b, 0);
     },
 
     get formattedTotalPrice() {
-        return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(this.totalPrice);
+        return this.formatCurrency(this.totalPrice);
     },
 
     formatCurrency(val) {
@@ -233,29 +197,28 @@ Alpine.data('seatBookingManager', (config = {}) => ({
             const lost = this.selectedSeats.filter(seat => unavailable.includes(seat.id));
             if (lost.length > 0) {
                 this.selectedSeats = this.selectedSeats.filter(seat => !unavailable.includes(seat.id));
-                this.notify(`Ghế ${lost.map(seat => seat.row + seat.number).join(', ')} vừa được người khác giữ.`, 'warning');
+                this.notify(`Ghế ${lost.map(seat => seat.code).join(', ')} vừa được người khác giữ.`, 'warning');
             }
         } catch (error) {
             // mất mạng tạm thời: bỏ qua, lần sau thử lại
         }
     },
 
-    // Gửi ghế/hạng vé đang chọn lên server để giữ chỗ 10 phút
+    // Gửi ghế + số lượng theo khu lên server để giữ chỗ 10 phút
     async confirmHold() {
         if (this.totalTicketCount === 0 || this.isSubmitting) return;
         this.isSubmitting = true;
 
-        const tiers = {};
-        Object.entries(this.tierQuantities).forEach(([key, quantity]) => {
-            if (quantity > 0) tiers[key] = quantity;
+        const zones = {};
+        Object.entries(this.zoneQuantities).forEach(([id, count]) => {
+            if (count > 0) zones[id] = count;
         });
-        if (this.standingCount > 0) tiers.standing_pit = this.standingCount;
 
         try {
             const response = await fetch(config.holdUrl, {
                 method: 'POST',
                 headers: jsonHeaders(),
-                body: JSON.stringify({ seat_ids: this.selectedSeats.map(seat => seat.id), tiers }),
+                body: JSON.stringify({ seat_ids: this.selectedSeats.map(seat => seat.id), zones }),
             });
 
             if (response.status === 401) {
@@ -283,9 +246,7 @@ Alpine.data('seatBookingManager', (config = {}) => ({
         this.notificationType = type;
         this.showToast = true;
         if (this.toastTimeout) clearTimeout(this.toastTimeout);
-        this.toastTimeout = setTimeout(() => {
-            this.showToast = false;
-        }, 3200);
+        this.toastTimeout = setTimeout(() => { this.showToast = false; }, 3200);
     }
 }));
 

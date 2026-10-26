@@ -3,13 +3,14 @@
 use App\Exceptions\SeatHoldException;
 use App\Models\Event;
 use App\Models\Room;
+use App\Models\SeatZone;
 use App\Models\Showtime;
 use App\Models\ShowtimeSeat;
 use App\Services\RoomSeatGenerator;
 use App\Services\SeatHoldService;
 use App\Services\ShowtimeSeatGenerator;
 
-/** Suất diễn có ghế, phòng lưới 3 hàng x 4 ghế (hàng A,B = svip_diamond, C = vip_gold), giá cơ bản 200.000đ. */
+/** Suất diễn có ghế, phòng lưới 3 hàng x 4 ghế (hàng A,B = khu VIP +80.000, C = khu STD), giá cơ bản 200.000đ. */
 function seatedShowtime(string $preset = 'custom_grid', array $eventAttributes = []): Showtime
 {
     $room = Room::factory()->create(['layout_preset' => $preset]);
@@ -24,6 +25,11 @@ function seatedShowtime(string $preset = 'custom_grid', array $eventAttributes =
 function seatIds(Showtime $showtime, int $count): array
 {
     return $showtime->showtimeSeats()->orderBy('id')->take($count)->pluck('id')->all();
+}
+
+function zoneOf(Showtime $showtime, string $code): SeatZone
+{
+    return $showtime->room->zones()->where('code', $code)->firstOrFail();
 }
 
 function holds(): SeatHoldService
@@ -43,7 +49,7 @@ test('holding seats marks them held for ten minutes at the tier price', function
         expect($seat->status)->toBe('held')
             ->and($seat->held_by_user_id)->toBe($user->id)
             ->and($seat->held_until->between(now()->addMinutes(9), now()->addMinutes(11)))->toBeTrue()
-            ->and($seat->price_override)->toBe(350000); // svip_diamond = 200.000 + 150.000
+            ->and($seat->price_override)->toBe(280000); // khu VIP = 200.000 + 80.000
     });
 });
 
@@ -129,39 +135,68 @@ test('a showtime that already started cannot be booked', function () {
         ->toThrow(SeatHoldException::class, 'đã bắt đầu');
 });
 
-test('non seated events sell passes and the server assigns seats', function () {
-    $showtime = seatedShowtime('convention_center', ['is_seated' => false]);
-    $user = createCustomer();
-
-    $held = holds()->hold($user, $showtime, [], ['vip_pass' => 2, 'combo_pass' => 1]);
-
-    expect($held)->toHaveCount(4)
-        ->and($held->where('price_override', 300000)->count())->toBe(2)  // vip_pass = 200.000 + 100.000
-        ->and($held->where('price_override', 170000)->count())->toBe(2); // combo 2 người = 340.000 / 2
-});
-
-test('non seated events reject hand picked seats and unknown tiers', function () {
+test('non seated events sell any zone by quantity and the server picks front seats', function () {
     $showtime = seatedShowtime('convention_center', ['is_seated' => false]);
 
-    expect(fn () => holds()->hold(createCustomer(), $showtime, seatIds($showtime, 1)))->toThrow(SeatHoldException::class)
-        ->and(fn () => holds()->hold(createCustomer(), $showtime, [], ['svip_diamond' => 1]))->toThrow(SeatHoldException::class, 'Hạng vé không hợp lệ');
+    $held = holds()->hold(createCustomer(), $showtime, [], [zoneOf($showtime, 'KEYNOTE')->id => 2]);
+
+    expect($held)->toHaveCount(2)
+        ->and($held->pluck('seat.row_label')->unique()->values()->all())->toBe(['KN-A'])
+        ->and($held->every(fn ($seat) => $seat->price_override === 300000))->toBeTrue(); // 200.000 + 100.000
 });
 
-test('a pass tier fails when there are not enough seats left', function () {
-    $showtime = seatedShowtime('convention_center', ['is_seated' => false]);
-    $showtime->showtimeSeats()->update(['status' => 'booked']);
-
-    expect(fn () => holds()->hold(createCustomer(), $showtime, [], ['standard_pass' => 1]))
-        ->toThrow(SeatHoldException::class, 'chỉ còn 0 chỗ');
-});
-
-test('standing tickets are assigned from the hidden standing row', function () {
+test('seated events sell standing zones by quantity but not numbered zones', function () {
     $showtime = seatedShowtime('mega_concert');
 
-    $held = holds()->hold(createCustomer(), $showtime, [], ['standing_pit' => 3]);
+    $held = holds()->hold(createCustomer(), $showtime, [], [zoneOf($showtime, 'GA-L')->id => 3]);
 
     expect($held)->toHaveCount(3)
-        ->and($held->every(fn ($seat) => $seat->seat->type === 'standing_pit'))->toBeTrue();
+        ->and($held->every(fn ($seat) => $seat->seat->row_label === 'GA-L'))->toBeTrue()
+        ->and($held->first()->price_override)->toBe(180000); // 200.000 - 20.000
+    expect(fn () => holds()->hold(createCustomer(), $showtime, [], [zoneOf($showtime, 'VIP')->id => 1]))
+        ->toThrow(SeatHoldException::class, 'Khu này chọn ghế trên sơ đồ.');
+});
+
+test('standing seats cannot be hand picked', function () {
+    $showtime = seatedShowtime('mega_concert');
+    $standing = $showtime->showtimeSeats()->whereHas('seat', fn ($q) => $q->where('row_label', 'GA-L'))->value('id');
+
+    expect(fn () => holds()->hold(createCustomer(), $showtime, [$standing]))
+        ->toThrow(SeatHoldException::class, 'Khu đứng bán theo số lượng');
+});
+
+test('a zone of another room is rejected', function () {
+    $showtime = seatedShowtime('mega_concert');
+    $other = seatedShowtime('mega_concert');
+
+    expect(fn () => holds()->hold(createCustomer(), $showtime, [], [zoneOf($other, 'GA-L')->id => 1]))
+        ->toThrow(SeatHoldException::class, 'Khu vực không hợp lệ.');
+});
+
+test('non seated events reject hand picked seats', function () {
+    $showtime = seatedShowtime('convention_center', ['is_seated' => false]);
+
+    expect(fn () => holds()->hold(createCustomer(), $showtime, seatIds($showtime, 1)))
+        ->toThrow(SeatHoldException::class, 'không chọn ghế trên sơ đồ');
+});
+
+test('the last standing place goes to one customer only', function () {
+    $showtime = seatedShowtime('mega_concert');
+    $zone = zoneOf($showtime, 'GA-L');
+    $showtime->showtimeSeats()->whereHas('seat', fn ($q) => $q->where('zone_id', $zone->id))
+        ->orderBy('id')->take(39)->update(['status' => 'booked']);
+
+    expect(holds()->hold(createCustomer(), $showtime, [], [$zone->id => 1]))->toHaveCount(1);
+    expect(fn () => holds()->hold(createCustomer(), $showtime, [], [$zone->id => 1]))
+        ->toThrow(SeatHoldException::class, 'Khu "Fanzone đứng trái" chỉ còn 0 chỗ.');
+});
+
+test('table zones can be sold by quantity for non seated events', function () {
+    $showtime = seatedShowtime('banquet_hall', ['is_seated' => false]);
+
+    $held = holds()->hold(createCustomer(), $showtime, [], [zoneOf($showtime, 'STDT')->id => 4]);
+
+    expect($held->pluck('seat.row_label')->unique()->values()->all())->toBe(['B05']);
 });
 
 test('a user can release only their own hold', function () {

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Room;
 use App\Services\RoomSeatGenerator;
+use App\Support\LayoutTemplates;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -125,7 +126,7 @@ class RoomController extends Controller
             'name' => 'required|string|max:255',
             'address' => 'nullable|string|max:500',
             'capacity' => 'required|integer|min:10|max:50000',
-            'layout_preset' => 'required|string|in:'.implode(',', RoomSeatGenerator::PRESETS),
+            'layout_preset' => 'required|string|in:'.implode(',', LayoutTemplates::PRESETS),
             'base_price' => 'nullable|numeric|min:10000',
             'rows' => 'nullable|integer|min:2|max:26',
             'cols' => 'nullable|integer|min:4|max:40',
@@ -162,11 +163,8 @@ class RoomController extends Controller
             'seat_config' => $seatConfig,
         ]);
 
-        if ($customMatrix) {
-            $generator->generateFromMatrix($room, $customMatrix, $validated['layout_preset']);
-        } else {
-            $generator->generate($room, $validated['layout_preset'], $seatConfig);
-        }
+        // Tạm thời sinh theo mẫu; trình dựng theo khu thay thế ở Plan 8 Task 5.
+        $generator->generate($room, $validated['layout_preset'], $seatConfig);
 
         return redirect()->route('admin.rooms.index')
             ->with('success', "Đã tạo khán phòng [{$room->name}] và lưu sơ đồ tùy chỉnh thành công!");
@@ -178,7 +176,7 @@ class RoomController extends Controller
             'name' => 'required|string|max:255',
             'address' => 'nullable|string|max:500',
             'capacity' => 'required|integer|min:10|max:50000',
-            'layout_preset' => 'required|string|in:'.implode(',', RoomSeatGenerator::PRESETS),
+            'layout_preset' => 'required|string|in:'.implode(',', LayoutTemplates::PRESETS),
             'base_price' => 'nullable|numeric|min:10000',
             'rows' => 'nullable|integer|min:2|max:26',
             'cols' => 'nullable|integer|min:4|max:40',
@@ -227,11 +225,8 @@ class RoomController extends Controller
             'seat_config' => $seatConfig,
         ]);
 
-        if ($customMatrix) {
-            $generator->generateFromMatrix($room, $customMatrix, $validated['layout_preset']);
-        } else {
-            $generator->generate($room, $validated['layout_preset'], $seatConfig);
-        }
+        // Tạm thời sinh theo mẫu; trình dựng theo khu thay thế ở Plan 8 Task 5.
+        $generator->generate($room, $validated['layout_preset'], $seatConfig);
 
         return redirect()->route('admin.rooms.index')
             ->with('success', "Đã cập nhật khán phòng [{$room->name}] và tái tạo sơ đồ ghế thành công!");

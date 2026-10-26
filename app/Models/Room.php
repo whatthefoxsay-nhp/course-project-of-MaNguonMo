@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Support\LayoutTemplates;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -45,26 +46,23 @@ class Room extends Model
 
     public function getPresetLabelAttribute(): string
     {
-        return match ($this->layout_preset ?? 'mega_concert') {
-            'theater_hall' => '🎭 Nhà Hát & Giao Hưởng',
-            'convention_center' => '🏢 Trung Tâm Hội Nghị & Triển Lãm',
-            'custom_grid' => '⚡ Ma Trận Tùy Chỉnh',
-            default => '🏟️ Mega Concert Arena',
-        };
+        return LayoutTemplates::label($this->layout_preset ?? 'custom_grid');
     }
 
+    /** @return array{total: int, zones: list<array{code: string, name: string, color: string, kind: string, count: int}>} */
     public function getSeatsSummaryAttribute(): array
     {
-        $seats = $this->seats;
+        $counts = $this->seats->countBy('zone_id');
 
         return [
-            'total' => $seats->count(),
-            'svip' => $seats->where('type', 'svip_diamond')->count(),
-            'vip' => $seats->where('type', 'vip_gold')->count(),
-            'cat1' => $seats->where('type', 'cat1_stand')->count(),
-            'cat2' => $seats->where('type', 'cat2_wings')->count(),
-            'skybox' => $seats->where('type', 'skybox_suite')->count(),
-            'standing' => $seats->where('type', 'standing_pit')->count(),
+            'total' => $this->seats->count(),
+            'zones' => $this->zones->map(fn (SeatZone $zone) => [
+                'code' => $zone->code,
+                'name' => $zone->name,
+                'color' => $zone->color,
+                'kind' => $zone->kind,
+                'count' => (int) ($counts[$zone->id] ?? 0),
+            ])->values()->all(),
         ];
     }
 }

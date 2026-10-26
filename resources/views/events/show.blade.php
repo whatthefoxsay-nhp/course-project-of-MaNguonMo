@@ -419,39 +419,31 @@
                             </div>
                         @endif
 
-                        <!-- 4. TICKET TIERS OVERVIEW (Bảng Giá & Quyền Lợi Hạng Vé) -->
+                        <!-- 4. TICKET TIERS OVERVIEW (Bảng giá theo khu của suất sắp tới) -->
+                        @if (! empty($zoneCards))
                         <div class="mt-8 space-y-4">
                             <div class="flex items-center justify-between">
                                 <div>
-                                    <span class="text-xs font-bold uppercase tracking-wider text-gold-dark">Hạng Vé &amp; Quyền Lợi</span>
+                                    <span class="text-xs font-bold uppercase tracking-wider text-gold-dark">Khu Vực &amp; Quyền Lợi</span>
                                     <h3 class="font-display font-black text-xl text-black">Bảng Giá Vé Sự Kiện</h3>
                                 </div>
                                 <span class="text-xs text-gray-500 italic hidden sm:inline">Chọn suất diễn bên dưới để mở sơ đồ chỗ ngồi</span>
                             </div>
 
                             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5">
-                                @foreach ($ticketTiers as $key => $tier)
-                                    <div class="bg-[#FAF9F6] rounded-2xl p-4 border border-black/10 hover:border-black/30 hover:shadow-md transition-all space-y-2">
-                                        <div class="flex items-center justify-between">
-                                            <span class="{{ $tier['badge'] }} text-[10px] px-2.5 py-0.5 rounded-full font-black uppercase flex items-center gap-1">
-                                                <span>{{ $tier['icon'] }}</span>
-                                                <span>{{ $tier['name'] }}</span>
-                                            </span>
-                                            <span class="font-display font-black text-sm text-black">
-                                                {{ number_format($tier['price']) }}₫
-                                            </span>
+                                @foreach ($zoneCards as $zone)
+                                    <div class="bg-[#FAF9F6] rounded-2xl p-4 border border-black/10 hover:shadow-md transition-all space-y-2" style="border-left: 5px solid {{ $zone['color'] }}">
+                                        <div class="flex items-center justify-between gap-2">
+                                            <span class="text-xs font-black text-black">{{ $zone['name'] }}</span>
+                                            <span class="font-display font-black text-sm text-black">{{ number_format($zone['price']) }}₫</span>
                                         </div>
-
-                                        <p class="text-[11px] text-gray-600 leading-relaxed">
-                                            {{ $tier['description'] }}
-                                        </p>
-
-                                        @if (!empty($tier['perks']))
+                                        @if ($zone['description'])
+                                            <p class="text-[11px] text-gray-600 leading-relaxed">{{ $zone['description'] }}</p>
+                                        @endif
+                                        @if (! empty($zone['perks']))
                                             <div class="flex flex-wrap gap-1 pt-1">
-                                                @foreach ($tier['perks'] as $perk)
-                                                    <span class="bg-white border border-black/10 text-[9px] font-bold px-2 py-0.5 rounded-full text-gray-700">
-                                                        ✓ {{ $perk }}
-                                                    </span>
+                                                @foreach ($zone['perks'] as $perk)
+                                                    <span class="bg-white border border-black/10 text-[9px] font-bold px-2 py-0.5 rounded-full text-gray-700">✓ {{ $perk }}</span>
                                                 @endforeach
                                             </div>
                                         @endif
@@ -459,6 +451,7 @@
                                 @endforeach
                             </div>
                         </div>
+                        @endif
 
                         <!-- 5. SHOWTIME SELECTOR SECTION (Lịch Diễn & Suất Diễn) -->
                         <div class="mt-8 space-y-4">

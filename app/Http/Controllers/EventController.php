@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Category;
 use App\Models\Event;
-use App\Support\TicketTiers;
+use App\Support\SeatMap;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
@@ -60,7 +60,7 @@ class EventController extends Controller
             'movie' => $event,
             // View đang dùng !empty($showtimes) và $showtimes[0] nên truyền array, không truyền Collection.
             'showtimes' => $showtimes->all(),
-            'ticketTiers' => TicketTiers::for($event->base_price ?? 180000, $event->is_seated),
+            'zoneCards' => $showtimes->isEmpty() ? [] : SeatMap::zoneCards($showtimes->first()),
         ]);
     }
 }

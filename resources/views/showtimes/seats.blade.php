@@ -131,8 +131,7 @@
         <x-seat-map 
             :showtime="$showtime" 
             :movie="$movie" 
-            :seats="$seats" 
-            :ticketTiers="$ticketTiers"
+            :seat-map="$seatMap"
         />
 
     </div>

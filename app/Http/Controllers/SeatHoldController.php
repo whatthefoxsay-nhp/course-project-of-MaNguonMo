@@ -15,7 +15,7 @@ class SeatHoldController extends Controller
     public function store(HoldSeatsRequest $request, Showtime $showtime, SeatHoldService $holds): JsonResponse
     {
         try {
-            $seats = $holds->hold($request->user(), $showtime, $request->seatIds(), $request->tierQuantities());
+            $seats = $holds->hold($request->user(), $showtime, $request->seatIds(), $request->zoneQuantities());
         } catch (SeatHoldException $exception) {
             return response()->json(['message' => $exception->getMessage()], 422);
         }

@@ -40,9 +40,8 @@ test('admin can create room with mega concert preset and auto-generate seats', f
 
     // Verify seats were auto-generated
     expect($room->seats()->count())->toBeGreaterThan(50);
-    expect($room->seats()->where('type', 'svip_diamond')->count())->toBeGreaterThan(0);
-    expect($room->seats()->where('type', 'vip_gold')->count())->toBeGreaterThan(0);
-    expect($room->seats()->where('type', 'skybox_suite')->count())->toBeGreaterThan(0);
+    expect($room->zones()->pluck('code')->all())->toContain('SVIP', 'VIP', 'SKY');
+    expect($room->seats()->where('type', 'SVIP')->count())->toBeGreaterThan(0);
 });
 
 test('admin can create room with custom grid preset and auto-generate seats', function () {

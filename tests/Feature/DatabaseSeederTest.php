@@ -32,7 +32,8 @@ test('the concert runs in the stadium room with a standing row', function () {
 
     expect($room->layout_preset)->toBe('mega_concert')
         ->and($room->latitude)->not->toBeNull()
-        ->and($room->seats()->where('type', 'standing_pit')->count())->toBe(40);
+        ->and($room->zones()->where('kind', 'standing')->pluck('code')->all())->toBe(['GA-L', 'GA-R'])
+        ->and($room->seats()->whereNull('pos_col')->count())->toBe(80);
 });
 
 test('the demo booking is confirmed and its seats are sold', function () {

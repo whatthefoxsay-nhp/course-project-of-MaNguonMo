@@ -286,7 +286,7 @@ describe('Seat Holds & Cart Workflows', function () {
         $cartRes->assertOk();
         $cartRes->assertSee('Live Concert Đỉnh Cao 2026');
         $cartRes->assertViewHas('items', fn ($items) => count($items) === 2);
-        $cartRes->assertViewHas('total', 800000);
+        $cartRes->assertViewHas('total', 660000); // 2 ghế khu VIP = 2 x (250.000 + 80.000)
     });
 
     test('conflict protection: second user cannot hold already held seats', function () {
