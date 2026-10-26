@@ -1,7 +1,7 @@
 <?php
 
 /*
- * Noi dung 8 su kien demo (chuyen nguyen van tu App\Support\DemoCatalog::movies()).
+ * Noi dung 8 su kien demo (tieu de, mo ta, chi tiet dia diem, lineup, lich trinh...).
  */
 
 return [

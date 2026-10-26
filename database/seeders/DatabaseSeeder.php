@@ -113,7 +113,7 @@ class DatabaseSeeder extends Seeder
             }
         }
 
-        // 5. Sự kiện (nội dung chuyển từ DemoCatalog)
+        // 5. Sự kiện demo (nội dung trong data/events.php)
         $events = [];
         $basePrices = [];
         foreach (require __DIR__.'/data/events.php' as $row) {
@@ -217,7 +217,7 @@ class DatabaseSeeder extends Seeder
         }
     }
 
-    /** id danh mục trong DemoCatalog -> slug danh mục đã seed ở bước 3 */
+    /** id danh mục trong data/events.php -> slug danh mục đã seed ở bước 3 */
     private const CATEGORY_BY_DEMO_ID = [
         1 => 'concert', 2 => 'hoa-nhac', 3 => 'hoi-thao', 4 => 'trien-lam',
         5 => 'fan-meeting', 6 => 'san-khau-kich', 7 => 'festival', 8 => 'workshop',

@@ -139,3 +139,11 @@ thời tiết) → Plan 6 (báo cáo, README).
 **Plan 8 xong (2026-10-26)** trên `feature/hoan-thien`: 245 test xanh. Dữ liệu demo đổi —
 chạy `php artisan migrate:fresh --seed` (8 địa điểm, mỗi sự kiện một kiểu bố trí). Ghi nhận
 ngoài phạm vi: ở màn hình 375px thanh menu trên cùng làm mọi trang rộng ~490px (lỗi có sẵn).
+
+**Plan 4, 5, 6 xong (2026-10-26)** trên `feature/hoan-thien-2`: 278 test xanh.
+- Plan 4: bình luận AJAX, gợi ý tìm kiếm, ảnh đại diện (số điện thoại đã có từ trước).
+- Plan 5: bản đồ Google Maps (chưa có key → dùng link nhúng công khai), dự báo OpenWeatherMap
+  (key đặt trong `.env`, không commit; `phpunit.xml` để trống key để test không gọi mạng).
+- Plan 6: `docs/report/` (ERD có `seat_zones`, use case, chức năng theo rubric, checklist ảnh,
+  kịch bản demo) + README mới. Ảnh chụp màn hình nhóm tự chụp theo `docs/report/anh-chup.md`.
+- Còn lại cho nhóm: chụp ảnh, điền tên thành viên (README, kịch bản demo), sửa lỗi menu ở màn hình 375px.
