@@ -41,8 +41,9 @@ return new class extends Migration
         });
 
         Schema::table('seats', function (Blueprint $table) {
-            // Không cascade: xóa khu phải xóa ghế trước (tránh mất vé đã bán).
-            $table->foreignId('zone_id')->nullable()->after('room_id')->constrained('seat_zones');
+            // Xóa khu không kéo theo xóa ghế (tránh mất vé đã bán); ghế chỉ mất liên kết khu.
+            // Xóa cả phòng thì rooms -> seats (cascade) vẫn chạy được trên MySQL.
+            $table->foreignId('zone_id')->nullable()->after('room_id')->constrained('seat_zones')->nullOnDelete();
             $table->unsignedSmallInteger('pos_col')->nullable()->after('seat_number');
         });
 

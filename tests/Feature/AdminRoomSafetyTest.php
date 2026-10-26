@@ -80,3 +80,15 @@ test('deleting a room that has showtimes is refused', function () {
     expect(Room::find($room->id))->not->toBeNull()
         ->and(BookingItem::count())->toBe(1);
 });
+
+test('a room without showtimes can be deleted together with its zones and seats', function () {
+    $room = Room::factory()->create();
+    app(RoomSeatGenerator::class)->generate($room, 'mega_concert');
+
+    $this->actingAs(createAdmin())->delete(route('admin.rooms.destroy', $room))
+        ->assertRedirect(route('admin.rooms.index'));
+
+    expect(Room::find($room->id))->toBeNull()
+        ->and(\App\Models\SeatZone::where('room_id', $room->id)->count())->toBe(0)
+        ->and(\App\Models\Seat::where('room_id', $room->id)->count())->toBe(0);
+});
