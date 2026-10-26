@@ -23,7 +23,7 @@
         @csrf
     </form>
 
-    <form method="post" action="{{ route('profile.update') }}" class="mt-6 space-y-5">
+    <form method="post" action="{{ route('profile.update') }}" class="mt-6 space-y-5" enctype="multipart/form-data">
         @csrf
         @method('patch')
 
@@ -100,6 +100,23 @@
                 >
             </div>
             <x-input-error class="mt-1" :messages="$errors->get('phone')" />
+        </div>
+
+        <!-- Avatar -->
+        <div class="space-y-1.5">
+            <label for="avatar" class="block text-xs font-bold text-slate-700 uppercase tracking-wider">Ảnh Đại Diện</label>
+            <div class="flex items-center gap-4">
+                @if ($user->avatar_url)
+                    <img src="{{ $user->avatar_url }}" alt="Ảnh đại diện" class="w-16 h-16 rounded-full object-cover border border-black/10">
+                @else
+                    <div class="w-16 h-16 rounded-full bg-[#F5F5DC] border border-black/10 flex items-center justify-center font-black text-lg">
+                        {{ mb_strtoupper(mb_substr($user->name, 0, 1)) }}
+                    </div>
+                @endif
+                <input id="avatar" name="avatar" type="file" accept="image/jpeg,image/png,image/webp" class="text-xs">
+            </div>
+            <p class="text-[11px] text-slate-500">JPG, PNG hoặc WEBP, tối đa 1MB.</p>
+            <x-input-error class="mt-1" :messages="$errors->get('avatar')" />
         </div>
 
         @if ($user instanceof \Illuminate\Contracts\Auth\MustVerifyEmail && ! $user->hasVerifiedEmail())

@@ -27,6 +27,12 @@ class ProfileUpdateRequest extends FormRequest
                 Rule::unique(User::class)->ignore($this->user()->id),
             ],
             'phone' => ['nullable', 'string', 'max:20', 'regex:/^[0-9+\-\s()]*$/'],
+            'avatar' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:1024'],
         ];
+    }
+
+    public function attributes(): array
+    {
+        return ['phone' => 'số điện thoại', 'avatar' => 'ảnh đại diện'];
     }
 }
