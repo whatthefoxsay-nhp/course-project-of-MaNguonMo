@@ -17,8 +17,8 @@ class HoldSeatsRequest extends FormRequest
         return [
             'seat_ids' => ['nullable', 'array', 'max:8'],
             'seat_ids.*' => ['integer', 'distinct'],
-            'tiers' => ['nullable', 'array', 'max:6'],
-            'tiers.*' => ['integer', 'min:0', 'max:8'],
+            'zones' => ['nullable', 'array', 'max:12'],
+            'zones.*' => ['integer', 'min:0', 'max:8'],
         ];
     }
 
@@ -26,7 +26,7 @@ class HoldSeatsRequest extends FormRequest
     {
         return [
             function (Validator $validator) {
-                if ($this->seatIds() === [] && array_sum($this->tierQuantities()) === 0) {
+                if ($this->seatIds() === [] && array_sum($this->zoneQuantities()) === 0) {
                     $validator->errors()->add('seat_ids', 'Vui lòng chọn ít nhất 1 vé.');
                 }
             },
@@ -39,9 +39,16 @@ class HoldSeatsRequest extends FormRequest
         return array_map('intval', $this->input('seat_ids', []) ?? []);
     }
 
-    /** @return array<string, int> */
-    public function tierQuantities(): array
+    /** @return array<int, int> [id khu => số vé], bỏ các khu có số lượng 0 */
+    public function zoneQuantities(): array
     {
-        return array_map('intval', $this->input('tiers', []) ?? []);
+        $quantities = [];
+        foreach ($this->input('zones', []) ?? [] as $zoneId => $quantity) {
+            if ((int) $quantity > 0) {
+                $quantities[(int) $zoneId] = (int) $quantity;
+            }
+        }
+
+        return $quantities;
     }
 }

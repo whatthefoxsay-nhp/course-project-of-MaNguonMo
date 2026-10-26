@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\Room;
+use App\Support\LayoutTemplates;
 use App\Models\User;
 use Spatie\Permission\Models\Role;
 
@@ -15,7 +16,7 @@ test('admin can access room builder creation page', function () {
 
     $response = $this->actingAs($admin)->get(route('admin.rooms.create'));
     $response->assertStatus(200);
-    $response->assertSee('Thiết Kế & Sinh Sơ Đồ Khán Đài Mới');
+    $response->assertSee('Thiết Kế Sơ Đồ Địa Điểm Mới');
 });
 
 test('admin can create room with mega concert preset and auto-generate seats', function () {
@@ -27,7 +28,7 @@ test('admin can create room with mega concert preset and auto-generate seats', f
         'address' => 'Đường Lê Đức Thọ, Mỹ Đình 1, Nam Từ Liêm, Hà Nội',
         'capacity' => 40000,
         'layout_preset' => 'mega_concert',
-        'base_price' => 300000,
+        'layout' => json_encode(LayoutTemplates::get('mega_concert')),
     ]);
 
     $response->assertRedirect(route('admin.rooms.index'));
@@ -40,9 +41,8 @@ test('admin can create room with mega concert preset and auto-generate seats', f
 
     // Verify seats were auto-generated
     expect($room->seats()->count())->toBeGreaterThan(50);
-    expect($room->seats()->where('type', 'svip_diamond')->count())->toBeGreaterThan(0);
-    expect($room->seats()->where('type', 'vip_gold')->count())->toBeGreaterThan(0);
-    expect($room->seats()->where('type', 'skybox_suite')->count())->toBeGreaterThan(0);
+    expect($room->zones()->pluck('code')->all())->toContain('SVIP', 'VIP', 'SKY');
+    expect($room->seats()->where('type', 'SVIP')->count())->toBeGreaterThan(0);
 });
 
 test('admin can create room with custom grid preset and auto-generate seats', function () {
@@ -54,9 +54,7 @@ test('admin can create room with custom grid preset and auto-generate seats', fu
         'address' => 'Quận 1, TP.HCM',
         'capacity' => 120,
         'layout_preset' => 'custom_grid',
-        'base_price' => 200000,
-        'rows' => 6,
-        'cols' => 10,
+        'layout' => json_encode(LayoutTemplates::get('custom_grid', ['rows' => 6, 'cols' => 10])),
     ]);
 
     $response->assertRedirect(route('admin.rooms.index'));
@@ -80,7 +78,7 @@ test('admin can update room and regenerate seat map', function () {
         'name' => 'Khán Phòng Opera Mới Cải Tạo',
         'capacity' => 800,
         'layout_preset' => 'theater_hall',
-        'base_price' => 350000,
+        'layout' => json_encode(LayoutTemplates::get('theater_hall')),
     ]);
 
     $response->assertRedirect(route('admin.rooms.index'));

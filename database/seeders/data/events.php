@@ -171,7 +171,7 @@ return [
             [
                 5, 'event', 'Fan Meeting 2026: Gặp Gỡ & Ký Tặng Dàn Cast Running Man VN', 'fan-meeting-running-man-vn-2026', 5,
                 'Đêm fan meeting độc quyền giao lưu, ký tặng fansign 1:1, biểu diễn âm nhạc acoustic và chụp ảnh polaroid cùng thần tượng.',
-                150, 220000, false,
+                150, 220000, true,
                 [
                     'venue_name' => 'Nhà Thi Đấu Thể Dục Thể Thao Nguyễn Du',
                     'venue_address' => '116 Nguyễn Du, Phường Bến Thành, Quận 1, TP.HCM',
@@ -288,7 +288,7 @@ return [
             [
                 8, 'event', 'Masterclass: Nghệ Thuật Kể Chuyện & Sáng Tạo Phim Bằng AI', 'masterclass-sang-tao-phim-ai-2026', 8,
                 'Buổi workshop thực hành 1 ngày cùng các đạo diễn và giám đốc sáng tạo hàng đầu về ứng dụng AI tạo sinh trong truyền thông.',
-                240, 350000, false,
+                240, 350000, true,
                 [
                     'venue_name' => 'Không Gian Sáng Tạo Toong Co-working Space',
                     'venue_address' => '126 Nguyễn Thị Minh Khai, Phường 6, Quận 3, TP.HCM',

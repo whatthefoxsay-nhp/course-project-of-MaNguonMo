@@ -54,7 +54,13 @@ class ShowtimeSeat extends Model
             return $this->price_override;
         }
 
-        return TicketTiers::seatPrice($this->seat?->type ?? 'normal', $this->showtime?->base_price ?? 0);
+        $basePrice = $this->showtime?->base_price ?? 0;
+        if ($this->seat?->zone !== null) {
+            return $this->seat->zone->priceFor($basePrice);
+        }
+
+        // Ghế cũ chưa thuộc khu nào.
+        return TicketTiers::seatPrice($this->seat?->type ?? 'normal', $basePrice);
     }
 
     /** Trạng thái hiển thị cho khách: ghế giữ quá hạn coi như còn trống. */

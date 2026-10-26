@@ -6,6 +6,7 @@ use App\Models\Room;
 use App\Models\Showtime;
 use App\Models\ShowtimeSeat;
 use App\Services\RoomSeatGenerator;
+use App\Support\LayoutTemplates;
 
 function roomWithSoldTicket(): array
 {
@@ -32,16 +33,20 @@ test('generator builds a custom grid with the requested size', function () {
 
     expect($count)->toBe(12)
         ->and($room->seats()->count())->toBe(12)
-        ->and($room->seats()->where('row_label', 'A')->value('type'))->toBe('svip_diamond');
+        ->and($room->seats()->where('row_label', 'A')->value('type'))->toBe('VIP');
 });
 
-test('mega concert preset includes a hidden standing row', function () {
+test('mega concert preset puts hidden standing places in two fanzones', function () {
     $room = Room::factory()->create();
 
     app(RoomSeatGenerator::class)->generate($room, 'mega_concert', []);
 
-    expect($room->seats()->where('row_label', RoomSeatGenerator::STANDING_ROW)->where('type', 'standing_pit')->count())
-        ->toBe(RoomSeatGenerator::STANDING_CAPACITY);
+    foreach (['GA-L', 'GA-R'] as $code) {
+        $zone = $room->zones()->where('code', $code)->first();
+        expect($zone->kind)->toBe('standing')
+            ->and($zone->capacity)->toBe(40)
+            ->and($zone->seats()->whereNull('pos_col')->count())->toBe(40);
+    }
 });
 
 test('updating a room that already has showtimes keeps seats and sold tickets', function () {
@@ -54,8 +59,7 @@ test('updating a room that already has showtimes keeps seats and sold tickets', 
             'address' => 'Địa chỉ mới',
             'capacity' => 500,
             'layout_preset' => 'custom_grid',
-            'rows' => 10,
-            'cols' => 10,
+            'layout' => json_encode(LayoutTemplates::get('custom_grid', ['rows' => 10, 'cols' => 10])),
         ])
         ->assertRedirect(route('admin.rooms.index'))
         ->assertSessionHas('warning');
@@ -75,4 +79,16 @@ test('deleting a room that has showtimes is refused', function () {
 
     expect(Room::find($room->id))->not->toBeNull()
         ->and(BookingItem::count())->toBe(1);
+});
+
+test('a room without showtimes can be deleted together with its zones and seats', function () {
+    $room = Room::factory()->create();
+    app(RoomSeatGenerator::class)->generate($room, 'mega_concert');
+
+    $this->actingAs(createAdmin())->delete(route('admin.rooms.destroy', $room))
+        ->assertRedirect(route('admin.rooms.index'));
+
+    expect(Room::find($room->id))->toBeNull()
+        ->and(\App\Models\SeatZone::where('room_id', $room->id)->count())->toBe(0)
+        ->and(\App\Models\Seat::where('room_id', $room->id)->count())->toBe(0);
 });

@@ -3,8 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Showtime;
-use App\Support\SeatMapPresenter;
-use App\Support\TicketTiers;
+use App\Support\SeatMap;
 use Illuminate\Http\JsonResponse;
 use Illuminate\View\View;
 
@@ -27,8 +26,7 @@ class ShowtimeController extends Controller
             'showtime' => $showtime,
             'allShowtimes' => $allShowtimes,
             'movie' => $event,
-            'seats' => $event->is_seated ? SeatMapPresenter::forShowtime($showtime) : [],
-            'ticketTiers' => TicketTiers::for($showtime->base_price, $event->is_seated),
+            'seatMap' => SeatMap::forShowtime($showtime),
         ]);
     }
 

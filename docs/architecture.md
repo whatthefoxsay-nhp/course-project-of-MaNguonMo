@@ -35,6 +35,25 @@ Cập nhật file này mỗi khi kiến trúc hoặc yêu cầu dự án thay đ
 | **2026-09-21** | **Đồng bộ ghế** | Polling `GET /showtimes/{id}/seat-status` mỗi 15 giây | Spec mục 5: không dùng WebSocket. |
 | **2026-09-23** | **Quản trị hệ thống** | Làm sạch dữ liệu thực trên Dashboard & Báo cáo (xóa bỏ số liệu giả lập); Hoàn thiện chi tiết đơn vé & giải phóng ghế khi hủy đơn; Khởi tạo bảng & Model `Discount` lưu trữ thật; Bổ sung đổi vai trò Admin/User và đặt lại mật khẩu | Đảm bảo phân hệ Admin vận hành 100% trên cơ sở dữ liệu thật MySQL, không còn mock/alert giả lập. |
 | **2026-09-23** | **Public Catalog DB (Plan 2)** | Toàn bộ trang chủ, danh sách sự kiện, chi tiết sự kiện và sơ đồ ghế đọc trực tiếp từ MySQL; Thống nhất định giá qua `TicketTiers`; Trình bày sơ đồ ghế động qua `SeatMapPresenter`; Hỗ trợ cả Sân vận động và Khán phòng nhà hát | Loại bỏ hoàn toàn phụ thuộc vào `DemoCatalog` cho luồng xem sự kiện và sơ đồ ghế. |
+| **2026-10-26** | **Sơ đồ theo khu vực (Plan 8)** | Thêm bảng `seat_zones`; `seats.zone_id` + `seats.pos_col`. Thay 6 loại ghế "concert" cố định, `SeatMapPresenter` và hạng vé VIP/Standard/Combo bằng khu do admin đặt (xem mục 2a) | Mỗi loại sự kiện có cách bố trí khác nhau; admin tự đặt tên, giá, màu từng khu. |
+| **2026-10-26** | **Đổi trạng thái đơn (admin)** | Chỉ cho `pending→confirmed`, `pending→cancelled`, `confirmed→cancelled`; xác nhận bị từ chối nếu ghế đã thuộc đơn khác hoặc người khác đang giữ | Chặn bán trùng ghế khi xác nhận lại đơn đã hủy. |
+
+### 2a. Sơ đồ chỗ ngồi theo khu vực
+
+```
+rooms 1─n seat_zones 1─n seats 1─n showtime_seats n─1 showtimes
+seat_zones(id, room_id, code, name, kind[seated|table|standing], level, sort_order,
+           surcharge, color, gate, description, perks json, capacity)
+seats(+ zone_id, + pos_col)   -- pos_col = vị trí ô trong hàng; ô trống giữa 2 cột = lối đi
+```
+
+- **3 kiểu khu**: `seated` (ghế đánh số, chọn trên sơ đồ), `table` (mỗi `row_label` là một bàn, ghế quanh bàn, có nút "Chọn cả bàn"), `standing` (khu đứng / vào cửa tự do: `capacity` ghế ẩn, `row_label` = mã khu, `pos_col` null, khách chọn số lượng).
+- **Giá** 1 vé = `showtimes.base_price` + `seat_zones.surcharge` (tối thiểu 0), chốt vào `showtime_seats.price_override` lúc giữ chỗ. `TicketTiers` chỉ còn dùng cho ghế cũ chưa có khu.
+- **6 mẫu** (`App\Support\LayoutTemplates`): `mega_concert` (concert sân vận động: 2 Fanzone đứng + SVIP + VIP mặt sàn + khán đài C/A/D + Skybox), `theater_hall` (nhà hát: Stalls / Dress Circle / Gallery, lối đi giữa), `convention_center` (hội trường: VIP Keynote + 3 khối), `banquet_hall` (workshop/gala: bàn 8 và 6 ghế), `open_space` (triển lãm/festival: chỉ khu vào cửa theo sức chứa), `custom_grid` (lưới tùy chỉnh).
+- **Đặt vé**: sự kiện `is_seated` → khu `seated`/`table` chọn ghế, khu `standing` chọn số lượng; sự kiện không sơ đồ → mọi khu chọn số lượng, server gán ghế trống đầu tiên của khu (`SeatHoldService`, khóa dòng như cũ). API giữ chỗ: `seat_ids[]` + `zones[id_khu] = số vé`.
+- **Vẽ sơ đồ** (`App\Support\SeatMap` + `<x-seat-map>`): sân khấu theo preset ở trên; khu xếp theo `level` (gần sân khấu → xa), cùng `level` nằm cạnh nhau theo `sort_order`.
+- **Admin** (`RoomLayoutRequest`): kiểm tra JSON sơ đồ (mã khu, nhãn hàng không trùng, ô trỏ đúng khu, sức chứa khu đứng 1–2.000, tổng ≤ 5.000 chỗ). Địa điểm đã có suất diễn chỉ sửa được tên/giá/màu/cổng/mô tả của khu, không đổi ghế.
+- **Bỏ**: vé "Combo nhóm 2 người" (`combo_pass`) và hạng VIP Pass/Standard Pass cố định — thay bằng khu của địa điểm.
 
 ---
 
@@ -51,7 +70,7 @@ Cập nhật file này mỗi khi kiến trúc hoặc yêu cầu dự án thay đ
 ---
 
 ## 4. Kiểm thử & Độ bao phủ (Test Suite)
-- Toàn bộ tính năng đều được kiểm thử bằng Pest PHP (`php artisan test`): **161 tests / 550 assertions (Pass 100%)**.
+- Toàn bộ tính năng đều được kiểm thử bằng Pest PHP (`php artisan test`): **245 tests / 1692 assertions (Pass 100%, 2026-10-26)**.
 - Bao gồm Feature Test cho:
   - Admin: Dashboard Real Data, Booking Management & Seat Release, Discount CRUD, Room Safety, Locked User, Category CRUD, Event CRUD, Showtime CRUD, User Role & Password Management.
   - Public & Engine: Public Catalog, Seat Map Page, Ticket Tiers & Seat Pricing, SeatHoldService, SeatHoldHttp, Checkout, Cart & Booking History.

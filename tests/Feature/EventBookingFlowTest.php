@@ -64,13 +64,12 @@ test('seat map page displays concert stadium arena blueprint for seated concerts
     $response->assertStatus(200);
     $response->assertSee($movie->title);
     $response->assertSee($showtime->room->name);
-    $response->assertSee('SÂN KHẤU CHÍNH');
-    $response->assertSee('CATWALK RUNWAY');
-    $response->assertSee('GA STANDING');
-    $response->assertSee('SVIP B-Stage Floor');
-    $response->assertSee('Khán Đài A');
-    $response->assertSee('Skybox VIP Suites');
-    $response->assertSee('Tổng Tạm Tính');
+    $response->assertSee('Sân khấu chính');
+    $response->assertSee('Fanzone đứng trái');
+    $response->assertSee('SVIP sát sân khấu');
+    $response->assertSee('Khán đài A (trung tâm)');
+    $response->assertSee('Skybox VIP');
+    $response->assertSee('Tổng tạm tính');
 });
 
 test('ticket selection page renders direct tier selector for non-concert events', function () {
@@ -81,11 +80,11 @@ test('ticket selection page renders direct tier selector for non-concert events'
 
     $response->assertStatus(200);
     $response->assertSee($movie->title);
-    $response->assertSee('Chọn Hạng Vé & Số Lượng Tham Dự');
-    $response->assertSee('Vé VIP Toàn Diện');
-    $response->assertSee('Vé Tiêu Chuẩn');
-    $response->assertSee('Combo Nhóm 2 Người');
-    $response->assertDontSee('SÂN KHẤU CHÍNH (MAIN STAGE)');
+    $response->assertSee('Chọn Khu Vực & Số Lượng');
+    $response->assertSee('Hàng ghế VIP Keynote');
+    $response->assertSee('Khối giữa');
+    $response->assertDontSee('Combo Nhóm 2 Người');
+    $response->assertDontSee('Tất cả khu');
 });
 
 test('unauthenticated guest is redirected to login when accessing cart', function () {

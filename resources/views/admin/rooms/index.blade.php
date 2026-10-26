@@ -75,12 +75,7 @@
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             @forelse($rooms as $room)
                 @php
-                    $presetLabel = match($room->layout_preset ?? 'mega_concert') {
-                        'theater_hall' => '🎭 Nhà Hát & Giao Hưởng',
-                        'convention_center' => '🏢 Trung Tâm Hội Nghị',
-                        'custom_grid' => '⚡ Ma Trận Tùy Chỉnh',
-                        default => '🏟️ Mega Concert Arena'
-                    };
+                    $presetLabel = $room->preset_label;
                     $blueprintJson = json_encode($room->blueprint_data ?? []);
                 @endphp
 
@@ -290,13 +285,15 @@
                                     </div>
                                 </template>
 
-                                <!-- Standing GA Zone if applicable -->
-                                <template x-if="activeRoom?.has_standing">
-                                    <div class="mt-6 p-4 rounded-2xl bg-amber-500/10 border border-amber-500/40 text-center max-w-md mx-auto">
-                                        <span class="text-xs font-black text-amber-300 block uppercase">Khu Vực Vé Đứng (GA Standing Pit)</span>
-                                        <span class="text-[11px] text-gray-300 font-mono" x-text="'Sức chứa vé đứng: ' + activeRoom?.standing_count + ' Khán giả (Gán tự động)'"></span>
-                                    </div>
-                                </template>
+                                <!-- Khu đứng / vào cửa tự do (bán theo số lượng) -->
+                                <div class="mt-6 flex flex-wrap justify-center gap-3">
+                                    <template x-for="zone in activeRoom?.standing || []" :key="zone.code">
+                                        <div class="p-4 rounded-2xl border-2 border-dashed text-center min-w-[12rem]" :style="'border-color: ' + zone.color">
+                                            <span class="text-xs font-black text-white block" x-text="zone.name"></span>
+                                            <span class="text-[11px] text-gray-300 font-mono" x-text="'Sức chứa: ' + zone.count + ' chỗ (bán theo số lượng)'"></span>
+                                        </div>
+                                    </template>
+                                </div>
                             </div>
                         </div>
 
@@ -316,26 +313,12 @@
                     <div class="p-6 bg-white border-t border-black/10 flex flex-col sm:flex-row items-center justify-between gap-4">
                         <!-- Legend & Counts -->
                         <div class="flex flex-wrap items-center gap-4 text-xs font-semibold">
-                            <div class="flex items-center gap-1.5">
-                                <span class="w-3 h-3 rounded-full bg-[#D4AF37]"></span>
-                                <span>SVIP: <strong x-text="activeRoom?.summary?.svip || 0"></strong></span>
-                            </div>
-                            <div class="flex items-center gap-1.5">
-                                <span class="w-3 h-3 rounded-full bg-[#C08497]"></span>
-                                <span>VIP: <strong x-text="activeRoom?.summary?.vip || 0"></strong></span>
-                            </div>
-                            <div class="flex items-center gap-1.5">
-                                <span class="w-3 h-3 rounded-full bg-[#3A5A40]"></span>
-                                <span>Cat 1: <strong x-text="activeRoom?.summary?.cat1 || 0"></strong></span>
-                            </div>
-                            <div class="flex items-center gap-1.5">
-                                <span class="w-3 h-3 rounded-full bg-[#1E293B]"></span>
-                                <span>Cat 2: <strong x-text="activeRoom?.summary?.cat2 || 0"></strong></span>
-                            </div>
-                            <div class="flex items-center gap-1.5">
-                                <span class="w-3 h-3 rounded-full bg-[#E11D48]"></span>
-                                <span>Skybox: <strong x-text="activeRoom?.summary?.skybox || 0"></strong></span>
-                            </div>
+                            <template x-for="zone in activeRoom?.summary?.zones || []" :key="zone.code">
+                                <div class="flex items-center gap-1.5">
+                                    <span class="w-3 h-3 rounded-full" :style="'background-color: ' + zone.color"></span>
+                                    <span><span x-text="zone.name"></span>: <strong x-text="zone.count"></strong></span>
+                                </div>
+                            </template>
                         </div>
 
                         <!-- Action Buttons -->

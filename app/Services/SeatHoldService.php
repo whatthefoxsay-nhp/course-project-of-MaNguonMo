@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Exceptions\SeatHoldException;
+use App\Models\SeatZone;
 use App\Models\Showtime;
 use App\Models\ShowtimeSeat;
 use App\Models\User;
@@ -27,16 +28,16 @@ class SeatHoldService
      * Giữ chỗ cho user — tất cả hoặc không gì cả.
      *
      * @param  list<int>  $showtimeSeatIds  ghế khách tự chọn trên sơ đồ (id bảng showtime_seats)
-     * @param  array<string, int>  $tierQuantities  hạng bán theo số lượng => số vé (server tự gán ghế)
+     * @param  array<int, int>  $zoneQuantities  [id khu => số vé] cho khu bán theo số lượng (server tự gán ghế)
      * @return Collection<int, ShowtimeSeat>
      *
      * @throws SeatHoldException
      */
-    public function hold(User $user, Showtime $showtime, array $showtimeSeatIds, array $tierQuantities = []): Collection
+    public function hold(User $user, Showtime $showtime, array $showtimeSeatIds, array $zoneQuantities = []): Collection
     {
         $showtime->loadMissing('event');
         $event = $showtime->event;
-        $tierQuantities = array_filter($tierQuantities, fn (int $quantity) => $quantity > 0);
+        $zoneQuantities = array_filter($zoneQuantities, fn (int $quantity) => $quantity > 0);
 
         if ($event->status !== 'published') {
             throw new SeatHoldException('Sự kiện hiện không mở bán.');
@@ -45,23 +46,26 @@ class SeatHoldService
             throw new SeatHoldException('Suất diễn đã bắt đầu, không thể đặt vé.');
         }
         if ($showtimeSeatIds !== [] && ! $event->is_seated) {
-            throw new SeatHoldException('Sự kiện này không chọn ghế trên sơ đồ, vui lòng chọn hạng vé.');
-        }
-        foreach (array_keys($tierQuantities) as $tier) {
-            if (! TicketTiers::isPassTier($tier, $event->is_seated)) {
-                throw new SeatHoldException('Hạng vé không hợp lệ.');
-            }
+            throw new SeatHoldException('Sự kiện này không chọn ghế trên sơ đồ, vui lòng chọn khu vực và số lượng.');
         }
 
-        $requestedSeats = count($showtimeSeatIds);
-        foreach ($tierQuantities as $tier => $quantity) {
-            $requestedSeats += $quantity * TicketTiers::seatsPerUnit($tier);
+        $zones = SeatZone::where('room_id', $showtime->room_id)
+            ->whereIn('id', array_keys($zoneQuantities))
+            ->get()
+            ->keyBy('id');
+        if ($zones->count() !== count($zoneQuantities)) {
+            throw new SeatHoldException('Khu vực không hợp lệ.');
         }
+        if ($event->is_seated && $zones->contains(fn (SeatZone $zone) => ! $zone->isStanding())) {
+            throw new SeatHoldException('Khu này chọn ghế trên sơ đồ.');
+        }
+
+        $requestedSeats = count($showtimeSeatIds) + array_sum($zoneQuantities);
         if ($requestedSeats === 0) {
             throw new SeatHoldException('Vui lòng chọn ít nhất 1 vé.');
         }
 
-        return DB::transaction(function () use ($user, $showtime, $event, $showtimeSeatIds, $tierQuantities, $requestedSeats) {
+        return DB::transaction(function () use ($user, $showtime, $showtimeSeatIds, $zoneQuantities, $zones, $requestedSeats) {
             // Mỗi user chỉ giữ ghế của 1 suất tại 1 thời điểm.
             ShowtimeSeat::where('held_by_user_id', $user->id)
                 ->where('status', 'held')
@@ -78,7 +82,7 @@ class SeatHoldService
 
             // 1) Ghế khách tự chọn: khóa dòng rồi mới kiểm tra còn trống (chống 2 người cùng giữ).
             if ($showtimeSeatIds !== []) {
-                $picked = ShowtimeSeat::with('seat')
+                $picked = ShowtimeSeat::with('seat.zone')
                     ->where('showtime_id', $showtime->id)
                     ->whereIn('id', $showtimeSeatIds)
                     ->lockForUpdate()
@@ -87,8 +91,8 @@ class SeatHoldService
                 if ($picked->count() !== count(array_unique($showtimeSeatIds))) {
                     throw new SeatHoldException('Có ghế không thuộc suất diễn này.');
                 }
-                if ($picked->contains(fn (ShowtimeSeat $seat) => $seat->seat->type === 'standing_pit')) {
-                    throw new SeatHoldException('Vé đứng được bán theo số lượng, không chọn theo ghế.');
+                if ($picked->contains(fn (ShowtimeSeat $seat) => $seat->seat->zone?->isStanding() || $seat->seat->type === 'standing_pit')) {
+                    throw new SeatHoldException('Khu đứng bán theo số lượng, không chọn theo ghế.');
                 }
 
                 $unavailable = $picked->reject(fn (ShowtimeSeat $seat) => $seat->isHoldable());
@@ -98,34 +102,34 @@ class SeatHoldService
                 }
 
                 foreach ($picked as $seat) {
-                    $this->markHeld($seat, $user, $heldUntil, TicketTiers::seatPrice($seat->seat->type, $showtime->base_price));
+                    $price = $seat->seat->zone?->priceFor($showtime->base_price)
+                        ?? TicketTiers::seatPrice($seat->seat->type, $showtime->base_price);
+                    $this->markHeld($seat, $user, $heldUntil, $price);
                 }
                 $held = $held->merge($picked);
             }
 
-            // 2) Hạng bán theo số lượng: server tự lấy ghế trống đúng loại (ghi ngay từng hạng
-            //    để hạng sau không lấy trùng ghế của hạng trước).
-            foreach ($tierQuantities as $tier => $quantity) {
-                $needed = $quantity * TicketTiers::seatsPerUnit($tier);
+            // 2) Khu bán theo số lượng: lấy ghế trống đầu tiên của khu (hàng trước được gán trước),
+            //    ghi ngay từng khu để khu sau không lấy trùng.
+            foreach ($zoneQuantities as $zoneId => $quantity) {
+                $zone = $zones[$zoneId];
 
                 $assigned = ShowtimeSeat::select('showtime_seats.*')
                     ->join('seats', 'seats.id', '=', 'showtime_seats.seat_id')
                     ->where('showtime_seats.showtime_id', $showtime->id)
-                    ->whereIn('seats.type', TicketTiers::passSeatTypes($tier))
+                    ->where('seats.zone_id', $zone->id)
                     ->holdable()
                     ->orderBy('showtime_seats.id')
-                    ->limit($needed)
+                    ->limit($quantity)
                     ->lockForUpdate()
                     ->get();
 
-                if ($assigned->count() < $needed) {
-                    $tierName = TicketTiers::for($showtime->base_price, $event->is_seated)[$tier]['name'];
-                    throw new SeatHoldException("Hạng vé \"{$tierName}\" chỉ còn {$assigned->count()} chỗ.");
+                if ($assigned->count() < $quantity) {
+                    throw new SeatHoldException("Khu \"{$zone->name}\" chỉ còn {$assigned->count()} chỗ.");
                 }
 
-                $pricePerSeat = TicketTiers::pricePerSeat($tier, $showtime->base_price, $event->is_seated);
                 foreach ($assigned as $seat) {
-                    $this->markHeld($seat, $user, $heldUntil, $pricePerSeat);
+                    $this->markHeld($seat, $user, $heldUntil, $zone->priceFor($showtime->base_price));
                 }
                 $held = $held->merge($assigned->load('seat'));
             }
