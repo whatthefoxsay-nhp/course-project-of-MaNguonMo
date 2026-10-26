@@ -2,6 +2,8 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
+> **Cập nhật 2026-10-26:** Task 1 đã làm trong Plan 8 Task 1. Task 2 (mật khẩu) bỏ theo yêu cầu user. Task 3 được thay bằng Plan 8 Task 5 (`RoomLayoutRequest`).
+
 **Goal:** Sửa 3 lỗi tìm thấy khi audit nhánh `feature/update_UI` (2026-10-05) để nhánh này đủ an toàn merge vào `main`.
 
 **Architecture:** Sửa tại chỗ trong controller/service hiện có, không thêm bảng, không thêm route. Mỗi lỗi = 1 task = 1 commit, có test Pest tái hiện lỗi trước khi sửa.

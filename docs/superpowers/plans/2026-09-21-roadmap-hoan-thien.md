@@ -135,3 +135,7 @@ này, không theo số dòng trong plan. Plan 4 Task 4: bỏ phần số điện
 
 **Thứ tự mới:** Plan 8 → Plan 4 (bình luận AJAX, gợi ý tìm kiếm, avatar) → Plan 5 (bản đồ,
 thời tiết) → Plan 6 (báo cáo, README).
+
+**Plan 8 xong (2026-10-26)** trên `feature/hoan-thien`: 245 test xanh. Dữ liệu demo đổi —
+chạy `php artisan migrate:fresh --seed` (8 địa điểm, mỗi sự kiện một kiểu bố trí). Ghi nhận
+ngoài phạm vi: ở màn hình 375px thanh menu trên cùng làm mọi trang rộng ~490px (lỗi có sẵn).
