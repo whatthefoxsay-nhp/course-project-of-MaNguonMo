@@ -30,6 +30,7 @@ GOOGLE_MAPS_EMBED_KEY=
 
 - `OPENWEATHER_API_KEY`: hỏi trưởng nhóm, hoặc tự đăng ký miễn phí ở openweathermap.org (key mới có thể mất ~1 giờ mới chạy). Để trống thì trang sự kiện hiện "Chưa có dự báo", không lỗi.
 - `GOOGLE_MAPS_EMBED_KEY`: nhóm chưa có, để trống vẫn hiện bản đồ.
+- Google OAuth là tùy chọn. Khi được cung cấp credentials, thêm `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` và `GOOGLE_REDIRECT_URI` vào `.env`; URI phải khớp chính xác với Authorized redirect URI trong Google Cloud Console (mặc định `${APP_URL}/auth/google/callback`). Nếu để trống thì nút Google sẽ ẩn và đăng nhập email/mật khẩu vẫn hoạt động.
 - **Không commit file `.env` và không dán key vào code, tài liệu hay tin nhắn công khai.**
 - Sau khi sửa `.env`: `php artisan config:clear`.
 

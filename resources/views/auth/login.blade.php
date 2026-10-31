@@ -130,6 +130,8 @@
             </span>
         </button>
 
+        @include('components.google-auth-button')
+
         <!-- Quick Demo One-Click Login Box (Antique Gold for Admin, Forest Sage for User) -->
         <div class="pt-5 border-t border-slate-100">
             <span class="text-[10px] font-black uppercase tracking-wider text-slate-400 block text-center mb-2.5">

@@ -183,6 +183,8 @@
             </span>
         </button>
 
+        @include('components.google-auth-button')
+
         <!-- Login Link -->
         <div class="text-center pt-3 text-xs text-slate-500 font-medium border-t border-slate-100 mt-5">
             Đã có tài khoản? 

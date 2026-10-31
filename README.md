@@ -43,6 +43,7 @@ Muốn làm lại dữ liệu demo từ đầu: `php artisan migrate:fresh --see
 ## Khóa API (tùy chọn)
 - `OPENWEATHER_API_KEY` — dự báo thời tiết trên trang sự kiện (đăng ký miễn phí tại openweathermap.org; key mới có thể mất tới ~1 giờ mới hoạt động). Bỏ trống thì trang hiện "Chưa có dự báo".
 - `GOOGLE_MAPS_EMBED_KEY` — bản đồ qua Maps Embed API; bỏ trống vẫn hiện bản đồ bằng link nhúng công khai.
+- `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_REDIRECT_URI` — bật đăng nhập/đăng ký Google. Đây là cấu hình tùy chọn; thiếu credentials thì nút Google ẩn và đăng nhập bằng email/mật khẩu vẫn dùng được. Redirect URI cần khớp URI đã khai báo trong Google Cloud Console; giá trị mẫu là `${APP_URL}/auth/google/callback`.
 
 Sau khi sửa `.env`: `php artisan config:clear`. Không commit key lên git.
 
