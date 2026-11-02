@@ -35,7 +35,7 @@
         </div>
     @endif
 
-    <form method="POST" action="{{ route('login') }}" class="space-y-4 sm:space-y-5" x-data="{ emailVal: '{{ old('email') }}', passVal: '', showPass: false }">
+    <form method="POST" action="{{ route('login') }}" class="space-y-4 sm:space-y-5" x-data="{ emailVal: @js(old('email', config('app.admin_email'))), passVal: '', showPass: false }">
         @csrf
 
         <!-- Email Address -->
@@ -54,7 +54,7 @@
                     type="email" 
                     name="email" 
                     x-model="emailVal"
-                    value="{{ old('email') }}" 
+                    value="{{ old('email', config('app.admin_email')) }}"
                     required 
                     autofocus 
                     placeholder="name@example.com"
@@ -132,16 +132,16 @@
 
         @include('components.google-auth-button')
 
-        <!-- Quick Demo One-Click Login Box (Antique Gold for Admin, Forest Sage for User) -->
+        <!-- Admin email shortcut and demo user login -->
         <div class="pt-5 border-t border-slate-100">
             <span class="text-[10px] font-black uppercase tracking-wider text-slate-400 block text-center mb-2.5">
-                Đăng nhập nhanh tài khoản mẫu:
+                Điền email quản trị:
             </span>
             <div class="grid grid-cols-2 gap-2.5">
                 <!-- Admin Demo Quick Button (Antique Gold) -->
                 <button 
                     type="button" 
-                    @click="emailVal = 'admin@ticketbox.vn'; passVal = 'password';"
+                    @click="emailVal = @js(config('app.admin_email')); passVal = '';"
                     class="p-3.5 rounded-2xl bg-gradient-to-br from-amber-50/90 via-orange-50/40 to-amber-100/60 hover:from-amber-100 hover:to-orange-100/80 border border-amber-200/80 hover:border-amber-300 text-left transition-all shadow-2xs group cursor-pointer"
                 >
                     <div class="text-xs text-slate-900 font-black flex items-center justify-between">
@@ -151,7 +151,7 @@
                         </span>
                         <span class="text-[10px] text-amber-600 font-black group-hover:translate-x-0.5 transition-transform">&rarr;</span>
                     </div>
-                    <div class="text-[11px] text-slate-600 font-mono font-semibold truncate mt-1">admin@ticketbox.vn</div>
+                    <div class="text-[11px] text-slate-600 font-mono font-semibold truncate mt-1">{{ config('app.admin_email') }}</div>
                 </button>
 
                 <!-- User Demo Quick Button (Forest Sage) -->
