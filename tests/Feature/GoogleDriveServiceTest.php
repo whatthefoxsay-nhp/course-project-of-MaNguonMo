@@ -82,7 +82,7 @@ it('uploads an image, makes it public, and returns a direct view URL', function 
 
         return $uploaded;
     });
-    $permissionResource->shouldReceive('create')->once()->with('file_123', Mockery::type(Permission::class));
+    $permissionResource->shouldReceive('create')->once()->with('file_123', Mockery::type(Permission::class), ['supportsAllDrives' => true]);
 
     $service = new GoogleDriveService(drive: $drive);
     $url = $service->upload(UploadedFile::fake()->image('poster.png'));

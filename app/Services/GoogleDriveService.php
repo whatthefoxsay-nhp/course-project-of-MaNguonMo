@@ -35,6 +35,8 @@ class GoogleDriveService
             return null;
         }
 
+        $fileId = null;
+
         try {
             $drive = $this->drive();
             $parents = [trim((string) config('services.google_drive.folder_id'))];
@@ -51,6 +53,7 @@ class GoogleDriveService
                 'data' => file_get_contents($file->getRealPath()),
                 'mimeType' => $file->getMimeType(),
                 'uploadType' => 'multipart',
+                'supportsAllDrives' => true,
                 'fields' => 'id,webViewLink,webContentLink',
             ]);
 
@@ -62,11 +65,19 @@ class GoogleDriveService
             $drive->permissions->create($fileId, new Permission([
                 'type' => 'anyone',
                 'role' => 'reader',
-            ]));
+            ]), ['supportsAllDrives' => true]);
 
             return $uploaded->getWebContentLink()
                 ?: "https://drive.google.com/uc?export=view&id={$fileId}";
         } catch (Throwable $exception) {
+            if ($fileId !== null && $fileId !== '') {
+                try {
+                    $this->drive()->files->delete($fileId, ['supportsAllDrives' => true]);
+                } catch (Throwable) {
+                    // Keep the original upload error as the fallback reason.
+                }
+            }
+
             Log::warning('Google Drive image upload failed; local storage fallback will be used.', [
                 'exception' => $exception::class,
             ]);
@@ -82,7 +93,7 @@ class GoogleDriveService
         }
 
         try {
-            $this->drive()->files->delete($fileId);
+            $this->drive()->files->delete($fileId, ['supportsAllDrives' => true]);
 
             return true;
         } catch (Throwable $exception) {
@@ -123,7 +134,7 @@ class GoogleDriveService
 
         $client = $this->client ?? new Client;
         $client->setAuthConfig($this->credentialPath());
-        $client->addScope(Drive::DRIVE);
+        $client->addScope(Drive::DRIVE_FILE);
 
         return $this->drive = new Drive($client);
     }
@@ -141,6 +152,8 @@ class GoogleDriveService
             'q' => "mimeType='application/vnd.google-apps.folder' and name='{$escapedName}' and '{$parentId}' in parents and trashed=false",
             'pageSize' => 1,
             'fields' => 'files(id,name)',
+            'supportsAllDrives' => true,
+            'includeItemsFromAllDrives' => true,
         ])->getFiles();
 
         if ($folders !== []) {
@@ -151,7 +164,7 @@ class GoogleDriveService
             'name' => $name,
             'mimeType' => 'application/vnd.google-apps.folder',
             'parents' => [$parentId],
-        ]), ['fields' => 'id']);
+        ]), ['fields' => 'id', 'supportsAllDrives' => true]);
 
         return $this->folderIds[$key] = (string) $folder->getId();
     }
