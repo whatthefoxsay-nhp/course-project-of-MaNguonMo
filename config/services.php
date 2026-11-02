@@ -41,6 +41,12 @@ return [
         'redirect' => env('GOOGLE_REDIRECT_URI'),
     ],
 
+    'google_drive' => [
+        'enabled' => env('GOOGLE_DRIVE_ENABLED', false),
+        'folder_id' => env('GOOGLE_DRIVE_FOLDER_ID'),
+        'service_account' => env('GOOGLE_SERVICE_ACCOUNT_JSON', 'storage/app/google/service-account.json'),
+    ],
+
     'google_maps' => [
         'embed_key' => env('GOOGLE_MAPS_EMBED_KEY'),
     ],
