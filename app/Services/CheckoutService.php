@@ -3,10 +3,12 @@
 namespace App\Services;
 
 use App\Exceptions\SeatHoldException;
+use App\Mail\BookingConfirmationMail;
 use App\Models\Booking;
 use App\Models\ShowtimeSeat;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
 
 class CheckoutService
 {
@@ -19,7 +21,7 @@ class CheckoutService
      */
     public function checkout(User $user, string $paymentMethod): Booking
     {
-        return DB::transaction(function () use ($user, $paymentMethod) {
+        $booking = DB::transaction(function () use ($user, $paymentMethod) {
             $seats = ShowtimeSeat::heldBy($user)
                 ->with(['seat', 'showtime'])
                 ->lockForUpdate()
@@ -53,5 +55,9 @@ class CheckoutService
 
             return $booking;
         });
+
+        Mail::to($user->email)->queue(new BookingConfirmationMail($booking));
+
+        return $booking;
     }
 }

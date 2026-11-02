@@ -1,12 +1,17 @@
 <?php
 
+use App\Mail\BookingConfirmationMail;
 use App\Models\Booking;
 use App\Models\Event;
 use App\Models\Showtime;
 use App\Models\ShowtimeSeat;
 use App\Services\SeatHoldService;
+use Illuminate\Support\Facades\Mail;
 
-beforeEach(fn () => $this->seed());
+beforeEach(function () {
+    $this->seed();
+    Mail::fake();
+});
 
 function heldCart($user, int $count = 2): Showtime
 {
@@ -36,6 +41,8 @@ test('checkout turns held seats into a confirmed booking', function () {
         ->and($booking->items)->toHaveCount(2)
         ->and($booking->total_price)->toBe($booking->items->sum('price'))
         ->and($booking->items->every(fn ($item) => $item->showtimeSeat->status === 'booked' && $item->showtimeSeat->held_by_user_id === null))->toBeTrue();
+
+    Mail::assertQueued(BookingConfirmationMail::class, fn (BookingConfirmationMail $mail) => $mail->hasTo($user->email));
 });
 
 test('checkout with an empty cart is rejected', function () {
