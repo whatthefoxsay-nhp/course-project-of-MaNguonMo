@@ -7,8 +7,10 @@ use App\Http\Requests\Admin\EventRequest;
 use App\Models\Category;
 use App\Models\Event;
 use App\Models\ShowtimeSeat;
+use App\Services\GoogleDriveService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
@@ -45,13 +47,13 @@ class EventController extends Controller
         ]);
     }
 
-    public function store(EventRequest $request): RedirectResponse
+    public function store(EventRequest $request, GoogleDriveService $googleDrive): RedirectResponse
     {
         $event = new Event($request->eventAttributes());
         $event->details = $request->mergedDetails([]);
 
         if ($request->hasFile('poster')) {
-            $event->poster_path = $request->file('poster')->store('posters', 'public');
+            $event->poster_path = $this->storePoster($request->file('poster'), $googleDrive);
         }
 
         $event->save();
@@ -68,14 +70,16 @@ class EventController extends Controller
         ]);
     }
 
-    public function update(EventRequest $request, Event $event): RedirectResponse
+    public function update(EventRequest $request, Event $event, GoogleDriveService $googleDrive): RedirectResponse
     {
         $event->fill($request->eventAttributes());
         $event->details = $request->mergedDetails($event->details ?? []);
 
         if ($request->hasFile('poster')) {
-            $this->deleteStoredPoster($event);
-            $event->poster_path = $request->file('poster')->store('posters', 'public');
+            $poster = $request->file('poster');
+            $newPosterPath = $this->storePoster($poster, $googleDrive);
+            $this->deleteStoredPoster($event, $googleDrive);
+            $event->poster_path = $newPosterPath;
         }
 
         $event->save();
@@ -84,7 +88,7 @@ class EventController extends Controller
             ->with('success', "Đã cập nhật sự kiện [{$event->title}].");
     }
 
-    public function destroy(Event $event): RedirectResponse
+    public function destroy(Event $event, GoogleDriveService $googleDrive): RedirectResponse
     {
         $hasSoldTickets = ShowtimeSeat::whereIn('showtime_id', $event->showtimes()->select('id'))
             ->where('status', 'booked')
@@ -94,17 +98,40 @@ class EventController extends Controller
             return back()->with('error', 'Sự kiện đã có vé bán ra, không thể xóa. Hãy chuyển trạng thái sang "Lưu trữ".');
         }
 
-        $this->deleteStoredPoster($event);
+        $this->deleteStoredPoster($event, $googleDrive);
         $event->delete();
 
         return redirect()->route('admin.events.index')->with('success', 'Đã xóa sự kiện.');
     }
 
     /** Chỉ xóa file đã upload lên disk public, bỏ qua poster là URL ngoài (dữ liệu seed). */
-    private function deleteStoredPoster(Event $event): void
+    private function storePoster(UploadedFile $poster, GoogleDriveService $googleDrive): string
     {
-        if ($event->poster_path && ! Str::startsWith($event->poster_path, ['http://', 'https://'])) {
-            Storage::disk('public')->delete($event->poster_path);
+        if ($googleDrive->isEnabled()) {
+            $url = $googleDrive->upload($poster);
+            if ($url !== null) {
+                return $url;
+            }
         }
+
+        return $poster->store('posters', 'public');
+    }
+
+    private function deleteStoredPoster(Event $event, GoogleDriveService $googleDrive): void
+    {
+        if (! $event->poster_path) {
+            return;
+        }
+
+        if (Str::startsWith($event->poster_path, ['http://', 'https://'])) {
+            $fileId = $googleDrive->extractFileId($event->poster_path);
+            if ($fileId !== null) {
+                $googleDrive->delete($fileId);
+            }
+
+            return;
+        }
+
+        Storage::disk('public')->delete($event->poster_path);
     }
 }

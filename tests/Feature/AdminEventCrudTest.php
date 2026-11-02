@@ -6,6 +6,7 @@ use App\Models\Room;
 use App\Models\Seat;
 use App\Models\Showtime;
 use App\Models\ShowtimeSeat;
+use App\Services\GoogleDriveService;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 
@@ -46,6 +47,63 @@ test('admin creates an event with a poster and structured details', function () 
         ->and($event->timeline[1])->toBe(['time' => '19:30', 'title' => 'Mở màn', 'desc' => '']);
 
     Storage::disk('public')->assertExists($event->poster_path);
+});
+
+test('admin event poster uploads to Google Drive when it is enabled', function () {
+    $drive = Mockery::mock(GoogleDriveService::class);
+    $drive->shouldReceive('isEnabled')->once()->andReturn(true);
+    $drive->shouldReceive('upload')->once()->with(Mockery::on(fn ($file) => $file instanceof UploadedFile))
+        ->andReturn('https://drive.google.com/uc?export=view&id=drive_file_123');
+    $this->app->instance(GoogleDriveService::class, $drive);
+
+    $this->actingAs(createAdmin())
+        ->post(route('admin.events.store'), eventPayload([
+            'poster' => UploadedFile::fake()->create('poster.jpg', 100, 'image/jpeg'),
+        ]))
+        ->assertRedirect(route('admin.events.index'));
+
+    $event = Event::firstWhere('title', 'Đêm Nhạc Trịnh');
+    expect($event->poster_path)->toBe('https://drive.google.com/uc?export=view&id=drive_file_123');
+    Storage::disk('public')->assertDirectoryEmpty('posters');
+});
+
+test('admin event poster falls back to local storage when Drive upload fails', function () {
+    $drive = Mockery::mock(GoogleDriveService::class);
+    $drive->shouldReceive('isEnabled')->once()->andReturn(true);
+    $drive->shouldReceive('upload')->once()->andReturnNull();
+    $this->app->instance(GoogleDriveService::class, $drive);
+
+    $this->actingAs(createAdmin())
+        ->post(route('admin.events.store'), eventPayload([
+            'poster' => UploadedFile::fake()->create('poster.jpg', 100, 'image/jpeg'),
+        ]))
+        ->assertRedirect(route('admin.events.index'));
+
+    $event = Event::firstWhere('title', 'Đêm Nhạc Trịnh');
+    expect($event->poster_path)->toStartWith('posters/');
+    Storage::disk('public')->assertExists($event->poster_path);
+});
+
+test('updating an event poster deletes the old Drive file and stores the new one', function () {
+    $event = Event::factory()->create([
+        'poster_path' => 'https://drive.google.com/uc?export=view&id=old_drive_file',
+    ]);
+    $drive = Mockery::mock(GoogleDriveService::class);
+    $drive->shouldReceive('isEnabled')->once()->andReturn(true);
+    $drive->shouldReceive('upload')->once()->with(Mockery::on(fn ($file) => $file instanceof UploadedFile))
+        ->andReturn('https://drive.google.com/uc?export=view&id=new_drive_file');
+    $drive->shouldReceive('extractFileId')->once()->with('https://drive.google.com/uc?export=view&id=old_drive_file')
+        ->andReturn('old_drive_file');
+    $drive->shouldReceive('delete')->once()->with('old_drive_file')->andReturn(true);
+    $this->app->instance(GoogleDriveService::class, $drive);
+
+    $this->actingAs(createAdmin())
+        ->put(route('admin.events.update', $event), eventPayload([
+            'poster' => UploadedFile::fake()->create('new-poster.jpg', 100, 'image/jpeg'),
+        ]))
+        ->assertRedirect(route('admin.events.index'));
+
+    expect($event->fresh()->poster_path)->toBe('https://drive.google.com/uc?export=view&id=new_drive_file');
 });
 
 test('updating an event keeps detail keys the form does not edit', function () {
