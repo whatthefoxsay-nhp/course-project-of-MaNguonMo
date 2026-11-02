@@ -141,7 +141,7 @@
                 <!-- Admin Demo Quick Button (Antique Gold) -->
                 <button 
                     type="button" 
-                    @click="emailVal = @js(config('app.admin_email')); passVal = '';"
+                    @click="emailVal = @js(config('app.admin_email')); passVal = 'password';"
                     class="p-3.5 rounded-2xl bg-gradient-to-br from-amber-50/90 via-orange-50/40 to-amber-100/60 hover:from-amber-100 hover:to-orange-100/80 border border-amber-200/80 hover:border-amber-300 text-left transition-all shadow-2xs group cursor-pointer"
                 >
                     <div class="text-xs text-slate-900 font-black flex items-center justify-between">
