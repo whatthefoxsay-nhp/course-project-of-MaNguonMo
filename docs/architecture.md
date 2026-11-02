@@ -41,6 +41,7 @@ Cập nhật file này mỗi khi kiến trúc hoặc yêu cầu dự án thay đ
 | **2026-10-26** | **Tương tác AJAX (Plan 4)** | Bình luận thêm/xóa không tải lại (`CommentController` JSON, `CommentPolicy`: chủ bình luận hoặc admin, throttle 10/phút, render bằng `x-text`); gợi ý tìm kiếm `GET /search/suggestions` (≥ 2 ký tự, tối đa 6, debounce 250ms); upload ảnh đại diện (disk `public/avatars`, ≤ 1MB) | Spec mục 2 "AJAX bình luận, tìm kiếm gợi ý" và "Upload avatar". |
 | **2026-10-26** | **API ngoài (Plan 5)** | Google Maps: Maps Embed API khi có `GOOGLE_MAPS_EMBED_KEY`, không có key thì dùng link nhúng công khai (`MapEmbed`). OpenWeatherMap: dự báo 5 ngày/3 giờ, chọn mốc gần giờ diễn nhất, cache 30 phút, lỗi/thiếu key → hiện "Chưa có dự báo" (`WeatherService`). Admin nhập tọa độ địa điểm | Trang không phụ thuộc API ngoài sống hay chết; demo được khi chưa có key Maps. |
 | **2026-10-26** | **Phạm vi thời tiết** | Hiển thị cho mọi địa điểm có tọa độ, không chỉ sự kiện ngoài trời | Chưa có cờ trong nhà/ngoài trời; thêm cờ là mở rộng phạm vi. |
+| **2026-11-02** | **Drive & Gmail ticket (Plan 9)** | Poster sự kiện upload lên Drive bằng Service Account, chia sẻ công khai để hiển thị; thiếu credential/lỗi API thì lưu local. Checkout xếp `BookingConfirmationMail` vào queue; mail có HTML và PDF vé QR. Gmail API dùng OAuth refresh token; thiếu cấu hình thì dùng SMTP | Tách thông tin đăng nhập Drive khỏi quyền gửi Gmail; không mở rộng Google OAuth đăng nhập hiện tại. Service Account yêu cầu Shared Drive có quyền phù hợp; tài khoản Google cá nhân không có Shared Drive thì cần OAuth người dùng để ghi vào My Drive. |
 
 ### 2a. Sơ đồ chỗ ngồi theo khu vực
 
@@ -59,6 +60,14 @@ seats(+ zone_id, + pos_col)   -- pos_col = vị trí ô trong hàng; ô trống 
 - **Admin** (`RoomLayoutRequest`): kiểm tra JSON sơ đồ (mã khu, nhãn hàng không trùng, ô trỏ đúng khu, sức chứa khu đứng 1–2.000, tổng ≤ 5.000 chỗ). Địa điểm đã có suất diễn chỉ sửa được tên/giá/màu/cổng/mô tả của khu, không đổi ghế.
 - **Bỏ**: vé "Combo nhóm 2 người" (`combo_pass`) và hạng VIP Pass/Standard Pass cố định — thay bằng khu của địa điểm.
 
+### 2b. Google Drive image storage & Gmail ticket delivery (Plan 9)
+
+- **Poster sự kiện**: `GoogleDriveService` upload vào thư mục con `posters`, đặt quyền `anyone/reader`, và lưu URL trong `events.poster_path`. Khi Drive tắt hoặc upload lỗi, `Admin\EventController` dùng disk `public`; khi thay/xóa poster, hệ thống xóa file Drive hoặc file local tương ứng.
+- **Drive credential**: Service Account JSON ở `storage/app/google/service-account.json` (đã gitignore), `GOOGLE_DRIVE_FOLDER_ID` trỏ tới thư mục gốc. Scope dùng `drive.file`. Service Account không có quota và không sở hữu file trong My Drive; cần thư mục trong Shared Drive mà tài khoản dịch vụ được phép tạo/xóa file. Nếu chỉ có Google Drive cá nhân, cần bổ sung luồng OAuth người dùng thay cho Service Account.
+- **Gửi vé**: `CheckoutService` queue `BookingConfirmationMail` sau transaction tạo booking. Worker dựng HTML và `TicketPdfService` tạo PDF A5 ngang chứa QR theo `booking_code`. `QUEUE_CONNECTION=database` cần chạy `php artisan queue:work`; `sync` gửi ngay trong request checkout.
+- **Gmail**: transport `gmail_api` gửi MIME message bằng Gmail API với scope `gmail.send` và `GMAIL_OAUTH_REFRESH_TOKEN`. `MAIL_MAILER=gmail_api` dùng Gmail API khi đủ credential; cấu hình thiếu thì transport dùng SMTP từ `mail.mailers.smtp`. Địa chỉ `MAIL_FROM_ADDRESS` nên trùng `GMAIL_SENDER_EMAIL`.
+- **Biến môi trường**: xem `.env.example` cho `GOOGLE_DRIVE_*`, `GOOGLE_SERVICE_ACCOUNT_JSON`, `GMAIL_API_*`, `GMAIL_OAUTH_*` và cấu hình SMTP. Không commit Service Account JSON, OAuth client secret hay refresh token.
+
 ---
 
 ## 3. Bảng Màu & Phân Bổ Token (Design Tokens)
@@ -74,10 +83,11 @@ seats(+ zone_id, + pos_col)   -- pos_col = vị trí ô trong hàng; ô trống 
 ---
 
 ## 4. Kiểm thử & Độ bao phủ (Test Suite)
-- Toàn bộ tính năng đều được kiểm thử bằng Pest PHP (`php artisan test`): **278 tests / 1792 assertions (Pass 100%, 2026-10-26)**.
+- Toàn bộ tính năng đều được kiểm thử bằng Pest PHP (`php artisan test`): **302 tests / 1936 assertions (Pass 100%, 2026-11-02)**.
 - Bao gồm Feature Test cho:
   - Admin: Dashboard Real Data, Booking Management & Seat Release, Discount CRUD, Room Safety, Locked User, Category CRUD, Event CRUD, Showtime CRUD, User Role & Password Management.
   - Public & Engine: Public Catalog, Seat Map Page, Ticket Tiers & Seat Pricing, SeatHoldService, SeatHoldHttp, Checkout, Cart & Booking History.
+  - Drive & mail: Google Drive upload/disabled fallback, Gmail API transport/SMTP fallback, PDF ticket QR, booking confirmation content and attachment.
 
 ---
 
