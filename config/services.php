@@ -47,6 +47,14 @@ return [
         'service_account' => env('GOOGLE_SERVICE_ACCOUNT_JSON', 'storage/app/google/service-account.json'),
     ],
 
+    'gmail_api' => [
+        'enabled' => env('GMAIL_API_ENABLED', false),
+        'sender_email' => env('GMAIL_SENDER_EMAIL'),
+        'client_id' => env('GMAIL_OAUTH_CLIENT_ID'),
+        'client_secret' => env('GMAIL_OAUTH_CLIENT_SECRET'),
+        'refresh_token' => env('GMAIL_OAUTH_REFRESH_TOKEN'),
+    ],
+
     'google_maps' => [
         'embed_key' => env('GOOGLE_MAPS_EMBED_KEY'),
     ],
