@@ -32,7 +32,7 @@ class DatabaseSeeder extends Seeder
 
         // 2. Create Official Demo Users (Admin & Customer)
         $admin = User::firstOrCreate(
-            ['email' => 'admin@ticketbox.vn'],
+            ['email' => config('app.admin_email', 'admin@ticketbox.vn')],
             [
                 'name' => 'Quản Trị Viên (Admin)',
                 'phone' => '0901234567',
