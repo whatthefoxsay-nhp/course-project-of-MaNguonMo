@@ -7,9 +7,12 @@
     "license": "MIT",
     "require": {
         "php": "^8.2",
+        "barryvdh/laravel-dompdf": "*",
+        "google/apiclient": "*",
         "laravel/framework": "^11.31",
         "laravel/socialite": "^5.31",
         "laravel/tinker": "^2.9",
+        "simplesoftwareio/simple-qrcode": "*",
         "spatie/laravel-permission": "^6.25"
     },
     "require-dev": {
