@@ -8,6 +8,7 @@ use Google\Service\Drive\DriveFile;
 use Google\Service\Drive\Permission;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Log;
+use RuntimeException;
 use Throwable;
 
 class GoogleDriveService
@@ -26,7 +27,7 @@ class GoogleDriveService
     {
         return (bool) config('services.google_drive.enabled')
             && trim((string) config('services.google_drive.folder_id')) !== ''
-            && is_file($this->credentialPath());
+            && ($this->hasOAuthCredentials() || is_file($this->credentialPath()));
     }
 
     public function upload(UploadedFile $file, string $subfolder = 'posters'): ?string
@@ -133,10 +134,32 @@ class GoogleDriveService
         }
 
         $client = $this->client ?? new Client;
-        $client->setAuthConfig($this->credentialPath());
-        $client->addScope(Drive::DRIVE_FILE);
+        if ($this->hasOAuthCredentials()) {
+            $client->setClientId((string) config('services.google_drive.client_id'));
+            $client->setClientSecret((string) config('services.google_drive.client_secret'));
+            $client->setAccessType('offline');
+            // This app writes into a user-selected existing My Drive folder.
+            $client->addScope(Drive::DRIVE);
+            $token = $client->fetchAccessTokenWithRefreshToken(
+                (string) config('services.google_drive.refresh_token')
+            );
+            if (isset($token['error'])) {
+                throw new RuntimeException('Google Drive OAuth token refresh failed.');
+            }
+            $client->setAccessToken($token);
+        } else {
+            $client->setAuthConfig($this->credentialPath());
+            $client->addScope(Drive::DRIVE_FILE);
+        }
 
         return $this->drive = new Drive($client);
+    }
+
+    private function hasOAuthCredentials(): bool
+    {
+        return trim((string) config('services.google_drive.client_id')) !== ''
+            && trim((string) config('services.google_drive.client_secret')) !== ''
+            && trim((string) config('services.google_drive.refresh_token')) !== '';
     }
 
     /** @param list<string> $parents */

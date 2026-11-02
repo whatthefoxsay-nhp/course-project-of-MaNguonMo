@@ -40,6 +40,19 @@ it('reports disabled when Drive is not enabled or credentials are missing', func
     expect(app(GoogleDriveService::class)->isEnabled())->toBeFalse();
 });
 
+it('enables Drive with personal-account OAuth credentials without a service-account file', function () {
+    config([
+        'services.google_drive.enabled' => true,
+        'services.google_drive.folder_id' => 'folder-123',
+        'services.google_drive.service_account' => 'missing-service-account.json',
+        'services.google_drive.client_id' => 'client-id',
+        'services.google_drive.client_secret' => 'client-secret',
+        'services.google_drive.refresh_token' => 'refresh-token',
+    ]);
+
+    expect(app(GoogleDriveService::class)->isEnabled())->toBeTrue();
+});
+
 it('uploads an image, makes it public, and returns a direct view URL', function () {
     $credential = driveCredentialFile();
     config([

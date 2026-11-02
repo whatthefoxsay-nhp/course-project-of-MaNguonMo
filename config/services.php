@@ -45,6 +45,9 @@ return [
         'enabled' => env('GOOGLE_DRIVE_ENABLED', false),
         'folder_id' => env('GOOGLE_DRIVE_FOLDER_ID'),
         'service_account' => env('GOOGLE_SERVICE_ACCOUNT_JSON', 'storage/app/google/service-account.json'),
+        'client_id' => env('GOOGLE_DRIVE_OAUTH_CLIENT_ID'),
+        'client_secret' => env('GOOGLE_DRIVE_OAUTH_CLIENT_SECRET'),
+        'refresh_token' => env('GOOGLE_DRIVE_OAUTH_REFRESH_TOKEN'),
     ],
 
     'gmail_api' => [
