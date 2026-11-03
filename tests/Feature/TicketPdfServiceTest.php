@@ -44,6 +44,6 @@ it('generates a PDF ticket with booking details and a QR code', function () {
     $html = view('tickets.pdf', ['booking' => $booking->fresh()])->render();
     $pdf = app(TicketPdfService::class)->generate($booking->fresh());
 
-    expect($html)->toContain('TBX-PDF12345', 'Đêm nhạc mùa thu', 'Nhà hát Hòa Bình', 'A12')
+    expect($html)->toContain('TBX-PDF12345', 'Đêm nhạc mùa thu', 'Nhà hát Hòa Bình', 'A12', 'data:image/svg+xml;base64,')
         ->and($pdf)->toStartWith('%PDF-');
 });

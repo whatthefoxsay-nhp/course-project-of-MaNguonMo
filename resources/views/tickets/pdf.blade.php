@@ -4,26 +4,28 @@
     <meta charset="UTF-8">
     <title>Vé {{ $booking->booking_code }}</title>
     <style>
-        @page { margin: 22px; }
+        @page { margin: 16px; }
         * { box-sizing: border-box; }
         body { margin: 0; background: #101112; color: #f7f2e8; font-family: "DejaVu Sans", sans-serif; }
-        .ticket { border: 2px solid #c8a96a; border-radius: 16px; min-height: 500px; padding: 26px 30px; position: relative; }
-        .brand { color: #c8a96a; font-size: 11px; letter-spacing: 3px; text-transform: uppercase; }
-        .heading { color: #fff; font-size: 24px; margin: 18px 0 5px; }
-        .code { color: #d8bd83; font-size: 13px; letter-spacing: 2px; }
-        .details { border-collapse: collapse; margin-top: 24px; width: 72%; }
-        .details td { border-bottom: 1px solid #383838; padding: 8px 6px; vertical-align: top; }
+        .ticket { border: 2px solid #c8a96a; border-radius: 16px; height: 440px; padding: 22px 26px; position: relative; }
+        .brand { color: #c8a96a; font-size: 10px; letter-spacing: 3px; text-transform: uppercase; }
+        .heading { color: #fff; font-size: 21px; margin: 14px 0 5px; }
+        .code { color: #d8bd83; font-size: 12px; letter-spacing: 2px; }
+        .details { border-collapse: collapse; margin-top: 18px; width: 72%; }
+        .details td { border-bottom: 1px solid #383838; padding: 6px; vertical-align: top; }
         .label { color: #b6ad9c; font-size: 9px; text-transform: uppercase; width: 118px; }
-        .value { color: #fff; font-size: 11px; }
-        .qr { position: absolute; right: 30px; top: 105px; text-align: center; width: 130px; }
-        .qr svg { height: 112px; width: 112px; background: #fff; padding: 7px; }
-        .qr-label { color: #b6ad9c; font-size: 8px; margin-top: 8px; }
-        .footer { border-top: 1px solid #383838; bottom: 20px; color: #b6ad9c; font-size: 8px; left: 30px; padding-top: 10px; position: absolute; right: 30px; }
+        .value { color: #fff; font-size: 10px; }
+        .qr { position: absolute; right: 24px; top: 92px; text-align: center; width: 124px; }
+        .qr img { background: #fff; border: 5px solid #fff; height: 112px; width: 112px; }
+        .qr-label { color: #b6ad9c; font-size: 7px; margin-top: 7px; }
+        .footer { border-top: 1px solid #383838; bottom: 15px; color: #b6ad9c; font-size: 7px; left: 26px; padding-top: 8px; position: absolute; right: 26px; }
         .seat-list { margin: 0; padding: 0; }
         .seat-list li { list-style: none; margin-bottom: 3px; }
     </style>
 </head>
 <body>
+    @php($qrSvg = \SimpleSoftwareIO\QrCode\Facades\QrCode::format('svg')->size(280)->margin(2)->generate('TICKETBOX_AUTH_PASS_'.$booking->booking_code))
+    @php($qrDataUri = 'data:image/svg+xml;base64,'.base64_encode($qrSvg))
     <main class="ticket">
         <div class="brand">{{ config('app.name') }} · Vé điện tử</div>
         <h1 class="heading">Vé xác nhận đặt chỗ</h1>
@@ -75,7 +77,7 @@
         </table>
 
         <aside class="qr">
-            {!! \SimpleSoftwareIO\QrCode\Facades\QrCode::format('svg')->size(240)->margin(0)->generate($booking->booking_code) !!}
+            <img src="{{ $qrDataUri }}" alt="QR {{ $booking->booking_code }}">
             <div class="qr-label">Quét mã để xác nhận vé</div>
         </aside>
 
