@@ -105,6 +105,37 @@ class GoogleDriveService
         }
     }
 
+    /** @return array{content: string, mime_type: string}|null */
+    public function downloadImage(string $fileId): ?array
+    {
+        if (! $this->isEnabled() || ! preg_match('/^[A-Za-z0-9_-]+$/', $fileId)) {
+            return null;
+        }
+
+        try {
+            $response = $this->drive()->files->get($fileId, [
+                'alt' => 'media',
+                'supportsAllDrives' => true,
+            ]);
+            $mimeType = strtolower(trim(explode(';', $response->getHeaderLine('Content-Type'))[0]));
+
+            if (! in_array($mimeType, ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/avif'], true)) {
+                return null;
+            }
+
+            return [
+                'content' => $response->getBody()->getContents(),
+                'mime_type' => $mimeType,
+            ];
+        } catch (Throwable $exception) {
+            Log::warning('Google Drive image download failed.', [
+                'exception' => $exception::class,
+            ]);
+
+            return null;
+        }
+    }
+
     public function extractFileId(string $url): ?string
     {
         $parts = parse_url($url);

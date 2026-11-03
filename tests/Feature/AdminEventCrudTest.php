@@ -67,12 +67,30 @@ test('admin can edit an event whose legacy detail rows are strings', function ()
         ->assertSee('18:00 | Legacy timeline row');
 });
 
-test('event poster URLs from Drive are normalized for inline image display', function () {
+test('event poster URLs from Drive use the same-origin image route', function () {
     $event = Event::factory()->create([
         'poster_path' => 'https://drive.google.com/uc?id=drive_file_123&export=download',
     ]);
 
-    expect($event->poster_url)->toBe('https://drive.google.com/uc?export=view&id=drive_file_123');
+    expect($event->poster_url)->toBe(route('events.poster', $event));
+});
+
+test('public event poster route streams Drive image bytes from the same origin', function () {
+    $event = Event::factory()->create([
+        'poster_path' => 'https://drive.google.com/uc?id=drive_file_123&export=download',
+    ]);
+    $drive = Mockery::mock(GoogleDriveService::class);
+    $drive->shouldReceive('extractFileId')->once()
+        ->with('https://drive.google.com/uc?id=drive_file_123&export=download')
+        ->andReturn('drive_file_123');
+    $drive->shouldReceive('downloadImage')->once()->with('drive_file_123')
+        ->andReturn(['content' => 'image bytes', 'mime_type' => 'image/jpeg']);
+    $this->app->instance(GoogleDriveService::class, $drive);
+
+    $this->get(route('events.poster', $event))
+        ->assertOk()
+        ->assertHeader('Content-Type', 'image/jpeg')
+        ->assertContent('image bytes');
 });
 
 test('admin event poster uploads to Google Drive when it is enabled', function () {

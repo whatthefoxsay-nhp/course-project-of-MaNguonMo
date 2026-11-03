@@ -111,7 +111,7 @@ class Event extends Model
             if (str_starts_with($this->poster_path, 'http://') || str_starts_with($this->poster_path, 'https://')) {
                 $driveFileId = $this->extractGoogleDriveFileId($this->poster_path);
                 if ($driveFileId !== null) {
-                    return "https://drive.google.com/uc?export=view&id={$driveFileId}";
+                    return route('events.poster', $this);
                 }
 
                 return $this->poster_path;

@@ -115,6 +115,30 @@ it('returns null for local fallback when Drive is disabled', function () {
     expect(app(GoogleDriveService::class)->upload(UploadedFile::fake()->create('poster.png', 1, 'image/png')))->toBeNull();
 });
 
+it('downloads image bytes from Drive for same-origin image responses', function () {
+    $credential = driveCredentialFile();
+    config([
+        'services.google_drive.enabled' => true,
+        'services.google_drive.folder_id' => 'folder-123',
+        'services.google_drive.service_account' => $credential,
+        'services.google_drive.client_id' => '',
+        'services.google_drive.client_secret' => '',
+        'services.google_drive.refresh_token' => '',
+    ]);
+
+    $fileResource = Mockery::mock(Files::class);
+    $drive = Mockery::mock(Drive::class);
+    $drive->files = $fileResource;
+    $fileResource->shouldReceive('get')
+        ->once()
+        ->with('file_123', ['alt' => 'media', 'supportsAllDrives' => true])
+        ->andReturn(new GuzzleHttp\Psr7\Response(200, ['Content-Type' => 'image/jpeg'], 'image bytes'));
+
+    $image = (new GoogleDriveService(drive: $drive))->downloadImage('file_123');
+
+    expect($image)->toBe(['content' => 'image bytes', 'mime_type' => 'image/jpeg']);
+});
+
 it('extracts file IDs only from supported Google Drive URLs', function () {
     $service = app(GoogleDriveService::class);
 
