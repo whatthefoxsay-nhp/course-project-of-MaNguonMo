@@ -4,22 +4,22 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Booking;
-use App\Models\Category;
-use App\Models\Movie;
+use App\Models\Event;
 use App\Models\Room;
 use App\Models\Showtime;
 use App\Models\ShowtimeSeat;
+use App\Services\SalesReportService;
 use Illuminate\View\View;
 
 class DashboardController extends Controller
 {
-    public function __invoke(): View
+    public function __invoke(SalesReportService $sales): View
     {
         // 1. KPI Statistics
         $totalRevenue = Booking::where('status', 'confirmed')->sum('total_price');
         $totalBookings = Booking::count();
         $confirmedBookings = Booking::where('status', 'confirmed')->count();
-        $activeEventsCount = Movie::where('status', 'published')->count();
+        $activeEventsCount = Event::where('status', 'published')->count();
         $activeShowtimesCount = Showtime::where('start_time', '>=', now()->startOfDay())->count();
 
         // Calculate overall seat occupancy
@@ -28,16 +28,10 @@ class DashboardController extends Controller
         $occupancyRate = $totalShowtimeSeats > 0 ? round(($bookedShowtimeSeats / $totalShowtimeSeats) * 100, 1) : 0;
 
         // 2. Room Occupancy Rates
-        $rooms = Room::with(['seats', 'showtimes.showtimeSeats'])->get()->map(function ($room) {
-            $totalSeats = $room->seats->count();
-            $roomShowtimes = $room->showtimes;
-            $totalShowtimeSeatsCount = 0;
-            $bookedSeatsCount = 0;
-
-            foreach ($roomShowtimes as $st) {
-                $totalShowtimeSeatsCount += $st->showtimeSeats->count();
-                $bookedSeatsCount += $st->showtimeSeats->where('status', 'booked')->count();
-            }
+        $roomOccupancy = $sales->seatOccupancyBy('room_id');
+        $rooms = Room::query()->get()->map(function ($room) use ($roomOccupancy) {
+            $totalShowtimeSeatsCount = $roomOccupancy[$room->id]['total'] ?? 0;
+            $bookedSeatsCount = $roomOccupancy[$room->id]['booked'] ?? 0;
 
             $rate = $totalShowtimeSeatsCount > 0 ? round(($bookedSeatsCount / $totalShowtimeSeatsCount) * 100, 1) : 0;
 
@@ -50,39 +44,14 @@ class DashboardController extends Controller
             ];
         });
 
-        // 3. Category Revenue Distribution
-        $categories = Category::with(['movies.showtimes.showtimeSeats.bookingItems.booking'])->get()->map(function ($cat) {
-            $catRevenue = 0;
-            $ticketCount = 0;
-            foreach ($cat->movies as $movie) {
-                foreach ($movie->showtimes as $st) {
-                    foreach ($st->showtimeSeats as $stSeat) {
-                        if ($stSeat->status === 'booked' && $stSeat->bookingItems->isNotEmpty()) {
-                            foreach ($stSeat->bookingItems as $item) {
-                                if ($item->booking && $item->booking->status === 'confirmed') {
-                                    $catRevenue += $item->price;
-                                    $ticketCount++;
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-            return [
-                'name' => $cat->name,
-                'revenue' => $catRevenue,
-                'tickets' => $ticketCount,
-            ];
-        });
+        // 3. Category Revenue Distribution (vé chọn ghế + vé theo khu của đơn đã xác nhận)
+        $categories = $sales->categoriesRevenue();
 
         // 4. Top Performing Events
-        $topEvents = Movie::with(['category', 'showtimes.showtimeSeats'])->get()->map(function ($event) {
-            $totalEventSeats = 0;
-            $bookedEventSeats = 0;
-            foreach ($event->showtimes as $st) {
-                $totalEventSeats += $st->showtimeSeats->count();
-                $bookedEventSeats += $st->showtimeSeats->where('status', 'booked')->count();
-            }
+        $eventOccupancy = $sales->seatOccupancyBy('event_id');
+        $topEvents = Event::with('category')->get()->map(function ($event) use ($eventOccupancy) {
+            $totalEventSeats = $eventOccupancy[$event->id]['total'] ?? 0;
+            $bookedEventSeats = $eventOccupancy[$event->id]['booked'] ?? 0;
 
             $fillRate = $totalEventSeats > 0 ? round(($bookedEventSeats / $totalEventSeats) * 100, 1) : 0;
 

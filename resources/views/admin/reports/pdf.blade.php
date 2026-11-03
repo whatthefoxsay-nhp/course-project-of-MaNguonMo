@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Báo Cáo Doanh Thu Bán Vé - TicketBox Official</title>
+    <title>Báo Cáo Doanh Thu Bán Vé - TicketBox</title>
     
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -51,8 +51,8 @@
                     </div>
                     <span class="font-display font-black text-xl tracking-tight">TICKETBOX PLATFORM</span>
                 </div>
-                <p class="text-xs text-gray-500 mt-1">Hệ thống phân phối &amp; quản lý vé sự kiện toàn quốc</p>
-                <p class="text-xs text-gray-500">Website: https://ticketbox.vn | Hotline: 1900 6408</p>
+                <p class="text-xs text-gray-500 mt-1">Hệ thống quản lý đặt vé sự kiện</p>
+                <p class="text-xs text-gray-500">Đồ án môn Mã nguồn mở — báo cáo phục vụ mục đích học tập</p>
             </div>
 
             <div class="text-right text-xs">

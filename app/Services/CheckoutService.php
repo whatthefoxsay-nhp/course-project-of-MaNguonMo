@@ -2,26 +2,48 @@
 
 namespace App\Services;
 
+use App\Exceptions\DiscountException;
 use App\Exceptions\SeatHoldException;
 use App\Mail\BookingConfirmationMail;
 use App\Models\Booking;
+use App\Models\Showtime;
 use App\Models\ShowtimeSeat;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
+use Throwable;
 
 class CheckoutService
 {
     public const PAYMENT_METHODS = ['vietqr', 'momo', 'zalopay', 'card'];
 
-    /**
-     * Thanh toán giả lập (spec mục 5): ghế đang giữ -> đơn "confirmed".
-     *
-     * @throws SeatHoldException
-     */
-    public function checkout(User $user, string $paymentMethod): Booking
+    public function __construct(private readonly DiscountService $discounts)
     {
-        $booking = DB::transaction(function () use ($user, $paymentMethod) {
+    }
+
+    /** Tạm tính các vé user đang giữ (chưa hết hạn) — dùng cho bước áp mã giảm giá ở giỏ vé. */
+    public function heldSubtotal(User $user): int
+    {
+        return (int) ShowtimeSeat::heldBy($user)->with('seat', 'showtime')->get()
+            ->sum(fn (ShowtimeSeat $seat) => self::seatPrice($seat));
+    }
+
+    private static function seatPrice(ShowtimeSeat $seat): int
+    {
+        return (int) ($seat->price_override ?? $seat->effective_price);
+    }
+
+    /**
+     * Thanh toán giả lập (spec mục 5): ghế đang giữ -> đơn "confirmed", rồi gửi mail xác nhận kèm vé PDF.
+     *
+     * @param  array{name?: ?string, phone?: ?string, email?: ?string}  $buyer  người nhận vé (mặc định lấy từ tài khoản)
+     * @param  ?string  $discountCode  mã giảm giá (kiểm tra lại & tính tiền giảm phía server)
+     *
+     * @throws SeatHoldException|DiscountException
+     */
+    public function checkout(User $user, string $paymentMethod, array $buyer = [], ?string $discountCode = null): Booking
+    {
+        $booking = DB::transaction(function () use ($user, $paymentMethod, $buyer, $discountCode) {
             $seats = ShowtimeSeat::heldBy($user)
                 ->with(['seat', 'showtime'])
                 ->lockForUpdate()
@@ -31,13 +53,29 @@ class CheckoutService
                 throw new SeatHoldException('Giỏ vé trống hoặc đã hết thời gian giữ chỗ. Vui lòng chọn lại ghế.');
             }
 
-            $priceOf = fn (ShowtimeSeat $seat) => $seat->price_override ?? $seat->effective_price;
+            $this->ensureShowtimesBookable($seats->pluck('showtime'));
+
+            $priceOf = fn (ShowtimeSeat $seat) => self::seatPrice($seat);
+            $subtotal = $seats->sum($priceOf);
+
+            $discount = null;
+            $discountAmount = 0;
+            if ($discountCode !== null && trim($discountCode) !== '') {
+                // Khóa dòng mã giảm giá để 2 đơn đồng thời không vượt quá max_uses.
+                [$discount, $discountAmount] = $this->discounts->resolve($discountCode, $subtotal, lockForUpdate: true);
+                $discount->increment('used_count');
+            }
 
             $booking = Booking::create([
                 'user_id' => $user->id,
-                'total_price' => $seats->sum($priceOf),
+                'total_price' => $subtotal - $discountAmount,
+                'discount_id' => $discount?->id,
+                'discount_amount' => $discountAmount,
                 'status' => 'confirmed',
                 'payment_method' => $paymentMethod,
+                'buyer_name' => array_key_exists('name', $buyer) ? $buyer['name'] : $user->name,
+                'buyer_phone' => array_key_exists('phone', $buyer) ? $buyer['phone'] : $user->phone,
+                'buyer_email' => array_key_exists('email', $buyer) ? $buyer['email'] : $user->email,
             ]);
 
             foreach ($seats as $seat) {
@@ -56,8 +94,35 @@ class CheckoutService
             return $booking;
         });
 
-        Mail::to($user->email)->queue(new BookingConfirmationMail($booking));
+        // Đơn đã lưu; lỗi gửi mail (Gmail API, mạng...) chỉ ghi log, không làm hỏng bước thanh toán.
+        try {
+            Mail::to($booking->buyer_email ?: $user->email)->queue(new BookingConfirmationMail($booking));
+        } catch (Throwable $exception) {
+            report($exception);
+        }
 
         return $booking;
+    }
+
+    /**
+     * Kiểm tra lại lúc thanh toán: suất chưa bắt đầu và sự kiện vẫn đang mở bán
+     * (admin có thể ẩn sự kiện hoặc suất đã qua giờ trong lúc khách đang giữ vé).
+     *
+     * @param  iterable<int, Showtime|null>  $showtimes
+     *
+     * @throws SeatHoldException
+     */
+    private function ensureShowtimesBookable(iterable $showtimes): void
+    {
+        foreach (collect($showtimes)->filter()->unique('id') as $showtime) {
+            $showtime->loadMissing('event');
+
+            if ($showtime->event?->status !== 'published') {
+                throw new SeatHoldException('Sự kiện hiện không mở bán, không thể thanh toán.');
+            }
+            if ($showtime->start_time->isPast()) {
+                throw new SeatHoldException('Suất diễn đã bắt đầu, không thể thanh toán.');
+            }
+        }
     }
 }

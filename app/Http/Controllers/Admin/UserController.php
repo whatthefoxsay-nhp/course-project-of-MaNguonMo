@@ -8,6 +8,8 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use Illuminate\View\View;
 use Spatie\Permission\Models\Role;
 
@@ -147,14 +149,21 @@ class UserController extends Controller
     }
 
     /**
-     * Reset password to default temporary password.
+     * Reset password to a random temporary password and sign the user out everywhere.
      */
     public function resetPassword(Request $request, User $user): RedirectResponse
     {
-        $tempPassword = 'TicketBox@' . date('Y');
+        $tempPassword = Str::password(10, symbols: false);
         $user->password = $tempPassword;
+        $user->setRememberToken(Str::random(60));
         $user->save();
 
-        return back()->with('success', "Đã đặt lại mật khẩu cho tài khoản [{$user->name}] thành: {$tempPassword}");
+        // Đăng xuất mọi thiết bị: remember_token đã đổi ở trên; phiên lưu DB thì xóa luôn.
+        // Driver khác (file/redis) không tra được theo user, phiên cũ hết khi hết hạn.
+        if (config('session.driver') === 'database') {
+            DB::table(config('session.table', 'sessions'))->where('user_id', $user->id)->delete();
+        }
+
+        return back()->with('success', "Đã đặt lại mật khẩu cho tài khoản [{$user->name}]. Mật khẩu tạm thời (chỉ hiển thị một lần): {$tempPassword}");
     }
 }

@@ -13,7 +13,10 @@ class StoreCommentRequest extends FormRequest
 
     protected function prepareForValidation(): void
     {
-        $this->merge(['content' => trim((string) $this->input('content'))]);
+        // Mảng/kiểu lạ để nguyên cho rule 'string' trả 422, không ép kiểu gây lỗi 500.
+        if (is_string($this->input('content'))) {
+            $this->merge(['content' => trim($this->input('content'))]);
+        }
     }
 
     public function rules(): array

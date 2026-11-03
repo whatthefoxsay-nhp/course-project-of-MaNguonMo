@@ -60,3 +60,37 @@ test('event page lists upcoming showtimes only', function () {
         ->assertOk()
         ->assertViewHas('showtimes', fn (array $showtimes) => count($showtimes) === 1);
 });
+
+test('home page filters events by category tab in backend', function () {
+    $this->get(route('home', ['category' => 'concert']))
+        ->assertOk()
+        ->assertViewHas('movies', function ($events) {
+            $titles = collect($events)->pluck('title');
+            return $titles->contains('Live Concert: Anh Trai Vượt Ngàn Chông Gai 2026')
+                && ! $titles->contains('Vietnam Tech Summit & Global AI Expo 2026');
+        });
+
+    $this->get(route('home', ['category' => 'expo']))
+        ->assertOk()
+        ->assertViewHas('movies', function ($events) {
+            $titles = collect($events)->pluck('title');
+            return $titles->contains('Vietnam Tech Summit & Global AI Expo 2026')
+                && ! $titles->contains('Live Concert: Anh Trai Vượt Ngàn Chông Gai 2026');
+        });
+});
+
+test('home page category filter responds to ajax request with json', function () {
+    $response = $this->getJson(route('home', ['category' => 'concert']), [
+        'X-Requested-With' => 'XMLHttpRequest',
+    ]);
+
+    $response->assertOk()
+        ->assertJsonStructure(['html', 'count', 'category'])
+        ->assertJsonFragment(['category' => 'concert']);
+
+    expect($response->json('html'))
+        ->toContain('Live Concert: Anh Trai Vượt Ngàn Chông Gai 2026')
+        ->not->toContain('Vietnam Tech Summit & Global AI Expo 2026');
+});
+
+

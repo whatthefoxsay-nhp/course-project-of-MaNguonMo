@@ -44,6 +44,18 @@ class Room extends Model
         return $this->hasMany(Showtime::class);
     }
 
+    /** Mẫu bố trí của địa điểm ngoài trời (gồm cả tên mẫu cũ còn trong dữ liệu trước Plan 8). */
+    private const OUTDOOR_PRESETS = ['mega_concert', 'open_space', 'outdoor_concert', 'sayhi_concert'];
+
+    /**
+     * Địa điểm ngoài trời (sân vận động, lễ hội) — suy ra từ mẫu bố trí vì chưa có cờ riêng.
+     * Dùng để quyết định có hiện dự báo thời tiết hay không.
+     */
+    public function isOutdoor(): bool
+    {
+        return in_array((string) $this->layout_preset, self::OUTDOOR_PRESETS, true);
+    }
+
     public function getPresetLabelAttribute(): string
     {
         return LayoutTemplates::label($this->layout_preset ?? 'custom_grid');

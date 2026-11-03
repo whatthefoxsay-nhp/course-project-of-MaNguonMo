@@ -2,13 +2,16 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Exceptions\SeatHoldException;
 use App\Http\Controllers\Controller;
 use App\Models\Booking;
 use App\Models\BookingItem;
+use App\Models\Discount;
 use App\Models\ShowtimeSeat;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 
@@ -42,7 +45,7 @@ class BookingController extends Controller
     {
         $booking->load([
             'user',
-            'items.showtimeSeat.seat',
+            'items.showtimeSeat.seat.zone',
             'items.showtimeSeat.showtime.movie.category',
             'items.showtimeSeat.showtime.room',
         ]);
@@ -54,63 +57,135 @@ class BookingController extends Controller
         return view('admin.bookings.show', compact('booking'));
     }
 
-    /** Trạng thái được phép chuyển tới; "cancelled" là trạng thái cuối. */
-    private const TRANSITIONS = [
-        'pending' => ['confirmed', 'cancelled'],
-        'confirmed' => ['cancelled'],
-        'cancelled' => [],
-    ];
-
     public function updateStatus(Request $request, Booking $booking): RedirectResponse
     {
         $validated = $request->validate([
-            'status' => 'required|in:confirmed,cancelled,pending',
+            'status' => 'required|in:confirmed,cancelled',
         ]);
+
         $newStatus = $validated['status'];
 
-        if (! in_array($newStatus, self::TRANSITIONS[$booking->status] ?? [], true)) {
-            return back()->with('error', "Không thể chuyển đơn [{$booking->booking_code}] từ trạng thái \"{$booking->status}\" sang \"{$newStatus}\".");
+        if ($booking->status === $newStatus) {
+            return back()->with('warning', "Đơn vé [{$booking->booking_code}] đã ở trạng thái này, không có thay đổi.");
         }
 
-        $conflict = DB::transaction(function () use ($booking, $newStatus) {
-            $seats = ShowtimeSeat::whereIn('id', $booking->items()->pluck('showtime_seat_id'))
-                ->lockForUpdate()
-                ->get();
-
-            if ($newStatus === 'confirmed') {
-                $takenByOtherBooking = BookingItem::whereIn('showtime_seat_id', $seats->pluck('id'))
-                    ->where('booking_id', '!=', $booking->id)
-                    ->whereHas('booking', fn ($query) => $query->where('status', '!=', 'cancelled'))
-                    ->exists();
-                $heldByOtherUser = $seats->contains(fn (ShowtimeSeat $seat) => $seat->status === 'held'
-                    && $seat->held_by_user_id !== null
-                    && $seat->held_by_user_id !== $booking->user_id
-                    && $seat->held_until?->isFuture());
-
-                if ($takenByOtherBooking || $heldByOtherUser) {
-                    return true;
+        try {
+            DB::transaction(function () use ($booking, $newStatus) {
+                $locked = Booking::whereKey($booking->id)->lockForUpdate()->firstOrFail();
+                if ($locked->status === $newStatus) {
+                    return;
                 }
-            }
 
-            $booking->update(['status' => $newStatus]);
+                $items = $locked->items()->get();
+                $seatIds = $items->pluck('showtime_seat_id')->filter()->unique()->values();
+                $seats = ShowtimeSeat::with('seat')->whereIn('id', $seatIds)->lockForUpdate()->get();
 
-            $seatState = $newStatus === 'cancelled'
-                ? ['status' => 'available', 'held_by_user_id' => null, 'held_until' => null, 'price_override' => null]
-                : ['status' => 'booked', 'held_by_user_id' => null, 'held_until' => null];
-            ShowtimeSeat::whereIn('id', $seats->pluck('id'))->update($seatState);
+                // Ghế đang thuộc một đơn "confirmed" KHÁC (vd. ghế đã bán lại sau khi đơn này bị hủy).
+                $claimedSeatIds = $this->claimedByOtherBookings($locked, $seatIds);
 
-            return false;
-        });
+                if ($newStatus === 'cancelled') {
+                    foreach ($seats as $seat) {
+                        if ($seat->status === 'booked' && ! $claimedSeatIds->contains($seat->id)) {
+                            $seat->update([
+                                'status' => 'available',
+                                'held_by_user_id' => null,
+                                'held_until' => null,
+                                'price_override' => null,
+                            ]);
+                        }
+                    }
+                } else {
+                    $this->assertSeatsFree($locked, $items, $seats, $claimedSeatIds);
 
-        if ($conflict) {
-            return back()->with('error', "Không thể xác nhận đơn [{$booking->booking_code}]: có ghế đã thuộc về đơn khác hoặc đang được người khác giữ.");
+                    foreach ($seats as $seat) {
+                        $seat->update(['status' => 'booked', 'held_by_user_id' => null, 'held_until' => null]);
+                    }
+                }
+
+                $this->syncDiscountUsage($locked, $newStatus);
+
+                $locked->update(['status' => $newStatus]);
+            });
+        } catch (SeatHoldException $exception) {
+            return back()->with('error', $exception->getMessage());
         }
 
-        $message = match ($newStatus) {
-            'cancelled' => "Đã hủy đơn vé [{$booking->booking_code}] và giải phóng toàn bộ ghế liên quan.",
-            default => "Đã xác nhận thanh toán đơn vé [{$booking->booking_code}].",
-        };
+        $message = $newStatus === 'cancelled'
+            ? "Đã hủy đơn vé [{$booking->booking_code}] và giải phóng toàn bộ ghế liên quan."
+            : "Đã xác nhận thanh toán đơn vé [{$booking->booking_code}].";
 
         return back()->with('success', $message);
+    }
+
+    /**
+     * Hủy đơn thì trả lại 1 lượt dùng mã giảm giá; xác nhận lại thì dùng lại 1 lượt (hết lượt → từ chối).
+     * Ngày hiệu lực không kiểm tra lại: mã đã hợp lệ tại thời điểm khách thanh toán.
+     *
+     * @throws SeatHoldException
+     */
+    private function syncDiscountUsage(Booking $booking, string $newStatus): void
+    {
+        if (! $booking->discount_id) {
+            return;
+        }
+
+        $discount = Discount::whereKey($booking->discount_id)->lockForUpdate()->first();
+        if (! $discount) {
+            return;
+        }
+
+        if ($newStatus === 'cancelled') {
+            if ($discount->used_count > 0) {
+                $discount->decrement('used_count');
+            }
+
+            return;
+        }
+
+        if ($discount->max_uses !== null && $discount->used_count >= $discount->max_uses) {
+            throw new SeatHoldException("Mã giảm giá {$discount->code} của đơn đã hết lượt sử dụng, không thể xác nhận lại đơn.");
+        }
+        $discount->increment('used_count');
+    }
+
+    /** Id ghế (trong $ids) đang nằm trong một đơn "confirmed" khác đơn hiện tại. */
+    private function claimedByOtherBookings(Booking $booking, Collection $ids): Collection
+    {
+        if ($ids->isEmpty()) {
+            return collect();
+        }
+
+        return BookingItem::whereIn('showtime_seat_id', $ids)
+            ->where('booking_id', '!=', $booking->id)
+            ->whereHas('booking', fn ($query) => $query->where('status', 'confirmed'))
+            ->pluck('showtime_seat_id')
+            ->unique()
+            ->values();
+    }
+
+    /**
+     * Chỉ xác nhận lại đơn khi mọi ghế vẫn còn trống: không ai khác đang giữ và không thuộc đơn khác.
+     * (Khu đứng cũng là ghế ẩn trong showtime_seats nên dùng chung kiểm tra này.)
+     *
+     * @throws SeatHoldException
+     */
+    private function assertSeatsFree(Booking $booking, Collection $items, Collection $seats, Collection $claimedSeatIds): void
+    {
+        $prefix = "Không thể xác nhận lại đơn [{$booking->booking_code}]";
+
+        $missing = $items->contains(fn (BookingItem $item) => $item->showtime_seat_id === null
+            || ! $seats->contains('id', $item->showtime_seat_id));
+        if ($missing) {
+            throw new SeatHoldException("{$prefix}: một số ghế của đơn không còn tồn tại.");
+        }
+
+        $taken = $seats->filter(fn (ShowtimeSeat $seat) => $claimedSeatIds->contains($seat->id)
+            || ! ($seat->status === 'booked' || $seat->isHoldable()));
+
+        if ($taken->isNotEmpty()) {
+            $codes = $taken->map(fn (ShowtimeSeat $seat) => $seat->seat?->full_code)->filter()->unique()->implode(', ');
+
+            throw new SeatHoldException("{$prefix}: ghế {$codes} đã được người khác giữ hoặc mua.");
+        }
     }
 }

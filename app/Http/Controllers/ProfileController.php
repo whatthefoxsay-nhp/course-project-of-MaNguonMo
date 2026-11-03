@@ -58,22 +58,35 @@ class ProfileController extends Controller
 
         $user->save();
 
-        if ($oldAvatar && Str::startsWith($oldAvatar, ['http://', 'https://'])) {
-            $fileId = $googleDrive->extractFileId($oldAvatar);
+        // Chỉ xóa ảnh cũ sau khi lưu thành công.
+        $this->deleteAvatar($oldAvatar, $googleDrive);
+
+        return Redirect::route('profile.edit')->with('status', 'profile-updated');
+    }
+
+    /** Ảnh trên Drive xóa theo file id; ảnh cũ trên disk public xóa file; URL ngoài khác thì bỏ qua. */
+    private function deleteAvatar(?string $avatar, GoogleDriveService $googleDrive): void
+    {
+        if (! $avatar) {
+            return;
+        }
+
+        if (Str::startsWith($avatar, ['http://', 'https://'])) {
+            $fileId = $googleDrive->extractFileId($avatar);
             if ($fileId !== null) {
                 $googleDrive->delete($fileId);
             }
-        } elseif ($oldAvatar) {
-            Storage::disk('public')->delete($oldAvatar);
+
+            return;
         }
 
-        return Redirect::route('profile.edit')->with('status', 'profile-updated');
+        Storage::disk('public')->delete($avatar);
     }
 
     /**
      * Delete the user's account.
      */
-    public function destroy(Request $request): RedirectResponse
+    public function destroy(Request $request, GoogleDriveService $googleDrive): RedirectResponse
     {
         $request->validateWithBag('userDeletion', [
             'password' => ['required', 'current_password'],
@@ -81,9 +94,18 @@ class ProfileController extends Controller
 
         $user = $request->user();
 
+        // bookings.user_id cascade -> xóa tài khoản sẽ xóa luôn đơn/vé đã thanh toán (ghế kẹt "booked").
+        if ($user->bookings()->exists()) {
+            return back()->withErrors([
+                'password' => 'Tài khoản đã có lịch sử đặt vé nên không thể tự xóa. Vui lòng liên hệ quản trị viên để được hỗ trợ.',
+            ], 'userDeletion');
+        }
+
         Auth::logout();
 
         $user->delete();
+
+        $this->deleteAvatar($user->avatar, $googleDrive);
 
         $request->session()->invalidate();
         $request->session()->regenerateToken();

@@ -86,7 +86,17 @@ export default {
                     glow: 'rgba(185, 28, 28, 0.35)',
                 },
             },
+            // Các bước spacing/shadow mà view đang dùng nhưng Tailwind v3 không có sẵn
+            // (shadow-xs/2xs là tên của Tailwind v4).
+            spacing: {
+                '0.2': '0.0625rem',
+                '4.5': '1.125rem',
+                '15': '3.75rem',
+                '18': '4.5rem',
+            },
             boxShadow: {
+                '2xs': '0 1px 0 0 rgba(0, 0, 0, 0.05)',
+                'xs': '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
                 'glass-light': '0 8px 30px 0 rgba(0, 0, 0, 0.06), inset 0 1px 0 0 rgba(255, 255, 255, 0.9)',
                 'glass-card-light': '0 10px 30px -5px rgba(0, 0, 0, 0.08), 0 0 0 1px rgba(0, 0, 0, 0.05)',
                 'glass-dark': '0 8px 32px 0 rgba(0, 0, 0, 0.5), inset 0 1px 0 0 rgba(255, 255, 255, 0.1)',

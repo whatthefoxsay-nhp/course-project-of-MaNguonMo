@@ -15,13 +15,30 @@ class ShowtimeRequest extends FormRequest
 
     public function rules(): array
     {
+        // "after:now" chỉ áp dụng khi tạo mới hoặc khi đổi giờ bắt đầu: suất đã diễn ra vẫn sửa được giá/giờ kết thúc.
+        $current = $this->route('showtime');
+        $startTime = ['required', 'date'];
+        if (! $current instanceof Showtime || ! $this->startTimeUnchanged($current)) {
+            $startTime[] = 'after:now';
+        }
+
         return [
             'event_id' => ['required', 'integer', 'exists:events,id'],
             'room_id' => ['required', 'integer', 'exists:rooms,id'],
-            'start_time' => ['required', 'date', 'after:now'],
+            'start_time' => $startTime,
             'end_time' => ['required', 'date', 'after:start_time'],
             'base_price' => ['required', 'integer', 'min:10000', 'max:50000000'],
         ];
+    }
+
+    private function startTimeUnchanged(Showtime $showtime): bool
+    {
+        $input = $this->input('start_time');
+        $timestamp = is_string($input) ? strtotime($input) : false;
+
+        // Form gửi theo phút (Y-m-d\TH:i) nên so sánh tới phút.
+        return $timestamp !== false
+            && $showtime->start_time?->format('Y-m-d H:i') === date('Y-m-d H:i', $timestamp);
     }
 
     public function attributes(): array

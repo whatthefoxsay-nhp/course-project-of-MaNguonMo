@@ -40,7 +40,13 @@ test('map embed uses the embed api when a key is configured', function () {
 
 test('map embed falls back to the address, or null when nothing is known', function () {
     expect(MapEmbed::url(roomAt(null, null, '7 Công Trường Lam Sơn')))->toContain('q=7%20C%C3%B4ng')
-        ->and(MapEmbed::url(roomAt(null, null, null)))->toBeNull();
+        ->and(MapEmbed::url(roomAt(null, null, null)))->toBeNull()
+        ->and(MapEmbed::directionsUrl(roomAt(null, null, null)))->toBeNull();
+});
+
+test('directions link points google maps at the venue', function () {
+    expect(MapEmbed::directionsUrl(roomAt(10.8005, 106.6658)))
+        ->toBe('https://www.google.com/maps/dir/?api=1&destination=10.8005,106.6658');
 });
 
 test('weather picks the forecast closest to the show time', function () {
@@ -78,6 +84,13 @@ test('forecasts are cached per location', function () {
     Http::assertSentCount(1);
 });
 
+test('weather is null when no forecast entry is near the show time', function () {
+    $at = now()->addDays(3)->setTime(19, 0);
+    fakeForecast($at->copy()->subDay());
+
+    expect(app(WeatherService::class)->forecastFor(roomAt(10.8, 106.6), $at))->toBeNull();
+});
+
 test('weather is null without key, coordinates, beyond five days, or when the api fails', function () {
     $room = roomAt(10.8, 106.6);
     $service = app(WeatherService::class);
@@ -90,5 +103,17 @@ test('weather is null without key, coordinates, beyond five days, or when the ap
 
     config(['services.openweather.key' => 'test-key']);
     Http::fake(['api.openweathermap.org/*' => Http::response('boom', 500)]);
-    expect($service->forecastFor(roomAt(11.0, 107.0), now()->addDay()))->toBeNull();
+    $failing = roomAt(11.0, 107.0);
+    expect($service->forecastFor($failing, now()->addDay()))->toBeNull()
+        ->and($service->forecastFor($failing, now()->addDay()))->toBeNull();
+
+    // Lỗi được nhớ tạm thời: không gọi lại API ở lượt xem kế tiếp.
+    Http::assertSentCount(1);
+});
+
+test('only outdoor venues are treated as outdoor', function () {
+    expect(Room::factory()->make(['layout_preset' => 'mega_concert'])->isOutdoor())->toBeTrue()
+        ->and(Room::factory()->make(['layout_preset' => 'outdoor_concert'])->isOutdoor())->toBeTrue()
+        ->and(Room::factory()->make(['layout_preset' => 'theater_hall'])->isOutdoor())->toBeFalse()
+        ->and(Room::factory()->make(['layout_preset' => 'convention_center'])->isOutdoor())->toBeFalse();
 });

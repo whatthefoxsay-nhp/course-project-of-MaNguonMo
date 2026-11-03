@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Category;
 use App\Models\Event;
+use App\Models\Showtime;
 use App\Services\WeatherService;
 use App\Support\MapEmbed;
 use App\Support\SeatMap;
@@ -25,6 +26,7 @@ class EventController extends Controller
         $events = Event::published()
             ->with('category')
             ->withMin('showtimes', 'base_price')
+            ->withMin(['showtimes as next_showtime_at' => fn ($q) => $q->where('start_time', '>', now())], 'start_time')
             ->when($query !== '', fn ($builder) => $builder->where(function ($where) use ($query) {
                 $where->where('title', 'like', "%{$query}%")
                     ->orWhere('description', 'like', "%{$query}%");
@@ -56,28 +58,30 @@ class EventController extends Controller
             ->where('start_time', '>', now())
             ->orderBy('start_time')
             ->get();
+        Showtime::primeSessionLabels($event, $showtimes);
 
-        $comments = $event->comments()
-            ->with('user')
-            ->latest()
-            ->take(30)
-            ->get()
-            ->map(fn ($comment) => $comment->toPublicArray($request->user()))
-            ->all();
-
+        // Bản đồ + thời tiết theo khán phòng của suất gần nhất.
+        // Thời tiết chỉ cho địa điểm ngoài trời; không có dự báo thật thì view ẩn hẳn khối thời tiết.
         $nextShowtime = $showtimes->first();
         $venue = $nextShowtime?->room;
 
+        // Trang đầu bình luận render sẵn; các trang sau tải AJAX qua route comments.index.
+        $commentsPage = CommentController::page($event, $request->user());
+
         return view('events.show', [
+            'comments' => $commentsPage['data'],
+            'commentsTotal' => $commentsPage['total'],
+            'commentsNextUrl' => $commentsPage['next_page_url'],
             'event' => $event,
             'movie' => $event,
             // View đang dùng !empty($showtimes) và $showtimes[0] nên truyền array, không truyền Collection.
             'showtimes' => $showtimes->all(),
-            'comments' => $comments,
+            'venue' => $venue,
             'mapUrl' => $venue ? MapEmbed::url($venue) : null,
-            'weather' => $venue ? $weatherService->forecastFor($venue, $nextShowtime->start_time) : null,
+            'directionsUrl' => $venue ? MapEmbed::directionsUrl($venue) : null,
+            'weather' => $venue?->isOutdoor() ? $weatherService->forecastFor($venue, $nextShowtime->start_time) : null,
             'weatherShowtime' => $nextShowtime,
-            'zoneCards' => $showtimes->isEmpty() ? [] : SeatMap::zoneCards($showtimes->first()),
+            'zoneCards' => $nextShowtime ? SeatMap::zoneCards($nextShowtime) : [],
         ]);
     }
 }

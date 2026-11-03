@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <title>{{ $title ?? 'Tài Khoản' }} - TicketBox Official</title>
+    <title>{{ $title ?? 'Tài Khoản' }} - TicketBox</title>
 
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -25,7 +25,7 @@
 
     <!-- Top Header Navigation -->
     <header class="w-full max-w-xl relative z-10 flex items-center justify-between py-4">
-        <a href="/" class="flex items-center gap-2.5 group">
+        <a href="{{ route('home') }}" class="flex items-center gap-2.5 group">
             <div class="w-9 h-9 rounded-2xl bg-gradient-to-tr from-gold-antique to-rose-taupe flex items-center justify-center text-black font-display font-black text-lg shadow-sm group-hover:scale-105 transition-transform">
                 T
             </div>
@@ -34,7 +34,7 @@
             </span>
         </a>
 
-        <a href="/" class="px-4 py-2 rounded-full text-xs font-bold text-slate-700 bg-white hover:bg-[#C08497] hover:text-white border border-slate-200/80 shadow-sm transition-all flex items-center gap-1.5">
+        <a href="{{ route('home') }}" class="px-4 py-2 rounded-full text-xs font-bold text-slate-700 bg-white hover:bg-[#C08497] hover:text-white border border-slate-200/80 shadow-sm transition-all flex items-center gap-1.5">
             <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
             </svg>
@@ -53,7 +53,7 @@
 
     <!-- Bottom Footer -->
     <footer class="w-full max-w-xl relative z-10 text-center py-4 text-xs text-gray-400 font-medium">
-        © 2026 TicketBox Vietnam JSC. Nền tảng đặt vé Sự kiện &amp; Concert chuyên nghiệp.
+        © {{ date('Y') }} TicketBox — Đồ án môn Mã nguồn mở. Sản phẩm phục vụ mục đích học tập.
     </footer>
 
 </body>

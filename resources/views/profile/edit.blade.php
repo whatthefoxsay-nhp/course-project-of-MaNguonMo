@@ -56,9 +56,13 @@
                     <div class="relative text-center">
                         <!-- Big Avatar with luxury gradient border -->
                         <div class="w-24 h-24 rounded-3xl bg-gradient-to-tr from-gold-antique via-rose-taupe to-sage-forest p-[2.5px] shadow-lg mx-auto">
-                            <div class="w-full h-full rounded-[21px] bg-[#FAF9F6] flex items-center justify-center font-display font-black text-3xl text-black">
-                                {{ strtoupper(substr($user->name, 0, 1)) }}
-                            </div>
+                            @if ($user->avatar_url)
+                                <img src="{{ $user->avatar_url }}" alt="Ảnh đại diện của {{ $user->name }}" class="w-full h-full rounded-[21px] object-cover bg-[#FAF9F6]">
+                            @else
+                                <div class="w-full h-full rounded-[21px] bg-[#FAF9F6] flex items-center justify-center font-display font-black text-3xl text-black">
+                                    {{ $user->initials }}
+                                </div>
+                            @endif
                         </div>
 
                         <h2 class="mt-4 font-display font-black text-lg sm:text-xl text-slate-900 tracking-tight">
@@ -127,7 +131,7 @@
                         <span class="text-gray-400 group-hover:text-black">&rarr;</span>
                     </a>
 
-                    <a href="{{ route('movies.index') }}" class="flex items-center justify-between px-3.5 py-2.5 rounded-2xl text-slate-800 hover:bg-[#FAF9F6] font-semibold text-xs transition-colors group">
+                    <a href="{{ route('events.index') }}" class="flex items-center justify-between px-3.5 py-2.5 rounded-2xl text-slate-800 hover:bg-[#FAF9F6] font-semibold text-xs transition-colors group">
                         <div class="flex items-center gap-2.5">
                             <div class="w-7 h-7 rounded-xl bg-[#FFF8E1] text-gold-dark flex items-center justify-center group-hover:scale-105 transition-transform">
                                 <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">

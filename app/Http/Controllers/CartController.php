@@ -2,8 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Exceptions\DiscountException;
 use App\Models\ShowtimeSeat;
+use App\Services\CheckoutService;
+use App\Services\DiscountService;
 use App\Support\TicketTiers;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
@@ -41,6 +45,38 @@ class CartController extends Controller
             'items' => $items,
             'total' => array_sum(array_map(fn ($item) => $item->price, $items)),
             'expiresInSeconds' => $expiresInSeconds,
+        ]);
+    }
+
+    public function applyDiscount(Request $request, CheckoutService $checkout, DiscountService $discounts): JsonResponse
+    {
+        $validated = $request->validate(
+            ['code' => ['required', 'string', 'max:32']],
+            [],
+            ['code' => 'mã giảm giá'],
+        );
+
+        $subtotal = $checkout->heldSubtotal($request->user());
+        if ($subtotal <= 0) {
+            return response()->json(['message' => 'Giỏ vé trống hoặc đã hết thời gian giữ chỗ.'], 422);
+        }
+
+        try {
+            [$discount, $amount] = $discounts->resolve($validated['code'], $subtotal);
+        } catch (DiscountException $exception) {
+            return response()->json([
+                'message' => $exception->getMessage(),
+                'errors' => ['code' => [$exception->getMessage()]],
+            ], 422);
+        }
+
+        return response()->json([
+            'message' => 'Đã áp dụng mã '.$discount->code.': giảm '.number_format($amount, 0, ',', '.').'₫.',
+            'code' => $discount->code,
+            'title' => $discount->title,
+            'subtotal' => $subtotal,
+            'discount_amount' => $amount,
+            'total' => $subtotal - $amount,
         ]);
     }
 }

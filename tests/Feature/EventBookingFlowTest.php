@@ -104,16 +104,16 @@ test('cart page renders checkout flow with multi-method payment and e-ticket pas
     $response->assertSee('Giỏ Vé');
     $response->assertSee('Thông Tin Người Đặt & Nhận Vé');
     $response->assertSee('Chọn Phương Thức Thanh Toán');
-    $response->assertSee('Chuyển Khoản VietQR 24/7');
+    $response->assertSee('Chuyển Khoản VietQR');
     $response->assertSee('Ví Điện Tử MoMo');
     $response->assertSee('Ví Điện Tử ZaloPay');
     $response->assertSee('Thẻ Quốc Tế');
-    $response->assertSee('Techcombank');
-    $response->assertSee('1903 8888 6688');
-    $response->assertSee('CONG TY CP TICKETBOX VIETNAM');
+    $response->assertSee('Mã QR minh họa – không chuyển tiền');
+    $response->assertDontSee('1903 8888 6688');
+    $response->assertDontSee('CONG TY CP TICKETBOX VIETNAM');
     $response->assertSee('Vé Điện Tử E-Ticket Đã Được Kích Hoạt');
     $response->assertSee('Lưu vé về máy (PNG)');
-    $response->assertDontSee('giả lập');
+    $response->assertSee('giả lập');
 });
 
 test('booking history page displays e-ticket passes and png download button for authenticated user', function () {
@@ -125,7 +125,9 @@ test('booking history page displays e-ticket passes and png download button for 
     $response->assertSee('Lịch Sử Vé Đã Đặt');
     $response->assertSee('TBX-89214');
     $response->assertSee('Lưu vé về máy (PNG)');
-    $response->assertSee('qrSvg:');
+    $response->assertSee('qrSvg', false);
+    $response->assertSee('data:image/svg+xml;base64,', false);
+    $response->assertDontSee('api.qrserver.com', false);
 });
 
 test('non-existent movie slug returns 404', function () {

@@ -85,3 +85,27 @@ test('correct password must be provided to delete account', function () {
 
     $this->assertNotNull($user->fresh());
 });
+
+test('account with bookings cannot be self deleted', function () {
+    $user = User::factory()->create();
+    $booking = \App\Models\Booking::create([
+        'user_id' => $user->id,
+        'total_price' => 300000,
+        'status' => 'confirmed',
+    ]);
+
+    $response = $this
+        ->actingAs($user)
+        ->from('/profile')
+        ->delete('/profile', [
+            'password' => 'password',
+        ]);
+
+    $response
+        ->assertSessionHasErrorsIn('userDeletion', 'password')
+        ->assertRedirect('/profile');
+
+    $this->assertAuthenticatedAs($user);
+    $this->assertNotNull($user->fresh());
+    $this->assertNotNull($booking->fresh());
+});

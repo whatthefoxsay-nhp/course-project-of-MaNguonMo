@@ -64,7 +64,9 @@ test('standing tickets can be held by quantity', function () {
         ])
         ->assertOk();
 
-    expect(ShowtimeSeat::where('status', 'held')->count())->toBe(2);
+    // Khu đứng bán theo số lượng: server tự gán ghế ẩn của khu (P8).
+    expect($showtime->showtimeSeats()->where('status', 'held')
+        ->whereHas('seat.zone', fn ($zone) => $zone->where('code', 'GA-L'))->count())->toBe(2);
 });
 
 test('a customer removes a seat from their cart', function () {

@@ -4,7 +4,7 @@
 
 ## Tính năng chính
 - **Khách:** tìm kiếm/lọc sự kiện, gợi ý tìm kiếm khi gõ, chi tiết sự kiện có bản đồ Google Maps và dự báo thời tiết tại giờ diễn, sơ đồ chỗ ngồi tương tác.
-- **Thành viên:** giữ chỗ 10 phút (chống đặt trùng), chọn ghế / chọn cả bàn / chọn số lượng vé khu đứng tùy loại sự kiện, giỏ vé, thanh toán giả lập (VietQR/MoMo/ZaloPay/Thẻ), vé điện tử, lịch sử, bình luận, hồ sơ + ảnh đại diện.
+- **Thành viên:** giữ chỗ 10 phút (chống đặt trùng), chọn ghế / chọn cả bàn / chọn số lượng vé khu đứng tùy loại sự kiện, giỏ vé, nhập thông tin người nhận vé và mã giảm giá, thanh toán giả lập (VietQR/MoMo/ZaloPay/Thẻ — mã QR chỉ là minh họa), mail xác nhận kèm vé PDF qua Gmail API, vé điện tử, lịch sử, bình luận, hồ sơ + ảnh đại diện, chatbot hỏi đáp (Gemini, không có key thì dùng câu trả lời có sẵn).
 - **Quản trị:** danh mục, sự kiện (upload poster), địa điểm với trình dựng sơ đồ theo khu (6 mẫu: sân vận động, nhà hát, hội trường, bàn tiệc, không gian mở, lưới tùy chỉnh), suất diễn, đơn đặt vé, mã giảm giá, người dùng (khóa/mở, đổi vai trò), dashboard, báo cáo.
 
 ## Cài đặt (Windows + Laragon)

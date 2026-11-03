@@ -57,7 +57,6 @@
                     <select name="status" class="w-full bg-[#FAF9F6] border border-gray-200 rounded-2xl px-4 py-2.5 text-xs text-black focus:outline-none focus:border-amber-400 focus:ring-2 focus:ring-amber-400/20 font-medium cursor-pointer">
                         <option value="">-- Tất cả trạng thái --</option>
                         <option value="confirmed" {{ request('status') === 'confirmed' ? 'selected' : '' }}>Đã xác nhận</option>
-                        <option value="pending" {{ request('status') === 'pending' ? 'selected' : '' }}>Đang giữ chỗ</option>
                         <option value="cancelled" {{ request('status') === 'cancelled' ? 'selected' : '' }}>Đã hủy</option>
                     </select>
                 </div>
@@ -94,9 +93,9 @@
                         @forelse($bookings as $booking)
                             @php
                                 $firstItem = $booking->items->first();
-                                $movie = $firstItem?->showtimeSeat?->showtime?->movie;
                                 $showtime = $firstItem?->showtimeSeat?->showtime;
-                                $room = $firstItem?->showtimeSeat?->showtime?->room;
+                                $movie = $showtime?->movie;
+                                $room = $showtime?->room;
                                 $seatCount = $booking->items->count();
                             @endphp
                             <tr class="hover:bg-[#F2F8F4] border-l-[3px] border-l-transparent hover:border-l-amber-500 transition-all">
@@ -108,7 +107,7 @@
                                 <td class="py-3.5 px-3 whitespace-nowrap">
                                     <div class="flex items-center gap-2">
                                         <div class="w-7 h-7 rounded-xl bg-gradient-to-br from-indigo-500 to-blue-600 text-white flex items-center justify-center font-bold text-[10px] shadow-xs shrink-0">
-                                            {{ strtoupper(substr($booking->user?->name ?? 'K', 0, 1)) }}
+                                            {{ mb_strtoupper(mb_substr($booking->user?->name ?? 'K', 0, 1)) }}
                                         </div>
                                         <div class="min-w-0 max-w-[120px] sm:max-w-[150px]">
                                             <div class="font-bold text-black text-xs truncate" title="{{ $booking->user?->name ?? 'Khách vãng lai' }}">{{ $booking->user?->name ?? 'Khách vãng lai' }}</div>

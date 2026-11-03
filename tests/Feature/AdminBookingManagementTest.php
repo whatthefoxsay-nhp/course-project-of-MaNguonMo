@@ -135,7 +135,8 @@ test('cancelling a booking marks it cancelled and safely releases seats back to 
 
 test('admin can confirm a pending booking', function () {
     $this->booking->update(['status' => 'pending']);
-    $this->stSeat1->update(['status' => 'held']);
+    // Ghế đang "held" nhưng hold đã hết hạn -> coi như còn trống, xác nhận được.
+    $this->stSeat1->update(['status' => 'held', 'held_until' => now()->subMinute()]);
 
     $response = $this->actingAs($this->admin)->patch(route('admin.bookings.update-status', $this->booking), [
         'status' => 'confirmed',
@@ -191,7 +192,7 @@ test('setting the same status again changes nothing', function () {
     $this->stSeat1->update(['status' => 'held', 'held_by_user_id' => $this->admin->id, 'held_until' => now()->addMinutes(5)]);
 
     $this->actingAs($this->admin)->patch(route('admin.bookings.update-status', $this->booking), ['status' => 'cancelled'])
-        ->assertSessionHas('error');
+        ->assertSessionHas('warning');
 
     expect($this->stSeat1->fresh()->status)->toBe('held');
 });

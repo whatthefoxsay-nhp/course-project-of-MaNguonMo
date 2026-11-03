@@ -94,3 +94,11 @@ test('the profile page shows the avatar upload field', function () {
         ->assertSee('name="avatar"', false)
         ->assertSee('enctype="multipart/form-data"', false);
 });
+
+test('initials fall back correctly for vietnamese names', function () {
+    expect(App\Models\User::factory()->make(['name' => 'Đỗ Ánh'])->initials)->toBe('ĐÁ')
+        ->and(App\Models\User::factory()->make(['name' => 'ánh'])->initials)->toBe('Á')
+        ->and(App\Models\User::factory()->make(['name' => '  '])->initials)->toBe('?')
+        ->and(App\Models\User::factory()->make(['avatar' => null])->avatar_url)->toBeNull()
+        ->and(App\Models\User::factory()->make(['avatar' => 'https://example.com/a.png'])->avatar_url)->toBe('https://example.com/a.png');
+});

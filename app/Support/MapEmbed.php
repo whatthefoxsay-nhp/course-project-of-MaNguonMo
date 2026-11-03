@@ -4,9 +4,13 @@ namespace App\Support;
 
 use App\Models\Room;
 
-/** URL iframe bản đồ địa điểm: Maps Embed API nếu có key, không có key thì dùng link nhúng công khai. */
+/**
+ * Dựng URL bản đồ Google Maps cho một khán phòng.
+ * Ưu tiên tọa độ; không có tọa độ thì dùng địa chỉ; không có cả hai thì trả null.
+ */
 final class MapEmbed
 {
+    /** URL cho iframe: Maps Embed API khi có key, không có key thì dùng link nhúng công khai. */
     public static function url(Room $room): ?string
     {
         $query = self::query($room);
@@ -17,8 +21,16 @@ final class MapEmbed
         $key = config('services.google_maps.embed_key');
 
         return $key
-            ? "https://www.google.com/maps/embed/v1/place?key={$key}&q={$query}&zoom=16"
+            ? 'https://www.google.com/maps/embed/v1/place?key='.rawurlencode($key)."&q={$query}&zoom=16"
             : "https://maps.google.com/maps?q={$query}&z=16&output=embed";
+    }
+
+    /** Link "Chỉ đường" mở Google Maps (không cần key). */
+    public static function directionsUrl(Room $room): ?string
+    {
+        $query = self::query($room);
+
+        return $query === null ? null : "https://www.google.com/maps/dir/?api=1&destination={$query}";
     }
 
     private static function query(Room $room): ?string
@@ -27,6 +39,8 @@ final class MapEmbed
             return "{$room->latitude},{$room->longitude}";
         }
 
-        return $room->address ? rawurlencode($room->address) : null;
+        $address = trim((string) $room->address);
+
+        return $address !== '' ? rawurlencode($address) : null;
     }
 }

@@ -9,6 +9,7 @@ use App\Models\ShowtimeSeat;
 use App\Models\User;
 use App\Support\TicketTiers;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 
 class SeatHoldService
@@ -66,6 +67,10 @@ class SeatHoldService
         }
 
         return DB::transaction(function () use ($user, $showtime, $showtimeSeatIds, $zoneQuantities, $zones, $requestedSeats) {
+            // Khóa dòng user: 2 request giữ chỗ song song của cùng 1 user chạy tuần tự, nên phép
+            // đếm MAX_SEATS bên dưới không bị cả hai cùng đọc số cũ rồi cùng vượt giới hạn.
+            User::whereKey($user->id)->lockForUpdate()->first();
+
             // Mỗi user chỉ giữ ghế của 1 suất tại 1 thời điểm.
             ShowtimeSeat::where('held_by_user_id', $user->id)
                 ->where('status', 'held')
@@ -77,7 +82,10 @@ class SeatHoldService
                 throw new SeatHoldException('Mỗi lượt đặt tối đa '.self::MAX_SEATS." chỗ (bạn đang giữ {$alreadyHeld} chỗ).");
             }
 
-            $heldUntil = now()->addMinutes(self::HOLD_MINUTES);
+            // Giỏ vé có 1 đồng hồ chung: vé giữ thêm dùng hạn của vé giữ sớm nhất (không gia hạn vé cũ,
+            // để không ai giữ ghế mãi bằng cách thêm/bỏ vé liên tục) → giỏ hết hạn cùng lúc, checkout không đặt thiếu.
+            $existingUntil = ShowtimeSeat::where('showtime_id', $showtime->id)->heldBy($user)->min('held_until');
+            $heldUntil = $existingUntil !== null ? Carbon::parse($existingUntil) : now()->addMinutes(self::HOLD_MINUTES);
             $held = new Collection;
 
             // 1) Ghế khách tự chọn: khóa dòng rồi mới kiểm tra còn trống (chống 2 người cùng giữ).

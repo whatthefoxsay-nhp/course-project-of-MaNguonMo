@@ -7,7 +7,7 @@ use App\Models\User;
 
 class CommentPolicy
 {
-    /** Chủ bình luận hoặc admin được xóa. */
+    /** Chủ bình luận hoặc quản trị viên được xóa. */
     public function delete(User $user, Comment $comment): bool
     {
         return $user->id === $comment->user_id || $user->hasRole('admin');

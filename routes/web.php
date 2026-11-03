@@ -16,10 +16,10 @@ use App\Http\Controllers\CommentController;
 use App\Http\Controllers\EventController;
 use App\Http\Controllers\EventPosterController;
 use App\Http\Controllers\HomeController;
-use App\Http\Controllers\MovieController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SearchSuggestionController;
 use App\Http\Controllers\SeatHoldController;
+use App\Http\Controllers\ChatbotController;
 use App\Http\Controllers\ShowtimeController;
 use App\Http\Controllers\UserAvatarController;
 use Illuminate\Support\Facades\Route;
@@ -34,6 +34,10 @@ Route::get('/users/{user}/avatar', UserAvatarController::class)
     ->whereNumber('user')
     ->name('users.avatar');
 Route::get('/events/{slug}', [EventController::class, 'show'])->name('events.show');
+Route::get('/events/{event:slug}/comments', [CommentController::class, 'index'])
+    ->middleware('throttle:60,1')
+    ->name('comments.index');
+
 Route::get('/search/suggestions', SearchSuggestionController::class)
     ->middleware('throttle:60,1')
     ->name('search.suggestions');
@@ -44,12 +48,20 @@ Route::get('/movies/{slug}', [EventController::class, 'show'])->name('movies.sho
 Route::get('/showtimes/{showtime}/seats', [ShowtimeController::class, 'seats'])->name('showtimes.seats');
 Route::get('/showtimes/{showtime}/seat-status', [ShowtimeController::class, 'seatStatus'])->name('showtimes.seat-status');
 
+// Chatbot AI
+Route::post('/chatbot/message', [ChatbotController::class, 'sendMessage'])
+    ->middleware('throttle:30,1')
+    ->name('chatbot.message');
+
 Route::middleware('auth')->group(function () {
     Route::post('/showtimes/{showtime}/holds', [SeatHoldController::class, 'store'])
         ->middleware('throttle:30,1')
         ->name('showtimes.holds.store');
     Route::delete('/cart/seats/{showtimeSeat}', [SeatHoldController::class, 'destroy'])->name('cart.seats.destroy');
     Route::get('/cart', [CartController::class, 'index'])->name('cart.index');
+    Route::post('/cart/discount', [CartController::class, 'applyDiscount'])
+        ->middleware('throttle:20,1')
+        ->name('cart.discount');
     Route::post('/checkout', [CheckoutController::class, 'store'])
         ->middleware('throttle:10,1')
         ->name('checkout.store');
@@ -57,7 +69,9 @@ Route::middleware('auth')->group(function () {
     Route::post('/events/{event:slug}/comments', [CommentController::class, 'store'])
         ->middleware('throttle:10,1')
         ->name('comments.store');
-    Route::delete('/comments/{comment}', [CommentController::class, 'destroy'])->name('comments.destroy');
+    Route::delete('/comments/{comment}', [CommentController::class, 'destroy'])
+        ->middleware('throttle:30,1')
+        ->name('comments.destroy');
 });
 
 Route::get('/dashboard', function () {
