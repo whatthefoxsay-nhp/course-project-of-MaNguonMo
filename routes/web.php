@@ -21,6 +21,7 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SearchSuggestionController;
 use App\Http\Controllers\SeatHoldController;
 use App\Http\Controllers\ShowtimeController;
+use App\Http\Controllers\UserAvatarController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
@@ -29,6 +30,9 @@ Route::get('/events', [EventController::class, 'index'])->name('events.index');
 Route::get('/events/{event}/poster', EventPosterController::class)
     ->whereNumber('event')
     ->name('events.poster');
+Route::get('/users/{user}/avatar', UserAvatarController::class)
+    ->whereNumber('user')
+    ->name('users.avatar');
 Route::get('/events/{slug}', [EventController::class, 'show'])->name('events.show');
 Route::get('/search/suggestions', SearchSuggestionController::class)
     ->middleware('throttle:60,1')

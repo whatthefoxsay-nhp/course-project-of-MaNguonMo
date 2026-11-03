@@ -78,7 +78,7 @@ class GoogleDriveService
                 }
             }
 
-            Log::warning('Google Drive image upload failed; local storage fallback will be used.', [
+            Log::warning('Google Drive image upload failed; the image upload will be rejected.', [
                 'exception' => $exception::class,
             ]);
 

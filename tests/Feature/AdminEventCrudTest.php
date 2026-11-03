@@ -32,6 +32,12 @@ function eventPayload(array $overrides = []): array
 }
 
 test('admin creates an event with a poster and structured details', function () {
+    $drive = Mockery::mock(GoogleDriveService::class);
+    $drive->shouldReceive('isEnabled')->once()->andReturn(true);
+    $drive->shouldReceive('upload')->once()->with(Mockery::type(UploadedFile::class))
+        ->andReturn('https://drive.google.com/uc?export=view&id=event_poster_123');
+    $this->app->instance(GoogleDriveService::class, $drive);
+
     $this->actingAs(createAdmin())
         ->post(route('admin.events.store'), eventPayload([
             'poster' => UploadedFile::fake()->create('poster.jpg', 100, 'image/jpeg'),
@@ -49,7 +55,7 @@ test('admin creates an event with a poster and structured details', function () 
         ->and($event->lineup[1]['badge'])->toBe('')
         ->and($event->timeline[1])->toBe(['time' => '19:30', 'title' => 'Mở màn', 'desc' => '']);
 
-    Storage::disk('public')->assertExists($event->poster_path);
+    expect($event->poster_path)->toBe('https://drive.google.com/uc?export=view&id=event_poster_123');
 });
 
 test('admin can edit an event whose legacy detail rows are strings', function () {
@@ -111,7 +117,7 @@ test('admin event poster uploads to Google Drive when it is enabled', function (
     Storage::disk('public')->assertDirectoryEmpty('posters');
 });
 
-test('admin event poster falls back to local storage when Drive upload fails', function () {
+test('admin event poster upload fails instead of storing locally when Drive rejects it', function () {
     $drive = Mockery::mock(GoogleDriveService::class);
     $drive->shouldReceive('isEnabled')->once()->andReturn(true);
     $drive->shouldReceive('upload')->once()->andReturnNull();
@@ -121,11 +127,10 @@ test('admin event poster falls back to local storage when Drive upload fails', f
         ->post(route('admin.events.store'), eventPayload([
             'poster' => UploadedFile::fake()->create('poster.jpg', 100, 'image/jpeg'),
         ]))
-        ->assertRedirect(route('admin.events.index'));
+        ->assertSessionHasErrors('poster');
 
-    $event = Event::firstWhere('title', 'Đêm Nhạc Trịnh');
-    expect($event->poster_path)->toStartWith('posters/');
-    Storage::disk('public')->assertExists($event->poster_path);
+    expect(Event::firstWhere('title', 'Đêm Nhạc Trịnh'))->toBeNull();
+    Storage::disk('public')->assertDirectoryEmpty('posters');
 });
 
 test('updating an event poster deletes the old Drive file and stores the new one', function () {

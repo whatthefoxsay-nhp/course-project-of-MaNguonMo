@@ -13,6 +13,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
 class EventController extends Controller
@@ -74,15 +75,20 @@ class EventController extends Controller
     {
         $event->fill($request->eventAttributes());
         $event->details = $request->mergedDetails($event->details ?? []);
+        $oldPosterPath = null;
 
         if ($request->hasFile('poster')) {
             $poster = $request->file('poster');
             $newPosterPath = $this->storePoster($poster, $googleDrive);
-            $this->deleteStoredPoster($event, $googleDrive);
+            $oldPosterPath = $event->poster_path;
             $event->poster_path = $newPosterPath;
         }
 
         $event->save();
+
+        if ($oldPosterPath !== null) {
+            $this->deletePosterPath($oldPosterPath, $googleDrive);
+        }
 
         return redirect()->route('admin.events.index')
             ->with('success', "Đã cập nhật sự kiện [{$event->title}].");
@@ -104,27 +110,38 @@ class EventController extends Controller
         return redirect()->route('admin.events.index')->with('success', 'Đã xóa sự kiện.');
     }
 
-    /** Chỉ xóa file đã upload lên disk public, bỏ qua poster là URL ngoài (dữ liệu seed). */
+    /** Xóa poster Drive cũ hoặc local legacy file sau khi ảnh mới đã upload thành công. */
     private function storePoster(UploadedFile $poster, GoogleDriveService $googleDrive): string
     {
-        if ($googleDrive->isEnabled()) {
-            $url = $googleDrive->upload($poster);
-            if ($url !== null) {
-                return $url;
-            }
+        if (! $googleDrive->isEnabled()) {
+            throw ValidationException::withMessages([
+                'poster' => 'Google Drive chưa được cấu hình; không thể lưu poster sự kiện.',
+            ]);
         }
 
-        return $poster->store('posters', 'public');
+        $url = $googleDrive->upload($poster);
+        if ($url === null) {
+            throw ValidationException::withMessages([
+                'poster' => 'Không tải được poster lên Google Drive. Vui lòng thử lại.',
+            ]);
+        }
+
+        return $url;
     }
 
     private function deleteStoredPoster(Event $event, GoogleDriveService $googleDrive): void
     {
-        if (! $event->poster_path) {
+        $this->deletePosterPath($event->poster_path, $googleDrive);
+    }
+
+    private function deletePosterPath(?string $posterPath, GoogleDriveService $googleDrive): void
+    {
+        if (! $posterPath) {
             return;
         }
 
-        if (Str::startsWith($event->poster_path, ['http://', 'https://'])) {
-            $fileId = $googleDrive->extractFileId($event->poster_path);
+        if (Str::startsWith($posterPath, ['http://', 'https://'])) {
+            $fileId = $googleDrive->extractFileId($posterPath);
             if ($fileId !== null) {
                 $googleDrive->delete($fileId);
             }
@@ -132,6 +149,6 @@ class EventController extends Controller
             return;
         }
 
-        Storage::disk('public')->delete($event->poster_path);
+        Storage::disk('public')->delete($posterPath);
     }
 }

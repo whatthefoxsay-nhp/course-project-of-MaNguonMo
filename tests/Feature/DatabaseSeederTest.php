@@ -19,6 +19,11 @@ test('the seeder publishes the eight demo events with their details', function (
         ->and(Event::firstWhere('slug', 'vietnam-tech-summit-ai-expo-2026')->is_seated)->toBeFalse();
 });
 
+test('all seeded event posters point to Google Drive', function () {
+    expect(Event::whereNull('poster_path')->count())->toBe(0)
+        ->and(Event::where('poster_path', 'not like', 'https://drive.google.com/%')->count())->toBe(0);
+});
+
 test('every showtime has one showtime seat per room seat', function () {
     Showtime::with('room')->get()->each(function (Showtime $showtime) {
         expect($showtime->showtimeSeats()->count())->toBe($showtime->room->seats()->count());

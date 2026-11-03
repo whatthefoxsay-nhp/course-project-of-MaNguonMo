@@ -40,6 +40,21 @@ Tùy chọn: chạy `php artisan schedule:work` ở cửa sổ khác để dọn
 
 Muốn làm lại dữ liệu demo từ đầu: `php artisan migrate:fresh --seed` (xóa toàn bộ dữ liệu cũ).
 
+## Ảnh trên Google Drive
+
+Poster sự kiện và ảnh đại diện mới được lưu bắt buộc lên Google Drive; nếu Drive chưa cấu hình hoặc upload lỗi, form sẽ báo lỗi thay vì lưu ảnh local. Ảnh Drive được trả qua route cùng domain để trình duyệt hiển thị được.
+
+Điền các biến `GOOGLE_DRIVE_ENABLED`, `GOOGLE_DRIVE_FOLDER_ID`, `GOOGLE_DRIVE_OAUTH_CLIENT_ID`, `GOOGLE_DRIVE_OAUTH_CLIENT_SECRET` và `GOOGLE_DRIVE_OAUTH_REFRESH_TOKEN` trong `.env`. OAuth token cần scope `https://www.googleapis.com/auth/drive`; chia sẻ thư mục Drive với từng tester bằng quyền Editor, rồi mỗi tester tạo OAuth refresh token riêng. Không commit `.env`.
+
+Poster demo trong seeder trỏ tới các file Drive đã chuẩn bị sẵn. Với database cũ, kiểm tra rồi chuyển poster/avatars local hoặc từ Picsum bằng:
+
+```bash
+php artisan images:migrate-to-drive --dry-run
+php artisan images:migrate-to-drive
+```
+
+Lệnh giữ bản gốc local làm backup; database chỉ đổi sang URL Drive sau khi upload và đọc lại ảnh thành công.
+
 ## Khóa API (tùy chọn)
 - `OPENWEATHER_API_KEY` — dự báo thời tiết trên trang sự kiện (đăng ký miễn phí tại openweathermap.org; key mới có thể mất tới ~1 giờ mới hoạt động). Bỏ trống thì trang hiện "Chưa có dự báo".
 - `GOOGLE_MAPS_EMBED_KEY` — bản đồ qua Maps Embed API; bỏ trống vẫn hiện bản đồ bằng link nhúng công khai.

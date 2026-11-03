@@ -116,8 +116,13 @@ class DatabaseSeeder extends Seeder
         // 5. Sự kiện demo (nội dung trong data/events.php)
         $events = [];
         $basePrices = [];
+        $drivePosters = require __DIR__.'/data/drive-posters.php';
         foreach (require __DIR__.'/data/events.php' as $row) {
             [, $type, $title, $slug, $demoCategoryId, $description, $duration, $basePrice, $isSeated, $details] = $row;
+
+            if (! isset($drivePosters[$slug])) {
+                throw new \RuntimeException("Missing Google Drive poster mapping for seeded event [{$slug}].");
+            }
 
             $events[$slug] = Event::updateOrCreate(['slug' => $slug], [
                 'type' => $type,
@@ -125,7 +130,7 @@ class DatabaseSeeder extends Seeder
                 'category_id' => $categories[self::CATEGORY_BY_DEMO_ID[$demoCategoryId]]->id,
                 'description' => $description,
                 'duration_minutes' => $duration,
-                'poster_path' => "https://picsum.photos/seed/{$slug}/480/720",
+                'poster_path' => $drivePosters[$slug],
                 'status' => 'published',
                 'is_seated' => $isSeated,
                 'details' => $details,
