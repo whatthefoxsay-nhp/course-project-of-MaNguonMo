@@ -931,9 +931,11 @@ window.downloadTicketPNG = function(bookingData) {
     }
 
     const qrImage = new Image();
+    const qrUrl = URL.createObjectURL(new Blob([qrSvg], { type: 'image/svg+xml;charset=utf-8' }));
     qrImage.onload = () => {
         // Quiet zone preserved around the real QR for reliable scanning.
         ctx.drawImage(qrImage, 905, 160, 170, 170);
+        URL.revokeObjectURL(qrUrl);
 
         const link = document.createElement('a');
         link.download = `Ve-Dien-Tu-${orderCode}.png`;
@@ -941,10 +943,11 @@ window.downloadTicketPNG = function(bookingData) {
         link.click();
     };
     qrImage.onerror = () => {
+        URL.revokeObjectURL(qrUrl);
         console.error('Could not render the ticket QR image.');
         window.alert('Không thể hiển thị mã QR vé. Vui lòng thử lại.');
     };
-    qrImage.src = `data:image/svg+xml;base64,${btoa(unescape(encodeURIComponent(qrSvg)))}`;
+    qrImage.src = qrUrl;
 };
 
 // Admin Auto Seat Map & Ticket Tier Builder Alpine Component
