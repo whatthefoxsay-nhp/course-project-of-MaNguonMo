@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use App\Mail\Transport\GmailApiTransport;
+use App\Services\GoogleDriveService;
 use Google\Client as GoogleClient;
 use Google\Service\Gmail;
 use Illuminate\Pagination\Paginator;
@@ -16,7 +17,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        // Avoid Laravel auto-resolving empty Google Client/Drive objects into this service.
+        $this->app->bind(GoogleDriveService::class, static fn () => new GoogleDriveService);
     }
 
     /**
