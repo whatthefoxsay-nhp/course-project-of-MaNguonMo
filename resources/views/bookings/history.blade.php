@@ -135,6 +135,12 @@
                                 </div>
 
                                 <!-- Download Ticket Button -->
+                                @php
+                                    $downloadQrSvg = \SimpleSoftwareIO\QrCode\Facades\QrCode::format('svg')
+                                        ->size(400)
+                                        ->margin(2)
+                                        ->generate('TICKETBOX_AUTH_PASS_'.$booking->booking_code);
+                                @endphp
                                 <button 
                                     type="button" 
                                     onclick="window.downloadTicketPNG({
@@ -143,7 +149,8 @@
                                         venue: '{{ addslashes($booking->showtime->room->name ?? 'Khán Phòng Sự Kiện') }}',
                                         seats: '{{ implode(', ', $booking->seats) }}',
                                         orderCode: '{{ $booking->booking_code }}',
-                                        totalPrice: {{ $booking->total_price }}
+                                        totalPrice: {{ $booking->total_price }},
+                                        qrSvg: @js($downloadQrSvg)
                                     })"
                                     class="w-full py-2.5 px-4 rounded-xl bg-[#C08497] hover:bg-[#A96B7E] text-white text-xs font-black shadow-md shadow-[#C08497]/25 hover:shadow-[#C08497]/40 flex items-center justify-center gap-1.5 transition-all cursor-pointer group"
                                 >

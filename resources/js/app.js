@@ -898,33 +898,6 @@ window.downloadTicketPNG = function(bookingData) {
     ctx.stroke();
 
     ctx.fillStyle = '#000000';
-    const drawEye = (ex, ey) => {
-        ctx.fillRect(ex, ey, 45, 45);
-        ctx.fillStyle = '#FFFFFF';
-        ctx.fillRect(ex + 8, ey + 8, 29, 29);
-        ctx.fillStyle = '#000000';
-        ctx.fillRect(ex + 15, ey + 15, 15, 15);
-    };
-    drawEye(905, 160);
-    drawEye(1030, 160);
-    drawEye(905, 285);
-
-    for (let r = 0; r < 7; r++) {
-        for (let c = 0; c < 7; c++) {
-            if ((r < 3 && c < 3) || (r < 3 && c > 3) || (r > 3 && c < 3)) continue;
-            if ((r + c * 3 + orderCode.charCodeAt(r % 5)) % 2 === 0) {
-                ctx.fillRect(960 + c * 9, 215 + r * 9, 7, 7);
-            }
-        }
-    }
-
-    ctx.fillStyle = '#C08497';
-    ctx.fillRect(972, 227, 36, 36);
-    ctx.fillStyle = '#FFFFFF';
-    ctx.font = '900 12px "Plus Jakarta Sans", sans-serif';
-    ctx.fillText('TBX', 990, 250);
-
-    ctx.fillStyle = '#000000';
     ctx.font = '900 16px "Space Grotesk", sans-serif';
     ctx.fillText(orderCode, 990, 380);
 
@@ -950,10 +923,28 @@ window.downloadTicketPNG = function(bookingData) {
 
     ctx.textAlign = 'left';
 
-    const link = document.createElement('a');
-    link.download = `Ve-Dien-Tu-${orderCode}.png`;
-    link.href = canvas.toDataURL('image/png');
-    link.click();
+    const qrSvg = bookingData.qrSvg;
+    if (!qrSvg) {
+        console.error('Ticket QR image is missing.');
+        window.alert('Không tạo được mã QR vé. Vui lòng tải lại trang rồi thử lại.');
+        return;
+    }
+
+    const qrImage = new Image();
+    qrImage.onload = () => {
+        // Quiet zone preserved around the real QR for reliable scanning.
+        ctx.drawImage(qrImage, 905, 160, 170, 170);
+
+        const link = document.createElement('a');
+        link.download = `Ve-Dien-Tu-${orderCode}.png`;
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+    };
+    qrImage.onerror = () => {
+        console.error('Could not render the ticket QR image.');
+        window.alert('Không thể hiển thị mã QR vé. Vui lòng thử lại.');
+    };
+    qrImage.src = `data:image/svg+xml;base64,${btoa(unescape(encodeURIComponent(qrSvg)))}`;
 };
 
 // Admin Auto Seat Map & Ticket Tier Builder Alpine Component

@@ -125,6 +125,7 @@ test('booking history page displays e-ticket passes and png download button for 
     $response->assertSee('Lịch Sử Vé Đã Đặt');
     $response->assertSee('TBX-89214');
     $response->assertSee('Lưu vé về máy (PNG)');
+    $response->assertSee('qrSvg:');
 });
 
 test('non-existent movie slug returns 404', function () {
