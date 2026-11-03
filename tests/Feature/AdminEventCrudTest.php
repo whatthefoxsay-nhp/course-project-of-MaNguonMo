@@ -93,7 +93,7 @@ test('event poster URLs from Drive use the same-origin image route', function ()
         'poster_path' => 'https://drive.google.com/uc?id=drive_file_123&export=download',
     ]);
 
-    expect($event->poster_url)->toBe(route('events.poster', $event));
+    expect($event->poster_url)->toBe(route('events.poster', $event).'?v=drive_file_123');
 });
 
 test('public event poster route streams Drive image bytes from the same origin', function () {

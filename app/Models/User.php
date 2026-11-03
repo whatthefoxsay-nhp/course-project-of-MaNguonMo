@@ -89,7 +89,7 @@ class User extends Authenticatable
         if (str_starts_with($this->avatar, 'http://') || str_starts_with($this->avatar, 'https://')) {
             $fileId = $this->extractGoogleDriveFileId($this->avatar);
             if ($fileId !== null) {
-                return route('users.avatar', $this);
+                return route('users.avatar', $this).'?v='.rawurlencode($fileId);
             }
 
             return $this->avatar;

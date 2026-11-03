@@ -30,7 +30,7 @@ test('a user uploads an avatar and sets a phone number', function () {
     $user->refresh();
     expect($user->phone)->toBe('0912 345 678')
         ->and($user->avatar)->toBe('https://drive.google.com/uc?export=view&id=user_avatar_123')
-        ->and($user->avatar_url)->toBe(route('users.avatar', $user));
+        ->and($user->avatar_url)->toBe(route('users.avatar', $user).'?v=user_avatar_123');
 });
 
 test('uploading a new avatar deletes the old file', function () {
