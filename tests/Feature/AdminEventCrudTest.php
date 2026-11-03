@@ -49,6 +49,21 @@ test('admin creates an event with a poster and structured details', function () 
     Storage::disk('public')->assertExists($event->poster_path);
 });
 
+test('admin can edit an event whose legacy detail rows are strings', function () {
+    $event = Event::factory()->create([
+        'details' => [
+            'lineup' => ['Legacy lineup row'],
+            'timeline' => ['18:00 | Legacy timeline row'],
+        ],
+    ]);
+
+    $this->actingAs(createAdmin())
+        ->get(route('admin.events.edit', $event))
+        ->assertOk()
+        ->assertSee('Legacy lineup row')
+        ->assertSee('18:00 | Legacy timeline row');
+});
+
 test('admin event poster uploads to Google Drive when it is enabled', function () {
     $drive = Mockery::mock(GoogleDriveService::class);
     $drive->shouldReceive('isEnabled')->once()->andReturn(true);
