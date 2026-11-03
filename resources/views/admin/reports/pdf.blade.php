@@ -85,7 +85,7 @@
             <div class="p-4 rounded-2xl bg-[#FAF9F6] border border-black/10 text-center">
                 <span class="text-[10px] uppercase font-bold text-gray-500 block">Giá Trị Đơn Trung Bình</span>
                 <span class="font-display font-black text-xl text-amber-700 block mt-1">
-                    {{ number_format($totalBookings > 0 ? round($totalRevenue / $totalBookings) : 0, 0, ',', '.') }}₫
+                    {{ number_format($confirmedBookings > 0 ? round($totalRevenue / $confirmedBookings) : 0, 0, ',', '.') }}₫
                 </span>
             </div>
         </div>

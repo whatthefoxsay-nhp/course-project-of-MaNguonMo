@@ -105,3 +105,24 @@ test('regular user cannot manage discounts', function () {
         'max_uses' => 10,
     ])->assertStatus(403);
 });
+
+test('a percentage discount cannot exceed 100 percent', function () {
+    $this->actingAs($this->admin)->post(route('admin.discounts.store'), [
+        'code' => 'OVER150',
+        'title' => 'Giảm quá tay',
+        'discount_type' => 'percentage',
+        'discount_value' => 150,
+        'max_uses' => 10,
+    ])->assertSessionHasErrors('discount_value');
+
+    $this->assertDatabaseMissing('discounts', ['code' => 'OVER150']);
+
+    // Giảm cố định vẫn được nhập số lớn (đơn vị là đồng).
+    $this->actingAs($this->admin)->post(route('admin.discounts.store'), [
+        'code' => 'FIXED150K',
+        'title' => 'Giảm 150.000đ',
+        'discount_type' => 'fixed',
+        'discount_value' => 150000,
+        'max_uses' => 10,
+    ])->assertSessionHasNoErrors();
+});

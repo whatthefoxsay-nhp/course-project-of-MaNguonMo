@@ -27,6 +27,8 @@ class ReportController extends Controller
             'totalRevenue' => Booking::where('status', 'confirmed')->sum('total_price'),
             'totalTicketsSold' => ShowtimeSeat::where('status', 'booked')->count(),
             'totalBookings' => Booking::count(),
+            // Giá trị đơn trung bình chỉ tính trên đơn đã xác nhận (doanh thu cũng chỉ lấy từ các đơn này).
+            'confirmedBookings' => Booking::where('status', 'confirmed')->count(),
             'eventsRevenue' => $sales->eventsRevenue(),
             'categoriesRevenue' => $sales->categoriesRevenue(),
         ];

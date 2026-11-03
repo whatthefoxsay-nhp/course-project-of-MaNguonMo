@@ -58,10 +58,13 @@ function revenueRows($rows, string $key): array
 }
 
 test('report revenue per event and category counts only confirmed seat and zone items', function () {
-    $response = $this->actingAs($this->admin)->get(route('admin.reports.index'))->assertOk();
+    $response = $this->actingAs($this->admin)->get(route('admin.reports.index'))->assertOk()
+        ->assertSee('400.000₫');
 
     expect($response->viewData('totalRevenue'))->toEqual(800000)
         ->and($response->viewData('totalTicketsSold'))->toBe(4)
+        // 2 đơn confirmed (500k + 300k) -> giá trị đơn trung bình 400.000₫, không chia cho đơn đã hủy.
+        ->and($response->viewData('confirmedBookings'))->toBe(2)
         ->and(revenueRows($response->viewData('eventsRevenue'), 'title'))->toBe([
             'Đêm nhạc ghế ngồi' => [500000, 2],
             'Vở kịch vé khu' => [300000, 2],

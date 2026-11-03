@@ -175,7 +175,7 @@ test('admin cannot create a user with duplicate email', function () {
         'role' => 'user',
     ]);
 
-    $response->assertSessionHasErrors(['email']);
+    $response->assertSessionHasErrorsIn('createUser', ['email']);
 });
 
 test('regular user cannot create user accounts via admin endpoint', function () {
@@ -192,3 +192,31 @@ test('regular user cannot create user accounts via admin endpoint', function () 
     $response->assertForbidden();
 });
 
+
+test('a rejected new account reopens the create form with the errors and typed values', function () {
+    $admin = createAdmin();
+    $existing = createCustomer(['email' => 'trung@example.test']);
+
+    $payload = [
+        'name' => 'Người Trùng Email',
+        'email' => $existing->email,
+        'password' => 'MatKhau123',
+        'role' => 'user',
+    ];
+
+    $this->actingAs($admin)
+        ->from(route('admin.users.index'))
+        ->post(route('admin.users.store'), $payload)
+        ->assertRedirect(route('admin.users.index'))
+        ->assertSessionHasErrorsIn('createUser', 'email');
+
+    // Theo redirect: lỗi và dữ liệu đã nhập được flash sang trang danh sách.
+    $this->actingAs($admin)
+        ->from(route('admin.users.index'))
+        ->followingRedirects()
+        ->post(route('admin.users.store'), $payload)
+        ->assertOk()
+        ->assertSee('openCreateModal: true', false)
+        ->assertSee('role="alert"', false)
+        ->assertSee('value="Người Trùng Email"', false);
+});

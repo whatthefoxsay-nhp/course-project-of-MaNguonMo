@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Discount;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
 class DiscountController extends Controller
@@ -63,7 +64,7 @@ class DiscountController extends Controller
             'code' => 'required|string|max:32|unique:discounts,code',
             'title' => 'required|string|max:255',
             'discount_type' => 'required|in:percentage,fixed',
-            'discount_value' => 'required|integer|min:1',
+            'discount_value' => $this->discountValueRules($request),
             'min_order_value' => 'nullable|integer|min:0',
             'max_discount_amount' => 'nullable|integer|min:0',
             'max_uses' => 'required|integer|min:1',
@@ -91,7 +92,7 @@ class DiscountController extends Controller
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'discount_type' => 'required|in:percentage,fixed',
-            'discount_value' => 'required|integer|min:1',
+            'discount_value' => $this->discountValueRules($request),
             'min_order_value' => 'nullable|integer|min:0',
             'max_discount_amount' => 'nullable|integer|min:0',
             'max_uses' => 'required|integer|min:1',
@@ -130,5 +131,11 @@ class DiscountController extends Controller
 
         return redirect()->route('admin.discounts.index')
             ->with('success', "Đã {$statusText} mã khuyến mãi [{$discount->code}].");
+    }
+
+    /** Giảm theo phần trăm thì tối đa 100%; giảm cố định chỉ cần là số dương. */
+    private function discountValueRules(Request $request): array
+    {
+        return ['required', 'integer', 'min:1', Rule::when($request->input('discount_type') === 'percentage', ['max:100'])];
     }
 }

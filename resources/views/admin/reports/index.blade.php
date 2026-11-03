@@ -88,7 +88,7 @@
                     </div>
                 </div>
                 <div class="font-display font-black text-2xl text-amber-900 mt-3">
-                    {{ number_format($totalBookings > 0 ? round($totalRevenue / $totalBookings) : 0, 0, ',', '.') }}₫
+                    {{ number_format($confirmedBookings > 0 ? round($totalRevenue / $confirmedBookings) : 0, 0, ',', '.') }}₫
                 </div>
                 <div class="flex items-center gap-1.5 mt-2">
                     <span class="text-xs text-gray-500 font-semibold">AOV (Average Order Value)</span>

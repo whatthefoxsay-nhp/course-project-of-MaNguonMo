@@ -409,6 +409,14 @@
                 <form method="POST" action="{{ route('admin.users.store') }}" class="space-y-4">
                     @csrf
 
+                    @if ($errors->createUser->any())
+                        <div role="alert" class="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-xs font-semibold text-rose-700 space-y-0.5">
+                            @foreach ($errors->createUser->all() as $message)
+                                <p>{{ $message }}</p>
+                            @endforeach
+                        </div>
+                    @endif
+
                     <!-- Name -->
                     <div class="space-y-1">
                         <label for="create_name" class="block text-xs font-bold text-gray-700 uppercase tracking-wider">
@@ -417,7 +425,8 @@
                         <input 
                             id="create_name" 
                             type="text" 
-                            name="name" 
+                            name="name"
+                            value="{{ old('name') }}" 
                             required 
                             placeholder="Ví dụ: Nguyễn Văn Quản Trị" 
                             class="bg-[#FAF9F6] border border-black/10 px-4 py-2.5 rounded-2xl w-full text-xs text-black font-medium focus:outline-none focus:border-black focus:ring-2 focus:ring-black/10"
@@ -432,7 +441,8 @@
                         <input 
                             id="create_email" 
                             type="email" 
-                            name="email" 
+                            name="email"
+                            value="{{ old('email') }}" 
                             required 
                             placeholder="admin@ticketbox.vn" 
                             class="bg-[#FAF9F6] border border-black/10 px-4 py-2.5 rounded-2xl w-full text-xs text-black font-medium focus:outline-none focus:border-black focus:ring-2 focus:ring-black/10"
@@ -447,7 +457,8 @@
                         <input 
                             id="create_phone" 
                             type="tel" 
-                            name="phone" 
+                            name="phone"
+                            value="{{ old('phone') }}" 
                             placeholder="0912 345 678 (tùy chọn)" 
                             class="bg-[#FAF9F6] border border-black/10 px-4 py-2.5 rounded-2xl w-full text-xs text-black font-medium focus:outline-none focus:border-black focus:ring-2 focus:ring-black/10"
                         >
@@ -548,7 +559,8 @@
     <script>
         document.addEventListener('alpine:init', () => {
             Alpine.data('userManagement', () => ({
-                openCreateModal: false,
+                // Lỗi validation khi tạo tài khoản: mở lại modal để admin thấy lỗi và dữ liệu đã nhập.
+                openCreateModal: @js($errors->createUser->any()),
                 showConfirmModal: false,
                 isSubmitting: false,
                 targetUser: { id: null, name: '', is_active: true },
