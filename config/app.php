@@ -15,7 +15,7 @@ return [
 
     'name' => env('APP_NAME', 'Laravel'),
 
-    'admin_email' => env('ADMIN_EMAIL', 'admin@ticketbox.vn'),
+    'admin_email' => env('ADMIN_EMAIL', 'ktao5002@gmail.com'),
 
     /*
     |--------------------------------------------------------------------------
