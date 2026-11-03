@@ -24,4 +24,22 @@ class TicketPdfService
             ])
             ->output();
     }
+
+    public function generateReceipt(Booking $booking): string
+    {
+        $booking->loadMissing([
+            'user',
+            'items.showtimeSeat.seat.zone',
+            'items.showtimeSeat.showtime.event',
+            'items.showtimeSeat.showtime.room',
+        ]);
+
+        return Pdf::loadView('tickets.receipt-pdf', compact('booking'))
+            ->setPaper('a5', 'portrait')
+            ->setOptions([
+                'defaultFont' => 'DejaVu Sans',
+                'isRemoteEnabled' => false,
+            ])
+            ->output();
+    }
 }

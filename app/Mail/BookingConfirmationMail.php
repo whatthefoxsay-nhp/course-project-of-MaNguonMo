@@ -43,10 +43,14 @@ class BookingConfirmationMail extends Mailable implements ShouldQueue
     public function attachments(): array
     {
         $this->loadBooking();
-        $pdf = app(TicketPdfService::class)->generate($this->booking);
+        $documents = app(TicketPdfService::class);
+        $receipt = $documents->generateReceipt($this->booking);
+        $ticket = $documents->generate($this->booking);
 
         return [
-            Attachment::fromData(fn () => $pdf, "ticket-{$this->booking->booking_code}.pdf")
+            Attachment::fromData(fn () => $receipt, "bien-lai-{$this->booking->booking_code}.pdf")
+                ->withMime('application/pdf'),
+            Attachment::fromData(fn () => $ticket, "ve-dien-tu-{$this->booking->booking_code}.pdf")
                 ->withMime('application/pdf'),
         ];
     }

@@ -10,7 +10,7 @@ use App\Models\Showtime;
 use App\Models\ShowtimeSeat;
 use App\Models\User;
 
-it('renders booking information and attaches the PDF ticket', function () {
+it('renders the receipt email and attaches separate receipt and ticket PDFs', function () {
     $user = User::factory()->create(['name' => 'Trần Bình']);
     $event = Event::factory()->create(['title' => 'Đêm nhạc xác nhận']);
     $room = Room::factory()->create(['name' => 'Nhà hát Thành phố']);
@@ -42,16 +42,19 @@ it('renders booking information and attaches the PDF ticket', function () {
     ]);
 
     $mail = new BookingConfirmationMail($booking->fresh());
-    $attachment = $mail->attachments()[0];
-    $pdfPrefix = $attachment->attachWith(
+    $attachments = $mail->attachments();
+    $pdfPrefixes = array_map(fn ($attachment) => $attachment->attachWith(
         fn ($path) => $path,
         fn ($data) => substr($data(), 0, 5),
-    );
+    ), $attachments);
     $html = $mail->render();
 
     expect($mail->envelope()->subject)->toContain('TBX-MAIL1234', 'Đêm nhạc xác nhận')
-        ->and($html)->toContain('Trần Bình', 'Nhà hát Thành phố', 'B8', '425.000₫')
-        ->and($attachment->as)->toBe('ticket-TBX-MAIL1234.pdf')
-        ->and($attachment->mime)->toBe('application/pdf')
-        ->and($pdfPrefix)->toBe('%PDF-');
+        ->and($html)->toContain('Trần Bình', 'Nhà hát Thành phố', 'B8', '425.000₫', 'Vé đã đặt', 'Biên lai thanh toán')
+        ->and(array_map(fn ($attachment) => $attachment->as, $attachments))->toBe([
+            'bien-lai-TBX-MAIL1234.pdf',
+            've-dien-tu-TBX-MAIL1234.pdf',
+        ])
+        ->and(array_map(fn ($attachment) => $attachment->mime, $attachments))->toBe(['application/pdf', 'application/pdf'])
+        ->and($pdfPrefixes)->toBe(['%PDF-', '%PDF-']);
 });
