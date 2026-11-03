@@ -43,7 +43,8 @@
                     </span>
                     <button 
                         type="button" 
-                        @click="showGreeting = false" 
+                        @click="dismissGreeting()"
+                        aria-label="Ẩn lời chào"
                         class="text-slate-400 hover:text-slate-600 p-0.5 cursor-pointer"
                     >
                         <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
@@ -381,11 +382,33 @@ document.addEventListener('alpine:init', () => {
         ],
 
         initBot() {
+            // Không tự bật lời chào ở trang chọn ghế / giỏ vé (bong bóng che nút giữ chỗ, thanh toán)
+            // và không bật lại khi người dùng đã tắt trong phiên này.
+            if (/^\/(showtimes|cart)(\/|$)/.test(window.location.pathname) || this.greetingDismissed()) {
+                return;
+            }
             setTimeout(() => {
                 if (!this.isOpen) {
                     this.showGreeting = true;
                 }
             }, 1800);
+        },
+
+        greetingDismissed() {
+            try {
+                return sessionStorage.getItem('ticketbot-greeting-dismissed') === '1';
+            } catch (error) {
+                return false;
+            }
+        },
+
+        dismissGreeting() {
+            this.showGreeting = false;
+            try {
+                sessionStorage.setItem('ticketbot-greeting-dismissed', '1');
+            } catch (error) {
+                // Trình duyệt chặn sessionStorage: chỉ ẩn trong lần xem này.
+            }
         },
 
         toggleChat() {

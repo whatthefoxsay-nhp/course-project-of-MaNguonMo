@@ -30,7 +30,7 @@
                             Sơ đồ {{ $showtime->room->preset_label }}
                         </span>
                         <span class="text-xs text-gray-500 font-semibold">
-                            {{ $showtime->room->name }} · còn {{ number_format($seatMap['available_total']) }} chỗ
+                            {{ $showtime->room->name }} · còn {{ number_format($seatMap['available_total'], 0, ',', '.') }} chỗ
                         </span>
                     </div>
                     <h3 class="font-display font-black text-xl text-black mt-1">Chọn Khu Vực &amp; Vị Trí Trực Quan</h3>
@@ -60,7 +60,7 @@
                             class="px-3.5 py-2 rounded-full text-xs font-bold whitespace-nowrap flex items-center gap-1.5">
                         <span class="w-2.5 h-2.5 rounded-full" style="background-color: {{ $zone['color'] }}"></span>
                         <span>{{ $zone['name'] }}</span>
-                        <span class="text-[10px] font-mono opacity-80">({{ number_format($zone['price']) }}₫)</span>
+                        <span class="text-[10px] font-mono opacity-80">({{ number_format($zone['price'], 0, ',', '.') }}₫)</span>
                     </button>
                 @endforeach
             </div>
@@ -125,7 +125,7 @@
                     <div class="p-3.5 rounded-2xl bg-[#FAF9F6] border border-black/10 space-y-2" style="border-left: 5px solid {{ $zone['color'] }}">
                         <div class="flex items-center justify-between gap-2">
                             <span class="font-black text-black">{{ $zone['name'] }}</span>
-                            <span class="font-display font-black text-sm text-black">{{ number_format($zone['price']) }}₫</span>
+                            <span class="font-display font-black text-sm text-black">{{ number_format($zone['price'], 0, ',', '.') }}₫</span>
                         </div>
                         @if ($zone['description'])
                             <p class="text-[11px] text-gray-600 leading-tight">{{ $zone['description'] }}</p>

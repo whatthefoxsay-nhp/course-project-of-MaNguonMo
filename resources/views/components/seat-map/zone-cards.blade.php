@@ -20,7 +20,7 @@
                         <span class="text-[10px] font-mono text-gray-500 font-bold uppercase whitespace-nowrap">{{ $zone['gate'] ?? 'Cổng chính' }}</span>
                     </div>
                     <div>
-                        <span class="font-display font-black text-2xl sm:text-3xl text-black block">{{ number_format($zone['price']) }}₫</span>
+                        <span class="font-display font-black text-2xl sm:text-3xl text-black block">{{ number_format($zone['price'], 0, ',', '.') }}₫</span>
                         <span class="text-[11px] text-gray-500 font-medium">/ 1 vé · còn {{ $zone['available'] }} chỗ</span>
                     </div>
                     @if ($zone['description'])

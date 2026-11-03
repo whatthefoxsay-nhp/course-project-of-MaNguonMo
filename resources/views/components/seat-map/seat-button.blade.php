@@ -42,5 +42,5 @@
             ? 'bg-amber-900/60 text-amber-300 opacity-60 cursor-not-allowed'
             : (isSeatSelected({{ $seat['id'] }}) ? 'bg-white text-black ring-2 ring-gold-antique scale-110 z-10' : 'bg-[var(--zone)] text-white hover:scale-110 cursor-pointer')"
     @endif
-    title="{{ $zone['name'] }} · {{ $seat['code'] }} · {{ number_format($seat['price']) }}₫"
+    title="{{ $zone['name'] }} · {{ $seat['code'] }} · {{ number_format($seat['price'], 0, ',', '.') }}₫"
 >{{ $seat['number'] }}</button>

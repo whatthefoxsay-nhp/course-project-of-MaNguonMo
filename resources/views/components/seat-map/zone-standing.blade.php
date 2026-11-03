@@ -6,7 +6,7 @@
     @if ($zone['description'])
         <p class="text-[10px] text-gray-300 leading-tight max-w-[14rem] mx-auto">{{ $zone['description'] }}</p>
     @endif
-    <div class="text-xs font-mono text-gold-light font-bold">{{ number_format($zone['price']) }}₫</div>
+    <div class="text-xs font-mono text-gold-light font-bold">{{ number_format($zone['price'], 0, ',', '.') }}₫</div>
     <div class="text-[10px] text-gray-400">còn {{ $zone['available'] }} chỗ</div>
 
     <div class="flex items-center justify-center gap-2 pt-1">

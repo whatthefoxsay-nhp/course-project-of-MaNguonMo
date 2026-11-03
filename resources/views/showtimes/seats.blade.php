@@ -83,7 +83,7 @@
                     <div class="text-left md:text-right">
                         <span class="text-xs text-gray-500 font-bold block">Giá vé từ</span>
                         <span class="font-display font-black text-2xl sm:text-3xl text-black">
-                            {{ number_format($showtime->base_price) }}₫
+                            {{ number_format($showtime->base_price, 0, ',', '.') }}₫
                         </span>
                     </div>
 

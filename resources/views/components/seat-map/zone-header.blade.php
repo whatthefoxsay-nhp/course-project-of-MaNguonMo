@@ -6,6 +6,6 @@
         {{ $zone['name'] }}
     </span>
     <span class="text-[10px] font-mono text-gold-light font-bold whitespace-nowrap">
-        {{ number_format($zone['price']) }}₫ · còn {{ $zone['available'] }} chỗ
+        {{ number_format($zone['price'], 0, ',', '.') }}₫ · còn {{ $zone['available'] }} chỗ
     </span>
 </div>
