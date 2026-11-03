@@ -21,33 +21,59 @@ return new class extends Migration
 
     public function up(): void
     {
-        Schema::create('seat_zones', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('room_id')->constrained()->cascadeOnDelete();
-            $table->string('code', 12);
-            $table->string('name', 120);
-            $table->string('kind', 20)->default('seated');
-            $table->unsignedTinyInteger('level')->default(1);
-            $table->unsignedSmallInteger('sort_order')->default(0);
-            $table->integer('surcharge')->default(0);
-            $table->string('color', 7)->default('#3A5A40');
-            $table->string('gate', 80)->nullable();
-            $table->string('description', 500)->nullable();
-            $table->json('perks')->nullable();
-            $table->unsignedSmallInteger('capacity')->nullable();
-            $table->timestamps();
+        if (! Schema::hasTable('seat_zones')) {
+            Schema::create('seat_zones', function (Blueprint $table) {
+                $table->id();
+                $table->foreignId('room_id')->constrained()->cascadeOnDelete();
+                $table->string('code', 12);
+                $table->string('name', 120);
+                $table->string('kind', 20)->default('seated');
+                $table->unsignedTinyInteger('level')->default(1);
+                $table->unsignedSmallInteger('sort_order')->default(0);
+                $table->integer('surcharge')->default(0);
+                $table->string('color', 7)->default('#3A5A40');
+                $table->string('gate', 80)->nullable();
+                $table->string('description', 500)->nullable();
+                $table->json('perks')->nullable();
+                $table->unsignedSmallInteger('capacity')->nullable();
+                $table->timestamps();
 
-            $table->unique(['room_id', 'code']);
+                $table->unique(['room_id', 'code']);
+            });
+        }
+
+        $legacyZoneTableExists = Schema::hasTable('room_zones');
+        $zoneForeignKeyTarget = $this->zoneForeignKeyTarget();
+
+        if (Schema::hasColumn('seats', 'zone_id') && $zoneForeignKeyTarget !== null && $zoneForeignKeyTarget !== 'seat_zones') {
+            Schema::table('seats', fn (Blueprint $table) => $table->dropForeign(['zone_id']));
+            $zoneForeignKeyTarget = null;
+        }
+
+        Schema::table('seats', function (Blueprint $table): void {
+            if (! Schema::hasColumn('seats', 'zone_id')) {
+                $table->unsignedBigInteger('zone_id')->nullable()->after('room_id');
+            }
+
+            if (! Schema::hasColumn('seats', 'pos_col')) {
+                $table->unsignedSmallInteger('pos_col')->nullable()->after('seat_number');
+            }
         });
 
-        Schema::table('seats', function (Blueprint $table) {
-            // Xóa khu không kéo theo xóa ghế (tránh mất vé đã bán); ghế chỉ mất liên kết khu.
-            // Xóa cả phòng thì rooms -> seats (cascade) vẫn chạy được trên MySQL.
-            $table->foreignId('zone_id')->nullable()->after('room_id')->constrained('seat_zones')->nullOnDelete();
-            $table->unsignedSmallInteger('pos_col')->nullable()->after('seat_number');
-        });
+        if ($legacyZoneTableExists) {
+            $this->migrateLegacyRoomZones();
+        } else {
+            $this->backfillExistingSeats();
+        }
 
-        $this->backfillExistingSeats();
+        if ($zoneForeignKeyTarget === null) {
+            Schema::table('seats', function (Blueprint $table): void {
+                // Deleting a zone must not delete seats or their bookings.
+                $table->foreign('zone_id')->references('id')->on('seat_zones')->nullOnDelete();
+            });
+        }
+
+        DB::table('seats')->whereNull('pos_col')->update(['pos_col' => DB::raw('seat_number')]);
     }
 
     public function down(): void
@@ -97,5 +123,77 @@ return new class extends Migration
                     'pos_col' => $kind === 'standing' ? null : DB::raw('seat_number'),
                 ]);
         }
+    }
+
+    /**
+     * Older local databases used room_zones with seats.zone_id already pointing there.
+     * Copy those zones into the current schema and preserve each seat's zone assignment.
+     */
+    private function migrateLegacyRoomZones(): void
+    {
+        $typeDetails = [
+            'svip_diamond' => [1, 150000, '#D4AF37'],
+            'vip_gold' => [2, 80000, '#E5A93C'],
+            'cat1_stand' => [3, 40000, '#3A5A40'],
+            'cat2_wings' => [3, 0, '#1F2937'],
+            'skybox_suite' => [4, 200000, '#C08497'],
+            'standing_pit' => [1, -20000, '#99334D'],
+        ];
+
+        foreach (DB::table('room_zones')->orderBy('id')->get() as $legacyZone) {
+            [$level, $surcharge, $color] = $typeDetails[$legacyZone->seat_type]
+                ?? [1, 0, '#4B5563'];
+            $kind = in_array($legacyZone->kind, ['seated', 'table', 'standing'], true)
+                ? $legacyZone->kind
+                : 'standing';
+            $code = substr((string) $legacyZone->code, 0, 12) ?: 'STD';
+
+            $zoneId = DB::table('seat_zones')->where('room_id', $legacyZone->room_id)
+                ->where('code', $code)->value('id');
+
+            if ($zoneId === null) {
+                $zoneId = DB::table('seat_zones')->insertGetId([
+                    'room_id' => $legacyZone->room_id,
+                    'code' => $code,
+                    'name' => $legacyZone->name,
+                    'kind' => $kind,
+                    'level' => $level,
+                    'sort_order' => $legacyZone->sort_order,
+                    'surcharge' => $surcharge,
+                    'color' => $color,
+                    'capacity' => $kind === 'standing' ? min((int) $legacyZone->capacity, 65535) : null,
+                    'created_at' => $legacyZone->created_at,
+                    'updated_at' => $legacyZone->updated_at,
+                ]);
+            }
+
+            DB::table('seats')->where('room_id', $legacyZone->room_id)
+                ->where('zone_id', $legacyZone->id)
+                ->update(['zone_id' => $zoneId]);
+        }
+    }
+
+    private function zoneForeignKeyTarget(): ?string
+    {
+        if (! Schema::hasColumn('seats', 'zone_id')) {
+            return null;
+        }
+
+        if (DB::connection()->getDriverName() === 'sqlite') {
+            foreach (DB::select('PRAGMA foreign_key_list(seats)') as $foreignKey) {
+                if (($foreignKey->from ?? null) === 'zone_id') {
+                    return $foreignKey->table;
+                }
+            }
+
+            return null;
+        }
+
+        $constraint = DB::selectOne(
+            'select referenced_table_name as target_table from information_schema.key_column_usage where table_schema = database() and table_name = ? and column_name = ? and referenced_table_name is not null limit 1',
+            ['seats', 'zone_id']
+        );
+
+        return $constraint?->target_table;
     }
 };
