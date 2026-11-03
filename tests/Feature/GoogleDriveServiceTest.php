@@ -28,6 +28,9 @@ it('reports disabled when Drive is not enabled or credentials are missing', func
         'services.google_drive.enabled' => false,
         'services.google_drive.folder_id' => 'folder-123',
         'services.google_drive.service_account' => 'missing-service-account.json',
+        'services.google_drive.client_id' => '',
+        'services.google_drive.client_secret' => '',
+        'services.google_drive.refresh_token' => '',
     ]);
 
     expect(app(GoogleDriveService::class)->isEnabled())->toBeFalse();
