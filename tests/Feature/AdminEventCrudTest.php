@@ -73,6 +73,21 @@ test('admin can edit an event whose legacy detail rows are strings', function ()
         ->assertSee('18:00 | Legacy timeline row');
 });
 
+test('admin can edit an event whose legacy lineup and timeline are scalar strings', function () {
+    $event = Event::factory()->create([
+        'details' => [
+            'lineup' => 'SOOBIN',
+            'timeline' => '19:00 mở màn',
+        ],
+    ]);
+
+    $this->actingAs(createAdmin())
+        ->get(route('admin.events.edit', $event))
+        ->assertOk()
+        ->assertSee('SOOBIN')
+        ->assertSee('19:00 mở màn');
+});
+
 test('event poster URLs from Drive use the same-origin image route', function () {
     $event = Event::factory()->create([
         'poster_path' => 'https://drive.google.com/uc?id=drive_file_123&export=download',

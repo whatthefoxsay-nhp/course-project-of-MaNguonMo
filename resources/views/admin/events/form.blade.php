@@ -1,7 +1,9 @@
 @php
     $isEdit = $event->exists;
-    $lineupText = collect($event->lineup ?? [])->map(fn ($row) => is_array($row) ? implode(' | ', array_values($row)) : (string) $row)->implode("\n");
-    $timelineText = collect($event->timeline ?? [])->map(fn ($row) => is_array($row) ? implode(' | ', array_values($row)) : (string) $row)->implode("\n");
+    $lineupRows = is_array($event->lineup) ? $event->lineup : ($event->lineup ? [$event->lineup] : []);
+    $timelineRows = is_array($event->timeline) ? $event->timeline : ($event->timeline ? [$event->timeline] : []);
+    $lineupText = collect($lineupRows)->map(fn ($row) => is_array($row) ? implode(' | ', array_values($row)) : (string) $row)->implode("\n");
+    $timelineText = collect($timelineRows)->map(fn ($row) => is_array($row) ? implode(' | ', array_values($row)) : (string) $row)->implode("\n");
 @endphp
 
 <x-admin-layout 
