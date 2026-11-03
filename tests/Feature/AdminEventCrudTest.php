@@ -10,7 +10,10 @@ use App\Services\GoogleDriveService;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 
-beforeEach(fn () => Storage::fake('public'));
+beforeEach(function () {
+    Storage::fake('public');
+    config(['services.google_drive.enabled' => false]);
+});
 
 function eventPayload(array $overrides = []): array
 {
@@ -62,6 +65,14 @@ test('admin can edit an event whose legacy detail rows are strings', function ()
         ->assertOk()
         ->assertSee('Legacy lineup row')
         ->assertSee('18:00 | Legacy timeline row');
+});
+
+test('event poster URLs from Drive are normalized for inline image display', function () {
+    $event = Event::factory()->create([
+        'poster_path' => 'https://drive.google.com/uc?id=drive_file_123&export=download',
+    ]);
+
+    expect($event->poster_url)->toBe('https://drive.google.com/uc?export=view&id=drive_file_123');
 });
 
 test('admin event poster uploads to Google Drive when it is enabled', function () {

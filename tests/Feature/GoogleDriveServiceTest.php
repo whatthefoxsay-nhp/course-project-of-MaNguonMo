@@ -72,7 +72,6 @@ it('uploads an image, makes it public, and returns a direct view URL', function 
     $drive->files = $fileResource;
     $drive->permissions = $permissionResource;
     $uploaded->shouldReceive('getId')->once()->andReturn('file_123');
-    $uploaded->shouldReceive('getWebContentLink')->once()->andReturn(null);
 
     $fileResource->shouldReceive('listFiles')->once()->andReturn(new class
     {
@@ -101,7 +100,7 @@ it('uploads an image, makes it public, and returns a direct view URL', function 
     $permissionResource->shouldReceive('create')->once()->with('file_123', Mockery::type(Permission::class), ['supportsAllDrives' => true]);
 
     $service = new GoogleDriveService(drive: $drive);
-    $url = $service->upload(UploadedFile::fake()->image('poster.png'));
+    $url = $service->upload(UploadedFile::fake()->create('poster.png', 1, 'image/png'));
 
     expect($url)->toBe('https://drive.google.com/uc?export=view&id=file_123');
 });
@@ -113,7 +112,7 @@ it('returns null for local fallback when Drive is disabled', function () {
         'services.google_drive.service_account' => 'missing-service-account.json',
     ]);
 
-    expect(app(GoogleDriveService::class)->upload(UploadedFile::fake()->image('poster.png')))->toBeNull();
+    expect(app(GoogleDriveService::class)->upload(UploadedFile::fake()->create('poster.png', 1, 'image/png')))->toBeNull();
 });
 
 it('extracts file IDs only from supported Google Drive URLs', function () {

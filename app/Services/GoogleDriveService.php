@@ -55,7 +55,7 @@ class GoogleDriveService
                 'mimeType' => $file->getMimeType(),
                 'uploadType' => 'multipart',
                 'supportsAllDrives' => true,
-                'fields' => 'id,webViewLink,webContentLink',
+                'fields' => 'id',
             ]);
 
             $fileId = (string) $uploaded->getId();
@@ -68,8 +68,7 @@ class GoogleDriveService
                 'role' => 'reader',
             ]), ['supportsAllDrives' => true]);
 
-            return $uploaded->getWebContentLink()
-                ?: "https://drive.google.com/uc?export=view&id={$fileId}";
+            return "https://drive.google.com/uc?export=view&id={$fileId}";
         } catch (Throwable $exception) {
             if ($fileId !== null && $fileId !== '') {
                 try {

@@ -109,6 +109,11 @@ class Event extends Model
     {
         if ($this->poster_path) {
             if (str_starts_with($this->poster_path, 'http://') || str_starts_with($this->poster_path, 'https://')) {
+                $driveFileId = $this->extractGoogleDriveFileId($this->poster_path);
+                if ($driveFileId !== null) {
+                    return "https://drive.google.com/uc?export=view&id={$driveFileId}";
+                }
+
                 return $this->poster_path;
             }
             if (Storage::disk('public')->exists($this->poster_path)) {
@@ -116,5 +121,22 @@ class Event extends Model
             }
         }
         return "https://picsum.photos/seed/{$this->slug}/480/720";
+    }
+
+    private function extractGoogleDriveFileId(string $url): ?string
+    {
+        $parts = parse_url($url);
+        if (! in_array(strtolower((string) ($parts['host'] ?? '')), ['drive.google.com', 'docs.google.com'], true)) {
+            return null;
+        }
+
+        parse_str((string) ($parts['query'] ?? ''), $query);
+        $fileId = $query['id'] ?? null;
+
+        if (! is_string($fileId) && preg_match('~/(?:file/)?d/([A-Za-z0-9_-]+)(?:/|$)~', (string) ($parts['path'] ?? ''), $matches)) {
+            $fileId = $matches[1];
+        }
+
+        return is_string($fileId) && preg_match('/^[A-Za-z0-9_-]+$/', $fileId) ? $fileId : null;
     }
 }
