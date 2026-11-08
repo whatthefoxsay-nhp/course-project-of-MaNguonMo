@@ -10,7 +10,6 @@ class TicketPdfService
     public function generate(Booking $booking): string
     {
         $booking->loadMissing([
-            'user',
             'items.showtimeSeat.seat.zone',
             'items.showtimeSeat.showtime.event',
             'items.showtimeSeat.showtime.room',
@@ -28,7 +27,6 @@ class TicketPdfService
     public function generateReceipt(Booking $booking): string
     {
         $booking->loadMissing([
-            'user',
             'items.showtimeSeat.seat.zone',
             'items.showtimeSeat.showtime.event',
             'items.showtimeSeat.showtime.room',

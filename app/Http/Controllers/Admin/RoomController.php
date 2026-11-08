@@ -26,18 +26,37 @@ class RoomController extends Controller
             $zones = $room->zones->keyBy('id');
             $zoneOf = fn (Seat $seat) => $zones[$seat->zone_id] ?? null;
 
-            $rows = $room->seats
-                ->whereNotNull('pos_col')
-                ->groupBy('row_label')
-                ->map(fn ($rowSeats, $rowLabel) => [
-                    'row' => (string) $rowLabel,
-                    'seats' => $rowSeats->sortBy('pos_col')->map(fn (Seat $seat) => [
-                        'id' => $seat->id,
-                        'number' => $seat->seat_number,
-                        'type_name' => $zoneOf($seat)?->name ?? 'Ghế ngồi',
-                        'color' => $zoneOf($seat)?->color ?? '#4B5563',
-                    ])->values()->all(),
-                ])->values()->all();
+            $levels = $room->zones->groupBy('level')->map(function ($zones, $level) use ($room, $zoneOf) {
+                return [
+                    'level' => (int) $level,
+                    'zones' => $zones->map(function (SeatZone $zone) use ($room, $zoneOf) {
+                        $zoneSeats = $room->seats->where('zone_id', $zone->id);
+                        $rows = $zoneSeats->whereNotNull('pos_col')
+                            ->groupBy('row_label')
+                            ->map(fn ($rowSeats, $rowLabel) => [
+                                'row' => (string) $rowLabel,
+                                'seats' => $rowSeats->sortBy('pos_col')->map(fn (Seat $seat) => [
+                                    'id' => $seat->id,
+                                    'number' => $seat->seat_number,
+                                    'col' => $seat->pos_col,
+                                    'type_name' => $zoneOf($seat)?->name ?? 'Ghế ngồi',
+                                    'color' => $zoneOf($seat)?->color ?? '#4B5563',
+                                ])->values()->all(),
+                            ])->values()->all();
+
+                        return [
+                            'code' => $zone->code,
+                            'name' => $zone->name,
+                            'kind' => $zone->kind,
+                            'color' => $zone->color,
+                            'capacity' => $zone->isStanding() ? $zoneSeats->count() : null,
+                            'count' => $zoneSeats->count(),
+                            'max_col' => (int) $zoneSeats->max('pos_col'),
+                            'rows' => $rows,
+                        ];
+                    })->values()->all(),
+                ];
+            })->values()->all();
 
             $summary = $room->seats_summary;
 
@@ -50,7 +69,19 @@ class RoomController extends Controller
                 'preset_label' => $room->preset_label,
                 'showtimes_count' => $room->showtimes_count ?? 0,
                 'summary' => $summary,
-                'rows' => $rows,
+                'levels' => $levels,
+                'stage_label' => match ($room->layout_preset) {
+                    'theater_hall' => '🎭 Sân khấu nhà hát 🎭',
+                    'convention_center' => '🏢 Bục diễn giả & màn chiếu 🏢',
+                    'banquet_hall' => '🍽️ Sân khấu & bàn giảng viên',
+                    'open_space' => '🎪 Cổng vào khu sự kiện',
+                    default => '★ SÂN KHẤU CHÍNH ★',
+                },
+                'stage_subtitle' => match ($room->layout_preset) {
+                    'theater_hall' => 'Hố dàn nhạc',
+                    'convention_center' => 'Khu vực trình chiếu',
+                    default => '',
+                },
                 'standing' => collect($summary['zones'])->where('kind', 'standing')->values()->all(),
                 'builder_url' => route('admin.rooms.builder', $room),
             ];

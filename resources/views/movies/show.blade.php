@@ -417,10 +417,6 @@
                                                 <span>Ngày biểu diễn:</span>
                                                 <strong class="text-black">{{ $showtime->start_time->format('d/m/Y') }}</strong>
                                             </div>
-                                            <div class="flex items-center justify-between">
-                                                <span>Giá vé chỉ từ:</span>
-                                                <strong class="text-rose-taupe font-black text-sm">{{ number_format($showtime->base_price) }}₫</strong>
-                                            </div>
                                         </div>
 
                                         <div class="mt-3 pt-3 border-t border-black/10 flex items-center justify-between text-xs font-black text-black group-hover:text-gold-dark">

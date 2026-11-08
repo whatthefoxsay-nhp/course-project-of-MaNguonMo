@@ -378,6 +378,16 @@
                             </div>
                             <span x-show="!sidebarCollapsed" class="whitespace-nowrap font-medium text-[13.5px]">Quản Lý Người Dùng</span>
                         </a>
+
+                        <a href="{{ route('admin.reviews.index') }}" :title="sidebarCollapsed ? 'Đánh Giá & Bình Luận' : ''" class="admin-nav-item h-12 flex items-center gap-3 rounded-xl {{ request()->routeIs('admin.reviews.*') ? 'is-active' : '' }}" :class="sidebarCollapsed ? 'lg:justify-center lg:px-0 px-3' : 'px-3'">
+                            <div class="admin-nav-icon-box"><svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M11.48 3.5a.75.75 0 011.04 0l2.1 2.03 2.9.42a.75.75 0 01.57 1.2l-2.1 2.05.5 2.88a.75.75 0 01-1.09.79L12 11.5l-2.6 1.37a.75.75 0 01-1.09-.79l.5-2.88-2.1-2.05a.75.75 0 01.57-1.2l2.9-.42 2.1-2.03zM5 16.5h14M7 20h10" /></svg></div>
+                            <span x-show="!sidebarCollapsed" class="whitespace-nowrap font-medium text-[13.5px]">Đánh Giá &amp; Bình Luận</span>
+                        </a>
+
+                        <a href="{{ route('admin.notifications.index') }}" :title="sidebarCollapsed ? 'Thông Báo Hệ Thống' : ''" class="admin-nav-item h-12 flex items-center gap-3 rounded-xl {{ request()->routeIs('admin.notifications.*') ? 'is-active' : '' }}" :class="sidebarCollapsed ? 'lg:justify-center lg:px-0 px-3' : 'px-3'">
+                            <div class="admin-nav-icon-box"><svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.4-1.4A2 2 0 0118 14.2V11a6 6 0 00-12 0v3.2a2 2 0 01-.6 1.4L4 17h5m6 0v1a3 3 0 01-6 0v-1m6 0H9" /></svg></div>
+                            <span x-show="!sidebarCollapsed" class="whitespace-nowrap font-medium text-[13.5px]">Thông Báo Hệ Thống</span>
+                        </a>
                     </div>
                 </div>
 

@@ -12,14 +12,14 @@ use Illuminate\Support\Facades\Mail;
 
 class CheckoutService
 {
-    public const PAYMENT_METHODS = ['vietqr', 'momo', 'zalopay', 'card'];
+    public const PAYMENT_METHODS = ['vietqr', 'momo'];
 
     /**
      * Thanh toán giả lập (spec mục 5): ghế đang giữ -> đơn "confirmed".
      *
      * @throws SeatHoldException
      */
-    public function checkout(User $user, string $paymentMethod): Booking
+    public function checkout(User $user, string $paymentMethod, string $deliveryEmail): Booking
     {
         $booking = DB::transaction(function () use ($user, $paymentMethod) {
             $seats = ShowtimeSeat::heldBy($user)
@@ -56,7 +56,7 @@ class CheckoutService
             return $booking;
         });
 
-        Mail::to($user->email)->queue(new BookingConfirmationMail($booking));
+        Mail::to($deliveryEmail)->queue(new BookingConfirmationMail($booking));
 
         return $booking;
     }

@@ -35,7 +35,6 @@ class BookingConfirmationMail extends Mailable implements ShouldQueue
             with: [
                 'booking' => $this->booking,
                 'items' => $this->booking->items,
-                'user' => $this->booking->user,
             ],
         );
     }
@@ -58,7 +57,6 @@ class BookingConfirmationMail extends Mailable implements ShouldQueue
     private function loadBooking(): void
     {
         $this->booking->loadMissing([
-            'user',
             'items.showtimeSeat.seat.zone',
             'items.showtimeSeat.showtime.event',
             'items.showtimeSeat.showtime.room',

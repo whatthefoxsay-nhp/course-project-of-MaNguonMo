@@ -233,40 +233,61 @@
                         </div>
 
                         <div class="overflow-x-auto p-4 bg-gradient-to-b from-[#0F172A] via-[#111827] to-[#020617] rounded-3xl text-white min-h-[320px]">
-                            <div class="transition-transform duration-200 origin-top min-w-max mx-auto space-y-2" :style="'transform: scale(' + zoomScale + ')'">
-                                <div class="w-full max-w-md mx-auto p-2.5 text-center rounded-2xl border-2 border-gold-antique/80 text-[11px] font-black tracking-widest uppercase text-gold-light mb-4">★ Sân khấu ★</div>
+                            <div class="transition-transform duration-200 origin-top min-w-max mx-auto space-y-6" :style="'transform: scale(' + zoomScale + ')'">
+                                <div x-show="preset === 'theater_hall'" class="w-full max-w-lg mx-auto p-4 bg-gradient-to-r from-red-950 via-rose-950 to-red-950 text-center rounded-b-[3rem] rounded-t-xl shadow-xl border-2 border-gold-antique">
+                                    <div class="font-display font-black text-xs tracking-widest uppercase text-gold-light">🎭 Sân khấu nhà hát 🎭</div>
+                                    <span class="text-[10px] text-gray-300 font-mono">Hố dàn nhạc</span>
+                                </div>
+                                <div x-show="preset !== 'theater_hall'" class="w-full max-w-md mx-auto p-2.5 text-center rounded-2xl border-2 border-gold-antique/80 text-[11px] font-black tracking-widest uppercase text-gold-light">★ Sân khấu ★</div>
 
-                                <template x-for="(row, rIdx) in rows" :key="rIdx">
-                                    <div class="flex items-center gap-2 group">
-                                        <button type="button" @click="paintRow(rIdx)" x-show="!locked" class="w-6 text-[11px] hover:scale-125 shrink-0" title="Tô cả hàng bằng cọ đang chọn">🖌️</button>
-                                        <input type="text" x-model="row.label" :readonly="locked" maxlength="12" class="w-16 bg-white/10 border border-white/10 rounded px-1 py-0.5 text-[10px] font-mono text-white" title="Nhãn hàng (sửa được)">
-                                        <div class="flex items-center gap-1">
-                                            <template x-for="(cell, cIdx) in row.cells" :key="cIdx">
-                                                <button type="button" @click="paintCell(rIdx, cIdx)"
-                                                        @mouseenter="hoveredCell = cell.aisle ? 'Lối đi' : (row.label + '-' + seatNumber(rIdx, cIdx) + ' · ' + zoneName(cell.zone))"
-                                                        :style="cell.aisle ? '' : 'background-color: ' + zoneColor(cell.zone)"
-                                                        :class="cell.aisle ? 'border border-dashed border-gray-600 text-gray-600' : 'border border-white/20 text-white hover:scale-125'"
-                                                        class="w-6 h-6 rounded-md text-[9px] font-black flex items-center justify-center transition-transform select-none">
-                                                    <span x-text="cell.aisle ? '·' : seatNumber(rIdx, cIdx)"></span>
-                                                </button>
-                                            </template>
-                                        </div>
-                                        <div class="flex items-center gap-1 opacity-0 group-hover:opacity-100 pl-1 shrink-0" x-show="!locked">
-                                            <button type="button" @click="addCell(rIdx)" class="w-5 h-5 rounded bg-white/10 text-[10px] font-bold" title="Thêm 1 ô">+</button>
-                                            <button type="button" @click="removeCell(rIdx)" class="w-5 h-5 rounded bg-white/10 text-[10px] font-bold" title="Bớt 1 ô">&minus;</button>
-                                            <button type="button" @click="removeRow(rIdx)" class="w-5 h-5 rounded bg-red-500/30 text-[10px] font-bold" title="Xóa hàng">&times;</button>
-                                        </div>
+                                <template x-for="level in previewLevels" :key="level.level">
+                                    <div class="flex items-start justify-center gap-4 sm:gap-6 min-w-max">
+                                        <template x-for="zone in level.zones" :key="zone.code">
+                                            <section class="rounded-2xl p-3 bg-black/40 border space-y-2" :style="'border-color: ' + zone.color + '66'">
+                                                <div class="flex items-center justify-between gap-3 px-1">
+                                                    <span class="flex items-center gap-2 text-[11px] font-black text-white">
+                                                        <span class="w-2.5 h-2.5 rounded-full" :style="'background-color: ' + zone.color"></span>
+                                                        <span x-text="zone.name"></span>
+                                                    </span>
+                                                    <span class="text-[9px] text-gray-400 font-mono" x-text="zone.kind === 'standing' ? 'Khu đứng' : (zone.rows.reduce((sum, row) => sum + row.cells.filter(cell => cell.kind === 'seat').length, 0) + ' chỗ')"></span>
+                                                </div>
+                                                <template x-if="zone.kind === 'standing'">
+                                                    <div class="px-4 py-3 rounded-xl border-2 border-dashed text-center min-w-[12rem]" :style="'border-color: ' + zone.color">
+                                                        <span class="text-[10px] text-gray-300 font-mono" x-text="'Sức chứa · ' + (zone.capacity || 0) + ' chỗ'"></span>
+                                                    </div>
+                                                </template>
+                                                <div class="space-y-1.5" x-show="zone.kind !== 'standing'">
+                                                    <template x-for="row in zone.rows" :key="row.rowIdx">
+                                                        <div class="flex items-center gap-1.5 group">
+                                                            <button type="button" @click="paintRow(row.rowIdx)" x-show="!locked && zone.code === row.primaryZone" class="w-5 text-[10px] hover:scale-125 shrink-0" title="Tô cả hàng bằng cọ đang chọn">🖌️</button>
+                                                            <input x-show="zone.code === row.primaryZone" type="text" x-model="rows[row.rowIdx].label" :readonly="locked" maxlength="12" class="w-12 bg-white/10 border border-white/10 rounded px-1 py-0.5 text-[9px] font-mono text-white" title="Nhãn hàng">
+                                                            <span x-show="zone.code !== row.primaryZone" class="w-12 text-right text-[9px] font-mono text-gray-400 font-bold" x-text="row.label"></span>
+                                                            <div class="grid gap-1" :style="'grid-template-columns: repeat(' + Math.max(1, zone.maxCol) + ', minmax(0, 1.5rem))'">
+                                                                <template x-for="cell in row.cells" :key="cell.colIdx">
+                                                                    <template x-if="cell.kind === 'seat' || cell.kind === 'aisle'">
+                                                                        <button type="button" @click="paintCell(row.rowIdx, cell.colIdx)"
+                                                                                @mouseenter="hoveredCell = cell.kind === 'aisle' ? 'Lối đi' : (rows[row.rowIdx].label + '-' + cell.number + ' · ' + zone.name)"
+                                                                                :style="cell.kind === 'aisle' ? '' : 'background-color: ' + zone.color"
+                                                                                :class="cell.kind === 'aisle' ? 'border border-dashed border-gray-600 text-gray-600' : 'border border-white/20 text-white hover:scale-125'"
+                                                                                class="w-6 h-6 rounded-md text-[9px] font-black flex items-center justify-center transition-transform select-none">
+                                                                            <span x-text="cell.kind === 'aisle' ? '·' : cell.number"></span>
+                                                                        </button>
+                                                                    </template>
+                                                                    <div x-show="cell.kind === 'other' || cell.kind === 'empty'" class="w-6 h-6"></div>
+                                                                </template>
+                                                            </div>
+                                                            <div class="flex items-center gap-1 opacity-0 group-hover:opacity-100 pl-1 shrink-0" x-show="!locked && zone.code === row.primaryZone">
+                                                                <button type="button" @click="addCell(row.rowIdx)" class="w-5 h-5 rounded bg-white/10 text-[10px] font-bold" title="Thêm 1 ô">+</button>
+                                                                <button type="button" @click="removeCell(row.rowIdx)" class="w-5 h-5 rounded bg-white/10 text-[10px] font-bold" title="Bớt 1 ô">&minus;</button>
+                                                                <button type="button" @click="removeRow(row.rowIdx)" class="w-5 h-5 rounded bg-red-500/30 text-[10px] font-bold" title="Xóa hàng">&times;</button>
+                                                            </div>
+                                                        </div>
+                                                    </template>
+                                                </div>
+                                            </section>
+                                        </template>
                                     </div>
                                 </template>
-
-                                <div class="pt-4 flex flex-wrap justify-center gap-3">
-                                    <template x-for="zone in standingZones" :key="zone.code">
-                                        <div class="px-4 py-3 rounded-2xl border-2 border-dashed text-center" :style="'border-color: ' + zone.color">
-                                            <span class="text-xs font-black block" x-text="zone.name"></span>
-                                            <span class="text-[10px] text-gray-300 font-mono" x-text="'Khu đứng · ' + (zone.capacity || 0) + ' chỗ'"></span>
-                                        </div>
-                                    </template>
-                                </div>
                             </div>
                         </div>
 

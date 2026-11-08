@@ -88,17 +88,17 @@
                     <div class="qr-subheading">Quét mã vào cổng khán phòng</div>
                     <div class="qr-card"><img src="{{ $qrDataUri }}" alt="QR {{ $booking->booking_code }}"></div>
                     <div class="qr-code">{{ $booking->booking_code }}</div>
-                    <div class="qr-valid">✓ HỢP LỆ ĐỐI SOÁT CỔNG</div>
+                    <div class="qr-valid">MÃ QR ĐỐI CHIẾU VÉ</div>
                 </td>
             </tr>
         </table>
 
         <table class="bottom" role="presentation" width="100%">
             <tr>
-                <td>KHÁCH HÀNG: <strong>{{ $booking->user?->name ?? 'Khách hàng' }}</strong></td>
+                <td>VÉ ĐIỆN TỬ: <strong>Đối chiếu bằng mã QR</strong></td>
                 <td align="right">MÃ ĐẶT VÉ: <strong>{{ $booking->booking_code }}</strong></td>
             </tr>
-            <tr><td colspan="2" class="footer">Vui lòng xuất trình mã QR tại cổng soát vé. Mỗi mã chỉ được sử dụng một lần.</td></tr>
+            <tr><td colspan="2" class="footer">Vui lòng xuất trình mã QR tại cổng soát vé và giữ mã riêng tư.</td></tr>
         </table>
     </main>
 </body>

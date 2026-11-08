@@ -18,11 +18,14 @@ class StoreCommentRequest extends FormRequest
 
     public function rules(): array
     {
-        return ['content' => ['required', 'string', 'min:3', 'max:1000']];
+        return [
+            'content' => ['required', 'string', 'min:3', 'max:1000'],
+            'rating' => ['required', 'integer', 'between:1,5'],
+        ];
     }
 
     public function attributes(): array
     {
-        return ['content' => 'nội dung bình luận'];
+        return ['content' => 'nội dung bình luận', 'rating' => 'số sao'];
     }
 }

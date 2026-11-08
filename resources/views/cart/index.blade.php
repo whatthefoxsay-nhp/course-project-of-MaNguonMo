@@ -16,9 +16,7 @@
         $totalPrice = array_sum(array_map(fn ($item) => $item->price, $items));
         $firstItem = !empty($items) ? $items[0] : null;
         $currentUser = auth()->user();
-        $userName = $currentUser?->name ?? '';
         $userEmail = $currentUser?->email ?? '';
-        $userPhone = $currentUser?->phone ?? '';
     @endphp
 
     <div 
@@ -26,9 +24,11 @@
         x-data="ticketPaymentManager({
             totalAmount: {{ $totalPrice }},
             items: {{ Js::from($jsItems) }},
-            userName: '{{ addslashes($userName) }}',
-            userEmail: '{{ addslashes($userEmail) }}',
-            userPhone: '{{ addslashes($userPhone) }}',
+            userEmail: @js($userEmail),
+            bankPayment: @js([
+                'accountNo' => config('services.ticket_payment.mb_account_no'),
+                'accountHolder' => config('services.ticket_payment.mb_account_holder'),
+            ]),
             checkoutUrl: @js(route('checkout.store')),
             removeUrl: @js(route('cart.seats.destroy', '__ID__')),
         })"
@@ -207,9 +207,9 @@
                                     </div>
                                     <div>
                                         <h3 class="font-display font-black text-lg sm:text-xl text-black tracking-tight">
-                                            Thông Tin Người Đặt &amp; Nhận Vé
+                                            Thông Tin Nhận Vé
                                         </h3>
-                                        <p class="text-xs text-gray-500 font-medium mt-0.5">Thông tin sẽ được in trực tiếp lên Vé Điện Tử E-Ticket để đối soát cổng sự kiện.</p>
+                                        <p class="text-xs text-gray-500 font-medium mt-0.5">Email dùng để gửi vé. Mã QR và thông tin vé được dùng để đối soát tại cổng.</p>
                                     </div>
                                 </div>
                                 <span class="badge-sage text-[10px] font-bold px-3 py-1 rounded-full border border-emerald-200/80 shrink-0 hidden sm:inline-flex items-center gap-1.5">
@@ -219,156 +219,21 @@
                             </div>
 
                             <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                                <!-- Field 1: Full Name -->
-                                <div>
-                                    <label class="block text-xs font-bold text-gray-800 mb-2 flex items-center justify-between">
-                                        <span>Họ và tên người đặt vé <span class="text-crimson font-black">*</span></span>
-                                    </label>
-                                    <div class="relative">
-                                        <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
-                                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                                            </svg>
-                                        </span>
-                                        <input 
-                                            type="text" 
-                                            x-model="buyerInfo.fullName"
-                                            placeholder="VD: Nguyễn Văn Kiên" 
-                                            class="w-full rounded-2xl pl-10 pr-4 py-3 bg-[#FAF9F6] border border-black/10 focus:border-gold-dark focus:bg-white focus:ring-4 focus:ring-gold-antique/20 text-xs sm:text-sm font-semibold text-black placeholder-gray-400 transition-all shadow-2xs"
-                                            required
-                                        >
-                                    </div>
-                                </div>
-
-                                <!-- Field 2: Phone Number -->
-                                <div>
-                                    <label class="block text-xs font-bold text-gray-800 mb-2 flex items-center justify-between">
-                                        <span>Số điện thoại nhận SMS vé <span class="text-crimson font-black">*</span></span>
-                                    </label>
-                                    <div class="relative">
-                                        <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
-                                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-                                            </svg>
-                                        </span>
-                                        <input 
-                                            type="tel" 
-                                            x-model="buyerInfo.phone"
-                                            placeholder="VD: 0988 123 456" 
-                                            class="w-full rounded-2xl pl-10 pr-4 py-3 bg-[#FAF9F6] border border-black/10 focus:border-gold-dark focus:bg-white focus:ring-4 focus:ring-gold-antique/20 text-xs sm:text-sm font-semibold text-black placeholder-gray-400 font-mono transition-all shadow-2xs"
-                                            required
-                                        >
-                                    </div>
-                                </div>
-
-                                <!-- Field 3: Email -->
-                                <div>
-                                    <label class="block text-xs font-bold text-gray-800 mb-2 flex items-center justify-between">
-                                        <span>Email nhận vé E-Ticket <span class="text-crimson font-black">*</span></span>
-                                    </label>
-                                    <div class="relative">
-                                        <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
-                                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                                            </svg>
-                                        </span>
-                                        <input 
-                                            type="email" 
-                                            x-model="buyerInfo.email"
-                                            placeholder="VD: kien.nguyen@example.com" 
-                                            class="w-full rounded-2xl pl-10 pr-4 py-3 bg-[#FAF9F6] border border-black/10 focus:border-gold-dark focus:bg-white focus:ring-4 focus:ring-gold-antique/20 text-xs sm:text-sm font-semibold text-black placeholder-gray-400 transition-all shadow-2xs"
-                                            required
-                                        >
-                                    </div>
-                                </div>
-
-                                <!-- Field 4: National ID Card -->
-                                <div>
-                                    <label class="block text-xs font-bold text-gray-800 mb-2 flex items-center justify-between">
-                                        <span>Số CCCD / Hộ chiếu <span class="text-gray-400 font-normal text-[11px]">(Đối soát cổng)</span></span>
-                                    </label>
-                                    <div class="relative">
-                                        <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
-                                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c1.306 0 2.417.835 2.83 2M9 14a3.001 3.001 0 00-2.83 2M15 11h3m-3 4h2" />
-                                            </svg>
-                                        </span>
-                                        <input 
-                                            type="text" 
-                                            x-model="buyerInfo.idCard"
-                                            placeholder="VD: 001201008899" 
-                                            class="w-full rounded-2xl pl-10 pr-4 py-3 bg-[#FAF9F6] border border-black/10 focus:border-gold-dark focus:bg-white focus:ring-4 focus:ring-gold-antique/20 text-xs sm:text-sm font-semibold text-black placeholder-gray-400 font-mono transition-all shadow-2xs"
-                                        >
-                                    </div>
-                                </div>
-
-                                <!-- Field 5: City -->
-                                <div>
-                                    <label class="block text-xs font-bold text-gray-800 mb-2">
-                                        Tỉnh / Thành phố
-                                    </label>
-                                    <div class="relative">
-                                        <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
-                                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                                            </svg>
-                                        </span>
-                                        <input 
-                                            type="text" 
-                                            x-model="buyerInfo.city"
-                                            placeholder="VD: Hà Nội, TP.HCM, Đà Nẵng..." 
-                                            class="w-full rounded-2xl pl-10 pr-4 py-3 bg-[#FAF9F6] border border-black/10 focus:border-gold-dark focus:bg-white focus:ring-4 focus:ring-gold-antique/20 text-xs sm:text-sm font-semibold text-black placeholder-gray-400 transition-all shadow-2xs"
-                                        >
-                                    </div>
-                                </div>
-
-                                <!-- Field 6: Address -->
-                                <div>
-                                    <label class="block text-xs font-bold text-gray-800 mb-2">
-                                        Địa chỉ liên hệ
-                                    </label>
-                                    <div class="relative">
-                                        <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
-                                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-                                            </svg>
-                                        </span>
-                                        <input 
-                                            type="text" 
-                                            x-model="buyerInfo.address"
-                                            placeholder="Số nhà, tên đường, phường/xã..." 
-                                            class="w-full rounded-2xl pl-10 pr-4 py-3 bg-[#FAF9F6] border border-black/10 focus:border-gold-dark focus:bg-white focus:ring-4 focus:ring-gold-antique/20 text-xs sm:text-sm font-semibold text-black placeholder-gray-400 transition-all shadow-2xs"
-                                        >
-                                    </div>
-                                </div>
-
-                                <!-- Field 7: Notes -->
                                 <div class="sm:col-span-2">
-                                    <label class="block text-xs font-bold text-gray-800 mb-2">
-                                        Ghi chú đơn vé (Tùy chọn)
+                                    <label class="block text-xs font-bold text-gray-800 mb-2" for="ticket-delivery-email">
+                                        Email nhận vé E-Ticket <span class="text-crimson font-black">*</span>
                                     </label>
                                     <div class="relative">
                                         <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
-                                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
-                                            </svg>
+                                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
                                         </span>
-                                        <input 
-                                            type="text" 
-                                            x-model="buyerInfo.notes"
-                                            placeholder="Yêu cầu hỗ trợ thêm, ghi chú nhận vé..." 
-                                            class="w-full rounded-2xl pl-10 pr-4 py-3 bg-[#FAF9F6] border border-black/10 focus:border-gold-dark focus:bg-white focus:ring-4 focus:ring-gold-antique/20 text-xs sm:text-sm font-semibold text-black placeholder-gray-400 transition-all shadow-2xs"
-                                        >
+                                        <input id="ticket-delivery-email" type="email" x-model="buyerInfo.email" autocomplete="email" placeholder="ban@example.com" class="w-full rounded-2xl pl-10 pr-4 py-3 bg-[#FAF9F6] border border-black/10 focus:border-gold-dark focus:bg-white focus:ring-4 focus:ring-gold-antique/20 text-xs sm:text-sm font-semibold text-black placeholder-gray-400 transition-all shadow-2xs" required>
                                     </div>
                                 </div>
 
-                                <!-- Helper Bottom Guarantee Banner -->
-                                <div class="sm:col-span-2 pt-3 border-t border-black/5 flex items-center gap-2.5 text-xs text-gray-500 font-medium">
-                                    <svg class="w-4 h-4 text-gold-dark shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                    </svg>
-                                    <span>Vé Điện Tử E-Ticket sẽ được gửi tức thì kèm mã QR bảo mật qua Email &amp; SMS sau khi giao dịch thành công.</span>
+                                <div class="sm:col-span-2 pt-3 border-t border-black/5 flex items-start gap-2.5 text-xs text-gray-500 font-medium">
+                                    <svg class="w-4 h-4 text-gold-dark shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                                    <span>Email chỉ dùng để gửi vé và thông báo về đơn hàng. Không cần cung cấp CCCD, số điện thoại hay địa chỉ; nhân viên soát vé chỉ kiểm tra mã QR và thông tin vé.</span>
                                 </div>
                             </div>
                         </div>
@@ -382,7 +247,7 @@
                                     </svg>
                                     <span>Chọn Phương Thức Thanh Toán</span>
                                 </h3>
-                                <p class="text-xs text-gray-500 mt-1">Hệ thống hỗ trợ thanh toán tự động qua VietQR liên ngân hàng, Ví điện tử và Thẻ quốc tế.</p>
+                                <p class="text-xs text-gray-500 mt-1">Chuyển khoản MB và MoMo. Đối soát tự động sẽ hoạt động sau khi kết nối cổng thanh toán.</p>
                             </div>
 
                             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5 pt-2">
@@ -397,7 +262,7 @@
                                             <span class="font-display font-black text-xs text-black">Chuyển Khoản VietQR 24/7</span>
                                             <span class="badge-gold text-[9px] px-2 py-0.2 rounded-full font-bold">Khuyên Dùng</span>
                                         </div>
-                                        <p class="text-[11px] text-gray-500 mt-1">Quét mã QR qua Techcombank, Vietcombank, MBBank, BIDV...</p>
+                                        <p class="text-[11px] text-gray-500 mt-1">Quét VietQR để chuyển khoản tới tài khoản MBBank.</p>
                                     </div>
                                 </label>
 
@@ -415,33 +280,6 @@
                                     </div>
                                 </label>
 
-                                <!-- Option 3: ZaloPay -->
-                                <label 
-                                    class="p-4 rounded-2xl border-2 transition-all cursor-pointer flex items-start gap-3.5"
-                                    :class="selectedMethod === 'zalopay' ? 'border-[#0068FF] bg-blue-50/50 shadow-sm' : 'border-black/10 bg-[#FAF9F6] hover:border-black/20'"
-                                >
-                                    <input type="radio" name="payment_method" value="zalopay" x-model="selectedMethod" class="mt-1 text-[#0068FF] focus:ring-[#0068FF]">
-                                    <div class="flex-1">
-                                        <div class="flex items-center gap-2">
-                                            <span class="font-display font-black text-xs text-black">Ví Điện Tử ZaloPay</span>
-                                        </div>
-                                        <p class="text-[11px] text-gray-500 mt-1">Thanh toán liền mạch qua Zalo &amp; Ví ZaloPay.</p>
-                                    </div>
-                                </label>
-
-                                <!-- Option 4: Visa/Mastercard -->
-                                <label 
-                                    class="p-4 rounded-2xl border-2 transition-all cursor-pointer flex items-start gap-3.5"
-                                    :class="selectedMethod === 'card' ? 'border-black bg-gray-100 shadow-sm' : 'border-black/10 bg-[#FAF9F6] hover:border-black/20'"
-                                >
-                                    <input type="radio" name="payment_method" value="card" x-model="selectedMethod" class="mt-1 text-black focus:ring-black">
-                                    <div class="flex-1">
-                                        <div class="flex items-center gap-2">
-                                            <span class="font-display font-black text-xs text-black">Thẻ Quốc Tế (Visa / Master)</span>
-                                        </div>
-                                        <p class="text-[11px] text-gray-500 mt-1">Cổng thanh toán quốc tế 3D-Secure an toàn.</p>
-                                    </div>
-                                </label>
                             </div>
                         </div>
 
@@ -511,8 +349,8 @@
                                         </div>
                                         <span>Phương thức:</span>
                                     </div>
-                                    <span class="font-bold text-slate-800 bg-slate-100 px-3 py-1 rounded-xl text-xs inline-flex items-center gap-1.5 shadow-2xs whitespace-nowrap" x-text="selectedMethod === 'vietqr' ? '🏦 VietQR 24/7' : (selectedMethod === 'momo' ? '🟣 Ví MoMo' : (selectedMethod === 'zalopay' ? '🔵 Ví ZaloPay' : '💳 Thẻ Quốc Tế'))">
-                                        🏦 VietQR 24/7
+                                    <span class="font-bold text-slate-800 bg-slate-100 px-3 py-1 rounded-xl text-xs inline-flex items-center gap-1.5 shadow-2xs whitespace-nowrap" x-text="selectedMethod === 'vietqr' ? '🏦 Chuyển khoản MB' : '🟣 Ví MoMo'">
+                                        🏦 Chuyển khoản MB
                                     </span>
                                 </div>
                             </div>
@@ -565,9 +403,6 @@
                                         NAPAS 24/7
                                     </span>
                                     <span class="px-2.5 py-1 rounded-lg bg-slate-50 text-slate-700 border border-slate-200/80">
-                                        PCI-DSS Level 1
-                                    </span>
-                                    <span class="px-2.5 py-1 rounded-lg bg-slate-50 text-slate-700 border border-slate-200/80">
                                         VietQR Verified
                                     </span>
                                 </div>
@@ -607,25 +442,6 @@
                             <span>🟣 Ví MoMo</span>
                         </button>
 
-                        <!-- Tab 3: ZaloPay -->
-                        <button 
-                            type="button" 
-                            @click="selectedMethod = 'zalopay'"
-                            class="px-4 py-2 rounded-2xl text-xs font-bold transition-all flex items-center gap-2 shrink-0 cursor-pointer"
-                            :class="selectedMethod === 'zalopay' ? 'bg-[#0068FF] text-white shadow-md' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'"
-                        >
-                            <span>🔵 Ví ZaloPay</span>
-                        </button>
-
-                        <!-- Tab 4: Card -->
-                        <button 
-                            type="button" 
-                            @click="selectedMethod = 'card'"
-                            class="px-4 py-2 rounded-2xl text-xs font-bold transition-all flex items-center gap-2 shrink-0 cursor-pointer"
-                            :class="selectedMethod === 'card' ? 'bg-gold-dark text-white shadow-md' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'"
-                        >
-                            <span>💳 Thẻ Quốc Tế</span>
-                        </button>
                     </div>
 
                     <button 
@@ -647,39 +463,14 @@
                             <div class="border-b border-black/10 pb-4">
                                 <div class="flex items-center justify-between">
                                     <h4 class="font-serif font-black text-lg text-black">Thông Tin Chuyển Khoản Ngân Hàng</h4>
-                                    <span class="badge-sage text-[10px] px-2.5 py-1 rounded-full font-bold">
-                                        Khớp lệnh tự động 24/7
+                                    <span class="badge-rose text-[10px] px-2.5 py-1 rounded-full font-bold">
+                                        Đối soát tự động chưa kết nối
                                     </span>
                                 </div>
-                                <p class="text-xs text-gray-500 mt-1">Chọn ngân hàng thụ hưởng thuận tiện nhất cho bạn:</p>
+                                <p class="text-xs text-gray-500 mt-1">Quét mã hoặc chuyển khoản tới tài khoản MBBank dưới đây:</p>
 
                                 <!-- Bank Selector Pills -->
-                                <div class="flex items-center gap-2 mt-3 overflow-x-auto pb-1">
-                                    <button 
-                                        type="button" 
-                                        @click="selectedBank = 'TCB'"
-                                        class="px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 cursor-pointer border"
-                                        :class="selectedBank === 'TCB' ? 'bg-red-50 border-red-500 text-red-700 shadow-sm font-black' : 'bg-[#FAF9F6] border-black/10 text-gray-600 hover:border-black/30'"
-                                    >
-                                        Techcombank
-                                    </button>
-                                    <button 
-                                        type="button" 
-                                        @click="selectedBank = 'VCB'"
-                                        class="px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 cursor-pointer border"
-                                        :class="selectedBank === 'VCB' ? 'bg-emerald-50 border-emerald-600 text-emerald-800 shadow-sm font-black' : 'bg-[#FAF9F6] border-black/10 text-gray-600 hover:border-black/30'"
-                                    >
-                                        Vietcombank
-                                    </button>
-                                    <button 
-                                        type="button" 
-                                        @click="selectedBank = 'MB'"
-                                        class="px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 cursor-pointer border"
-                                        :class="selectedBank === 'MB' ? 'bg-blue-50 border-blue-600 text-blue-800 shadow-sm font-black' : 'bg-[#FAF9F6] border-black/10 text-gray-600 hover:border-black/30'"
-                                    >
-                                        MBBank
-                                    </button>
-                                </div>
+                                <span class="inline-flex mt-3 px-3.5 py-1.5 rounded-xl text-xs font-black border border-blue-600 bg-blue-50 text-blue-800">MBBank</span>
                             </div>
 
                             <!-- Account Details Table -->
@@ -688,10 +479,10 @@
                                 <div class="bg-[#FAF9F6] rounded-2xl p-3.5 border border-black/5 flex items-center justify-between">
                                     <div>
                                         <span class="text-gray-500 block text-[11px] font-semibold">Ngân hàng thụ hưởng:</span>
-                                        <span class="font-bold text-sm text-black" x-text="currentBank.fullName">Ngân hàng TMCP Kỹ Thương Việt Nam</span>
+                                        <span class="font-bold text-sm text-black" x-text="currentBank.fullName">Ngân hàng TMCP Quân Đội</span>
                                     </div>
                                     <span class="px-2.5 py-1 rounded-lg text-white font-black text-[11px] uppercase tracking-wider" :class="currentBank.logoBg" x-text="currentBank.shortName">
-                                        Techcombank
+                                        MBBank
                                     </span>
                                 </div>
 
@@ -715,7 +506,7 @@
                                 <div class="bg-[#FAF9F6] rounded-2xl p-3.5 border border-black/5 flex items-center justify-between">
                                     <div>
                                         <span class="text-gray-500 block text-[11px] font-semibold">Tên chủ tài khoản:</span>
-                                        <span class="font-bold text-xs text-black" x-text="currentBank.accountHolder">CONG TY CP TICKETBOX VIETNAM</span>
+                                        <span class="font-bold text-xs text-black" x-text="currentBank.accountHolder">Nguyễn Đức Tâm</span>
                                     </div>
                                     <button 
                                         type="button" 
@@ -777,9 +568,9 @@
                                 <div class="bg-[#FAF9F6] rounded-2xl p-3.5 border border-black/5 flex items-center justify-between">
                                     <div>
                                         <span class="text-gray-500 block text-[11px] font-semibold">Tên đơn vị chấp nhận:</span>
-                                        <span class="font-bold text-xs text-black" x-text="momoInfo.merchant">TICKETBOX VIETNAM</span>
+                                        <span class="font-bold text-xs text-black" x-text="momoInfo.merchant">Chưa kết nối MoMo Business</span>
                                     </div>
-                                    <span class="badge-rose text-[10px] px-2.5 py-0.5 rounded-full font-bold">MoMo Business</span>
+                                    <span class="badge-rose text-[10px] px-2.5 py-0.5 rounded-full font-bold">Chưa cấu hình</span>
                                 </div>
                                 <div class="bg-[#FAF9F6] rounded-2xl p-3.5 border border-black/5 flex items-center justify-between">
                                     <div>
@@ -798,77 +589,6 @@
                             </div>
                         </div>
 
-                        <!-- VIEW 3: ZALOPAY DETAILS -->
-                        <div x-show="selectedMethod === 'zalopay'" class="bg-white rounded-3xl p-6 sm:p-7 border border-black/10 shadow-sm space-y-5" style="display: none;">
-                            <div class="border-b border-black/10 pb-4 flex items-center justify-between">
-                                <div>
-                                    <h4 class="font-serif font-black text-lg text-black">Thanh Toán Qua Ví ZaloPay</h4>
-                                    <p class="text-xs text-gray-500 mt-0.5">Quét mã ZaloPay QR trực tiếp trên Zalo hoặc ứng dụng ZaloPay.</p>
-                                </div>
-                                <div class="w-10 h-10 rounded-2xl bg-[#0068FF] text-white flex items-center justify-center font-black text-xs shadow-md">
-                                    Zalo
-                                </div>
-                            </div>
-
-                            <div class="space-y-3.5 text-xs">
-                                <div class="bg-[#FAF9F6] rounded-2xl p-3.5 border border-black/5 flex items-center justify-between">
-                                    <div>
-                                        <span class="text-gray-500 block text-[11px] font-semibold">Đơn vị thụ hưởng:</span>
-                                        <span class="font-bold text-xs text-black" x-text="zalopayInfo.merchant">TICKETBOX TICKET JSC</span>
-                                    </div>
-                                    <span class="badge-sage text-[10px] px-2.5 py-0.5 rounded-full font-bold">ZaloPay Merchant</span>
-                                </div>
-                                <div class="bg-[#FAF9F6] rounded-2xl p-3.5 border border-black/5 flex items-center justify-between">
-                                    <div>
-                                        <span class="text-gray-500 block text-[11px] font-semibold">Số tiền cần thanh toán:</span>
-                                        <span class="font-display font-black text-lg text-[#0068FF]" x-text="formatCurrency(totalAmount)">500.000 ₫</span>
-                                    </div>
-                                    <span class="text-sage-forest font-bold text-xs">Miễn phí giao dịch</span>
-                                </div>
-                                <div class="bg-[#FAF9F6] rounded-2xl p-3.5 border border-black/5 flex items-center justify-between">
-                                    <div>
-                                        <span class="text-gray-500 block text-[11px] font-semibold">Mã đơn hàng:</span>
-                                        <span class="font-mono font-black text-base text-black" x-text="orderCode">TBX-829143</span>
-                                    </div>
-                                    <button type="button" @click="copyToClipboard(orderCode, 'Mã đơn hàng')" class="btn-ghost-light px-3 py-1.5 rounded-xl text-xs font-bold cursor-pointer">Sao chép</button>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- VIEW 4: CREDIT / DEBIT CARD DETAILS -->
-                        <div x-show="selectedMethod === 'card'" class="bg-white rounded-3xl p-6 sm:p-7 border border-black/10 shadow-sm space-y-5" style="display: none;">
-                            <div class="border-b border-black/10 pb-4 flex items-center justify-between">
-                                <div>
-                                    <h4 class="font-serif font-black text-lg text-black">Thanh Toán Thẻ Quốc Tế (Visa / Mastercard)</h4>
-                                    <p class="text-xs text-gray-500 mt-0.5">Nhập thông tin thẻ thanh toán an toàn qua cổng bảo mật 3D-Secure.</p>
-                                </div>
-                                <div class="flex items-center gap-1.5">
-                                    <span class="px-2 py-1 rounded bg-blue-900 text-white font-black text-[10px]">VISA</span>
-                                    <span class="px-2 py-1 rounded bg-amber-600 text-white font-black text-[10px]">MC</span>
-                                </div>
-                            </div>
-
-                            <div class="space-y-3.5 text-xs">
-                                <div>
-                                    <label class="block text-gray-600 font-bold mb-1">Số thẻ thanh toán</label>
-                                    <input type="text" placeholder="4111 2222 3333 4444" class="glass-input w-full rounded-xl px-4 py-2.5 font-mono text-xs">
-                                </div>
-                                <div class="grid grid-cols-2 gap-3">
-                                    <div>
-                                        <label class="block text-gray-600 font-bold mb-1">Hạn sử dụng (MM/YY)</label>
-                                        <input type="text" placeholder="12/28" class="glass-input w-full rounded-xl px-4 py-2.5 font-mono text-xs">
-                                    </div>
-                                    <div>
-                                        <label class="block text-gray-600 font-bold mb-1">Mã bảo mật CVV</label>
-                                        <input type="password" placeholder="•••" maxlength="3" class="glass-input w-full rounded-xl px-4 py-2.5 font-mono text-xs">
-                                    </div>
-                                </div>
-                                <div>
-                                    <label class="block text-gray-600 font-bold mb-1">Tên in trên thẻ</label>
-                                    <input type="text" :value="buyerInfo.fullName.toUpperCase()" class="glass-input w-full rounded-xl px-4 py-2.5 font-mono uppercase text-xs">
-                                </div>
-                            </div>
-                        </div>
 
                         <!-- BUYER INFORMATION SUMMARY CARD IN STEP 2 -->
                         <div class="bg-white rounded-3xl p-5 sm:p-6 border border-black/10 shadow-sm space-y-3">
@@ -890,24 +610,8 @@
 
                             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
                                 <div>
-                                    <span class="text-gray-400 block text-[10px] uppercase font-bold">Họ và tên:</span>
-                                    <span class="text-black font-bold" x-text="buyerInfo.fullName">Nguyễn Văn Kiên</span>
-                                </div>
-                                <div>
-                                    <span class="text-gray-400 block text-[10px] uppercase font-bold">Số điện thoại:</span>
-                                    <span class="text-black font-bold font-mono" x-text="buyerInfo.phone">0988 123 456</span>
-                                </div>
-                                <div>
                                     <span class="text-gray-400 block text-[10px] uppercase font-bold">Email nhận vé:</span>
-                                    <span class="text-black font-medium" x-text="buyerInfo.email">kien.nguyen@example.com</span>
-                                </div>
-                                <div>
-                                    <span class="text-gray-400 block text-[10px] uppercase font-bold">Số CCCD / CMND:</span>
-                                    <span class="text-black font-bold font-mono" x-text="buyerInfo.idCard || 'Chưa cung cấp'">001201008899</span>
-                                </div>
-                                <div class="sm:col-span-2" x-show="buyerInfo.city || buyerInfo.address">
-                                    <span class="text-gray-400 block text-[10px] uppercase font-bold">Địa chỉ:</span>
-                                    <span class="text-gray-700" x-text="(buyerInfo.address ? buyerInfo.address + ', ' : '') + (buyerInfo.city || '')">Số 18 Hoàng Diệu, Ba Đình, Hà Nội</span>
+                                    <span class="text-black font-medium" x-text="buyerInfo.email"></span>
                                 </div>
                             </div>
                         </div>
@@ -942,12 +646,7 @@
                                 <span class="badge-rose text-[10px] px-3 py-0.5 rounded-full font-black uppercase" x-show="selectedMethod === 'momo'">
                                     MOMO QR PAY
                                 </span>
-                                <span class="badge-sage text-[10px] px-3 py-0.5 rounded-full font-black uppercase" x-show="selectedMethod === 'zalopay'">
-                                    ZALOPAY QR CODE
-                                </span>
-                                <span class="badge-dark text-[10px] px-3 py-0.5 rounded-full font-black uppercase" x-show="selectedMethod === 'card'">
-                                    SECURE CHECKOUT
-                                </span>
+
                             </div>
 
                             <!-- High-Fidelity Clickable QR Card (VietQR) -->
@@ -969,67 +668,11 @@
                             </div>
 
                             <!-- MoMo QR Card -->
-                            <div 
-                                x-show="selectedMethod === 'momo'"
-                                @click="simulatePaymentSuccess()"
-                                class="cursor-pointer group relative mx-auto p-4 bg-[#FAF9F6] rounded-2xl border border-[#A50064]/30 hover:border-[#A50064] hover:shadow-lg transition-all"
-                                style="display: none;"
-                            >
-                                <div class="w-56 h-56 mx-auto bg-gradient-to-b from-[#A50064] to-[#80004D] rounded-2xl p-3 shadow-md flex flex-col items-center justify-between text-white">
-                                    <div class="flex items-center justify-between w-full px-2">
-                                        <span class="font-black text-xs tracking-wider">MoMo Pay</span>
-                                        <span class="text-[10px] bg-white/20 px-2 py-0.5 rounded-full font-bold">24/7</span>
-                                    </div>
-                                    <div class="w-36 h-36 bg-white rounded-xl p-2 flex items-center justify-center">
-                                        <img 
-                                            :src="'https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=2|99|0988888999|TICKETBOX_VIETNAM||0|0|' + totalAmount + '|' + orderCode + '|transfer_myqr'" 
-                                            alt="MoMo QR"
-                                            class="w-full h-full object-contain"
-                                        >
-                                    </div>
-                                    <span class="text-[11px] font-bold" x-text="formatCurrency(totalAmount)">500.000 ₫</span>
-                                </div>
-                                <p class="text-[11px] text-gray-500 mt-2 font-medium">Quét mã bằng ứng dụng MoMo</p>
+                            <div x-show="selectedMethod === 'momo'" class="mx-auto max-w-sm p-4 bg-rose-50 rounded-2xl border border-rose-200 text-center" style="display: none;">
+                                <p class="text-sm font-bold text-rose-900">MoMo chưa được kết nối</p>
+                                <p class="text-xs text-rose-800 mt-1">Cần thông tin tích hợp MoMo for Business để tạo mã thanh toán thật và nhận xác nhận giao dịch.</p>
                             </div>
 
-                            <!-- ZaloPay QR Card -->
-                            <div 
-                                x-show="selectedMethod === 'zalopay'"
-                                @click="simulatePaymentSuccess()"
-                                class="cursor-pointer group relative mx-auto p-4 bg-[#FAF9F6] rounded-2xl border border-[#0068FF]/30 hover:border-[#0068FF] hover:shadow-lg transition-all"
-                                style="display: none;"
-                            >
-                                <div class="w-56 h-56 mx-auto bg-gradient-to-b from-[#0068FF] to-[#0047B3] rounded-2xl p-3 shadow-md flex flex-col items-center justify-between text-white">
-                                    <div class="flex items-center justify-between w-full px-2">
-                                        <span class="font-black text-xs tracking-wider">ZaloPay</span>
-                                        <span class="text-[10px] bg-white/20 px-2 py-0.5 rounded-full font-bold">QR</span>
-                                    </div>
-                                    <div class="w-36 h-36 bg-white rounded-xl p-2 flex items-center justify-center">
-                                        <img 
-                                            :src="'https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=ZALOPAY_TICKETBOX_' + orderCode + '_' + totalAmount" 
-                                            alt="ZaloPay QR"
-                                            class="w-full h-full object-contain"
-                                        >
-                                    </div>
-                                    <span class="text-[11px] font-bold" x-text="formatCurrency(totalAmount)">500.000 ₫</span>
-                                </div>
-                                <p class="text-[11px] text-gray-500 mt-2 font-medium">Quét mã bằng ứng dụng Zalo hoặc ZaloPay</p>
-                            </div>
-
-                            <!-- Card Checkout Trigger -->
-                            <div x-show="selectedMethod === 'card'" style="display: none;" class="p-4 bg-[#FAF9F6] rounded-2xl border border-black/10">
-                                <div class="w-full h-36 bg-gradient-to-tr from-gray-900 via-gray-800 to-black rounded-2xl p-4 text-white flex flex-col justify-between shadow-lg">
-                                    <div class="flex justify-between items-center">
-                                        <span class="text-xs font-mono font-bold tracking-widest text-gold-antique">TICKETBOX VIP PASS</span>
-                                        <span class="text-xs font-black">VISA</span>
-                                    </div>
-                                    <div class="font-mono text-sm tracking-widest text-center text-gray-300">•••• •••• •••• 8899</div>
-                                    <div class="flex justify-between items-center text-[10px]">
-                                        <span class="uppercase font-bold" x-text="buyerInfo.fullName">NGUYEN VAN KIEN</span>
-                                        <span class="font-mono">12/28</span>
-                                    </div>
-                                </div>
-                            </div>
 
                             <!-- Primary Action Button -->
                             <button 
@@ -1040,7 +683,7 @@
                                 <svg class="w-4 h-4 text-emerald-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
                                 </svg>
-                                <span>Xác nhận đã hoàn tất thanh toán</span>
+                                <span>Xác nhận mô phỏng (demo)</span>
                             </button>
                         </div>
 
@@ -1166,23 +809,21 @@
                             <!-- Buyer Info & Booking Code -->
                             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
                                 <div>
-                                    <span class="text-gray-400 block text-[10px] uppercase font-bold">Chủ Sở Hữu Vé</span>
-                                    <span class="text-black font-bold text-xs" x-text="buyerInfo.fullName">Nguyễn Văn Kiên</span>
-                                    <span class="text-gray-500 block text-[11px]" x-text="buyerInfo.phone + ' · ' + buyerInfo.email">0988 123 456 · kien.nguyen@example.com</span>
-                                    <span class="text-gray-500 block text-[11px]" x-show="buyerInfo.idCard" x-text="'CCCD: ' + buyerInfo.idCard">CCCD: 001201008899</span>
-                                </div>
-                                <div>
                                     <span class="text-gray-400 block text-[10px] uppercase font-bold">Mã Tra Cứu E-Ticket</span>
                                     <span class="font-mono font-black text-black text-base" x-text="orderCode">TBX-829143</span>
-                                    <span class="text-sage-forest block text-[11px] font-bold">Đã xác thực chữ ký số</span>
+                                    <span class="text-sage-forest block text-[11px] font-bold">Dùng để đối chiếu vé</span>
+                                </div>
+                                <div>
+                                    <span class="text-gray-400 block text-[10px] uppercase font-bold">Thông tin khách hàng</span>
+                                    <span class="text-black font-medium text-xs">Không hiển thị trên vé</span>
                                 </div>
                             </div>
 
                             <!-- Security Footer Note -->
                             <div class="bg-[#FAF9F6] rounded-2xl p-3.5 border border-black/5 text-[11px] text-gray-500 space-y-0.5">
                                 <div class="font-bold text-gray-700">Lưu ý khi tham dự sự kiện:</div>
-                                <div>• Vui lòng mang theo CCCD/Hộ chiếu trùng khớp tên trên vé khi đến cổng soát vé.</div>
-                                <div>• Mỗi mã QR chỉ quét hợp lệ 01 lần tại cổng an ninh. Tuyệt đối không chia sẻ mã QR này lên mạng xã hội.</div>
+                                <div>• Nhân viên soát vé chỉ cần quét mã QR và kiểm tra thông tin sự kiện, suất diễn, khu/ghế.</div>
+                                <div>• Giữ mã QR riêng tư để tránh người khác sử dụng vé của bạn.</div>
                             </div>
                         </div>
 
@@ -1200,11 +841,7 @@
                             <!-- E-Ticket High-Res QR Code Frame -->
                             <div class="p-3.5 bg-white rounded-3xl shadow-md border-2 border-amber-400/60 space-y-2">
                                 <div class="w-44 h-44 bg-white rounded-2xl p-2 flex items-center justify-center overflow-hidden border border-slate-100">
-                                    <img 
-                                        :src="'https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=TICKETBOX_AUTH_PASS_' + orderCode" 
-                                        alt="Check-in QR Code"
-                                        class="w-full h-full object-contain"
-                                    >
+                                    <img :src="ticketQrDataUri" class="w-full h-full object-contain" alt="Mã QR soát vé">
                                 </div>
                                 <span class="font-mono text-xs font-black text-slate-900 block tracking-widest" x-text="orderCode">TBX-829143</span>
                             </div>

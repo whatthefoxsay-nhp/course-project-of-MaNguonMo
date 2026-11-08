@@ -67,4 +67,9 @@ return [
         'base_url' => env('OPENWEATHER_BASE_URL', 'https://api.openweathermap.org/data/2.5'),
     ],
 
+    'ticket_payment' => [
+        'mb_account_no' => env('MB_ACCOUNT_NO'),
+        'mb_account_holder' => env('MB_ACCOUNT_HOLDER'),
+    ],
+
 ];

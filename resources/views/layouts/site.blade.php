@@ -163,18 +163,19 @@
                 </button>
 
                 @auth
-                    <!-- Notification Bell Dropdown (Events within 12h - 24h) -->
+                    <!-- Notification Bell Dropdown -->
                     <div class="relative shrink-0" x-data="{ open: false }">
                         <button 
                             @click="open = !open" 
                             class="relative w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-[#FAF9F6] border border-black/10 flex items-center justify-center text-black hover:bg-white hover:border-black/30 transition-all shadow-sm shrink-0"
-                            title="Thông báo nhắc nhở sự kiện"
+                            title="Thông báo"
                         >
                             <svg class="w-4 h-4 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
                             </svg>
-                            <!-- Ping Alert for Event in 12h -->
-                            <span class="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-rose-taupe"></span>
+                            @if ($unreadNotificationCount)
+                                <span class="absolute top-1 right-1 min-w-4 h-4 px-1 rounded-full bg-rose-600 text-white text-[9px] font-bold flex items-center justify-center">{{ min(99, $unreadNotificationCount) }}</span>
+                            @endif
                         </button>
 
                         <div 
@@ -192,23 +193,26 @@
                             <div class="bg-white rounded-3xl p-4 border border-black/10 shadow-[0_20px_45px_-15px_rgba(0,0,0,0.18)] text-xs space-y-3">
                                 <div class="flex items-center justify-between pb-2 border-b border-black/10">
                                     <h4 class="font-display font-black text-black text-sm">Thông Báo Sự Kiện</h4>
-                                    <span class="badge-rose text-[9px] px-2 py-0.5 rounded-full font-bold">1 Nhắc Nhở</span>
+                                    <span class="badge-rose text-[9px] px-2 py-0.5 rounded-full font-bold">{{ $unreadNotificationCount }}</span>
+                                </div>
+                                <div class="max-h-80 overflow-y-auto space-y-2">
+                                    @forelse ($notifications as $notification)
+                                        @php($isAnnouncement = ($notification->data['kind'] ?? '') === 'announcement')
+                                        <a href="{{ route('notifications.open', $notification) }}" class="block p-3 rounded-2xl {{ $isAnnouncement ? 'bg-sky-50 border-sky-100' : 'bg-[#FAF9F6] border-black/10' }} border hover:bg-[#FFF8E1] transition-colors space-y-1">
+                                            <div class="text-[10px] font-bold uppercase tracking-wide text-rose-taupe">{{ $isAnnouncement ? 'Thông báo từ hệ thống' : 'Thông báo mới' }} · {{ $notification->created_at->diffForHumans() }}</div>
+                                            <h5 class="font-display font-black text-xs text-black">{{ $notification->data['title'] ?? 'Thông báo' }}</h5>
+                                            <p class="text-[11px] text-gray-600 leading-tight">{{ $notification->data['message'] ?? '' }}</p>
+                                        </a>
+                                    @empty
+                                    @endforelse
+                                    @if ($notifications->isEmpty())
+                                        <p class="text-center text-[11px] text-gray-500 py-4">Bạn chưa có thông báo mới.</p>
+                                    @endif
                                 </div>
 
-                                <a href="{{ route('bookings.history') }}" class="block p-3 rounded-2xl bg-[#FFF8E1] hover:bg-[#F5F5DC] border border-[#D8D8A8] transition-colors space-y-1">
-                                    <div class="flex items-center justify-between text-[10px]">
-                                        <span class="badge-gold px-2 py-0.5 rounded-full font-black">SẮP DIỄN RA TRONG 12H</span>
-                                        <span class="text-gray-500 font-bold">Hôm nay 19:30</span>
-                                    </div>
-                                    <h5 class="font-display font-black text-xs text-black">Live Concert Acoustic 2026</h5>
-                                    <p class="text-[11px] text-gray-600 leading-tight">
-                                        Khán phòng Saigon Grand Hall. Vui lòng mở mã QR vé điện tử để làm thủ tục check-in.
-                                    </p>
-                                </a>
-
                                 <div class="text-center pt-1">
-                                    <a href="{{ route('bookings.history') }}" class="text-[11px] font-bold text-rose-taupe hover:underline">
-                                        Xem tất cả vé đã đặt &rarr;
+                                    <a href="{{ route('notifications.index') }}" class="text-[11px] font-bold text-rose-taupe hover:underline">
+                                        Xem lịch sử thông báo &rarr;
                                     </a>
                                 </div>
                             </div>

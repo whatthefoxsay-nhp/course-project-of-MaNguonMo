@@ -30,7 +30,7 @@
                         <td style="padding:32px 36px 28px;background:#fbf8ee;border-bottom:1px solid #eee8db;">
                             <div style="display:inline-block;padding:7px 11px;border-radius:999px;background:#edf5ed;color:#35683e;font-size:10px;font-weight:bold;letter-spacing:1px;">✓ ĐẶT VÉ THÀNH CÔNG</div>
                             <h1 style="margin:18px 0 8px;color:#111;font-family:Georgia,'Times New Roman',serif;font-size:29px;line-height:1.2;">Vé của bạn đã sẵn sàng</h1>
-                            <p style="margin:0;color:#626262;font-size:14px;line-height:1.7;">Xin chào {{ $user?->name ?? 'bạn' }}, cảm ơn bạn đã đặt vé cùng {{ config('app.name') }}. Biên lai và vé điện tử có mã QR được đính kèm trong email này.</p>
+                            <p style="margin:0;color:#626262;font-size:14px;line-height:1.7;">Cảm ơn bạn đã đặt vé cùng {{ config('app.name') }}. Biên lai và vé điện tử có mã QR được đính kèm trong email này.</p>
                         </td>
                     </tr>
                     <tr>
@@ -81,7 +81,7 @@
                     </tr>
                     <tr>
                         <td style="padding:20px 36px 26px;background:#fbf8ee;border-top:1px solid #eee8db;color:#6f6a61;font-size:12px;line-height:1.7;">
-                            <strong style="color:#171717;">Tệp đính kèm gồm:</strong> biên lai thanh toán và vé điện tử đã đặt (PDF). Vui lòng mở vé, xuất trình mã QR tại cổng soát vé. Mỗi vé chỉ được sử dụng một lần.<br>
+                            <strong style="color:#171717;">Tệp đính kèm gồm:</strong> biên lai thanh toán và vé điện tử đã đặt (PDF). Vui lòng xuất trình mã QR tại cổng soát vé và giữ mã riêng tư.<br>
                             Cần hỗ trợ? Hãy phản hồi email này và ghi mã đặt vé <strong>{{ $booking->booking_code }}</strong>.
                         </td>
                     </tr>

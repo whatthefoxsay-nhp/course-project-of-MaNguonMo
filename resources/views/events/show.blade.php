@@ -165,12 +165,6 @@
                                                         </span>
                                                     </div>
                                                 </div>
-                                                <span 
-                                                    class="text-[10px] px-2 py-0.5 rounded-full font-bold uppercase"
-                                                    :class="selectedShowtimeId === {{ $st->id }} ? 'bg-white/20 text-gold-light' : 'bg-black/5 text-gray-600'"
-                                                >
-                                                    {{ number_format($st->base_price) }}₫
-                                                </span>
                                             </button>
                                         @endforeach
                                     </div>
@@ -216,7 +210,7 @@
                                 <svg class="w-3.5 h-3.5 text-gold-dark fill-current" viewBox="0 0 20 20">
                                     <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
                                 </svg>
-                                <span>4.9/5 (1.200+ đánh giá xác thực)</span>
+                                <span>{{ $ratingCount ? number_format($ratingAverage, 1) : '—' }}/5 ({{ number_format($ratingCount) }} đánh giá)</span>
                             </span>
                             <span class="badge-sage px-3 py-1 rounded-full text-xs font-bold">
                                 Cam Kết Vé Thật 100%
@@ -503,10 +497,6 @@
 
                                             <div class="text-xs text-gray-700 space-y-1.5 font-medium bg-[#FAF9F6] p-3 rounded-2xl border border-black/5">
                                                 <div class="flex items-center justify-between">
-                                                    <span class="text-gray-700">Giá vé khởi điểm:</span>
-                                                    <strong class="text-rose-taupe font-black text-sm">{{ number_format($showtime->base_price) }}₫</strong>
-                                                </div>
-                                                <div class="flex items-center justify-between">
                                                     <span class="text-gray-700">Trạng thái:</span>
                                                     <span class="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-800">
                                                         <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
@@ -651,14 +641,20 @@
                                  destroyUrl: @js(route('comments.destroy', '__ID__')),
                                  loginUrl: @js(route('login')),
                                  canComment: @js(auth()->check()),
+                                 ratingAverage: @js($ratingAverage),
+                                 ratingCount: @js($ratingCount),
                              })">
                             <div class="flex items-center justify-between mb-4">
                                 <h3 class="font-display font-black text-lg text-black">Đánh Giá &amp; Cảm Nhận Khán Giả</h3>
-                                <span class="text-xs text-gray-500" x-text="comments.length + ' bình luận'"></span>
+                                <span class="text-xs text-gray-500" x-text="comments.length + ' bình luận · ' + (ratingCount ? ratingAverage + '/5' : 'Chưa có điểm')"></span>
                             </div>
 
                             <!-- Comment Input Form -->
                             <form @submit.prevent="submit()" class="bg-[#FAF9F6] rounded-2xl p-3 border border-black/10 mb-2 flex gap-2">
+                                <label class="sr-only" for="event-rating">Đánh giá từ 1 đến 5 sao</label>
+                                <select id="event-rating" x-model.number="newRating" :disabled="!canComment" class="bg-white border border-black/10 rounded-xl text-xs px-2" aria-label="Đánh giá từ 1 đến 5 sao">
+                                    <option value="5">★★★★★ 5</option><option value="4">★★★★☆ 4</option><option value="3">★★★☆☆ 3</option><option value="2">★★☆☆☆ 2</option><option value="1">★☆☆☆☆ 1</option>
+                                </select>
                                 <input
                                     type="text"
                                     x-model="newComment"
@@ -693,6 +689,11 @@
                                             </div>
                                         </div>
                                         <p class="text-xs text-gray-700 whitespace-pre-line" x-text="c.text"></p>
+                                        <p x-show="c.rating" class="text-amber-600 text-xs" :aria-label="'Đánh giá ' + c.rating + ' trên 5 sao'" x-text="'★'.repeat(c.rating) + '☆'.repeat(5 - c.rating)"></p>
+                                        <div x-show="c.admin_reply" class="ml-3 mt-3 rounded-xl border border-emerald-200 bg-emerald-50 p-3 space-y-1">
+                                            <div class="flex items-center justify-between gap-2"><span class="text-[11px] font-black text-emerald-900">Phản hồi từ TicketBox</span><span class="text-[10px] text-emerald-800" x-text="c.admin_reply_time || ''"></span></div>
+                                            <p class="text-xs text-emerald-950 whitespace-pre-line" x-text="c.admin_reply"></p>
+                                        </div>
                                     </div>
                                 </template>
                             </div>

@@ -1,11 +1,13 @@
 <?php
 
 use App\Http\Controllers\Admin\BookingController as AdminBookingController;
+use App\Http\Controllers\Admin\AnnouncementController;
 use App\Http\Controllers\Admin\CategoryController as AdminCategoryController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\DiscountController as AdminDiscountController;
 use App\Http\Controllers\Admin\EventController as AdminEventController;
 use App\Http\Controllers\Admin\ReportController as AdminReportController;
+use App\Http\Controllers\Admin\ReviewController as AdminReviewController;
 use App\Http\Controllers\Admin\RoomController as AdminRoomController;
 use App\Http\Controllers\Admin\ShowtimeController as AdminShowtimeController;
 use App\Http\Controllers\Admin\UserController;
@@ -17,6 +19,7 @@ use App\Http\Controllers\EventController;
 use App\Http\Controllers\EventPosterController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\MovieController;
+use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SearchSuggestionController;
 use App\Http\Controllers\SeatHoldController;
@@ -54,10 +57,12 @@ Route::middleware('auth')->group(function () {
         ->middleware('throttle:10,1')
         ->name('checkout.store');
     Route::get('/bookings', [BookingController::class, 'history'])->name('bookings.history');
+    Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
     Route::post('/events/{event:slug}/comments', [CommentController::class, 'store'])
         ->middleware('throttle:10,1')
         ->name('comments.store');
     Route::delete('/comments/{comment}', [CommentController::class, 'destroy'])->name('comments.destroy');
+    Route::get('/notifications/{notification}', [NotificationController::class, 'open'])->name('notifications.open');
 });
 
 Route::get('/dashboard', function () {
@@ -78,6 +83,10 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::get('/', DashboardController::class)->name('dashboard');
     Route::get('/reports', [AdminReportController::class, 'index'])->name('reports.index');
     Route::get('/reports/pdf', [AdminReportController::class, 'pdf'])->name('reports.pdf');
+    Route::get('/reviews', [AdminReviewController::class, 'index'])->name('reviews.index');
+    Route::patch('/reviews/{comment}/reply', [AdminReviewController::class, 'reply'])->name('reviews.reply');
+    Route::get('/notifications', [AnnouncementController::class, 'index'])->name('notifications.index');
+    Route::post('/notifications', [AnnouncementController::class, 'store'])->name('notifications.store');
     Route::post('categories/bulk-destroy', [AdminCategoryController::class, 'bulkDestroy'])->name('categories.bulk-destroy');
     Route::resource('categories', AdminCategoryController::class)->except('show');
     Route::resource('events', AdminEventController::class)->except('show');

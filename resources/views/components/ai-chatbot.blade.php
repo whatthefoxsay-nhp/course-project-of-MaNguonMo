@@ -366,7 +366,7 @@ document.addEventListener('alpine:init', () => {
         messages: [
             {
                 sender: 'bot',
-                text: '<p class="font-bold text-slate-900">Xin chào bạn! 👋</p><p>Tôi là <strong>TicketBot AI</strong> — Trợ lý ảo chính thức của nền tảng đặt vé <strong>TicketBox</strong>.</p><p class="text-slate-600 text-xs">Tôi có thể hỗ trợ bạn nhanh các nội dung:</p><ul class="space-y-1 text-xs text-slate-700 list-disc pl-4"><li>Tìm kiếm và gợi ý các đại nhạc hội Concert & Sự kiện hot.</li><li>Hướng dẫn quy trình giữ chỗ 10 phút & sơ đồ khán phòng.</li><li>Giải đáp thanh toán tự động VietQR, Ví MoMo, ZaloPay.</li><li>Tra cứu và xuất trình vé điện tử E-Ticket QR Code.</li></ul>',
+                text: '<p class="font-bold text-slate-900">Xin chào bạn! 👋</p><p>Tôi là <strong>TicketBot AI</strong> — Trợ lý ảo chính thức của nền tảng đặt vé <strong>TicketBox</strong>.</p><p class="text-slate-600 text-xs">Tôi có thể hỗ trợ bạn nhanh các nội dung:</p><ul class="space-y-1 text-xs text-slate-700 list-disc pl-4"><li>Tìm kiếm và gợi ý các đại nhạc hội Concert & Sự kiện hot.</li><li>Hướng dẫn quy trình giữ chỗ 10 phút & sơ đồ khán phòng.</li><li>Giải đáp thanh toán bằng chuyển khoản MB/VietQR và MoMo.</li><li>Tra cứu và xuất trình vé điện tử E-Ticket QR Code.</li></ul>',
                 time: new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }),
                 event: null
             }
@@ -480,10 +480,10 @@ document.addEventListener('alpine:init', () => {
                 };
             }
 
-            // 3. Payment methods (VietQR, MoMo, ZaloPay)
+            // 3. Payment methods (MB/VietQR, MoMo)
             if (q.includes('thanh toán') || q.includes('vietqr') || q.includes('momo') || q.includes('chuyển khoản') || q.includes('tiền')) {
                 return {
-                    text: '<p class="font-bold text-slate-900">💳 TicketBox hỗ trợ 4 cổng thanh toán tự động 24/7:</p><div class="space-y-2 text-xs"><div class="p-2.5 rounded-xl bg-amber-50/80 border border-amber-200">🏦 <strong>Chuyển Khoản VietQR 24/7</strong>: Quét mã QR liên ngân hàng Techcombank, Vietcombank, MBBank... Khớp lệnh tự động tức thì 0đ phí.</div><div class="p-2.5 rounded-xl bg-rose-50/80 border border-rose-200">🟣 <strong>Ví MoMo & ZaloPay</strong>: Thanh toán nhanh chóng, liền mạch chỉ với 1 chạm.</div><div class="p-2.5 rounded-xl bg-slate-100 border border-slate-200">💳 <strong>Thẻ Quốc Tế (Visa/Mastercard)</strong>: Bảo mật 3D-Secure chuẩn quốc tế.</div></div>'
+                    text: '<p class="font-bold text-slate-900">Phương thức thanh toán đang hiển thị:</p><div class="space-y-2 text-xs"><div class="p-2.5 rounded-xl bg-amber-50/80 border border-amber-200">🏦 <strong>Chuyển khoản MB qua VietQR</strong>: Quét mã để chuyển tiền tới tài khoản MBBank.</div><div class="p-2.5 rounded-xl bg-rose-50/80 border border-rose-200">🟣 <strong>MoMo</strong>: Tích hợp đang chờ cấu hình merchant.</div><p class="text-slate-600">Đối soát thanh toán tự động chưa được kết nối.</p></div>'
                 };
             }
 

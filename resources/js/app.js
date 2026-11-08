@@ -308,7 +308,11 @@ Alpine.data('searchModal', () => ({
 // Bình luận sự kiện: gửi / xóa không tải lại trang
 Alpine.data('eventComments', (config = {}) => ({
     comments: config.comments || [],
+    ratingAverage: config.ratingAverage || 0,
+    ratingCount: config.ratingCount || 0,
+    canComment: config.canComment,
     newComment: '',
+    newRating: 5,
     isPosting: false,
     error: '',
 
@@ -328,16 +332,18 @@ Alpine.data('eventComments', (config = {}) => ({
             const response = await fetch(config.storeUrl, {
                 method: 'POST',
                 headers: jsonHeaders(),
-                body: JSON.stringify({ content }),
+                body: JSON.stringify({ content, rating: this.newRating }),
             });
             const data = await response.json();
 
             if (!response.ok) {
-                this.error = data.errors?.content?.[0] || data.message || 'Không thể gửi bình luận.';
+                this.error = data.errors?.content?.[0] || data.errors?.rating?.[0] || data.message || 'Không thể gửi bình luận.';
                 return;
             }
 
             this.comments.unshift(data.comment);
+            this.ratingCount = data.rating_count;
+            this.ratingAverage = data.rating_average;
             this.newComment = '';
         } catch (error) {
             this.error = 'Mất kết nối tới máy chủ, vui lòng thử lại.';
@@ -355,7 +361,10 @@ Alpine.data('eventComments', (config = {}) => ({
         });
 
         if (response.ok) {
+            const data = await response.json();
             this.comments = this.comments.filter(item => item.id !== comment.id);
+            this.ratingAverage = data.rating_average;
+            this.ratingCount = data.rating_count;
         } else {
             this.error = 'Không thể xóa bình luận này.';
         }
@@ -396,65 +405,36 @@ Alpine.data('ticketPaymentManager', (config = {}) => ({
     step: 'cart', // 'cart' | 'payment_qr' | 'e_ticket'
     isProcessingPayment: false,
     paymentSuccess: false,
-    selectedMethod: 'vietqr', // 'vietqr' | 'momo' | 'zalopay' | 'card'
-    selectedBank: 'TCB', // 'TCB' | 'VCB' | 'MB'
+    selectedMethod: 'vietqr', // 'vietqr' | 'momo'
+    selectedBank: 'MB',
     orderCode: 'TBX-' + Math.floor(100000 + Math.random() * 900000),
     totalAmount: config.totalAmount || 500000,
     items: config.items || [],
     buyerInfo: {
-        fullName: config.userName || '',
-        phone: config.userPhone || '',
         email: config.userEmail || '',
-        idCard: '',
-        city: '',
-        address: '',
-        notes: '',
     },
+    ticketQrDataUri: '',
+    ticketQrSvg: '',
     banks: {
-        TCB: {
-            code: 'TCB',
-            shortName: 'Techcombank',
-            fullName: 'Ngân hàng TMCP Kỹ Thương Việt Nam',
-            accountNo: '1903 8888 6688',
-            accountHolder: 'CONG TY CP TICKETBOX VIETNAM',
-            color: '#CC0000',
-            logoBg: 'bg-red-600',
-        },
-        VCB: {
-            code: 'VCB',
-            shortName: 'Vietcombank',
-            fullName: 'Ngân hàng TMCP Ngoại Thương Việt Nam',
-            accountNo: '0071 0008 89999',
-            accountHolder: 'CONG TY CP TICKETBOX VIETNAM',
-            color: '#005E28',
-            logoBg: 'bg-emerald-700',
-        },
         MB: {
             code: 'MB',
             shortName: 'MBBank',
             fullName: 'Ngân hàng TMCP Quân Đội',
-            accountNo: '8888 9999 6868',
-            accountHolder: 'CONG TY CP TICKETBOX VIETNAM',
+            accountNo: config.bankPayment?.accountNo || '',
+            accountHolder: config.bankPayment?.accountHolder || '',
             color: '#002B66',
             logoBg: 'bg-blue-800',
         }
     },
     momoInfo: {
-        merchant: 'TICKETBOX VIETNAM',
-        phone: '0988 888 999',
-        fee: 'Miễn phí',
-    },
-    zalopayInfo: {
-        merchant: 'TICKETBOX TICKET JSC',
-        appId: 'TBX-APP-889',
-        fee: 'Miễn phí',
+        merchant: 'Chưa kết nối MoMo Business',
     },
     toastMsg: '',
     showToast: false,
     toastTimer: null,
 
     get currentBank() {
-        return this.banks[this.selectedBank] || this.banks.TCB;
+        return this.banks.MB;
     },
 
     get vietQrUrl() {
@@ -496,8 +476,8 @@ Alpine.data('ticketPaymentManager', (config = {}) => ({
     },
 
     proceedToPayment() {
-        if (!this.buyerInfo.fullName.trim() || !this.buyerInfo.phone.trim()) {
-            this.notify('Vui lòng điền họ tên và số điện thoại người nhận vé!');
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(this.buyerInfo.email.trim())) {
+            this.notify('Vui lòng nhập email hợp lệ để nhận vé điện tử.');
             return;
         }
         this.step = 'payment_qr';
@@ -512,6 +492,11 @@ Alpine.data('ticketPaymentManager', (config = {}) => ({
     async simulatePaymentSuccess() {
         if (this.isProcessingPayment || this.paymentSuccess) return;
 
+        if (this.selectedMethod === 'momo') {
+            this.notify('MoMo chưa được kết nối. Hiện chưa thể xác nhận thanh toán MoMo.');
+            return;
+        }
+
         this.isProcessingPayment = true;
         this.notify('Đang kiểm tra và xác nhận giao dịch thanh toán...');
 
@@ -519,7 +504,10 @@ Alpine.data('ticketPaymentManager', (config = {}) => ({
             const response = await fetch(config.checkoutUrl, {
                 method: 'POST',
                 headers: jsonHeaders(),
-                body: JSON.stringify({ payment_method: this.selectedMethod }),
+                body: JSON.stringify({
+                    payment_method: this.selectedMethod,
+                    delivery_email: this.buyerInfo.email.trim(),
+                }),
             });
             const data = await response.json();
 
@@ -529,6 +517,8 @@ Alpine.data('ticketPaymentManager', (config = {}) => ({
             }
 
             this.orderCode = data.booking_code;
+            this.ticketQrDataUri = data.qr_data_uri;
+            this.ticketQrSvg = data.qr_data_uri ? atob(data.qr_data_uri.split(',')[1]) : '';
             this.paymentSuccess = true;
             this.step = 'e_ticket';
             window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -563,202 +553,17 @@ Alpine.data('ticketPaymentManager', (config = {}) => ({
 
     downloadTicketAsPNG() {
         const firstItem = this.items[0] || {};
-        const movieTitle = firstItem.movie_title || 'Live Concert TicketBox 2026';
-        const showtime = firstItem.showtime_str || '19:30 - 25/10/2026';
-        const venue = firstItem.room_name || 'Sân Khấu Sự Kiện';
-        const seats = this.items.map(i => (i.row_label ? i.row_label + i.seat_number : i.seat_type)).join(', ') || 'Ghế C4, C5';
+        const seats = this.items.map(item => `${item.row_label || ''}${item.seat_number || ''}`).filter(Boolean).join(', ');
 
-        const canvas = document.createElement('canvas');
-        canvas.width = 1200;
-        canvas.height = 680;
-        const ctx = canvas.getContext('2d');
-
-        // Background
-        ctx.fillStyle = '#14161D';
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-        // Header Gradient Banner
-        const grad = ctx.createLinearGradient(0, 0, 1200, 0);
-        grad.addColorStop(0, '#C08497');
-        grad.addColorStop(0.5, '#D4AF37');
-        grad.addColorStop(1, '#3A5A40');
-        ctx.fillStyle = grad;
-        ctx.fillRect(0, 0, 1200, 12);
-
-        // Ticket Card Body
-        ctx.fillStyle = '#FFFFFF';
-        ctx.roundRect(40, 40, 1120, 600, 24);
-        ctx.fill();
-        ctx.strokeStyle = '#D4AF37';
-        ctx.lineWidth = 3;
-        ctx.stroke();
-
-        // Stub divider line (dashed)
-        ctx.setLineDash([8, 8]);
-        ctx.strokeStyle = '#C08497';
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        ctx.moveTo(820, 40);
-        ctx.lineTo(820, 640);
-        ctx.stroke();
-        ctx.setLineDash([]); // reset
-
-        // Left Stub Notch
-        ctx.fillStyle = '#14161D';
-        ctx.beginPath();
-        ctx.arc(820, 40, 20, 0, Math.PI);
-        ctx.fill();
-        ctx.beginPath();
-        ctx.arc(820, 640, 20, Math.PI, 0);
-        ctx.fill();
-
-        // Brand & Title
-        ctx.fillStyle = '#C08497';
-        ctx.font = 'bold 16px "Plus Jakarta Sans", sans-serif';
-        ctx.fillText('TICKETBOX OFFICIAL E-TICKET PASS', 70, 85);
-
-        ctx.fillStyle = '#22C55E';
-        ctx.font = 'bold 15px "Plus Jakarta Sans", sans-serif';
-        ctx.fillText('● ĐÃ THANH TOÁN 100% (CONFIRMED)', 500, 85);
-
-        // Event Title
-        ctx.fillStyle = '#000000';
-        ctx.font = '900 28px "Playfair Display", serif';
-        const displayTitle = movieTitle.length > 38 ? movieTitle.substring(0, 36) + '...' : movieTitle;
-        ctx.fillText(displayTitle, 70, 135);
-
-        // Gold line under title
-        ctx.fillStyle = '#D4AF37';
-        ctx.fillRect(70, 155, 710, 2);
-
-        // Grid Details Left Side
-        const drawField = (label, val, x, y, isBig = false) => {
-            ctx.fillStyle = '#6B7280';
-            ctx.font = 'bold 13px "Plus Jakarta Sans", sans-serif';
-            ctx.fillText(label.toUpperCase(), x, y);
-
-            ctx.fillStyle = '#111827';
-            ctx.font = isBig ? '900 20px "Space Grotesk", sans-serif' : 'bold 16px "Plus Jakarta Sans", sans-serif';
-            ctx.fillText(val, x, y + 26);
-        };
-
-        drawField('Thời Gian Diễn Ra', showtime, 70, 200);
-        drawField('Địa Điểm & Sân Khấu', venue, 430, 200);
-
-        drawField('Cổng Vào (Gate)', 'CỔNG A1 (LỐI VIP / SEATED)', 70, 280);
-        drawField('Vị Trí Ghế / Hạng Vé', seats, 430, 280, true);
-
-        drawField('Người Sở Hữu Vé', `${this.buyerInfo.fullName} (CCCD: ${this.buyerInfo.idCard || 'Chính chủ'})`, 70, 360);
-        drawField('Số Điện Thoại / Email', `${this.buyerInfo.phone} · ${this.buyerInfo.email}`, 430, 360);
-
-        drawField('Mã Đơn Đặt Chỗ', this.orderCode, 70, 440, true);
-        drawField('Tổng Tiền Thanh Toán', this.formatCurrency(this.totalAmount), 430, 440, true);
-
-        // Security Notice Box
-        ctx.fillStyle = '#F5F5DC';
-        ctx.roundRect(70, 520, 710, 90, 14);
-        ctx.fill();
-        ctx.strokeStyle = '#D8D8A8';
-        ctx.lineWidth = 1;
-        ctx.stroke();
-
-        ctx.fillStyle = '#3A5A40';
-        ctx.font = 'bold 13px "Plus Jakarta Sans", sans-serif';
-        ctx.fillText('LƯU Ý CHECK-IN SỰ KIỆN:', 90, 548);
-        ctx.fillStyle = '#4B5563';
-        ctx.font = '12px "Plus Jakarta Sans", sans-serif';
-        ctx.fillText('• Xuất trình mã QR tại cổng kiểm soát vé để quét đổi vòng tay / vào khán phòng.', 90, 572);
-        ctx.fillText('• Mỗi vé QR chỉ có giá trị cho 01 lần check-in. Vui lòng bảo mật mã vé cá nhân.', 90, 592);
-
-        // Right Stub (QR Code & Barcode Section)
-        ctx.fillStyle = '#FAF9F6';
-        ctx.roundRect(845, 65, 290, 550, 16);
-        ctx.fill();
-
-        ctx.fillStyle = '#000000';
-        ctx.font = '900 18px "Space Grotesk", sans-serif';
-        ctx.textAlign = 'center';
-        ctx.fillText('GATE PASS', 990, 105);
-
-        ctx.fillStyle = '#6B7280';
-        ctx.font = '12px "Plus Jakarta Sans", sans-serif';
-        ctx.fillText('SCAN TO ENTER', 990, 125);
-
-        // Simulated QR Code Frame on Stub
-        ctx.fillStyle = '#FFFFFF';
-        ctx.roundRect(890, 145, 200, 200, 12);
-        ctx.fill();
-        ctx.strokeStyle = '#D4AF37';
-        ctx.lineWidth = 2;
-        ctx.stroke();
-
-        // Draw Stylized QR Grid pattern
-        ctx.fillStyle = '#000000';
-        // 3 Corner Eyes
-        const drawEye = (ex, ey) => {
-            ctx.fillRect(ex, ey, 45, 45);
-            ctx.fillStyle = '#FFFFFF';
-            ctx.fillRect(ex + 8, ey + 8, 29, 29);
-            ctx.fillStyle = '#000000';
-            ctx.fillRect(ex + 15, ey + 15, 15, 15);
-        };
-        drawEye(905, 160);
-        drawEye(1030, 160);
-        drawEye(905, 285);
-
-        // Random matrix dots
-        for (let r = 0; r < 7; r++) {
-            for (let c = 0; c < 7; c++) {
-                if ((r < 3 && c < 3) || (r < 3 && c > 3) || (r > 3 && c < 3)) continue;
-                if ((r + c * 3 + this.orderCode.charCodeAt(r % 5)) % 2 === 0) {
-                    ctx.fillRect(960 + c * 9, 215 + r * 9, 7, 7);
-                }
-            }
-        }
-
-        // Center TicketBox Logo on QR
-        ctx.fillStyle = '#C08497';
-        ctx.fillRect(972, 227, 36, 36);
-        ctx.fillStyle = '#FFFFFF';
-        ctx.font = '900 12px "Plus Jakarta Sans", sans-serif';
-        ctx.fillText('TBX', 990, 250);
-
-        // Booking Code
-        ctx.fillStyle = '#000000';
-        ctx.font = '900 16px "Space Grotesk", sans-serif';
-        ctx.fillText(this.orderCode, 990, 380);
-
-        // Barcode lines
-        ctx.fillStyle = '#111827';
-        const startBx = 875;
-        for (let i = 0; i < 40; i++) {
-            const w = (i % 3 === 0 || i % 7 === 0) ? 4 : 2;
-            const gap = i * 6;
-            ctx.fillRect(startBx + gap, 410, w, 45);
-        }
-
-        ctx.font = 'bold 11px "Space Grotesk", sans-serif';
-        ctx.fillStyle = '#9CA3AF';
-        ctx.fillText('AUTH-' + Date.now().toString().slice(-8), 990, 475);
-
-        // Brand Stamp
-        ctx.fillStyle = '#3A5A40';
-        ctx.font = 'bold 12px "Plus Jakarta Sans", sans-serif';
-        ctx.fillText('TICKETBOX VERIFIED', 990, 530);
-
-        ctx.fillStyle = '#D4AF37';
-        ctx.font = 'bold 11px "Plus Jakarta Sans", sans-serif';
-        ctx.fillText('★ VIP ADMISSION ★', 990, 555);
-
-        ctx.textAlign = 'left'; // reset
-
-        // Trigger Download
-        const link = document.createElement('a');
-        link.download = `Ve-Dien-Tu-${this.orderCode}.png`;
-        link.href = canvas.toDataURL('image/png');
-        link.click();
-
-        this.notify(`Đã lưu vé điện tử ${this.orderCode}.png về thiết bị của bạn!`);
+        window.downloadTicketPNG({
+            movieTitle: firstItem.movie_title,
+            showtime: firstItem.showtime_str,
+            venue: firstItem.room_name,
+            seats,
+            orderCode: this.orderCode,
+            totalPrice: this.totalAmount,
+            qrSvg: this.ticketQrSvg,
+        });
     },
 
     printTicket() {
@@ -774,7 +579,6 @@ window.downloadTicketPNG = function(bookingData) {
     const seats = bookingData.seats || 'Ghế VIP';
     const orderCode = bookingData.orderCode || 'TBX-' + Math.floor(100000 + Math.random() * 900000);
     const totalPrice = bookingData.totalPrice ? new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(bookingData.totalPrice) : '500.000 ₫';
-    const buyerName = bookingData.buyerName || 'Nguyễn Hải Phong';
 
     const canvas = document.createElement('canvas');
     canvas.width = 1200;
@@ -854,8 +658,8 @@ window.downloadTicketPNG = function(bookingData) {
     drawField('Cổng Vào (Gate)', 'CỔNG A1 (LỐI VIP / SEATED)', 70, 280);
     drawField('Vị Trí Ghế / Hạng Vé', seats, 430, 280, true);
 
-    drawField('Người Sở Hữu Vé', buyerName, 70, 360);
-    drawField('Trạng Thái Vé', 'HỢP LỆ - ĐÃ KÍCH HOẠT CHECK-IN', 430, 360);
+    drawField('Đối chiếu vé', 'Dùng mã QR tại cổng', 70, 360);
+    drawField('Thông tin khách hàng', 'Không in trên vé', 430, 360);
 
     drawField('Mã Đơn Đặt Chỗ', orderCode, 70, 440, true);
     drawField('Tổng Tiền Thanh Toán', totalPrice, 430, 440, true);
@@ -1007,6 +811,38 @@ Alpine.data('adminSeatMapBuilder', (config = {}) => ({
 
     get standingZones() {
         return this.zones.filter(zone => zone.kind === 'standing');
+    },
+
+    // Project the editable row/cell source into the same level → zone → row view used by customers.
+    get previewLevels() {
+        const levels = new Map();
+        this.zones.forEach((zone, zoneIndex) => {
+            const level = parseInt(zone.level) || 1;
+            if (!levels.has(level)) levels.set(level, []);
+
+            const maxCol = Math.max(0, ...this.rows.flatMap(row => row.cells.map((cell, index) => cell.zone === zone.code ? index + 1 : 0)));
+            const rows = maxCol === 0 ? [] : this.rows.flatMap((row, rowIdx) => {
+                const hasZone = row.cells.some(cell => cell.zone === zone.code);
+                if (!hasZone) return [];
+
+                return [{
+                    label: row.label,
+                    rowIdx,
+                    primaryZone: row.cells.find(cell => !cell.aisle)?.zone,
+                    cells: Array.from({ length: maxCol }, (_, colIdx) => {
+                        const cell = row.cells[colIdx];
+                        const kind = !cell ? 'empty' : cell.aisle ? 'aisle' : cell.zone === zone.code ? 'seat' : 'other';
+                        return { kind, colIdx, number: cell && !cell.aisle ? this.seatNumber(rowIdx, colIdx) : null };
+                    }),
+                }];
+            });
+
+            levels.get(level).push({ ...zone, zoneIndex, maxCol, rows });
+        });
+
+        return [...levels.entries()]
+            .sort(([a], [b]) => a - b)
+            .map(([level, zones]) => ({ level, zones }));
     },
 
     // ----- Khu vực -----

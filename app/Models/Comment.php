@@ -15,6 +15,12 @@ class Comment extends Model
         'event_id',
         'movie_id',
         'content',
+        'rating',
+    ];
+
+    protected $casts = [
+        'rating' => 'integer',
+        'admin_replied_at' => 'datetime',
     ];
 
     public function user(): BelongsTo
@@ -41,6 +47,9 @@ class Comment extends Model
             'avatar_url' => $this->user?->avatar_url,
             'time' => $this->created_at?->locale('vi')->diffForHumans() ?? 'Vừa xong',
             'text' => $this->content,
+            'rating' => $this->rating,
+            'admin_reply' => $this->admin_reply,
+            'admin_reply_time' => $this->admin_replied_at?->locale('vi')->diffForHumans(),
             'can_delete' => $viewer !== null && $viewer->can('delete', $this),
         ];
     }

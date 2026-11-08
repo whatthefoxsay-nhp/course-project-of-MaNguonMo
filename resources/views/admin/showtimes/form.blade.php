@@ -45,7 +45,7 @@
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <x-admin.field label="Bắt đầu" name="start_time" type="datetime-local" :value="$showtime->start_time?->format('Y-m-d\TH:i')" required />
             <x-admin.field label="Kết thúc" name="end_time" type="datetime-local" :value="$showtime->end_time?->format('Y-m-d\TH:i')" required />
-            <x-admin.field label="Giá vé cơ bản (₫)" name="base_price" type="number" :value="$showtime->base_price" min="10000" step="1000" required hint="Giá từng hạng ghế = giá cơ bản + phụ thu hạng." />
+            <x-admin.field label="Giá vé cơ bản (₫)" name="base_price" type="number" :value="$showtime->base_price" min="10000" step="1000" required hint="Giá nền dùng để tính giá vé cuối cùng cho từng khu ghế." />
         </div>
 
         <div class="flex items-center gap-3 pt-2">

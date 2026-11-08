@@ -44,9 +44,8 @@
         <div class="code">{{ $booking->booking_code }}</div>
     </div>
 
-    <h2>Thông tin khách hàng và sự kiện</h2>
+    <h2>Thông tin sự kiện</h2>
     <table>
-        <tr><td class="muted">Khách hàng</td><td class="right">{{ $booking->user?->name ?? 'Khách hàng' }}</td></tr>
         <tr><td class="muted">Sự kiện</td><td class="right">{{ $firstEvent?->title ?? 'Sự kiện' }}</td></tr>
         <tr><td class="muted">Ngày giờ</td><td class="right">{{ $firstShowtime?->start_time?->format('d/m/Y · H:i') ?? 'Theo lịch sự kiện' }}</td></tr>
         <tr><td class="muted">Địa điểm</td><td class="right">{{ $firstShowtime?->room?->name ?? $firstEvent?->venue_name ?? 'Theo thông tin sự kiện' }}</td></tr>

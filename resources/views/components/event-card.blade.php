@@ -82,15 +82,8 @@
             @endif
         </div>
 
-        <!-- Footer Price & Action -->
-        <div class="mt-4 pt-3.5 border-t border-black/8 flex items-center justify-between">
-            <div>
-                <span class="text-[10px] text-gray-400 font-bold uppercase tracking-wider block">Giá vé từ</span>
-                <span class="font-display font-black text-black text-base tracking-tight text-[#1A1A1A]">
-                    {{ number_format($item->base_price ?? 180000, 0, ',', '.') }}₫ <span class="text-[10px] text-gray-400 font-normal">/ vé</span>
-                </span>
-            </div>
-
+        <!-- Footer action -->
+        <div class="mt-4 pt-3.5 border-t border-black/8 flex items-center justify-end">
             <span class="btn-rose px-3.5 py-2 rounded-xl text-xs font-black flex items-center gap-1.5 shadow-sm group-hover:shadow-md group-hover:gap-2 transition-all">
                 <span>Chọn vé</span>
                 <svg class="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">

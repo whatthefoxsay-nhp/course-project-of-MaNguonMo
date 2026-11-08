@@ -104,6 +104,12 @@
                                     <span class="text-xs text-slate-800 font-bold block">Quét Mã Vào Cổng Khán Phòng</span>
                                 </div>
 
+                                @php
+                                    $downloadQrSvg = \SimpleSoftwareIO\QrCode\Facades\QrCode::format('svg')
+                                        ->size(400)
+                                        ->margin(2)
+                                        ->generate('TICKETBOX_AUTH_PASS_'.$booking->booking_code);
+                                @endphp
                                 <!-- Ultra-Sharp QR Code Card with Viewfinder Styling -->
                                 <div class="p-3.5 bg-white rounded-2xl shadow-md border border-slate-200/90 space-y-2 relative group hover:border-[#C08497] transition-all">
                                     <!-- Viewfinder HUD Corner Accents -->
@@ -114,17 +120,12 @@
 
                                     <!-- QR Image -->
                                     <div class="w-32 h-32 bg-white rounded-xl p-1 flex items-center justify-center overflow-hidden">
-                                        <img 
-                                            src="https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=TICKETBOX_AUTH_PASS_{{ $booking->booking_code }}" 
-                                            alt="Check-in QR Code" 
-                                            class="w-full h-full object-contain"
-                                            loading="lazy"
-                                        >
+                                        <img src="{{ 'data:image/svg+xml;base64,'.base64_encode($downloadQrSvg) }}" alt="Mã QR đối chiếu vé" class="w-full h-full object-contain">
                                     </div>
 
                                     <div class="pt-0.5">
                                         <span class="font-mono text-xs font-black text-slate-900 block tracking-widest">{{ $booking->booking_code }}</span>
-                                        <span class="text-[9px] font-bold text-emerald-700 uppercase tracking-wider block mt-0.5">✓ HỢP LỆ ĐỐI SOÁT CỔNG</span>
+                                        <span class="text-[9px] font-bold text-emerald-700 uppercase tracking-wider block mt-0.5">MÃ QR ĐỐI CHIẾU VÉ</span>
                                     </div>
                                 </div>
 
@@ -135,12 +136,6 @@
                                 </div>
 
                                 <!-- Download Ticket Button -->
-                                @php
-                                    $downloadQrSvg = \SimpleSoftwareIO\QrCode\Facades\QrCode::format('svg')
-                                        ->size(400)
-                                        ->margin(2)
-                                        ->generate('TICKETBOX_AUTH_PASS_'.$booking->booking_code);
-                                @endphp
                                 <button 
                                     type="button" 
                                     onclick="window.downloadTicketPNG({

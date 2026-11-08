@@ -78,15 +78,8 @@
                     </div>
                 </div>
 
-                <!-- Right: Price highlights & Steps -->
+                <!-- Right: Purchase steps -->
                 <div class="flex flex-row md:flex-col items-end justify-between md:justify-center w-full md:w-auto pt-4 md:pt-0 border-t md:border-t-0 border-black/10 shrink-0">
-                    <div class="text-left md:text-right">
-                        <span class="text-xs text-gray-500 font-bold block">Giá vé từ</span>
-                        <span class="font-display font-black text-2xl sm:text-3xl text-black">
-                            {{ number_format($showtime->base_price) }}₫
-                        </span>
-                    </div>
-
                     <div class="mt-2 flex items-center gap-1 text-[11px] text-sage-forest font-bold bg-[#EAF3EC] px-3 py-1 rounded-full border border-[#A3C9A8]">
                         <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>
                         <span>Nhận mã QR vé E-Ticket tức thì</span>

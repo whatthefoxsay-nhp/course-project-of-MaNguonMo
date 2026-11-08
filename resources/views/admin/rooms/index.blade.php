@@ -248,12 +248,10 @@
                     <!-- Modal Body: Blueprint Viewport & Seat Matrix -->
                     <div class="p-6 overflow-y-auto flex-1 bg-gradient-to-b from-[#0F172A] via-[#111827] to-[#020617] text-white">
                         
-                        <!-- STAGE BANNER -->
-                        <div class="w-full max-w-md mx-auto p-3 bg-gradient-to-r from-obsidian-950 via-obsidian-800 to-obsidian-950 text-white text-center rounded-2xl shadow-md border-2 border-gold-antique/80 relative overflow-hidden mb-8">
-                            <div class="font-display font-black text-xs tracking-widest uppercase text-gold-light">
-                                ★ SÂN KHẤU CHÍNH (MAIN STAGE) ★
-                            </div>
-                            <span class="text-[10px] text-gray-400 font-mono">HỆ THỐNG ÂM THANH ÁNH SÁNG &amp; MÀN HÌNH LED</span>
+                        <!-- Sân khấu theo loại địa điểm -->
+                        <div class="w-full max-w-lg mx-auto p-4 bg-gradient-to-r from-red-950 via-rose-950 to-red-950 text-center rounded-b-[3rem] rounded-t-xl shadow-xl border-2 border-gold-antique mb-8">
+                            <div class="font-display font-black text-xs tracking-widest uppercase text-gold-light" x-text="activeRoom?.stage_label || '★ SÂN KHẤU CHÍNH ★'"></div>
+                            <span class="text-[10px] text-gray-300 font-mono" x-text="activeRoom?.stage_subtitle || ''"></span>
                         </div>
 
                         <!-- ZOOM CANVAS CONTAINER -->
@@ -262,38 +260,43 @@
                                 class="transition-transform duration-200 origin-top min-w-[500px] max-w-4xl mx-auto space-y-3"
                                 :style="'transform: scale(' + zoomScale + ')'"
                             >
-                                <template x-for="r in activeRoom?.rows || []" :key="r.row">
-                                    <div class="flex items-center justify-center gap-1.5 flex-wrap">
-                                        <!-- Row Label -->
-                                        <span class="w-14 text-right pr-2 text-[11px] font-mono font-bold text-gray-400 shrink-0" x-text="r.row"></span>
-                                        
-                                        <!-- Seats in Row -->
-                                        <div class="flex items-center gap-1 flex-wrap justify-center">
-                                            <template x-for="s in r.seats" :key="s.id">
-                                                <button 
-                                                    type="button" 
-                                                    @mouseenter="hoveredSeat = s"
-                                                    @click="hoveredSeat = s"
-                                                    :style="'background-color: ' + s.color"
-                                                    class="w-6 h-6 sm:w-7 sm:h-7 rounded-lg text-[9px] font-black text-white flex items-center justify-center shadow-xs hover:scale-125 transition-transform cursor-pointer border border-white/20"
-                                                    :title="r.row + '-' + s.number + ' (' + s.type_name + ')'"
-                                                >
-                                                    <span x-text="s.number"></span>
-                                                </button>
-                                            </template>
-                                        </div>
+                                <template x-for="level in activeRoom?.levels || []" :key="level.level">
+                                    <div class="flex items-start justify-center gap-4 sm:gap-6 mb-6 min-w-max">
+                                        <template x-for="zone in level.zones" :key="zone.code">
+                                            <section class="rounded-2xl p-3 bg-black/40 border space-y-2" :style="'border-color: ' + zone.color + '88'">
+                                                <div class="flex items-center justify-between gap-3 px-1">
+                                                    <span class="flex items-center gap-2 text-[11px] font-black text-white">
+                                                        <span class="w-2.5 h-2.5 rounded-full" :style="'background-color: ' + zone.color"></span>
+                                                        <span x-text="zone.name"></span>
+                                                    </span>
+                                                    <span class="text-[9px] text-gray-400 font-mono" x-text="zone.count + ' chỗ'"></span>
+                                                </div>
+                                                <template x-if="zone.kind === 'standing'">
+                                                    <div class="p-4 rounded-xl border-2 border-dashed text-center min-w-[12rem]" :style="'border-color: ' + zone.color">
+                                                        <span class="text-[11px] text-gray-300 font-mono" x-text="'Khu đứng · ' + zone.capacity + ' chỗ'"></span>
+                                                    </div>
+                                                </template>
+                                                <div class="space-y-1.5" x-show="zone.kind !== 'standing'">
+                                                    <template x-for="r in zone.rows" :key="r.row">
+                                                        <div class="flex items-center gap-1.5">
+                                                            <span class="w-10 shrink-0 text-right text-[9px] font-mono text-gray-400 font-bold" x-text="r.row"></span>
+                                                            <div class="grid gap-1" :style="'grid-template-columns: repeat(' + Math.max(1, zone.max_col) + ', minmax(0, 1.5rem))'">
+                                                                <template x-for="s in r.seats" :key="s.id">
+                                                                    <button type="button" @mouseenter="hoveredSeat = s" @click="hoveredSeat = s"
+                                                                            :style="'grid-column: ' + s.col + '; background-color: ' + s.color"
+                                                                            class="w-6 h-6 rounded-md text-[9px] font-black text-white flex items-center justify-center shadow-xs hover:scale-125 transition-transform cursor-pointer border border-white/20"
+                                                                            :title="r.row + '-' + s.number + ' (' + s.type_name + ')'">
+                                                                        <span x-text="s.number"></span>
+                                                                    </button>
+                                                                </template>
+                                                            </div>
+                                                        </div>
+                                                    </template>
+                                                </div>
+                                            </section>
+                                        </template>
                                     </div>
                                 </template>
-
-                                <!-- Khu đứng / vào cửa tự do (bán theo số lượng) -->
-                                <div class="mt-6 flex flex-wrap justify-center gap-3">
-                                    <template x-for="zone in activeRoom?.standing || []" :key="zone.code">
-                                        <div class="p-4 rounded-2xl border-2 border-dashed text-center min-w-[12rem]" :style="'border-color: ' + zone.color">
-                                            <span class="text-xs font-black text-white block" x-text="zone.name"></span>
-                                            <span class="text-[11px] text-gray-300 font-mono" x-text="'Sức chứa: ' + zone.count + ' chỗ (bán theo số lượng)'"></span>
-                                        </div>
-                                    </template>
-                                </div>
                             </div>
                         </div>
 

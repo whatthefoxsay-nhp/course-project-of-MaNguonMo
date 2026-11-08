@@ -74,6 +74,8 @@ class EventController extends Controller
             // View đang dùng !empty($showtimes) và $showtimes[0] nên truyền array, không truyền Collection.
             'showtimes' => $showtimes->all(),
             'comments' => $comments,
+            'ratingAverage' => round((float) $event->comments()->whereNotNull('rating')->avg('rating'), 1),
+            'ratingCount' => $event->comments()->whereNotNull('rating')->count(),
             'mapUrl' => $venue ? MapEmbed::url($venue) : null,
             'weather' => $venue ? $weatherService->forecastFor($venue, $nextShowtime->start_time) : null,
             'weatherShowtime' => $nextShowtime,

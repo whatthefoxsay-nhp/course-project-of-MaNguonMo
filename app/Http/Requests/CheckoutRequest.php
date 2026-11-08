@@ -17,11 +17,15 @@ class CheckoutRequest extends FormRequest
     {
         return [
             'payment_method' => ['required', 'string', Rule::in(CheckoutService::PAYMENT_METHODS)],
+            'delivery_email' => ['required', 'email', 'max:255'],
         ];
     }
 
     public function attributes(): array
     {
-        return ['payment_method' => 'phương thức thanh toán'];
+        return [
+            'payment_method' => 'phương thức thanh toán',
+            'delivery_email' => 'email nhận vé',
+        ];
     }
 }

@@ -95,11 +95,7 @@
                                     <h3 class="font-serif font-black text-xl text-black line-clamp-1 group-hover:text-rose-taupe transition-colors">{{ $leadEvent->title }}</h3>
                                     <p class="text-xs text-gray-500 mt-1.5 line-clamp-2 leading-relaxed">{{ $leadEvent->description }}</p>
                                     
-                                    <div class="mt-4 pt-3.5 border-t border-black/10 flex items-center justify-between">
-                                        <div>
-                                            <span class="text-[10px] text-gray-400 font-semibold block">Giá vé từ</span>
-                                            <span class="font-display font-black text-black text-lg">{{ number_format($leadEvent->base_price ?? 250000, 0, ',', '.') }}₫</span>
-                                        </div>
+                                    <div class="mt-4 pt-3.5 border-t border-black/10 flex items-center justify-end">
                                         <a href="{{ route('movies.show', $leadEvent->slug) }}" class="btn-gold px-5 py-2.5 rounded-xl text-xs font-black shadow-sm flex items-center gap-1.5 hover:shadow-md transition-all">
                                             <span>Chọn chỗ ngồi</span>
                                             <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
