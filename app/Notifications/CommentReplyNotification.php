@@ -23,8 +23,11 @@ class CommentReplyNotification extends Notification
     {
         return [
             'title' => 'TicketBox đã phản hồi bình luận',
-            'message' => 'Bạn có phản hồi mới cho bình luận về sự kiện '.($this->comment->event?->title ?? 'của bạn').'.',
+            'message' => 'Bạn có phản hồi mới cho bình luận về sự kiện '.($this->comment->event?->title ?? 'của bạn').': "'.$this->comment->admin_reply.'"',
             'url' => '/events/'.$this->comment->event?->slug,
+            'event_id' => $this->comment->event_id,
+            'event_slug' => $this->comment->event?->slug,
+            'reply' => $this->comment->admin_reply,
             'kind' => 'comment_reply',
         ];
     }

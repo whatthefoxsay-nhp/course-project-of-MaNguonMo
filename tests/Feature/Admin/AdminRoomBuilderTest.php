@@ -76,6 +76,7 @@ test('admin can update room and regenerate seat map', function () {
 
     $response = $this->actingAs($admin)->put(route('admin.rooms.update', $room), [
         'name' => 'Khán Phòng Opera Mới Cải Tạo',
+        'address' => '07 Công Trường Lam Sơn, Quận 1',
         'capacity' => 800,
         'layout_preset' => 'theater_hall',
         'layout' => json_encode(LayoutTemplates::get('theater_hall')),

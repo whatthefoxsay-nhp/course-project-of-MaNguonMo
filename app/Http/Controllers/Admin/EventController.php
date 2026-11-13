@@ -96,12 +96,12 @@ class EventController extends Controller
 
     public function destroy(Event $event, GoogleDriveService $googleDrive): RedirectResponse
     {
-        $hasSoldTickets = ShowtimeSeat::whereIn('showtime_id', $event->showtimes()->select('id'))
-            ->where('status', 'booked')
+        $hasActiveSeats = ShowtimeSeat::whereIn('showtime_id', $event->showtimes()->select('id'))
+            ->whereIn('status', ['held', 'booked'])
             ->exists();
 
-        if ($hasSoldTickets) {
-            return back()->with('error', 'Sự kiện đã có vé bán ra, không thể xóa. Hãy chuyển trạng thái sang "Lưu trữ".');
+        if ($hasActiveSeats) {
+            return back()->with('error', 'Sự kiện đã có vé bán ra hoặc đang giữ chỗ, không thể xóa. Hãy chuyển trạng thái sang "Lưu trữ".');
         }
 
         $this->deleteStoredPoster($event, $googleDrive);
@@ -113,20 +113,18 @@ class EventController extends Controller
     /** Xóa poster Drive cũ hoặc local legacy file sau khi ảnh mới đã upload thành công. */
     private function storePoster(UploadedFile $poster, GoogleDriveService $googleDrive): string
     {
-        if (! $googleDrive->isEnabled()) {
-            throw ValidationException::withMessages([
-                'poster' => 'Google Drive chưa được cấu hình; không thể lưu poster sự kiện.',
-            ]);
+        if ($googleDrive->isEnabled()) {
+            $url = $googleDrive->upload($poster);
+            if ($url === null) {
+                throw ValidationException::withMessages([
+                    'poster' => 'Không tải được poster lên Google Drive. Vui lòng thử lại.',
+                ]);
+            }
+
+            return $url;
         }
 
-        $url = $googleDrive->upload($poster);
-        if ($url === null) {
-            throw ValidationException::withMessages([
-                'poster' => 'Không tải được poster lên Google Drive. Vui lòng thử lại.',
-            ]);
-        }
-
-        return $url;
+        return $poster->store('posters', 'public');
     }
 
     private function deleteStoredPoster(Event $event, GoogleDriveService $googleDrive): void

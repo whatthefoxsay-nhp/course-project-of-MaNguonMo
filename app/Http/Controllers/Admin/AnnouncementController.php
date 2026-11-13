@@ -29,9 +29,14 @@ class AnnouncementController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
+        $request->merge([
+            'title' => is_string($request->input('title')) ? trim($request->input('title')) : $request->input('title'),
+            'message' => is_string($request->input('message')) ? trim($request->input('message')) : $request->input('message'),
+        ]);
+
         $data = $request->validate([
-            'title' => ['required', 'string', 'min:3', 'max:120'],
-            'message' => ['required', 'string', 'min:5', 'max:2000'],
+            'title' => ['required', 'string', 'min:3', 'max:255'],
+            'message' => ['required', 'string', 'min:5', 'max:5000'],
         ]);
 
         $sent = 0;

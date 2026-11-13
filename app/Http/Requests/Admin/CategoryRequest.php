@@ -24,4 +24,14 @@ class CategoryRequest extends FormRequest
     {
         return ['name' => 'tên danh mục', 'description' => 'mô tả'];
     }
+
+    public function messages(): array
+    {
+        return [
+            'name.required' => 'Tên danh mục không được để trống.',
+            'name.unique' => 'Tên danh mục đã tồn tại trong hệ thống.',
+            'name.max' => 'Tên danh mục không được vượt quá 100 ký tự.',
+            'description.max' => 'Mô tả không được vượt quá 500 ký tự.',
+        ];
+    }
 }

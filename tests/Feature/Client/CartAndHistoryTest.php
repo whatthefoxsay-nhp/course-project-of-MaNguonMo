@@ -43,7 +43,7 @@ test('booking history lists only the user\'s own bookings from the database', fu
         ->assertOk()
         ->assertSee('TBX-89214')
         ->assertSee('TBX-77102')
-        ->assertViewHas('bookings', fn (array $bookings) => count($bookings) === 2 && count($bookings[0]->seats) >= 1);
+        ->assertViewHas('bookings', fn ($bookings) => count($bookings) === 2 && count($bookings[0]->seats) >= 1);
 
     $this->actingAs(createCustomer())->get(route('bookings.history'))
         ->assertOk()

@@ -16,12 +16,18 @@ class Booking extends Model
         'user_id',
         'booking_code',
         'total_price',
+        'discount_id',
+        'discount_amount',
         'status',
         'payment_method',
+        'buyer_name',
+        'buyer_phone',
+        'buyer_email',
     ];
 
     protected $casts = [
         'total_price' => 'integer',
+        'discount_amount' => 'integer',
     ];
 
     protected static function boot()
@@ -42,6 +48,11 @@ class Booking extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function discount(): BelongsTo
+    {
+        return $this->belongsTo(Discount::class);
     }
 
     public function items(): HasMany

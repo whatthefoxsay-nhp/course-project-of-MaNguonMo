@@ -217,9 +217,27 @@
                             </span>
                         </div>
 
-                        <h1 class="font-serif text-3xl sm:text-4xl lg:text-5xl font-black text-black leading-tight tracking-tight">
-                            {{ $movie->title }}
-                        </h1>
+                        <div class="flex items-start justify-between gap-4">
+                            <h1 class="font-serif text-3xl sm:text-4xl lg:text-5xl font-black text-black leading-tight tracking-tight flex-1">
+                                {{ $movie->title }}
+                            </h1>
+                            @php
+                                $isEventFav = auth()->check() && $movie->isFavoritedBy(auth()->user());
+                            @endphp
+                            <form action="{{ route('events.favorite.toggle', $movie->id) }}" method="POST" class="shrink-0 pt-1">
+                                @csrf
+                                <button
+                                    type="submit"
+                                    class="favorite-toggle-btn px-4 py-2 rounded-2xl border transition-all flex items-center gap-2 text-xs font-bold shadow-xs {{ $isEventFav ? 'bg-rose-50 border-rose-200 text-crimson' : 'bg-white border-black/10 text-gray-700 hover:text-crimson hover:border-rose-200' }}"
+                                    title="{{ $isEventFav ? 'Đã lưu yêu thích' : 'Lưu vào yêu thích' }}"
+                                >
+                                    <svg class="w-4 h-4 {{ $isEventFav ? 'fill-current text-crimson' : 'fill-none stroke-current' }}" viewBox="0 0 24 24" stroke-width="2">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                                    </svg>
+                                    <span class="{{ $isEventFav ? 'text-crimson' : '' }}">{{ $isEventFav ? 'Đã yêu thích' : 'Yêu thích' }}</span>
+                                </button>
+                            </form>
+                        </div>
 
                         <!-- Description -->
                         <div class="mt-4 text-sm sm:text-base text-gray-700 leading-relaxed font-normal border-b border-black/10 pb-6">
@@ -429,7 +447,7 @@
                                     <div class="bg-[#FAF9F6] rounded-2xl p-4 border border-black/10 hover:shadow-md transition-all space-y-2" style="border-left: 5px solid {{ $zone['color'] }}">
                                         <div class="flex items-center justify-between gap-2">
                                             <span class="text-xs font-black text-black">{{ $zone['name'] }}</span>
-                                            <span class="font-display font-black text-sm text-black">{{ number_format($zone['price']) }}₫</span>
+                                            <span class="font-display font-black text-sm text-black">{{ number_format($zone['price'], 0, ',', '.') }}₫</span>
                                         </div>
                                         @if ($zone['description'])
                                             <p class="text-[11px] text-gray-600 leading-relaxed">{{ $zone['description'] }}</p>

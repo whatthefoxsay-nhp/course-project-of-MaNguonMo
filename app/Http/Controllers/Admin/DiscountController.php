@@ -59,20 +59,35 @@ class DiscountController extends Controller
      */
     public function store(Request $request): RedirectResponse
     {
+        $rawCode = $request->input('code');
+        if (is_string($rawCode)) {
+            $request->merge(['code' => strtoupper(trim($rawCode))]);
+        }
+
         $validated = $request->validate([
-            'code' => 'required|string|max:32|unique:discounts,code',
-            'title' => 'required|string|max:255',
+            'code' => ['required', 'string', 'max:32', 'unique:discounts,code', 'regex:/^[A-Z0-9_\-]+$/'],
+            'title' => 'nullable|string|max:255',
             'discount_type' => 'required|in:percentage,fixed',
-            'discount_value' => 'required|integer|min:1',
+            'discount_value' => [
+                'required',
+                'integer',
+                'min:1',
+                function ($attribute, $value, $fail) use ($request) {
+                    if ($request->input('discount_type') === 'percentage' && (int) $value > 100) {
+                        $fail('Giá trị giảm theo phần trăm không được vượt quá 100%.');
+                    }
+                },
+            ],
             'min_order_value' => 'nullable|integer|min:0',
             'max_discount_amount' => 'nullable|integer|min:0',
-            'max_uses' => 'required|integer|min:1',
+            'max_uses' => 'nullable|integer|min:1',
             'start_date' => 'nullable|date',
-            'end_date' => 'nullable|date|after_or_equal:start_date',
+            'end_date' => 'nullable|date|after_or_equal:today|after_or_equal:start_date',
             'applicable_to' => 'nullable|string|max:255',
         ]);
 
-        $validated['code'] = strtoupper(trim($validated['code']));
+        $validated['title'] = $validated['title'] ?? "Ưu đãi {$validated['code']}";
+        $validated['max_uses'] = $validated['max_uses'] ?? 100;
         $validated['min_order_value'] = $validated['min_order_value'] ?? 0;
         $validated['applicable_to'] = $validated['applicable_to'] ?? 'Tất cả sự kiện & concert';
         $validated['is_active'] = true;
@@ -88,17 +103,35 @@ class DiscountController extends Controller
      */
     public function update(Request $request, Discount $discount): RedirectResponse
     {
+        $rawCode = $request->input('code');
+        if (is_string($rawCode)) {
+            $request->merge(['code' => strtoupper(trim($rawCode))]);
+        }
+
         $validated = $request->validate([
-            'title' => 'required|string|max:255',
+            'code' => ['sometimes', 'string', 'max:32', 'regex:/^[A-Z0-9_\-]+$/', \Illuminate\Validation\Rule::unique('discounts', 'code')->ignore($discount->id)],
+            'title' => 'nullable|string|max:255',
             'discount_type' => 'required|in:percentage,fixed',
-            'discount_value' => 'required|integer|min:1',
+            'discount_value' => [
+                'required',
+                'integer',
+                'min:1',
+                function ($attribute, $value, $fail) use ($request) {
+                    if ($request->input('discount_type') === 'percentage' && (int) $value > 100) {
+                        $fail('Giá trị giảm theo phần trăm không được vượt quá 100%.');
+                    }
+                },
+            ],
             'min_order_value' => 'nullable|integer|min:0',
             'max_discount_amount' => 'nullable|integer|min:0',
-            'max_uses' => 'required|integer|min:1',
+            'max_uses' => 'nullable|integer|min:1',
             'start_date' => 'nullable|date',
             'end_date' => 'nullable|date|after_or_equal:start_date',
             'applicable_to' => 'nullable|string|max:255',
         ]);
+
+        $validated['title'] = $validated['title'] ?? $discount->title;
+        $validated['max_uses'] = $validated['max_uses'] ?? $discount->max_uses;
 
         $discount->update($validated);
 

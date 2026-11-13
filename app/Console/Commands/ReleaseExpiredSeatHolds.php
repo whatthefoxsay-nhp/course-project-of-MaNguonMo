@@ -7,7 +7,9 @@ use Illuminate\Console\Command;
 
 class ReleaseExpiredSeatHolds extends Command
 {
-    protected $signature = 'seats:release-expired';
+    protected $signature = 'seats:release-holds';
+
+    protected $aliases = ['seats:release-expired'];
 
     protected $description = 'Trả các ghế giữ quá hạn về trạng thái còn trống';
 

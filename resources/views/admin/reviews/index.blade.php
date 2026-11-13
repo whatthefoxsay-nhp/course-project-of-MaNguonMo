@@ -1,6 +1,6 @@
 <x-admin-layout title="Đánh giá sự kiện" header="Đánh Giá & Bình Luận" subtitle="Theo dõi điểm sao và xử lý nội dung vi phạm.">
     <div class="grid sm:grid-cols-3 gap-4 mb-6">
-        @foreach ([['Tổng bình luận', $stats['total']], ['Có chấm sao', $stats['rated']], ['Điểm trung bình', $stats['rated'] ? $stats['average'].' / 5' : 'Chưa có']] as [$label, $value])
+        @foreach ([['Tổng bình luận', $stats['total']], ['Có chấm sao', $stats['rated']], ['Điểm trung bình', ($stats['rated'] ? number_format($stats['average'], 1) : '0.0').' / 5']] as [$label, $value])
             <div class="bg-white border border-stone-200 rounded-2xl p-5"><p class="text-sm text-stone-500">{{ $label }}</p><p class="text-2xl font-bold mt-1">{{ $value }}</p></div>
         @endforeach
     </div>

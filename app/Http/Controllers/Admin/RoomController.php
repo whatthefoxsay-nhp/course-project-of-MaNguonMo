@@ -158,7 +158,14 @@ class RoomController extends Controller
     {
         $newRoom = DB::transaction(function () use ($room, $generator) {
             $newRoom = $room->replicate(['id', 'created_at', 'updated_at']);
-            $newRoom->name = $room->name.' (Bản Sao '.now()->format('d/m H:i').')';
+            $baseName = $room->name.' (Bản Sao)';
+            $name = $baseName;
+            $counter = 1;
+            while (Room::where('name', $name)->exists()) {
+                $counter++;
+                $name = $room->name.' (Bản Sao '.$counter.')';
+            }
+            $newRoom->name = $name;
             $newRoom->save();
             $generator->apply($newRoom, LayoutTemplates::fromRoom($room));
 
@@ -171,11 +178,18 @@ class RoomController extends Controller
 
     public function destroy(Room $room): RedirectResponse
     {
-        if ($room->showtimes()->exists()) {
-            return back()->with('error', 'Không thể xóa khán phòng đã có suất diễn. Hãy xóa các suất diễn trước.');
+        $hasActiveSeats = \App\Models\ShowtimeSeat::whereIn('showtime_id', $room->showtimes()->select('id'))
+            ->whereIn('status', ['held', 'booked'])
+            ->exists();
+
+        if ($hasActiveSeats) {
+            return back()->with('error', 'Không thể xóa khán phòng đang có suất diễn phát sinh vé đã bán hoặc giữ chỗ.');
         }
 
-        $room->delete();
+        DB::transaction(function () use ($room) {
+            $room->showtimes()->delete();
+            $room->delete();
+        });
 
         return redirect()->route('admin.rooms.index')
             ->with('success', 'Đã xóa khán phòng thành công!');

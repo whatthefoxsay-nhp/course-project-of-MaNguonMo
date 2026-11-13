@@ -6,7 +6,11 @@ use App\Services\RoomSeatGenerator;
 use App\Services\ShowtimeSeatGenerator;
 use App\Models\Showtime;
 
-beforeEach(fn () => $this->seed());
+beforeEach(function () {
+    $this->seed();
+    $user = \App\Models\User::first() ?? \App\Models\User::factory()->create();
+    $this->actingAs($user);
+});
 
 function firstShowtimeOf(string $slug): Showtime
 {

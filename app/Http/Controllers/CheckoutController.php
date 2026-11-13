@@ -16,10 +16,16 @@ class CheckoutController extends Controller
                 $request->user(),
                 $request->validated('payment_method'),
                 $request->validated('delivery_email'),
+                $request->validated('delivery_name'),
+                $request->validated('delivery_phone'),
+                $request->input('discount_code'),
+                $request->input('seat_ids'),
             );
         } catch (SeatHoldException $exception) {
             return response()->json(['message' => $exception->getMessage()], 422);
         }
+
+        $ticketUrl = route('bookings.ticket', $booking->id);
 
         return response()->json([
             'message' => 'Thanh toán thành công! Vé điện tử đã được phát hành.',
@@ -29,7 +35,9 @@ class CheckoutController extends Controller
                 ->size(250)
                 ->margin(2)
                 ->generate('TICKETBOX_AUTH_PASS_'.$booking->booking_code)),
-            'redirect' => route('bookings.history'),
+            'redirect' => $ticketUrl,
+            'ticket_url' => $ticketUrl,
+            'history_url' => route('bookings.history'),
         ]);
     }
 }

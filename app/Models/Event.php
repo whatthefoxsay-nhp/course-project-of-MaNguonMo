@@ -141,4 +141,19 @@ class Event extends Model
 
         return is_string($fileId) && preg_match('/^[A-Za-z0-9_-]+$/', $fileId) ? $fileId : null;
     }
+
+    public function favoritedByUsers(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
+    {
+        return $this->belongsToMany(User::class, 'event_user_favorites', 'event_id', 'user_id')
+            ->withTimestamps();
+    }
+
+    public function isFavoritedBy(?User $user): bool
+    {
+        if (! $user) {
+            return false;
+        }
+
+        return $this->favoritedByUsers()->where('users.id', $user->id)->exists();
+    }
 }

@@ -5,16 +5,22 @@ namespace App\Http\Controllers;
 use App\Models\Showtime;
 use App\Support\SeatMap;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
 
 class ShowtimeController extends Controller
 {
-    public function seats(Showtime $showtime): View
+    public function seats(Showtime $showtime): View|RedirectResponse
     {
         $showtime->load(['room', 'event.category']);
         $event = $showtime->event;
 
         abort_unless($event->status === 'published', 404);
+
+        if ($showtime->start_time <= now()) {
+            return redirect()->route('events.show', $event->slug)
+                ->with('error', 'Suất diễn đã kết thúc hoặc hết hạn mở bán.');
+        }
 
         $allShowtimes = $event->showtimes()
             ->with('room')

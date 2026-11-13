@@ -25,8 +25,23 @@
             </span>
         </div>
 
-        <!-- Top Right: Live/Availability Status -->
-        <div class="absolute top-3 right-3 z-10">
+        <!-- Top Right: Live/Availability Status & Favorite Heart -->
+        <div class="absolute top-3 right-3 z-10 flex items-center gap-1.5">
+            @php
+                $isFav = auth()->check() && $item->isFavoritedBy(auth()->user());
+            @endphp
+            <button 
+                type="button"
+                onclick="event.preventDefault(); event.stopPropagation(); toggleFavoriteCard({{ $item->id }}, this);"
+                data-event-id="{{ $item->id }}"
+                class="favorite-heart-btn w-7 h-7 rounded-full bg-white/95 backdrop-blur-md flex items-center justify-center transition-all hover:scale-110 shadow-md {{ $isFav ? 'text-crimson' : 'text-gray-400 hover:text-crimson' }}"
+                title="{{ $isFav ? 'Đã yêu thích' : 'Lưu vào yêu thích' }}"
+                aria-label="{{ $isFav ? 'Đã yêu thích' : 'Lưu vào yêu thích' }}"
+            >
+                <svg class="w-4 h-4 {{ $isFav ? 'fill-current' : 'fill-none stroke-current' }}" viewBox="0 0 24 24" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                </svg>
+            </button>
             <span class="px-2.5 py-1 rounded-full bg-white/95 backdrop-blur-md text-emerald-800 text-[10px] font-extrabold flex items-center gap-1.5 shadow-md">
                 <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
                 Đang mở bán

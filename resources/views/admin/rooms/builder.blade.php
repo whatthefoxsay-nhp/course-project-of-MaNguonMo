@@ -41,13 +41,6 @@
             <a href="{{ route('admin.rooms.index') }}" class="px-5 py-2.5 rounded-2xl text-xs font-bold text-gray-600 bg-gray-100 hover:bg-gray-200 self-start md:self-auto">&larr; Quay lại danh sách</a>
         </div>
 
-        @if ($errors->any())
-            <div class="p-4 rounded-2xl bg-red-50 border border-red-200 text-sm text-red-700 space-y-1">
-                @foreach ($errors->all() as $error)
-                    <div>⚠️ {{ $error }}</div>
-                @endforeach
-            </div>
-        @endif
 
         <template x-if="locked">
             <div class="p-4 rounded-2xl bg-amber-50 border border-amber-200 text-xs text-amber-900">

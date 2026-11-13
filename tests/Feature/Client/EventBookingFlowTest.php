@@ -56,10 +56,11 @@ test('fan meeting details page displays specific cast members and fansign hosts'
 });
 
 test('seat map page displays concert stadium arena blueprint for seated concerts', function () {
+    $user = \App\Models\User::first();
     $movie = Event::firstWhere('slug', 'live-concert-anh-trai-vuot-ngan-chong-gai-2026');
     $showtime = $movie->showtimes()->orderBy('start_time')->first();
 
-    $response = $this->get(route('showtimes.seats', $showtime->id));
+    $response = $this->actingAs($user)->get(route('showtimes.seats', $showtime->id));
 
     $response->assertStatus(200);
     $response->assertSee($movie->title);
@@ -73,10 +74,11 @@ test('seat map page displays concert stadium arena blueprint for seated concerts
 });
 
 test('ticket selection page renders direct tier selector for non-concert events', function () {
+    $user = \App\Models\User::first();
     $movie = Event::firstWhere('slug', 'vietnam-tech-summit-ai-expo-2026');
     $showtime = $movie->showtimes()->orderBy('start_time')->first();
 
-    $response = $this->get(route('showtimes.seats', $showtime->id));
+    $response = $this->actingAs($user)->get(route('showtimes.seats', $showtime->id));
 
     $response->assertStatus(200);
     $response->assertSee($movie->title);
@@ -135,7 +137,8 @@ test('non-existent movie slug returns 404', function () {
 });
 
 test('non-existent showtime id returns 404', function () {
-    $response = $this->get('/showtimes/999999/seats');
+    $user = \App\Models\User::first();
+    $response = $this->actingAs($user)->get('/showtimes/999999/seats');
 
     $response->assertStatus(404);
 });

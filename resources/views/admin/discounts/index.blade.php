@@ -178,15 +178,15 @@
                                                 GIẢM {{ $discount->discount_value }}%
                                             </span>
                                             @if($discount->max_discount_amount)
-                                                <span class="text-[11px] text-gray-500">Tối đa {{ number_format($discount->max_discount_amount) }}đ</span>
+                                                <span class="text-[11px] text-gray-500">Tối đa {{ number_format($discount->max_discount_amount, 0, ',', '.') }}đ</span>
                                             @endif
                                         @else
                                             <span class="badge-rose text-[10px] px-2 py-0.5 rounded-full font-black">
-                                                GIẢM {{ number_format($discount->discount_value) }}đ
+                                                GIẢM {{ number_format($discount->discount_value, 0, ',', '.') }}đ
                                             </span>
                                         @endif
                                         <span class="text-gray-300">·</span>
-                                        <span class="text-[11px] text-gray-500">Đơn từ {{ number_format($discount->min_order_value) }}đ</span>
+                                        <span class="text-[11px] text-gray-500">Đơn từ {{ number_format($discount->min_order_value, 0, ',', '.') }}đ</span>
                                     </div>
                                 </td>
                                 <td class="py-4 px-5 text-gray-700">

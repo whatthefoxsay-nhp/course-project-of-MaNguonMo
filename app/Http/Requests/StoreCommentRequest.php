@@ -18,9 +18,15 @@ class StoreCommentRequest extends FormRequest
 
     public function rules(): array
     {
+        $ratingRules = ['nullable', 'integer', 'between:1,5'];
+
+        if ($this->has('require_rating') || array_key_exists('rating', $this->all())) {
+            $ratingRules = ['required', 'integer', 'between:1,5'];
+        }
+
         return [
             'content' => ['required', 'string', 'min:3', 'max:1000'],
-            'rating' => ['required', 'integer', 'between:1,5'],
+            'rating' => $ratingRules,
         ];
     }
 

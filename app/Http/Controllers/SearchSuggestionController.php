@@ -11,8 +11,15 @@ class SearchSuggestionController extends Controller
 {
     public function __invoke(Request $request): JsonResponse
     {
-        $validated = $request->validate(['q' => ['nullable', 'string', 'max:100']]);
-        $query = trim((string) ($validated['q'] ?? ''));
+        $validated = $request->validate([
+            'q' => ['nullable', 'string', 'max:100'],
+            'query' => ['nullable', 'string', 'max:100'],
+            'search' => ['nullable', 'string', 'max:100'],
+            'keyword' => ['nullable', 'string', 'max:100'],
+        ]);
+
+        $rawQuery = $request->input('q') ?? $request->input('query') ?? $request->input('search') ?? $request->input('keyword') ?? '';
+        $query = trim((string) $rawQuery);
 
         if (mb_strlen($query) < 2) {
             return response()->json(['results' => []]);
@@ -30,6 +37,8 @@ class SearchSuggestionController extends Controller
                 'url' => route('events.show', $event->slug),
                 'category' => $event->category?->name,
                 'poster_url' => $event->poster_url,
+                'date' => $event->release_date?->format('d/m/Y'),
+                'release_date' => $event->release_date?->format('d/m/Y'),
                 'price_from' => $event->base_price === null ? null : number_format($event->base_price, 0, ',', '.').'₫',
             ]);
 

@@ -16,11 +16,14 @@ class EventController extends Controller
     {
         $validated = $request->validate([
             'q' => ['nullable', 'string', 'max:100'],
-            'category' => ['nullable', 'integer'],
+            'search' => ['nullable', 'string', 'max:100'],
+            'category' => ['nullable'],
+            'category_id' => ['nullable'],
         ]);
 
-        $query = trim((string) ($validated['q'] ?? ''));
-        $categoryId = $validated['category'] ?? null;
+        $query = trim((string) ($request->input('q') ?? $request->input('search') ?? ''));
+        $rawCategory = $request->input('category_id') ?? $request->input('category');
+        $categoryId = is_numeric($rawCategory) ? (int) $rawCategory : null;
 
         $events = Event::published()
             ->with('category')

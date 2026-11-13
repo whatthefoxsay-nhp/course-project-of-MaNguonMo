@@ -16,6 +16,8 @@ class Comment extends Model
         'movie_id',
         'content',
         'rating',
+        'admin_reply',
+        'admin_replied_at',
     ];
 
     protected $casts = [

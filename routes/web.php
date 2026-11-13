@@ -16,6 +16,7 @@ use App\Http\Controllers\CartController;
 use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\CommentController;
 use App\Http\Controllers\EventController;
+use App\Http\Controllers\FavoriteEventController;
 use App\Http\Controllers\EventPosterController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\MovieController;
@@ -44,19 +45,24 @@ Route::get('/search/suggestions', SearchSuggestionController::class)
 // Backward compatibility routes for movies
 Route::get('/movies', [EventController::class, 'index'])->name('movies.index');
 Route::get('/movies/{slug}', [EventController::class, 'show'])->name('movies.show');
-Route::get('/showtimes/{showtime}/seats', [ShowtimeController::class, 'seats'])->name('showtimes.seats');
 Route::get('/showtimes/{showtime}/seat-status', [ShowtimeController::class, 'seatStatus'])->name('showtimes.seat-status');
 
 Route::middleware('auth')->group(function () {
+    Route::get('/showtimes/{showtime}/seats', [ShowtimeController::class, 'seats'])->name('showtimes.seats');
     Route::post('/showtimes/{showtime}/holds', [SeatHoldController::class, 'store'])
         ->middleware('throttle:30,1')
         ->name('showtimes.holds.store');
     Route::delete('/cart/seats/{showtimeSeat}', [SeatHoldController::class, 'destroy'])->name('cart.seats.destroy');
     Route::get('/cart', [CartController::class, 'index'])->name('cart.index');
+    Route::post('/cart/discount', [CartController::class, 'applyDiscount'])->name('cart.discount');
     Route::post('/checkout', [CheckoutController::class, 'store'])
         ->middleware('throttle:10,1')
         ->name('checkout.store');
     Route::get('/bookings', [BookingController::class, 'history'])->name('bookings.history');
+    Route::get('/bookings/{booking}/ticket', [BookingController::class, 'ticket'])->name('bookings.ticket');
+    Route::get('/bookings/{booking}/ticket/pdf', [BookingController::class, 'ticketPdf'])->name('bookings.ticket.pdf');
+    Route::post('/bookings/{booking}/ticket/email', [BookingController::class, 'sendTicketEmail'])->name('bookings.ticket.email');
+    Route::post('/bookings/{booking}/ticket/sync-drive', [BookingController::class, 'syncTicketDrive'])->name('bookings.ticket.sync-drive');
     Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
     Route::post('/events/{event:slug}/comments', [CommentController::class, 'store'])
         ->middleware('throttle:10,1')
@@ -76,7 +82,12 @@ Route::get('/dashboard', function () {
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
+    Route::post('/profile/avatar', [ProfileController::class, 'updateAvatar'])->name('profile.avatar.store');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+    Route::get('/favorites', [FavoriteEventController::class, 'index'])->name('favorites.index');
+    Route::get('/profile/favorites', [FavoriteEventController::class, 'index'])->name('profile.favorites');
+    Route::post('/events/{event}/favorite', [FavoriteEventController::class, 'toggle'])->name('events.favorite.toggle');
+    Route::delete('/favorites/{event}', [FavoriteEventController::class, 'destroy'])->name('favorites.destroy');
 });
 
 Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {

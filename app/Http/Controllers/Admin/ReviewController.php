@@ -19,13 +19,13 @@ class ReviewController extends Controller
             'search' => ['nullable', 'string', 'max:100'],
         ]);
 
-        $query = Comment::with(['user:id,name', 'event:id,title'])
+        $query = Comment::with(['user:id,name,email', 'event:id,title,slug'])
             ->when($validated['rating'] ?? null, fn ($query, $rating) => $query->where('rating', $rating))
             ->when($validated['search'] ?? null, function ($query, $search) {
                 $query->where(function ($query) use ($search) {
                     $query->where('content', 'like', "%{$search}%")
                         ->orWhereHas('event', fn ($event) => $event->where('title', 'like', "%{$search}%"))
-                        ->orWhereHas('user', fn ($user) => $user->where('name', 'like', "%{$search}%"));
+                        ->orWhereHas('user', fn ($user) => $user->where('name', 'like', "%{$search}%")->orWhere('email', 'like', "%{$search}%"));
                 });
             });
 

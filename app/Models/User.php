@@ -114,4 +114,10 @@ class User extends Authenticatable
 
         return is_string($fileId) && preg_match('/^[A-Za-z0-9_-]+$/', $fileId) ? $fileId : null;
     }
+
+    public function favoriteEvents(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
+    {
+        return $this->belongsToMany(Event::class, 'event_user_favorites', 'user_id', 'event_id')
+            ->withTimestamps();
+    }
 }

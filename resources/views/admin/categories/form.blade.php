@@ -12,7 +12,7 @@
         <span class="text-[#123D22] font-black">{{ $isEdit ? 'Chỉnh sửa' : 'Thêm mới' }}</span>
     </x-slot:breadcrumb>
 
-    <div class="max-w-2xl">
+    <div class="max-w-2xl space-y-4">
         <form method="POST"
               action="{{ $isEdit ? route('admin.categories.update', $category) : route('admin.categories.store') }}"
               class="bg-white p-7 rounded-3xl border border-[#E3EAE4] shadow-sm space-y-6">

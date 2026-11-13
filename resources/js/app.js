@@ -416,14 +416,14 @@ Alpine.data('ticketPaymentManager', (config = {}) => ({
     ticketQrDataUri: '',
     ticketQrSvg: '',
     banks: {
-        MB: {
-            code: 'MB',
-            shortName: 'MBBank',
-            fullName: 'Ngân hàng TMCP Quân Đội',
-            accountNo: config.bankPayment?.accountNo || '',
-            accountHolder: config.bankPayment?.accountHolder || '',
-            color: '#002B66',
-            logoBg: 'bg-blue-800',
+        VCB: {
+            code: config.bankPayment?.code || 'VCB',
+            shortName: config.bankPayment?.shortName || 'Vietcombank',
+            fullName: config.bankPayment?.fullName || 'Ngân hàng TMCP Ngoại thương Việt Nam',
+            accountNo: config.bankPayment?.accountNo || '1040394574',
+            accountHolder: config.bankPayment?.accountHolder || 'BUI NGOC LAN ANH',
+            color: '#005934',
+            logoBg: 'bg-emerald-800',
         }
     },
     momoInfo: {
@@ -434,7 +434,7 @@ Alpine.data('ticketPaymentManager', (config = {}) => ({
     toastTimer: null,
 
     get currentBank() {
-        return this.banks.MB;
+        return this.banks.VCB || this.banks.MB;
     },
 
     get vietQrUrl() {

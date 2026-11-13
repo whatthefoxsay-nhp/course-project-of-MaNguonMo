@@ -79,7 +79,12 @@ class AppServiceProvider extends ServiceProvider
             $token = $client->fetchAccessTokenWithRefreshToken($gmailConfig['refresh_token']);
 
             if (isset($token['error'])) {
-                throw new \RuntimeException('Could not refresh Gmail API access token.');
+                \Illuminate\Support\Facades\Log::warning('Could not refresh Gmail API access token, falling back to log transport.', [
+                    'error' => $token['error'],
+                    'description' => $token['error_description'] ?? null,
+                ]);
+
+                return app('mail.manager')->createSymfonyTransport(config('mail.mailers.log'));
             }
 
             return new GmailApiTransport($client, $gmailConfig['sender_email']);

@@ -114,6 +114,29 @@
                                 {{ ($booking->user?->is_active ?? true) ? 'Đang hoạt động' : 'Đã bị khóa' }}
                             </span>
                         </div>
+                        <div class="flex justify-between items-center py-1 border-t border-black/5">
+                            <span class="text-gray-500">Phương thức thanh toán:</span>
+                            @php
+                                $paymentLabels = [
+                                    'vietqr' => 'Chuyển khoản VietQR',
+                                    'momo' => 'Ví điện tử MoMo',
+                                    'zalopay' => 'Ví điện tử ZaloPay',
+                                    'card' => 'Thẻ thanh toán quốc tế',
+                                    'cash' => 'Tiền mặt tại quầy',
+                                ];
+                            @endphp
+                            <span class="px-2 py-0.5 rounded-lg text-xs font-bold bg-neutral-100 text-neutral-800 border border-neutral-200">
+                                {{ $paymentLabels[$booking->payment_method] ?? ($booking->payment_method ? strtoupper($booking->payment_method) : 'Chưa chọn') }}
+                            </span>
+                        </div>
+                        @if(!empty($booking->discount_code))
+                            <div class="flex justify-between items-center py-1 border-t border-black/5">
+                                <span class="text-gray-500">Mã giảm giá áp dụng:</span>
+                                <span class="px-2 py-0.5 rounded-lg text-xs font-black font-mono bg-amber-50 text-amber-900 border border-amber-200">
+                                    {{ $booking->discount_code }}
+                                </span>
+                            </div>
+                        @endif
                     </div>
                 </div>
 

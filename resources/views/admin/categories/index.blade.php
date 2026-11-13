@@ -74,12 +74,12 @@
             },
             // Modal Add / Edit
             formModal: {
-                open: false,
-                isEdit: false,
-                actionUrl: '',
-                name: '',
-                slugPreview: '',
-                description: '',
+                open: {{ $errors->any() ? 'true' : 'false' }},
+                isEdit: {{ old('_method') === 'PUT' ? 'true' : 'false' }},
+                actionUrl: '{{ old('_action_url', route('admin.categories.store')) }}',
+                name: @js(old('name', '')),
+                slugPreview: @js(old('name') ? \Illuminate\Support\Str::slug(old('name')) : ''),
+                description: @js(old('description', '')),
             },
             openCreateModal() {
                 this.formModal.isEdit = false;
@@ -119,13 +119,7 @@
         }"
         class="space-y-6"
     >
-        <!-- Flash session message bridge to toast -->
-        @if (session('success'))
-            <div x-init="showToast('{{ addslashes(session('success')) }}', 'success')"></div>
-        @endif
-        @if (session('error'))
-            <div x-init="showToast('{{ addslashes(session('error')) }}', 'error')"></div>
-        @endif
+
 
         <!-- 1. Stats Cards Grid (4 KPI Cards) -->
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -707,9 +701,26 @@
 
                     <form :action="formModal.actionUrl" method="POST" class="space-y-4 pt-4">
                         @csrf
+                        <input type="hidden" name="_action_url" :value="formModal.actionUrl">
                         <template x-if="formModal.isEdit">
                             <input type="hidden" name="_method" value="PUT">
                         </template>
+
+                        @if ($errors->any())
+                            <div class="p-3.5 rounded-2xl bg-rose-50 border border-rose-200 text-rose-800 text-xs">
+                                <div class="font-bold flex items-center gap-1.5 mb-1 text-rose-900">
+                                    <svg class="w-4 h-4 text-rose-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                    </svg>
+                                    <span>Vui lòng kiểm tra lại thông tin:</span>
+                                </div>
+                                <ul class="list-disc list-inside space-y-0.5 text-[11px] text-rose-700 font-medium pl-1">
+                                    @foreach ($errors->all() as $err)
+                                        <li>{{ $err }}</li>
+                                    @endforeach
+                                </ul>
+                            </div>
+                        @endif
 
                         <!-- Category Name -->
                         <div>
@@ -723,8 +734,14 @@
                                 @input="formModal.slugPreview = generateSlug(formModal.name)"
                                 required 
                                 placeholder="Ví dụ: Concert & Âm Nhạc, Fan Meeting..." 
-                                class="w-full px-4 py-2.5 rounded-2xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400/50 focus:border-amber-400 font-semibold bg-[#FAF9F6]"
+                                class="w-full px-4 py-2.5 rounded-2xl border @error('name') border-rose-300 ring-2 ring-rose-100 @else border-gray-200 @enderror text-sm focus:outline-none focus:ring-2 focus:ring-amber-400/50 focus:border-amber-400 font-semibold bg-[#FAF9F6]"
                             >
+                            @error('name')
+                                <p class="mt-1.5 text-[11px] font-bold text-rose-600 flex items-center gap-1">
+                                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                    {{ $message }}
+                                </p>
+                            @enderror
                             <!-- Real-time slug preview -->
                             <div class="mt-1.5 flex items-center gap-1.5 text-[11px] text-gray-400">
                                 <span>Slug tự tạo:</span>
@@ -742,8 +759,14 @@
                                 x-model="formModal.description" 
                                 rows="3" 
                                 placeholder="Mô tả ngắn gọn về đặc trưng các sự kiện thuộc danh mục này..." 
-                                class="w-full px-4 py-2.5 rounded-2xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400/50 focus:border-amber-400 bg-[#FAF9F6]"
+                                class="w-full px-4 py-2.5 rounded-2xl border @error('description') border-rose-300 ring-2 ring-rose-100 @else border-gray-200 @enderror text-sm focus:outline-none focus:ring-2 focus:ring-amber-400/50 focus:border-amber-400 bg-[#FAF9F6]"
                             ></textarea>
+                            @error('description')
+                                <p class="mt-1.5 text-[11px] font-bold text-rose-600 flex items-center gap-1">
+                                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                    {{ $message }}
+                                </p>
+                            @enderror
                         </div>
 
                         <!-- Action Buttons -->

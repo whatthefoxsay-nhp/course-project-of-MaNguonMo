@@ -143,7 +143,7 @@
     @endif
 
     <!-- Ngăn kéo vé đang chọn (dùng chung) -->
-    <div class="sticky bottom-6 z-40 bg-white/95 backdrop-blur-xl rounded-3xl p-5 sm:p-7 border border-black/15 shadow-[0_20px_50px_-10px_rgba(0,0,0,0.25)] flex flex-col lg:flex-row items-center justify-between gap-6">
+    <div class="sticky bottom-6 z-40 bg-white/95 backdrop-blur-xl rounded-3xl p-5 sm:p-7 border border-black/15 shadow-[0_20px_50px_-10px_rgba(0,0,0,0.25)] flex flex-col lg:flex-row items-center justify-between gap-6 mr-0 lg:mr-20">
         <div class="flex-1 w-full space-y-2">
             <div class="flex items-center justify-between">
                 <span class="text-xs font-black text-rose-taupe uppercase tracking-wider">Vé đang chọn (<span x-text="totalTicketCount">0</span>/8 vé)</span>
@@ -188,9 +188,16 @@
         </div>
     </div>
 
-    <!-- Thông báo -->
-    <div x-show="showToast" x-transition style="display: none;"
-         class="fixed bottom-8 right-8 z-50 bg-black text-white border border-white/20 px-5 py-3.5 rounded-2xl shadow-2xl flex items-center gap-3 max-w-sm">
+    <!-- Thông báo Toast (Đưa lên góc trên bên phải dưới Navbar, tránh bị Chatbot và thanh giữ chỗ che khuất) -->
+    <div x-show="showToast" 
+         x-transition:enter="ease-out duration-300"
+         x-transition:enter-start="opacity-0 -translate-y-4 scale-95"
+         x-transition:enter-end="opacity-100 translate-y-0 scale-100"
+         x-transition:leave="ease-in duration-200"
+         x-transition:leave-start="opacity-100 scale-100"
+         x-transition:leave-end="opacity-0 -translate-y-4 scale-95"
+         style="display: none;"
+         class="fixed top-20 right-5 sm:top-24 sm:right-8 z-50 bg-slate-900/95 text-white border border-white/20 px-5 py-3.5 rounded-2xl shadow-2xl backdrop-blur-md flex items-center gap-3 max-w-sm pointer-events-none">
         <div class="w-3 h-3 rounded-full shrink-0"
              :class="{ 'bg-emerald-400': notificationType === 'success', 'bg-amber-400': notificationType === 'warning', 'bg-red-400': notificationType === 'error', 'bg-rose-taupe': notificationType === 'info' }"></div>
         <span class="text-xs sm:text-sm font-bold leading-tight" x-text="notificationMessage"></span>

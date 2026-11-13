@@ -30,11 +30,12 @@ test('checkout turns held seats into a confirmed booking', function () {
     $response = $this->actingAs($user)
         ->postJson(route('checkout.store'), ['payment_method' => 'momo'])
         ->assertOk()
-        ->assertJsonPath('redirect', route('bookings.history'));
+        ->assertJsonStructure(['redirect', 'booking_code', 'total_price']);
 
     $booking = Booking::with('items.showtimeSeat')->firstWhere('booking_code', $response->json('booking_code'));
 
-    expect($booking->user_id)->toBe($user->id)
+    expect($response->json('redirect'))->toBe(route('bookings.ticket', $booking->id))
+        ->and($booking->user_id)->toBe($user->id)
         ->and($booking->status)->toBe('confirmed')
         ->and($booking->payment_method)->toBe('momo')
         ->and($booking->booking_code)->toMatch('/^TBX-[A-Z0-9]{8}$/')

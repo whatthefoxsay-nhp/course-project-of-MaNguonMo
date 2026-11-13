@@ -308,7 +308,7 @@
                             <th class="py-3 px-4 admin-eyebrow">Suất Diễn</th>
                             <th class="py-3 px-4 admin-eyebrow">Khu Vực / Ghế</th>
                             <th class="py-3 px-4 admin-eyebrow">Tổng Tiền</th>
-                            <th class="py-3 px-6 admin-eyebrow text-right">Trạng Thái</th>
+                            <th class="py-3 px-6 admin-eyebrow text-center whitespace-nowrap min-w-[130px]">Trạng Thái</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-stone-200/70">
@@ -321,28 +321,31 @@
                                 $seatLabel = $seat ? "Ghế {$seat->row_label}{$seat->seat_number}" : ($booking->items->count() > 0 ? $booking->items->count() . ' vé' : 'N/A');
                             @endphp
                             <tr class="hover:bg-amber-50/40 transition-colors">
-                                <td class="py-4 px-6 font-mono font-bold text-stone-900">{{ $booking->booking_code }}</td>
+                                <td class="py-4 px-6 font-mono font-bold text-stone-900 whitespace-nowrap">{{ $booking->booking_code }}</td>
                                 <td class="py-4 px-4 font-bold text-stone-900">{{ $booking->user?->name ?? 'Khách vãng lai' }}</td>
                                 <td class="py-4 px-4 text-stone-900 font-bold">{{ $movie?->title ?? 'N/A' }}</td>
-                                <td class="py-4 px-4 text-stone-600 font-medium">{{ $showtime ? $showtime->start_time->format('H:i - d/m/Y') : 'N/A' }}</td>
-                                <td class="py-4 px-4">
-                                    <span class="badge-semantic-neutral text-[11px]">
+                                <td class="py-4 px-4 text-stone-600 font-medium whitespace-nowrap">{{ $showtime ? $showtime->start_time->format('H:i - d/m/Y') : 'N/A' }}</td>
+                                <td class="py-4 px-4 whitespace-nowrap">
+                                    <span class="badge-semantic-neutral text-[11px] whitespace-nowrap">
                                         {{ $seatLabel }}
                                     </span>
                                 </td>
-                                <td class="py-4 px-4 font-display font-bold tabular-nums text-xs text-stone-900">{{ number_format($booking->total_price, 0, ',', '.') }}₫</td>
-                                <td class="py-4 px-6 text-right">
+                                <td class="py-4 px-4 font-display font-bold tabular-nums text-xs text-stone-900 whitespace-nowrap">{{ number_format($booking->total_price, 0, ',', '.') }}₫</td>
+                                <td class="py-4 px-6 text-center whitespace-nowrap">
                                     @if($booking->status === 'confirmed')
-                                        <span class="badge-semantic-sage text-[11px]">
-                                            Đã xác nhận
+                                        <span class="badge-semantic-sage text-[11px] whitespace-nowrap inline-flex items-center justify-center">
+                                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                                            <span>Đã xác nhận</span>
                                         </span>
                                     @elseif($booking->status === 'cancelled')
-                                        <span class="badge-semantic-crimson text-[11px]">
-                                            Đã hủy
+                                        <span class="badge-semantic-crimson text-[11px] whitespace-nowrap inline-flex items-center justify-center">
+                                            <span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span>
+                                            <span>Đã hủy</span>
                                         </span>
                                     @else
-                                        <span class="badge-semantic-gold text-[11px]">
-                                            Đang giữ chỗ
+                                        <span class="badge-semantic-gold text-[11px] whitespace-nowrap inline-flex items-center justify-center">
+                                            <span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span>
+                                            <span>Đang giữ chỗ</span>
                                         </span>
                                     @endif
                                 </td>

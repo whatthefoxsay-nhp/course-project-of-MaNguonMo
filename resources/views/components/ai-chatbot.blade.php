@@ -1,28 +1,46 @@
 <!-- Floating AI Chatbot Assistant (Frontend Interface) -->
+@php
+    $featuredEvent = \App\Models\Event::where('status', 'published')
+        ->with(['showtimes.room'])
+        ->withMin('showtimes', 'base_price')
+        ->latest('id')
+        ->first();
+    $featuredMinPrice = $featuredEvent ? ($featuredEvent->base_price ?? 0) : 0;
+@endphp
 <div 
-    x-data="ticketBotAssistant()" 
+    x-data="ticketBotAssistant({{ json_encode($featuredEvent ? [
+        'title' => $featuredEvent->title,
+        'date' => $featuredEvent->showtimes->first() ? $featuredEvent->showtimes->first()->start_time->format('H:i - d/m/Y') : 'Đang cập nhật lịch diễn',
+        'venue' => $featuredEvent->showtimes->first()?->room?->name ?? 'Trung tâm tổ chức sự kiện',
+        'price' => number_format($featuredMinPrice, 0, ',', '.') . '₫',
+        'poster' => $featuredEvent->poster_url,
+        'link' => route('events.show', $featuredEvent->slug),
+    ] : null, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) }})" 
     x-init="initBot()"
+    id="ai-chatbot-widget"
+    data-component="ai-chatbot"
     class="fixed bottom-5 right-5 sm:bottom-6 sm:right-6 z-50 font-sans"
 >
     <!-- Welcome Greeting Speech Bubble (Auto-shows on first visit) -->
     <div 
         x-show="showGreeting && !isOpen"
+        @click.outside="showGreeting = false"
         x-transition:enter="ease-out duration-300"
         x-transition:enter-start="opacity-0 translate-y-3 scale-95"
         x-transition:enter-end="opacity-100 translate-y-0 scale-100"
         x-transition:leave="ease-in duration-200"
         x-transition:leave-start="opacity-100 scale-100"
         x-transition:leave-end="opacity-0 translate-y-3 scale-95"
-        class="absolute bottom-20 right-0 w-80 bg-white/95 backdrop-blur-xl rounded-3xl p-4.5 border border-slate-200/90 shadow-2xl shadow-slate-900/20 mb-2 pointer-events-auto"
+        class="absolute bottom-20 sm:bottom-22 right-0 w-[340px] sm:w-[380px] max-w-[calc(100vw-32px)] bg-white/98 backdrop-blur-2xl rounded-2xl p-3.5 sm:p-4 border border-stone-200/90 shadow-[0_15px_45px_-10px_rgba(0,0,0,0.18)] mb-2.5 pointer-events-auto ring-1 ring-black/5"
         style="display: none;"
     >
-        <!-- Triangle Pointer -->
-        <div class="absolute -bottom-2 right-7 w-4 h-4 bg-white border-b border-r border-slate-200/90 rotate-45"></div>
+        <!-- Triangle Pointer nicely aligned with the orb -->
+        <div class="absolute -bottom-2 right-6 sm:right-7 w-4 h-4 bg-white border-b border-r border-stone-200 rotate-45"></div>
 
-        <div class="flex items-start gap-3.5 relative z-10">
-            <!-- Bot Avatar -->
-            <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-[#C08497] via-[#AA8820] to-[#3A5A40] p-0.5 shadow-md shrink-0 flex items-center justify-center">
-                <div class="w-full h-full bg-slate-950 rounded-[14px] flex items-center justify-center">
+        <div class="flex items-start gap-3 relative z-10">
+            <!-- Bot Avatar with Elegant Luxury Framing -->
+            <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-rose-500 via-amber-400 to-rose-600 p-0.5 shadow-sm shrink-0 flex items-center justify-center">
+                <div class="w-full h-full bg-slate-950 rounded-[10px] flex items-center justify-center">
                     <svg class="w-5 h-5 text-amber-300" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                         <!-- Futuristic Cute Robot Face -->
                         <rect x="3" y="6" width="18" height="13" rx="4" stroke-width="2" stroke="currentColor" fill="#14161D" />
@@ -36,29 +54,30 @@
             </div>
 
             <div class="flex-1 min-w-0">
-                <div class="flex items-center justify-between">
+                <div class="flex items-center justify-between gap-2">
                     <span class="text-xs font-black text-slate-900 flex items-center gap-1.5">
                         TicketBot AI ✨
-                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
                     </span>
                     <button 
                         type="button" 
                         @click="showGreeting = false" 
-                        class="text-slate-400 hover:text-slate-600 p-0.5 cursor-pointer"
+                        class="text-slate-400 hover:text-slate-700 p-1 rounded-lg hover:bg-slate-100 transition-colors cursor-pointer"
+                        title="Đóng lời chào"
                     >
                         <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                     </button>
                 </div>
-                <p class="text-xs text-slate-600 mt-1 leading-relaxed">
+                <p class="text-xs text-slate-600 mt-1 leading-relaxed font-normal">
                     👋 Xin chào! Tôi có thể giúp bạn tìm vé concert hot, hướng dẫn giữ chỗ hoặc giải đáp thanh toán nhé!
                 </p>
                 <button 
                     type="button" 
                     @click="openChat()" 
-                    class="mt-2.5 inline-flex items-center gap-1.5 text-xs font-black text-[#C08497] hover:text-[#9A5369] transition-colors cursor-pointer"
+                    class="mt-2 inline-flex items-center gap-1.5 text-xs font-black text-[#C08497] hover:text-[#9A5369] transition-colors cursor-pointer group"
                 >
                     <span>Mở trợ lý ảo trò chuyện</span>
-                    <span>&rarr;</span>
+                    <span class="group-hover:translate-x-1 transition-transform">&rarr;</span>
                 </button>
             </div>
         </div>
@@ -68,20 +87,20 @@
     <button 
         type="button" 
         @click="toggleChat()"
-        class="relative group p-1 focus:outline-none cursor-pointer"
+        class="relative group focus:outline-none cursor-pointer select-none"
         aria-label="Mở trợ lý ảo AI"
     >
-        <!-- Dynamic Pulsing Glow Ring -->
-        <span class="absolute inset-0 rounded-full bg-gradient-to-tr from-[#C08497] via-[#AA8820] to-[#3A5A40] blur-md opacity-70 group-hover:opacity-100 transition-opacity animate-pulse"></span>
+        <!-- Soft Ambient Drop Shadow Ring -->
+        <span class="absolute inset-0 rounded-full bg-gradient-to-tr from-rose-500/30 via-amber-400/30 to-rose-600/30 blur-lg group-hover:blur-xl transition-all duration-300"></span>
 
-        <!-- Floating Orb Body -->
-        <div class="relative w-15 h-15 sm:w-16 sm:h-16 rounded-full bg-gradient-to-tr from-slate-950 via-slate-900 to-[#1E1B24] p-0.5 shadow-2xl shadow-slate-950/40 border border-amber-300/60 group-hover:scale-105 active:scale-95 transition-all duration-300 flex items-center justify-center">
+        <!-- Floating Orb Body with Distinct Double-Border Aesthetics -->
+        <div class="relative w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-gradient-to-b from-slate-900 via-slate-950 to-slate-900 p-0.5 shadow-[0_12px_30px_-5px_rgba(0,0,0,0.35)] border border-amber-400/40 group-hover:border-amber-300/80 ring-4 ring-black/5 group-hover:ring-amber-400/20 group-hover:scale-105 active:scale-95 transition-all duration-300 flex items-center justify-center">
             
             <!-- Icon When Closed: High-Tech Cute Robot Mascot -->
             <div x-show="!isOpen" class="flex flex-col items-center justify-center relative">
                 <!-- Mascot Face -->
                 <div class="relative">
-                    <svg class="w-7 h-7 sm:w-8 sm:h-8 text-amber-300 drop-shadow-md group-hover:rotate-6 transition-transform duration-300" viewBox="0 0 24 24" fill="none">
+                    <svg class="w-7 h-7 sm:w-7.5 sm:h-7.5 text-amber-300 drop-shadow-md group-hover:rotate-6 transition-transform duration-300" viewBox="0 0 24 24" fill="none">
                         <!-- Headphone / Ears -->
                         <rect x="2" y="8.5" width="2" height="6" rx="1" fill="#C08497" />
                         <rect x="20" y="8.5" width="2" height="6" rx="1" fill="#C08497" />
@@ -118,10 +137,10 @@
                 </svg>
             </div>
 
-            <!-- Green Online Status Dot with Wave Ping -->
-            <span class="absolute top-0 right-0 flex h-4 w-4">
+            <!-- Crisp Green Online Status Dot with White Isolation Ring -->
+            <span class="absolute top-0 right-0 flex h-3.5 w-3.5">
                 <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                <span class="relative inline-flex rounded-full h-4 w-4 bg-emerald-500 border-2 border-slate-950"></span>
+                <span class="relative inline-flex rounded-full h-3.5 w-3.5 bg-emerald-500 border-2 border-white shadow-xs"></span>
             </span>
         </div>
     </button>
@@ -270,7 +289,7 @@
                     <template x-if="msg.sender === 'user'">
                         <div class="flex items-end justify-end gap-2 max-w-[88%] ml-auto">
                             <div class="space-y-1 text-right">
-                                <div class="bg-[#C08497] text-white rounded-2xl rounded-tr-sm px-4 py-3 shadow-sm text-left leading-relaxed text-[13px] font-semibold">
+                                <div class="bg-[#C08497] text-white rounded-2xl rounded-tr-sm px-4 py-3 shadow-sm text-left leading-relaxed text-[13px] font-semibold break-words">
                                     <span x-text="msg.text"></span>
                                 </div>
                                 <span class="text-[10px] text-slate-400 block px-1" x-text="msg.time"></span>
@@ -358,15 +377,16 @@
 
 <script>
 document.addEventListener('alpine:init', () => {
-    Alpine.data('ticketBotAssistant', () => ({
+    Alpine.data('ticketBotAssistant', (featuredEventData = null) => ({
         isOpen: false,
         showGreeting: false,
         isTyping: false,
         userInput: '',
+        featuredEvent: featuredEventData,
         messages: [
             {
                 sender: 'bot',
-                text: '<p class="font-bold text-slate-900">Xin chào bạn! 👋</p><p>Tôi là <strong>TicketBot AI</strong> — Trợ lý ảo chính thức của nền tảng đặt vé <strong>TicketBox</strong>.</p><p class="text-slate-600 text-xs">Tôi có thể hỗ trợ bạn nhanh các nội dung:</p><ul class="space-y-1 text-xs text-slate-700 list-disc pl-4"><li>Tìm kiếm và gợi ý các đại nhạc hội Concert & Sự kiện hot.</li><li>Hướng dẫn quy trình giữ chỗ 10 phút & sơ đồ khán phòng.</li><li>Giải đáp thanh toán bằng chuyển khoản MB/VietQR và MoMo.</li><li>Tra cứu và xuất trình vé điện tử E-Ticket QR Code.</li></ul>',
+                text: '<p class="font-bold text-slate-900">Xin chào bạn! 👋</p><p>Tôi là <strong>TicketBot AI</strong> — Trợ lý ảo chính thức của nền tảng đặt vé <strong>TicketBox</strong>.</p><p class="text-slate-600 text-xs">Tôi có thể hỗ trợ bạn nhanh các nội dung:</p><ul class="space-y-1 text-xs text-slate-700 list-disc pl-4"><li>Tìm kiếm và gợi ý các đại nhạc hội Concert & Sự kiện hot.</li><li>Hướng dẫn quy trình giữ chỗ 10 phút & sơ đồ khán phòng.</li><li>Giải đáp thanh toán bằng VietQR, MoMo, ZaloPay và thẻ ngân hàng.</li><li>Tra cứu và xuất trình vé điện tử E-Ticket QR Code.</li></ul>',
                 time: new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }),
                 event: null
             }
@@ -374,7 +394,7 @@ document.addEventListener('alpine:init', () => {
         quickChips: [
             { icon: '🔥', label: 'Concert hot nhất', prompt: 'Gợi ý cho tôi concert hot nhất' },
             { icon: '🎟️', label: 'Cách giữ chỗ & đặt vé', prompt: 'Quy trình đặt vé và giữ chỗ như thế nào?' },
-            { icon: '💳', label: 'Thanh toán VietQR', prompt: 'Tôi thanh toán bằng VietQR và MoMo ra sao?' },
+            { icon: '💳', label: 'Thanh toán VietQR & MoMo', prompt: 'Tôi thanh toán bằng VietQR và MoMo ra sao?' },
             { icon: '📱', label: 'Cách tải vé E-Ticket', prompt: 'Làm sao để tải và xem vé điện tử E-Ticket?' },
             { icon: '🏟️', label: 'Sơ đồ SVĐ Quân Khu 7', prompt: 'Cho tôi biết sơ đồ sân khấu SVĐ Quân Khu 7' },
             { icon: '🔄', label: 'Chính sách đổi trả', prompt: 'Chính sách hoàn hủy đổi vé như thế nào?' }
@@ -384,6 +404,9 @@ document.addEventListener('alpine:init', () => {
             setTimeout(() => {
                 if (!this.isOpen) {
                     this.showGreeting = true;
+                    setTimeout(() => {
+                        this.showGreeting = false;
+                    }, 8000);
                 }
             }, 1800);
         },
@@ -419,10 +442,10 @@ document.addEventListener('alpine:init', () => {
         },
 
         sendMessage() {
-            const query = this.userInput.trim();
+            const query = (this.userInput || '').trim();
             if (!query) return;
 
-            // Add user message
+            // Add user message (x-text prevents XSS)
             this.messages.push({
                 sender: 'user',
                 text: query,
@@ -433,7 +456,7 @@ document.addEventListener('alpine:init', () => {
             this.isTyping = true;
             this.scrollToBottom();
 
-            // Simulate intelligent AI processing with realistic delay
+            // Simulate intelligent AI processing
             setTimeout(() => {
                 const response = this.generateBotResponse(query);
                 this.messages.push({
@@ -444,80 +467,80 @@ document.addEventListener('alpine:init', () => {
                 });
                 this.isTyping = false;
                 this.scrollToBottom();
-            }, 550 + Math.random() * 350);
+            }, 500);
         },
 
         generateBotResponse(query) {
-            const q = query.toLowerCase();
+            const q = (query || '').toLowerCase().trim();
 
-            // 1. Hot Concert / Anh Trai Vuot Ngan Chong Gai
-            if (q.includes('concert') || q.includes('anh trai') || q.includes('hot') || q.includes('gợi ý')) {
+            // 1. Hot Concert / Event Recommendation
+            if (q.includes('concert') || q.includes('anh trai') || q.includes('hot') || q.includes('gợi ý') || q.includes('sự kiện')) {
+                if (this.featuredEvent) {
+                    return {
+                        text: '<p class="font-bold text-slate-900">🔥 Concert hot nhất đang mở bán:</p><p>Sự kiện <strong>' + this.featuredEvent.title + '</strong> đang là tâm điểm chú ý trên TicketBox. Nhanh tay chọn chỗ đẹp nhé!</p>',
+                        event: this.featuredEvent
+                    };
+                } else {
+                    return {
+                        text: '<p class="font-bold text-slate-900">🔥 Sự kiện âm nhạc nổi bật:</p><p class="text-xs text-slate-600">Hiện tại hệ thống chưa có sự kiện mở bán nào mới. Bạn vui lòng quay lại sau nhé!</p>',
+                        event: null
+                    };
+                }
+            }
+
+            // 2. Booking & 10-Minute Holding Process
+            if (q.includes('giữ chỗ') || q.includes('đặt vé') || q.includes('quy trình') || q.includes('mua vé') || q.includes('khóa ghế')) {
                 return {
-                    text: '<p class="font-bold text-slate-900">🔥 Sự kiện âm nhạc được quan tâm nhất:</p><p><strong>Live Concert Anh Trai Vượt Ngàn Chông Gai 2026</strong> đang mở bán các suất diễn bùng nổ tại <strong>Sân Vận Động Quân Khu 7 (TP.HCM)</strong>.</p><p class="text-xs text-slate-600">✨ <em>Dàn nghệ sĩ:</em> Soobin Hoàng Sơn, Bằng Kiều, NSND Tự Long, Hồ Ngọc Hà, Jun Phạm, Cường Seven...</p>',
-                    event: {
-                        title: 'Live Concert Anh Trai Vượt Ngàn Chông Gai 2026',
-                        date: '19:30 - 25/10/2026',
-                        venue: 'SVĐ Quân Khu 7, TP.HCM',
-                        price: '500.000₫',
-                        poster: 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?auto=format&fit=crop&w=600&q=80',
-                        link: '/events/live-concert-anh-trai-vuot-ngan-chong-gai-2026'
-                    }
+                    text: '<p class="font-bold text-slate-900">🎟️ Quy trình đặt vé và giữ chỗ 3 bước siêu tốc:</p><ul class="space-y-2 text-xs list-disc pl-4"><li><strong>Bước 1: Chọn sự kiện & suất diễn</strong> mong muốn trên hệ thống TicketBox.</li><li><strong>Bước 2: Chọn vị trí ghế trên Sơ đồ 2D</strong> — Hệ thống sẽ <strong>tự động khóa ghế và giữ chỗ an toàn trong 10 phút</strong>. Nếu quá 10 phút mà chưa thanh toán, hệ thống sẽ <strong>tự động nhả ghế</strong> cho người khác chọn.</li><li><strong>Bước 3: Điền thông tin & thanh toán</strong> để nhận ngay <strong>Vé Điện Tử E-Ticket QR Code</strong>.</li></ul>'
                 };
             }
 
-            // 2. Running Man Fan Meeting
-            if (q.includes('running man') || q.includes('fan meeting') || q.includes('ninh dương lan ngọc')) {
+            // 3. Payment Methods (VietQR, MoMo, ZaloPay, Cards)
+            if (q.includes('thanh toán') || q.includes('vietqr') || q.includes('momo') || q.includes('zalopay') || q.includes('chuyển khoản') || q.includes('ngân hàng') || q.includes('tiền')) {
                 return {
-                    text: '<p class="font-bold text-slate-900">🎉 Fan Meeting Running Man Vietnam 2026:</p><p>Sự kiện diễn ra tại <strong>Trung Tâm Hội Nghị White Palace (TP.HCM)</strong> với đầy đủ dàn Cast (Ninh Dương Lan Ngọc, Ngô Kiến Huy, Jun Phạm, Liên Bỉnh Phát...).</p><p class="text-xs text-slate-600">🎟️ Hạng vé <strong>VIP Fansign</strong> bao gồm quyền lợi giao lưu trực tiếp, nhận chữ ký và chụp ảnh kỷ niệm cùng thần tượng.</p>',
-                    event: {
-                        title: 'Fan Meeting Running Man Vietnam 2026',
-                        date: '18:00 - 15/11/2026',
-                        venue: 'White Palace, TP.HCM',
-                        price: '205.000₫',
-                        poster: 'https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?auto=format&fit=crop&w=600&q=80',
-                        link: '/events/fan-meeting-running-man-vn-2026'
-                    }
+                    text: '<p class="font-bold text-slate-900">💳 Phương thức thanh toán được hỗ trợ:</p><div class="space-y-2 text-xs"><div class="p-2.5 rounded-xl bg-amber-50/80 border border-amber-200">🏦 <strong>Chuyển khoản VietQR</strong>: Quét mã QR chuẩn NAPAS 24/7 từ mọi ứng dụng ngân hàng, xác nhận nhanh chóng.</div><div class="p-2.5 rounded-xl bg-rose-50/80 border border-rose-200">🟣 <strong>Ví điện tử MoMo</strong>: Quét mã hoặc liên kết tài khoản MoMo thanh toán siêu tốc.</div><div class="p-2.5 rounded-xl bg-blue-50/80 border border-blue-200">🔷 <strong>Ví điện tử ZaloPay</strong>: Thanh toán tiện lợi qua cổng ZaloPay.</div><div class="p-2.5 rounded-xl bg-emerald-50/80 border border-emerald-200">💳 <strong>Thẻ ngân hàng</strong>: Chấp nhận thẻ ATM nội địa và thẻ thanh toán quốc tế (Visa/Mastercard).</div></div>'
                 };
             }
 
-            // 3. Payment methods (MB/VietQR, MoMo)
-            if (q.includes('thanh toán') || q.includes('vietqr') || q.includes('momo') || q.includes('chuyển khoản') || q.includes('tiền')) {
-                return {
-                    text: '<p class="font-bold text-slate-900">Phương thức thanh toán đang hiển thị:</p><div class="space-y-2 text-xs"><div class="p-2.5 rounded-xl bg-amber-50/80 border border-amber-200">🏦 <strong>Chuyển khoản MB qua VietQR</strong>: Quét mã để chuyển tiền tới tài khoản MBBank.</div><div class="p-2.5 rounded-xl bg-rose-50/80 border border-rose-200">🟣 <strong>MoMo</strong>: Tích hợp đang chờ cấu hình merchant.</div><p class="text-slate-600">Đối soát thanh toán tự động chưa được kết nối.</p></div>'
-                };
-            }
-
-            // 4. Booking & Holding process
-            if (q.includes('giữ chỗ') || q.includes('đặt vé') || q.includes('quy trình') || q.includes('mua vé')) {
-                return {
-                    text: '<p class="font-bold text-slate-900">🎟️ Quy trình đặt vé 3 bước siêu tốc:</p><ol class="space-y-2 text-xs list-decimal pl-4"><li><strong>Chọn sự kiện & suất diễn</strong> mong muốn.</li><li><strong>Chọn vị trí ghế trên Sơ đồ 2D</strong> — Hệ thống sẽ <strong>tự động giữ chỗ an toàn trong 10 phút</strong>.</li><li><strong>Điền thông tin & thanh toán</strong> để nhận ngay <strong>Vé Điện Tử E-Ticket QR Code</strong>.</li></ol>'
-                };
-            }
-
-            // 5. E-Ticket & QR code check-in
+            // 4. E-Ticket & QR code check-in & PDF
             if (q.includes('e-ticket') || q.includes('qr') || q.includes('tải vé') || q.includes('check-in') || q.includes('lưu vé')) {
                 return {
-                    text: '<p class="font-bold text-slate-900">📱 Hướng dẫn xem và xuất trình Vé E-Ticket:</p><p>Sau khi thanh toán, vé điện tử kèm mã QR độ nét cao sẽ hiển thị ngay trên màn hình.</p><div class="space-y-1.5 text-xs text-slate-700"><p>• Nhấn nút <strong>"Lưu vé về máy (PNG)"</strong> để tải ảnh thẻ vé chất lượng cao về điện thoại.</p><p>• Bạn có thể vào mục <a href="/bookings" class="text-[#C08497] font-bold underline">Vé Của Tôi</a> bất kỳ lúc nào để xuất trình mã QR cho nhân viên an ninh quét tại cổng kiểm soát.</p></div>'
+                    text: '<p class="font-bold text-slate-900">📱 Hướng dẫn xem mã QR và tải vé điện tử:</p><p class="text-xs">Sau khi thanh toán thành công, bạn có thể dễ dàng quản lý vé:</p><div class="space-y-1.5 text-xs text-slate-700"><p>• Truy cập trang <a href="/bookings/history" class="text-[#C08497] font-bold underline">Lịch sử mua vé (/bookings/history)</a> để xem danh sách toàn bộ vé đã đặt.</p><p>• Nhấn vào nút <strong>"Xem vé điện tử"</strong> để hiển thị <strong>mã QR Code bảo mật</strong> phục vụ check-in tại cổng sự kiện.</p><p>• Chọn tính năng <strong>"Tải file PDF vé điện tử"</strong> để lưu vé trực tiếp về điện thoại hoặc in ra giấy.</p></div>'
                 };
             }
 
-            // 6. Stadium arena / Sơ đồ sân vận động
+            // 5. Ticket Price / Giá vé
+            if (q.includes('giá vé') || q.includes('giá')) {
+                return {
+                    text: '<p class="font-bold text-slate-900">💰 Thông tin giá vé:</p><p class="text-xs">Giá vé từng sự kiện được niêm yết công khai trên trang chi tiết và sơ đồ chỗ ngồi. Tùy từng phân khu (SVIP, VIP, GA Standing hay Khán đài) sẽ có các mức phụ thu khác nhau.</p>'
+                };
+            }
+
+            // 6. Discount voucher / Mã giảm giá
+            if (q.includes('mã giảm giá') || q.includes('giảm giá') || q.includes('discount') || q.includes('voucher')) {
+                return {
+                    text: '<p class="font-bold text-slate-900">🎁 Mã giảm giá & Ưu đãi:</p><p class="text-xs">Bạn có thể áp dụng mã giảm giá tại bước xem giỏ vé (/cart) hoặc thanh toán (/checkout) để được giảm trực tiếp trên tổng đơn hàng.</p>'
+                };
+            }
+
+            // 7. Stadium Arena / Sơ đồ SVĐ Quân Khu 7
             if (q.includes('sơ đồ') || q.includes('quân khu 7') || q.includes('khán đài') || q.includes('ghế')) {
                 return {
                     text: '<p class="font-bold text-slate-900">🏟️ Phân khu Sân Vận Động Quân Khu 7:</p><div class="space-y-1.5 text-xs text-slate-700"><p>• <strong>Sân khấu chính & Catwalk Runway:</strong> Tâm điểm trình diễn hiệu ứng ánh sáng.</p><p>• <strong>SVIP B-Stage Floor:</strong> Ghế ngồi cự ly gần nhất, ngắm trọn thần tượng.</p><p>• <strong>GA Standing (Fanzone):</strong> Đứng quẩy nhiệt huyết ngay sát sàn diễn.</p><p>• <strong>Khán Đài A & B:</strong> Tầm nhìn toàn cảnh sân khấu bao quát từ trên cao.</p></div>'
                 };
             }
 
-            // 7. Refund / Exchange policy
-            if (q.includes('đổi') || q.includes('hủy') || q.includes('hoàn') || q.includes('trả')) {
+            // 8. Refund / Exchange policy
+            if (q.includes('đổi') || q.includes('hủy') || q.includes('hoàn') || q.includes('trả') || q.includes('chính sách')) {
                 return {
-                    text: '<p class="font-bold text-slate-900">🔄 Chính sách đổi trả & Chuyển nhượng vé:</p><p class="text-xs">Theo quy chế của Ban Tổ Chức, vé đã thanh toán thành công thường <strong>không áp dụng hoàn tiền</strong>.</p><p class="text-xs text-slate-600">Tuy nhiên, bạn có thể <strong>chuyển nhượng vé cho bạn bè/người thân</strong> qua file ảnh Vé Điện Tử E-Ticket hoặc liên hệ bộ phận CSKH để cập nhật thông tin đối soát trước giờ diễn 48h.</p>'
+                    text: '<p class="font-bold text-slate-900">🔄 Chính sách hoàn hủy & đổi vé:</p><p class="text-xs">Theo quy chế của Ban Tổ Chức, vé đã thanh toán thành công thường <strong>không áp dụng hoàn tiền</strong>.</p><p class="text-xs text-slate-600">Tuy nhiên, bạn có thể <strong>chuyển nhượng vé cho bạn bè/người thân</strong> qua file ảnh Vé Điện Tử E-Ticket hoặc liên hệ bộ phận CSKH để cập nhật thông tin đối soát trước giờ diễn 48h.</p>'
                 };
             }
 
-            // Fallback general response
+            // Fallback general response (HTML escaped query to prevent XSS)
+            const safeQuery = query.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
             return {
-                text: '<p>Cảm ơn bạn đã gửi câu hỏi: <em>"' + query + '"</em>.</p><p class="text-xs text-slate-600">Tôi có thể hỗ trợ bạn tìm kiếm sự kiện âm nhạc, giải đáp sơ đồ sân khấu, cách giữ chỗ hoặc các hình thức thanh toán. Hãy chọn một trong các gợi ý bên dưới hoặc đặt câu hỏi chi tiết hơn nhé!</p>'
+                text: '<p>Cảm ơn bạn đã gửi câu hỏi: <em>"' + safeQuery + '"</em>.</p><p class="text-xs text-slate-600">Tôi có thể hỗ trợ bạn tìm kiếm sự kiện âm nhạc, giải đáp sơ đồ sân khấu, cách giữ chỗ hoặc các hình thức thanh toán. Hãy chọn một trong các gợi ý bên dưới hoặc đặt câu hỏi chi tiết hơn nhé!</p>'
             };
         },
 

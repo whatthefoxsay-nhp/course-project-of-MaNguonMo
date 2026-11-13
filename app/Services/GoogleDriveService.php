@@ -32,6 +32,16 @@ class GoogleDriveService
 
     public function upload(UploadedFile $file, string $subfolder = 'posters'): ?string
     {
+        return $this->uploadContent(
+            file_get_contents($file->getRealPath()),
+            $file->getClientOriginalName(),
+            $file->getMimeType(),
+            $subfolder
+        );
+    }
+
+    public function uploadContent(string $content, string $filename, string $mimeType = 'application/pdf', string $subfolder = 'tickets'): ?string
+    {
         if (! $this->isEnabled()) {
             return null;
         }
@@ -47,12 +57,12 @@ class GoogleDriveService
             }
 
             $uploaded = $drive->files->create(new DriveFile([
-                'name' => $file->getClientOriginalName(),
-                'mimeType' => $file->getMimeType(),
+                'name' => $filename,
+                'mimeType' => $mimeType,
                 'parents' => $parents,
             ]), [
-                'data' => file_get_contents($file->getRealPath()),
-                'mimeType' => $file->getMimeType(),
+                'data' => $content,
+                'mimeType' => $mimeType,
                 'uploadType' => 'multipart',
                 'supportsAllDrives' => true,
                 'fields' => 'id',
@@ -74,11 +84,11 @@ class GoogleDriveService
                 try {
                     $this->drive()->files->delete($fileId, ['supportsAllDrives' => true]);
                 } catch (Throwable) {
-                    // Keep the original upload error as the fallback reason.
+                    // Keep original exception as warning reason.
                 }
             }
 
-            Log::warning('Google Drive image upload failed; the image upload will be rejected.', [
+            Log::warning('Google Drive upload failed.', [
                 'exception' => $exception::class,
             ]);
 

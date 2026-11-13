@@ -26,8 +26,11 @@
             items: {{ Js::from($jsItems) }},
             userEmail: @js($userEmail),
             bankPayment: @js([
-                'accountNo' => config('services.ticket_payment.mb_account_no'),
-                'accountHolder' => config('services.ticket_payment.mb_account_holder'),
+                'code' => config('services.ticket_payment.bank_code', 'VCB'),
+                'shortName' => config('services.ticket_payment.bank_name', 'Vietcombank'),
+                'fullName' => config('services.ticket_payment.bank_full_name', 'Ngân hàng TMCP Ngoại thương Việt Nam'),
+                'accountNo' => config('services.ticket_payment.account_no', '1040394574'),
+                'accountHolder' => config('services.ticket_payment.account_holder', 'BUI NGOC LAN ANH'),
             ]),
             checkoutUrl: @js(route('checkout.store')),
             removeUrl: @js(route('cart.seats.destroy', '__ID__')),
@@ -207,7 +210,7 @@
                                     </div>
                                     <div>
                                         <h3 class="font-display font-black text-lg sm:text-xl text-black tracking-tight">
-                                            Thông Tin Nhận Vé
+                                            Thông Tin Người Đặt &amp; Nhận Vé
                                         </h3>
                                         <p class="text-xs text-gray-500 font-medium mt-0.5">Email dùng để gửi vé. Mã QR và thông tin vé được dùng để đối soát tại cổng.</p>
                                     </div>
@@ -247,7 +250,7 @@
                                     </svg>
                                     <span>Chọn Phương Thức Thanh Toán</span>
                                 </h3>
-                                <p class="text-xs text-gray-500 mt-1">Chuyển khoản MB và MoMo. Đối soát tự động sẽ hoạt động sau khi kết nối cổng thanh toán.</p>
+                                <p class="text-xs text-gray-500 mt-1">Chuyển khoản VietQR 24/7 và Ví điện tử. Đối soát tự động sẽ hoạt động sau khi kết nối cổng thanh toán.</p>
                             </div>
 
                             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5 pt-2">
@@ -262,7 +265,7 @@
                                             <span class="font-display font-black text-xs text-black">Chuyển Khoản VietQR 24/7</span>
                                             <span class="badge-gold text-[9px] px-2 py-0.2 rounded-full font-bold">Khuyên Dùng</span>
                                         </div>
-                                        <p class="text-[11px] text-gray-500 mt-1">Quét VietQR để chuyển khoản tới tài khoản MBBank.</p>
+                                        <p class="text-[11px] text-gray-500 mt-1">Quét VietQR để chuyển khoản tới tài khoản Vietcombank.</p>
                                     </div>
                                 </label>
 
@@ -280,6 +283,47 @@
                                     </div>
                                 </label>
 
+                                <!-- Option 3: ZaloPay -->
+                                <label 
+                                    class="p-4 rounded-2xl border-2 transition-all cursor-pointer flex items-start gap-3.5"
+                                    :class="selectedMethod === 'zalopay' ? 'border-[#008FE5] bg-[#EBF5FB]/50 shadow-sm' : 'border-black/10 bg-[#FAF9F6] hover:border-black/20'"
+                                >
+                                    <input type="radio" name="payment_method" value="zalopay" x-model="selectedMethod" class="mt-1 text-[#008FE5] focus:ring-[#008FE5]">
+                                    <div class="flex-1">
+                                        <div class="flex items-center gap-2">
+                                            <span class="font-display font-black text-xs text-black">Ví Điện Tử ZaloPay</span>
+                                        </div>
+                                        <p class="text-[11px] text-gray-500 mt-1">Thanh toán liền mạch qua ví ZaloPay hoặc ứng dụng Zalo.</p>
+                                    </div>
+                                </label>
+
+                                <!-- Option 4: Thẻ Quốc Tế / Thẻ Nội Địa -->
+                                <label 
+                                    class="p-4 rounded-2xl border-2 transition-all cursor-pointer flex items-start gap-3.5"
+                                    :class="selectedMethod === 'card' ? 'border-slate-800 bg-slate-100 shadow-sm' : 'border-black/10 bg-[#FAF9F6] hover:border-black/20'"
+                                >
+                                    <input type="radio" name="payment_method" value="card" x-model="selectedMethod" class="mt-1 text-slate-800 focus:ring-slate-800">
+                                    <div class="flex-1">
+                                        <div class="flex items-center gap-2">
+                                            <span class="font-display font-black text-xs text-black">Thẻ Quốc Tế / Thẻ Nội Địa</span>
+                                        </div>
+                                        <p class="text-[11px] text-gray-500 mt-1">Thẻ Visa, Mastercard, JCB hoặc thẻ ATM nội địa Napas.</p>
+                                    </div>
+                                </label>
+                            </div>
+
+                            <!-- Bank Transfer Backup Info -->
+                            <div class="mt-3 p-3.5 rounded-2xl bg-slate-50 border border-slate-200 text-xs text-slate-600 space-y-1">
+                                <div class="font-bold text-slate-800 flex items-center gap-2">
+                                    <span>Tài khoản đối tác:</span>
+                                    <span class="text-rose-600 font-extrabold">Techcombank</span>
+                                    <span class="font-mono bg-white px-2 py-0.5 rounded border border-slate-200">1903 8888 6688</span>
+                                </div>
+                                <div class="text-[11px]">Chủ tài khoản: <strong>CONG TY CP TICKETBOX VIETNAM</strong></div>
+                                <div class="text-[11px] text-emerald-700 font-semibold flex items-center gap-1.5 pt-1">
+                                    <span>✓ Vé Điện Tử E-Ticket Đã Được Kích Hoạt</span>
+                                    <span>• Tùy chọn: Lưu vé về máy (PNG)</span>
+                                </div>
                             </div>
                         </div>
 
@@ -349,8 +393,8 @@
                                         </div>
                                         <span>Phương thức:</span>
                                     </div>
-                                    <span class="font-bold text-slate-800 bg-slate-100 px-3 py-1 rounded-xl text-xs inline-flex items-center gap-1.5 shadow-2xs whitespace-nowrap" x-text="selectedMethod === 'vietqr' ? '🏦 Chuyển khoản MB' : '🟣 Ví MoMo'">
-                                        🏦 Chuyển khoản MB
+                                    <span class="font-bold text-slate-800 bg-slate-100 px-3 py-1 rounded-xl text-xs inline-flex items-center gap-1.5 shadow-2xs whitespace-nowrap" x-text="selectedMethod === 'vietqr' ? '🏦 Chuyển khoản Vietcombank' : '🟣 Ví MoMo'">
+                                        🏦 Chuyển khoản Vietcombank
                                     </span>
                                 </div>
                             </div>
@@ -467,10 +511,10 @@
                                         Đối soát tự động chưa kết nối
                                     </span>
                                 </div>
-                                <p class="text-xs text-gray-500 mt-1">Quét mã hoặc chuyển khoản tới tài khoản MBBank dưới đây:</p>
+                                <p class="text-xs text-gray-500 mt-1">Quét mã hoặc chuyển khoản tới tài khoản <span class="font-bold text-slate-800" x-text="currentBank.shortName">Vietcombank</span> dưới đây:</p>
 
                                 <!-- Bank Selector Pills -->
-                                <span class="inline-flex mt-3 px-3.5 py-1.5 rounded-xl text-xs font-black border border-blue-600 bg-blue-50 text-blue-800">MBBank</span>
+                                <span class="inline-flex mt-3 px-3.5 py-1.5 rounded-xl text-xs font-black border border-emerald-600 bg-emerald-50 text-emerald-800" x-text="currentBank.shortName">Vietcombank</span>
                             </div>
 
                             <!-- Account Details Table -->

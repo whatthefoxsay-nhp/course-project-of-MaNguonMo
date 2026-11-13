@@ -86,6 +86,7 @@
                             <th class="py-3.5 px-3 font-bold whitespace-nowrap">Suất Diễn</th>
                             <th class="py-3.5 px-2.5 font-bold whitespace-nowrap text-center">Số Lượng</th>
                             <th class="py-3.5 px-3 font-bold whitespace-nowrap">Tổng Tiền</th>
+                            <th class="py-3.5 px-3 font-bold whitespace-nowrap">Phương Thức</th>
                             <th class="py-3.5 px-3 font-bold whitespace-nowrap">Trạng Thái</th>
                             <th class="py-3.5 px-4 font-bold text-right whitespace-nowrap">Thao Tác</th>
                         </tr>
@@ -144,6 +145,21 @@
                                     </span>
                                 </td>
                                 <td class="py-3.5 px-3 whitespace-nowrap">
+                                    @php
+                                        $paymentLabels = [
+                                            'vietqr' => 'VietQR',
+                                            'momo' => 'Ví MoMo',
+                                            'zalopay' => 'Ví ZaloPay',
+                                            'card' => 'Thẻ quốc tế',
+                                            'cash' => 'Tiền mặt',
+                                        ];
+                                        $method = $booking->payment_method;
+                                    @endphp
+                                    <span class="px-2.5 py-1 rounded-xl text-[10px] font-bold bg-neutral-100 text-neutral-800 border border-neutral-200 inline-block uppercase">
+                                        {{ $paymentLabels[$method] ?? ($method ? strtoupper($method) : 'N/A') }}
+                                    </span>
+                                </td>
+                                <td class="py-3.5 px-3 whitespace-nowrap">
                                     @if($booking->status === 'confirmed')
                                         <span class="px-2.5 py-0.5 rounded-full font-black text-[11px] whitespace-nowrap inline-flex items-center gap-1 bg-emerald-50 text-emerald-800 border border-emerald-300 shadow-xs">
                                             <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
@@ -182,7 +198,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="8" class="py-12 text-center text-gray-500">
+                                <td colspan="9" class="py-12 text-center text-gray-500">
                                     <div class="w-12 h-12 rounded-2xl bg-[#FAF9F6] border border-black/10 text-gray-400 flex items-center justify-center mx-auto mb-3">
                                         <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z"/></svg>
                                     </div>

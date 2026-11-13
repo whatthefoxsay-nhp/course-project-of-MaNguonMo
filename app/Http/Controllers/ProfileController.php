@@ -35,17 +35,15 @@ class ProfileController extends Controller
         $oldAvatar = null;
 
         if ($request->hasFile('avatar')) {
-            if (! $googleDrive->isEnabled()) {
-                throw ValidationException::withMessages([
-                    'avatar' => 'Google Drive chưa được cấu hình; không thể lưu ảnh đại diện.',
-                ]);
-            }
-
-            $newAvatar = $googleDrive->upload($request->file('avatar'), 'avatars');
-            if ($newAvatar === null) {
-                throw ValidationException::withMessages([
-                    'avatar' => 'Không tải được ảnh đại diện lên Google Drive. Vui lòng thử lại.',
-                ]);
+            if ($googleDrive->isEnabled()) {
+                $newAvatar = $googleDrive->upload($request->file('avatar'), 'avatars');
+                if ($newAvatar === null) {
+                    throw ValidationException::withMessages([
+                        'avatar' => 'Không tải được ảnh đại diện lên Google Drive. Vui lòng thử lại.',
+                    ]);
+                }
+            } else {
+                $newAvatar = $request->file('avatar')->store('avatars', 'public');
             }
 
             $oldAvatar = $user->avatar;
@@ -56,6 +54,46 @@ class ProfileController extends Controller
             $user->email_verified_at = null;
         }
 
+        $user->save();
+
+        if ($oldAvatar && Str::startsWith($oldAvatar, ['http://', 'https://'])) {
+            $fileId = $googleDrive->extractFileId($oldAvatar);
+            if ($fileId !== null) {
+                $googleDrive->delete($fileId);
+            }
+        } elseif ($oldAvatar) {
+            Storage::disk('public')->delete($oldAvatar);
+        }
+
+        return Redirect::route('profile.edit')->with('status', 'profile-updated');
+    }
+
+    /**
+     * Update the user's avatar.
+     */
+    public function updateAvatar(Request $request, GoogleDriveService $googleDrive): RedirectResponse
+    {
+        $request->validate([
+            'avatar' => ['required', 'image', 'mimes:jpg,jpeg,png,webp', 'max:1024'],
+        ], [], [
+            'avatar' => 'ảnh đại diện',
+        ]);
+
+        $user = $request->user();
+        $oldAvatar = $user->avatar;
+
+        if ($googleDrive->isEnabled()) {
+            $newAvatar = $googleDrive->upload($request->file('avatar'), 'avatars');
+            if ($newAvatar === null) {
+                throw ValidationException::withMessages([
+                    'avatar' => 'Không tải được ảnh đại diện lên Google Drive. Vui lòng thử lại.',
+                ]);
+            }
+        } else {
+            $newAvatar = $request->file('avatar')->store('avatars', 'public');
+        }
+
+        $user->avatar = $newAvatar;
         $user->save();
 
         if ($oldAvatar && Str::startsWith($oldAvatar, ['http://', 'https://'])) {

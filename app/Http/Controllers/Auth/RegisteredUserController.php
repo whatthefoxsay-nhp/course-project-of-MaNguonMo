@@ -34,8 +34,16 @@ class RegisteredUserController extends Controller
         $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class],
-            'phone' => ['nullable', 'string', 'max:20', 'regex:/^[0-9+\-\s()]*$/'],
+            'phone' => ['nullable', 'string', 'regex:/^(0[35789])[0-9]{8}$/'],
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
+        ], [
+            'name.required' => 'Họ và tên không được để trống.',
+            'email.required' => 'Địa chỉ email không được để trống.',
+            'email.email' => 'Địa chỉ email không đúng định dạng.',
+            'email.unique' => 'Địa chỉ email này đã được đăng ký tài khoản.',
+            'phone.regex' => 'Số điện thoại không đúng định dạng di động Việt Nam (10 chữ số, đầu số 03, 05, 07, 08, 09).',
+            'password.required' => 'Mật khẩu không được để trống.',
+            'password.confirmed' => 'Xác nhận mật khẩu không trùng khớp.',
         ]);
 
         $user = User::create([
@@ -53,6 +61,7 @@ class RegisteredUserController extends Controller
 
         Auth::login($user);
 
-        return redirect(route('home', absolute: false));
+        return redirect(route('home', absolute: false))
+            ->with('success', 'Đăng ký tài khoản thành công! Chào mừng ' . $user->name . ' đến với TicketBox.');
     }
 }
