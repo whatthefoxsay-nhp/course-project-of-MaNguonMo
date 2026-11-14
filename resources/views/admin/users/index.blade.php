@@ -30,7 +30,7 @@
             <div class="bg-white rounded-3xl p-5 border border-[#E3EAE4] shadow-sm flex items-center justify-between">
                 <div>
                     <span class="text-xs font-bold uppercase tracking-wider text-emerald-700">Đang Hoạt Động</span>
-                    <span class="font-display font-black text-2xl text-emerald-800 block mt-1">{{ number_format($stats['active']) }}</span>
+                    <span id="stat-active-count" class="font-display font-black text-2xl text-emerald-800 block mt-1">{{ number_format($stats['active']) }}</span>
                 </div>
                 <div class="w-12 h-12 rounded-2xl bg-emerald-50 border border-emerald-200 flex items-center justify-center text-emerald-700 shadow-sm">
                     <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -43,7 +43,7 @@
             <div class="bg-white rounded-3xl p-5 border border-[#E3EAE4] shadow-sm flex items-center justify-between">
                 <div>
                     <span class="text-xs font-bold uppercase tracking-wider text-rose-700">Đã Bị Khóa</span>
-                    <span class="font-display font-black text-2xl text-rose-700 block mt-1">{{ number_format($stats['locked']) }}</span>
+                    <span id="stat-locked-count" class="font-display font-black text-2xl text-rose-700 block mt-1">{{ number_format($stats['locked']) }}</span>
                 </div>
                 <div class="w-12 h-12 rounded-2xl bg-rose-50 border border-rose-200 flex items-center justify-center text-rose-700 shadow-sm">
                     <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -249,17 +249,17 @@
                                             <button 
                                                 id="user-action-btn-{{ $user->id }}"
                                                 type="button" 
-                                                @click="openConfirm({{ $user->id }}, '{{ addslashes($user->name) }}', {{ $user->is_active ? 'true' : 'false' }})"
-                                                class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all shadow-sm whitespace-nowrap {{ $user->is_active ? 'bg-rose-50 text-rose-800 border border-rose-200 hover:bg-rose-100' : 'bg-emerald-50 text-emerald-800 border border-emerald-200 hover:bg-emerald-100' }}"
+                                                @click="openConfirm({{ $user->id }}, '{{ addslashes($user->name) }}')"
+                                                class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all shadow-xs whitespace-nowrap {{ $user->is_active ? 'bg-rose-50 text-rose-700 border border-rose-300 hover:bg-rose-100 hover:border-rose-400' : 'bg-emerald-50 text-emerald-700 border border-emerald-300 hover:bg-emerald-100 hover:border-emerald-400' }}"
                                                 title="{{ $user->is_active ? 'Khóa tài khoản này' : 'Mở khóa tài khoản này' }}"
                                             >
                                                 @if ($user->is_active)
-                                                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <svg class="w-3.5 h-3.5 text-rose-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                                                     </svg>
                                                     <span>Khóa</span>
                                                 @else
-                                                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <svg class="w-3.5 h-3.5 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z" />
                                                     </svg>
                                                     <span>Mở khóa</span>
@@ -297,6 +297,7 @@
         <!-- Confirmation Modal (High Contrast Light Dialog) -->
         <div 
             x-show="showConfirmModal" 
+            x-cloak
             x-transition:enter="ease-out duration-300"
             x-transition:enter-start="opacity-0"
             x-transition:enter-end="opacity-100"
@@ -321,30 +322,30 @@
             >
                 <div 
                     class="w-14 h-14 rounded-2xl mx-auto flex items-center justify-center border shadow-sm"
-                    :class="targetUser.is_active ? 'bg-red-50 text-crimson border-red-200' : 'bg-emerald-50 text-sage-forest border-emerald-200'"
+                    :class="targetUser.is_active ? 'bg-rose-50 text-rose-600 border-rose-200' : 'bg-emerald-50 text-emerald-600 border-emerald-200'"
                 >
                     <template x-if="targetUser.is_active">
-                        <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <svg class="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                         </svg>
                     </template>
                     <template x-if="!targetUser.is_active">
-                        <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <svg class="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z" />
                         </svg>
                     </template>
                 </div>
 
-                <h3 class="font-serif font-black text-2xl text-black">
+                <h3 class="font-display font-black text-2xl text-black">
                     <span x-text="targetUser.is_active ? 'Xác Nhận Khóa Tài Khoản?' : 'Xác Nhận Mở Khóa?'"></span>
                 </h3>
 
                 <p class="text-xs text-gray-600 leading-relaxed">
                     <template x-if="targetUser.is_active">
-                        <span>Bạn có chắc chắn muốn khóa tài khoản <strong class="text-black" x-text="targetUser.name"></strong> không? Người dùng này sẽ <strong>không thể đăng nhập</strong> vào hệ thống sau khi bị khóa.</span>
+                        <span>Bạn có chắc chắn muốn khóa tài khoản <strong class="text-black font-bold" x-text="targetUser.name"></strong> không? Người dùng này sẽ <strong>không thể đăng nhập</strong> hoặc mua vé sau khi bị khóa.</span>
                     </template>
                     <template x-if="!targetUser.is_active">
-                        <span>Bạn có muốn mở khóa tài khoản <strong class="text-black" x-text="targetUser.name"></strong> không? Người dùng sẽ có thể đăng nhập và mua vé bình thường.</span>
+                        <span>Bạn có muốn mở khóa cho tài khoản <strong class="text-black font-bold" x-text="targetUser.name"></strong> không? Người dùng sẽ có thể đăng nhập và đặt vé bình thường.</span>
                     </template>
                 </p>
 
@@ -353,8 +354,8 @@
                         type="button" 
                         @click="confirmToggle()"
                         :disabled="isSubmitting"
-                        class="flex-1 py-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 shadow-md"
-                        :class="targetUser.is_active ? 'btn-crimson' : 'btn-sage'"
+                        class="flex-1 py-3 px-4 rounded-2xl text-xs font-black transition-all flex items-center justify-center gap-2 shadow-md cursor-pointer"
+                        :class="targetUser.is_active ? 'bg-rose-600 hover:bg-rose-700 text-white' : 'bg-emerald-600 hover:bg-emerald-700 text-white'"
                     >
                         <span x-show="isSubmitting" class="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
                         <span x-text="targetUser.is_active ? 'Khóa Tài Khoản' : 'Mở Khóa Ngay'"></span>
@@ -364,7 +365,7 @@
                         type="button" 
                         @click="closeConfirm()"
                         :disabled="isSubmitting"
-                        class="btn-ghost-light px-5 py-3 rounded-xl text-xs font-bold"
+                        class="px-5 py-3 rounded-2xl text-xs font-bold bg-gray-100 hover:bg-gray-200 text-gray-700 transition-colors cursor-pointer"
                     >
                         Hủy Bỏ
                     </button>
@@ -528,21 +529,29 @@
         <!-- Global Toast Notification -->
         <div 
             x-show="showToast" 
+            x-cloak
             x-transition:enter="ease-out duration-300"
-            x-transition:enter-start="opacity-0 translate-y-4"
-            x-transition:enter-end="opacity-100 translate-y-0"
+            x-transition:enter-start="opacity-0 translate-y-4 scale-95"
+            x-transition:enter-end="opacity-100 translate-y-0 scale-100"
             x-transition:leave="ease-in duration-200"
-            x-transition:leave-start="opacity-100 translate-y-0"
-            x-transition:leave-end="opacity-0 translate-y-4"
-            class="fixed bottom-6 right-6 z-50 bg-black text-white px-5 py-3 rounded-2xl shadow-2xl flex items-center gap-3 border border-white/20"
+            x-transition:leave-start="opacity-100 translate-y-0 scale-100"
+            x-transition:leave-end="opacity-0 translate-y-4 scale-95"
+            class="fixed bottom-6 right-6 z-50 bg-[#141210] text-white px-5 py-3.5 rounded-2xl shadow-2xl flex items-center gap-3 border border-white/10"
             style="display: none;"
         >
-            <span class="w-2.5 h-2.5 rounded-full" :class="toastType === 'success' ? 'bg-emerald-400' : 'bg-red-400'"></span>
-            <span class="text-sm font-bold" x-text="toastMessage"></span>
+            <div class="w-7 h-7 rounded-xl flex items-center justify-center shrink-0" :class="toastType === 'success' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-rose-500/20 text-rose-400'">
+                <template x-if="toastType === 'success'">
+                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+                </template>
+                <template x-if="toastType !== 'success'">
+                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/></svg>
+                </template>
+            </div>
+            <span class="text-xs font-bold leading-tight" x-text="toastMessage"></span>
         </div>
     </div>
 
-    <!-- Clean Alpine.js Component Script (No inline HTML attribute escaping issues) -->
+    <!-- Clean Alpine.js Component Script -->
     <script>
         document.addEventListener('alpine:init', () => {
             Alpine.data('userManagement', () => ({
@@ -553,8 +562,14 @@
                 showToast: false,
                 toastMessage: '',
                 toastType: 'success',
+                userStatuses: {
+                    @foreach ($users as $u)
+                        {{ $u->id }}: {{ $u->is_active ? 'true' : 'false' }},
+                    @endforeach
+                },
 
-                openConfirm(id, name, isActive) {
+                openConfirm(id, name) {
+                    const isActive = this.userStatuses[id] !== undefined ? this.userStatuses[id] : true;
                     this.targetUser = { id: id, name: name, is_active: isActive };
                     this.showConfirmModal = true;
                 },
@@ -588,28 +603,48 @@
                         const data = await response.json();
 
                         if (response.ok && data.success) {
+                            // Cập nhật state nội bộ
+                            this.userStatuses[this.targetUser.id] = data.user.is_active;
+
                             const badgeEl = document.getElementById(`user-status-badge-${this.targetUser.id}`);
                             const btnEl = document.getElementById(`user-action-btn-${this.targetUser.id}`);
 
                             if (badgeEl) {
                                 if (data.user.is_active) {
-                                    badgeEl.className = 'badge-sage text-[10px] px-2.5 py-1 rounded-full font-bold whitespace-nowrap inline-flex items-center gap-1.5';
-                                    badgeEl.innerHTML = '<span class="w-1.5 h-1.5 rounded-full bg-sage-forest"></span> Hoạt động';
+                                    badgeEl.className = 'border text-[11px] px-2.5 py-0.5 rounded-full font-black whitespace-nowrap inline-flex items-center gap-1 shadow-xs bg-emerald-50 text-emerald-800 border-emerald-300';
+                                    badgeEl.innerHTML = '<span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> Hoạt động';
                                 } else {
-                                    badgeEl.className = 'badge-crimson text-[10px] px-2.5 py-1 rounded-full font-bold whitespace-nowrap inline-flex items-center gap-1.5';
-                                    badgeEl.innerHTML = '<span class="w-1.5 h-1.5 rounded-full bg-crimson"></span> Đã bị khóa';
+                                    badgeEl.className = 'border text-[11px] px-2.5 py-0.5 rounded-full font-black whitespace-nowrap inline-flex items-center gap-1 shadow-xs bg-rose-50 text-rose-800 border-rose-300';
+                                    badgeEl.innerHTML = '<span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span> Đã bị khóa';
                                 }
                             }
 
                             if (btnEl) {
                                 if (data.user.is_active) {
-                                    btnEl.className = 'inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all shadow-sm whitespace-nowrap bg-red-50 text-crimson border border-red-200 hover:bg-red-100';
+                                    // Đã mở khóa thành công -> Nút đổi ngay thành "Khóa" nổi bật
+                                    btnEl.className = 'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all shadow-xs whitespace-nowrap bg-rose-50 text-rose-700 border border-rose-300 hover:bg-rose-100 hover:border-rose-400';
                                     btnEl.setAttribute('title', 'Khóa tài khoản này');
-                                    btnEl.innerHTML = '<svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg><span>Khóa</span>';
+                                    btnEl.innerHTML = '<svg class="w-3.5 h-3.5 text-rose-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg><span>Khóa</span>';
                                 } else {
-                                    btnEl.className = 'inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all shadow-sm whitespace-nowrap bg-emerald-50 text-sage-forest border border-emerald-200 hover:bg-emerald-100';
+                                    // Đã khóa thành công -> Nút đổi ngay thành "Mở khóa"
+                                    btnEl.className = 'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all shadow-xs whitespace-nowrap bg-emerald-50 text-emerald-700 border border-emerald-300 hover:bg-emerald-100 hover:border-emerald-400';
                                     btnEl.setAttribute('title', 'Mở khóa tài khoản này');
-                                    btnEl.innerHTML = '<svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z" /></svg><span>Mở khóa</span>';
+                                    btnEl.innerHTML = '<svg class="w-3.5 h-3.5 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z" /></svg><span>Mở khóa</span>';
+                                }
+                            }
+
+                            // Cập nhật thống kê KPI Realtime
+                            const activeStatEl = document.getElementById('stat-active-count');
+                            const lockedStatEl = document.getElementById('stat-locked-count');
+                            if (activeStatEl && lockedStatEl) {
+                                let activeCount = parseInt(activeStatEl.innerText.replace(/,/g, '')) || 0;
+                                let lockedCount = parseInt(lockedStatEl.innerText.replace(/,/g, '')) || 0;
+                                if (data.user.is_active) {
+                                    activeStatEl.innerText = (activeCount + 1).toLocaleString('en-US');
+                                    lockedStatEl.innerText = Math.max(0, lockedCount - 1).toLocaleString('en-US');
+                                } else {
+                                    activeStatEl.innerText = Math.max(0, activeCount - 1).toLocaleString('en-US');
+                                    lockedStatEl.innerText = (lockedCount + 1).toLocaleString('en-US');
                                 }
                             }
 

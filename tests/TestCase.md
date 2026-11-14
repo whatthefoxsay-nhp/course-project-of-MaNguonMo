@@ -37,7 +37,7 @@ tests/
 
 | Mã UC | Tên Use Case | Phân hệ | File Test chính liên quan | Số Test Case | Trạng thái |
 |:---:|:---|:---:|:---|:---:|:---:|
-| **UC_001** | Quản lý tài khoản | Admin | `tests/Feature/Admin/AdminUserManagementTest.php`, `LockedUserTest.php`, `RoleSeederTest.php` | 18 | Đã tự động hóa |
+| **UC_001** | Quản lý tài khoản | Admin | `tests/Feature/Admin/AdminUserManagementTest.php`, `LockedUserTest.php`, `RoleSeederTest.php` | 24 | Đã tự động hóa |
 | **UC_002** | Quản lý danh mục | Admin | `tests/Feature/Admin/AdminCategoryCrudTest.php`, `AdminRoleAndCrudVerificationTest.php` | 17 | Đã tự động hóa |
 | **UC_003** | Quản lý địa điểm | Admin | `tests/Feature/Admin/AdminRoomUseCaseTest.php`, `AdminRoomBuilderTest.php`, `AdminRoomSafetyTest.php` | 17 | Đã tự động hóa |
 | **UC_004** | Quản lý sự kiện | Admin | `tests/Feature/Admin/AdminEventUseCaseTest.php`, `AdminEventCrudTest.php` | 24 | Đã tự động hóa |
@@ -87,6 +87,12 @@ tests/
 | `TC_UC001_13` | Admin tự hạ quyền của chính mình | Security/Self | Bị từ chối với thông báo: "Bạn không thể tự thay đổi vai trò của chính mình". |
 | `TC_UC001_14` | Admin đặt lại mật khẩu cho người dùng | Positive | Mật khẩu đổi về mặc định `TicketBox@2026`, user đăng nhập thành công với mật khẩu này. |
 | `TC_UC001_15` | User thường cố truy cập route `/admin/users` | Security | Trả về HTTP 403 hoặc chuyển hướng về trang chủ. |
+| `TC_UC001_16` | Thêm người dùng mới với mật khẩu không đủ 8 ký tự | Negative/Val | Bị từ chối tạo và hiển thị thông báo lỗi: "Mật khẩu không hợp lệ". Dữ liệu không lưu vào DB. |
+| `TC_UC001_17` | Thêm người dùng mới với SĐT bắt đầu không phải số 0 | Negative/Val | Bị từ chối tạo và hiển thị thông báo lỗi: "SĐT không đúng định dạng hoặc đủ 10 chữ số". Dữ liệu không lưu vào DB. |
+| `TC_UC001_18` | Thêm người dùng mới với SĐT không đúng 10 chữ số (9 số hoặc 11 số) | Negative/Val | Bị từ chối tạo và hiển thị thông báo lỗi: "SĐT không đúng định dạng hoặc đủ 10 chữ số". Dữ liệu không lưu vào DB. |
+| `TC_UC001_19` | Thêm người dùng mới với email đã tồn tại trong database | Negative/Val | Bị từ chối tạo và hiển thị thông báo lỗi: "Email đã tồn tại trong hệ thống.". Không tạo bản ghi mới trong DB. |
+| `TC_UC001_20` | Mở khóa tài khoản người dùng khác đang bị khóa qua AJAX | Positive/Ajax | Cập nhật `is_active = true` trong DB, trả JSON thông báo "Đã mở khóa tài khoản [Tên] thành công.", giao diện đổi nút thành "Khóa" nổi bật. |
+| `TC_UC001_21` | Khóa tài khoản người dùng khác đang hoạt động qua AJAX | Positive/Ajax | Cập nhật `is_active = false` trong DB, trả JSON thông báo "Đã khóa tài khoản [Tên] thành công.", giao diện đổi nút thành "Mở khóa". |
 
 ---
 

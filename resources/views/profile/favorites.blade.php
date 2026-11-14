@@ -43,15 +43,6 @@
             </div>
         </div>
 
-        @if (session('success'))
-            <div class="mb-6 p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-xs font-bold text-emerald-800 flex items-center gap-2">
-                <svg class="w-4 h-4 text-emerald-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                </svg>
-                <span>{{ session('success') }}</span>
-            </div>
-        @endif
-
         <!-- Favorites List Grid -->
         @if ($favorites->isEmpty())
             <!-- Empty State Interface -->

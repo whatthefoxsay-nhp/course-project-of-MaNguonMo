@@ -169,3 +169,189 @@ test('regular user cannot create user accounts via admin endpoint', function () 
     $response->assertForbidden();
 });
 
+describe('UC_001: Thêm người dùng mới validation', function () {
+    test('TC_UC001_16: Thêm người dùng mới với mật khẩu không hợp lệ - mật khẩu không đủ 8 ký tự', function () {
+        $admin = User::factory()->create();
+        $admin->assignRole('admin');
+
+        $response = $this->actingAs($admin)->post(route('admin.users.store'), [
+            'name' => 'Nguyen Van Test',
+            'email' => 'shortpwd@ticketbox.vn',
+            'phone' => '0987654321',
+            'password' => '1234567', // chỉ 7 ký tự (< 8)
+            'role' => 'user',
+        ]);
+
+        $response->assertSessionHasErrors([
+            'password' => 'Mật khẩu không hợp lệ',
+        ]);
+
+        $this->assertDatabaseMissing('users', [
+            'email' => 'shortpwd@ticketbox.vn',
+        ]);
+    });
+
+    test('TC_UC001_17: Thêm người dùng mới với số điện thoại không hợp lệ - bắt đầu không phải số 0', function () {
+        $admin = User::factory()->create();
+        $admin->assignRole('admin');
+
+        $response = $this->actingAs($admin)->post(route('admin.users.store'), [
+            'name' => 'Nguyen Van Test Phone',
+            'email' => 'phoneinvalid1@ticketbox.vn',
+            'phone' => '1987654321', // Bắt đầu bằng 1 thay vì 0
+            'password' => 'ValidPassword123',
+            'role' => 'user',
+        ]);
+
+        $response->assertSessionHasErrors([
+            'phone' => 'SĐT không đúng định dạng hoặc đủ 10 chữ số',
+        ]);
+
+        $this->assertDatabaseMissing('users', [
+            'email' => 'phoneinvalid1@ticketbox.vn',
+        ]);
+    });
+
+    test('TC_UC001_18: Thêm người dùng mới với số điện thoại không hợp lệ - không đúng 10 chữ số (9 số hoặc 11 số)', function () {
+        $admin = User::factory()->create();
+        $admin->assignRole('admin');
+
+        // Ca 1: 9 chữ số
+        $response1 = $this->actingAs($admin)->post(route('admin.users.store'), [
+            'name' => 'Nguyen 9 Digits',
+            'email' => 'phone9digits@ticketbox.vn',
+            'phone' => '098765432', // 9 số
+            'password' => 'ValidPassword123',
+            'role' => 'user',
+        ]);
+
+        $response1->assertSessionHasErrors([
+            'phone' => 'SĐT không đúng định dạng hoặc đủ 10 chữ số',
+        ]);
+
+        $this->assertDatabaseMissing('users', [
+            'email' => 'phone9digits@ticketbox.vn',
+        ]);
+
+        // Ca 2: 11 chữ số
+        $response2 = $this->actingAs($admin)->post(route('admin.users.store'), [
+            'name' => 'Nguyen 11 Digits',
+            'email' => 'phone11digits@ticketbox.vn',
+            'phone' => '09876543210', // 11 số
+            'password' => 'ValidPassword123',
+            'role' => 'user',
+        ]);
+
+        $response2->assertSessionHasErrors([
+            'phone' => 'SĐT không đúng định dạng hoặc đủ 10 chữ số',
+        ]);
+
+        $this->assertDatabaseMissing('users', [
+            'email' => 'phone11digits@ticketbox.vn',
+        ]);
+    });
+
+    test('TC_UC001_19: Thêm mới người dùng với email đã tồn tại trong database', function () {
+        $admin = User::factory()->create();
+        $admin->assignRole('admin');
+
+        // Tạo sẵn 1 người dùng đã có trong database
+        User::factory()->create([
+            'email' => 'existing_user@ticketbox.vn',
+        ]);
+
+        $userCountBefore = User::count();
+
+        $response = $this->actingAs($admin)->post(route('admin.users.store'), [
+            'name' => 'Duplicate Email User',
+            'email' => 'existing_user@ticketbox.vn',
+            'phone' => '0912345678',
+            'password' => 'ValidPassword123',
+            'role' => 'user',
+        ]);
+
+        $response->assertSessionHasErrors([
+            'email' => 'Email đã tồn tại trong hệ thống.',
+        ]);
+
+        // Đảm bảo không có tài khoản trùng lặp nào được thêm vào DB
+        expect(User::count())->toBe($userCountBefore);
+    });
+
+    test('TC_UC001_20: Mở khoá tài khoản người dùng khác đang bị khoá qua AJAX', function () {
+        $admin = User::factory()->create();
+        $admin->assignRole('admin');
+
+        $lockedUser = User::factory()->create([
+            'name' => 'Tran Thi Khoa',
+            'email' => 'locked_user@ticketbox.vn',
+            'is_active' => false,
+        ]);
+        $lockedUser->assignRole('user');
+
+        // Gửi request mở khóa qua AJAX
+        $response = $this->actingAs($admin)->patchJson(route('admin.users.toggle-status', $lockedUser));
+
+        $response->assertOk();
+        $response->assertJson([
+            'success' => true,
+            'message' => "Đã mở khóa tài khoản {$lockedUser->name} thành công.",
+            'user' => [
+                'id' => $lockedUser->id,
+                'name' => $lockedUser->name,
+                'is_active' => true,
+                'status_label' => 'Đang hoạt động',
+            ],
+        ]);
+
+        // Cập nhật Database thành công
+        $this->assertDatabaseHas('users', [
+            'id' => $lockedUser->id,
+            'is_active' => true,
+        ]);
+        expect($lockedUser->fresh()->is_active)->toBeTrue();
+
+        // Kiểm tra trên giao diện khi tải lại/xem trang: nút đã chuyển sang trạng thái "Khóa"
+        $pageResponse = $this->actingAs($admin)->get(route('admin.users.index'));
+        $pageResponse->assertOk();
+        $pageResponse->assertSee('Tran Thi Khoa');
+        $pageResponse->assertSee('Hoạt động');
+        $pageResponse->assertSee('Khóa');
+    });
+
+    test('TC_UC001_21: Khóa tài khoản người dùng khác đang hoạt động qua AJAX', function () {
+        $admin = User::factory()->create();
+        $admin->assignRole('admin');
+
+        $activeUser = User::factory()->create([
+            'name' => 'Le Van Active',
+            'email' => 'active_user@ticketbox.vn',
+            'is_active' => true,
+        ]);
+        $activeUser->assignRole('user');
+
+        // Gửi request khóa qua AJAX
+        $response = $this->actingAs($admin)->patchJson(route('admin.users.toggle-status', $activeUser));
+
+        $response->assertOk();
+        $response->assertJson([
+            'success' => true,
+            'message' => "Đã khóa tài khoản {$activeUser->name} thành công.",
+            'user' => [
+                'id' => $activeUser->id,
+                'name' => $activeUser->name,
+                'is_active' => false,
+                'status_label' => 'Đã bị khóa',
+            ],
+        ]);
+
+        // Cập nhật Database thành công
+        $this->assertDatabaseHas('users', [
+            'id' => $activeUser->id,
+            'is_active' => false,
+        ]);
+        expect($activeUser->fresh()->is_active)->toBeFalse();
+    });
+});
+
+

@@ -71,10 +71,18 @@ class UserController extends Controller
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class],
-            'phone' => ['nullable', 'string', 'max:20', 'regex:/^[0-9+\-\s()]*$/'],
+            'phone' => ['nullable', 'string', 'regex:/^0[0-9]{9}$/'],
             'password' => ['required', 'string', 'min:8'],
             'role' => ['required', 'string', 'in:admin,user'],
             'is_active' => ['nullable', 'boolean'],
+        ], [
+            'password.min' => 'Mật khẩu không hợp lệ',
+            'password.required' => 'Mật khẩu không hợp lệ',
+            'phone.regex' => 'SĐT không đúng định dạng hoặc đủ 10 chữ số',
+            'email.unique' => 'Email đã tồn tại trong hệ thống.',
+            'email.required' => 'Địa chỉ email không được để trống.',
+            'email.email' => 'Địa chỉ email không đúng định dạng.',
+            'name.required' => 'Họ và tên không được để trống.',
         ]);
 
         $user = User::create([
