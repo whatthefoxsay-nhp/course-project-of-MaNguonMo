@@ -66,13 +66,15 @@ class EventController extends Controller
     public function edit(Event $event): View
     {
         return view('admin.events.form', [
-            'event' => $event,
+            'event' => $event->load(['showtimes.room', 'showtimes.showtimeSeats']),
             'categories' => Category::orderBy('name')->get(),
         ]);
     }
 
     public function update(EventRequest $request, Event $event, GoogleDriveService $googleDrive): RedirectResponse
     {
+        $oldReleaseDate = $event->release_date;
+
         $event->fill($request->eventAttributes());
         $event->details = $request->mergedDetails($event->details ?? []);
         $oldPosterPath = null;
@@ -90,8 +92,48 @@ class EventController extends Controller
             $this->deletePosterPath($oldPosterPath, $googleDrive);
         }
 
-        return redirect()->route('admin.events.index')
-            ->with('success', "Đã cập nhật sự kiện [{$event->title}].");
+        // Tự động đồng bộ / dời ngày các suất diễn nếu ngày mở bán thay đổi hoặc có suất diễn quá hạn
+        $syncedCount = 0;
+        $newReleaseDate = $event->release_date;
+        $syncShowtimes = $request->boolean('sync_showtimes', true);
+
+        if ($syncShowtimes && $newReleaseDate && $event->showtimes()->exists()) {
+            $showtimes = $event->showtimes()->orderBy('start_time')->get();
+            $firstShowtime = $showtimes->first();
+
+            if ($firstShowtime) {
+                $firstOriginalDate = $firstShowtime->start_time->copy()->startOfDay();
+
+                foreach ($showtimes as $index => $showtime) {
+                    $originalStart = $showtime->start_time;
+                    $originalEnd = $showtime->end_time;
+
+                    // Tính khoảng cách ngày so với suất đầu tiên để bảo toàn khoảng cách giữa các đêm diễn
+                    $dayOffset = $firstOriginalDate->diffInDays($originalStart->copy()->startOfDay(), false);
+                    if ($dayOffset < 0) {
+                        $dayOffset = 0;
+                    }
+
+                    $newStart = $newReleaseDate->copy()->addDays($dayOffset)
+                        ->setTime($originalStart->hour, $originalStart->minute, $originalStart->second);
+
+                    $durationSeconds = $originalEnd ? $originalStart->diffInSeconds($originalEnd) : (($event->duration_minutes ?: 120) * 60);
+                    $newEnd = $newStart->copy()->addSeconds($durationSeconds);
+
+                    $showtime->update([
+                        'start_time' => $newStart,
+                        'end_time' => $newEnd,
+                    ]);
+                    $syncedCount++;
+                }
+            }
+        }
+
+        $message = $syncedCount > 0
+            ? "Đã cập nhật sự kiện [{$event->title}] và tự động dời ngày {$syncedCount} suất diễn theo ngày mở bán mới ({$newReleaseDate->format('d/m/Y')})."
+            : "Đã cập nhật sự kiện [{$event->title}].";
+
+        return redirect()->route('admin.events.index')->with('success', $message);
     }
 
     public function destroy(Event $event, GoogleDriveService $googleDrive): RedirectResponse

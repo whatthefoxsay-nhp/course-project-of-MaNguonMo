@@ -226,3 +226,54 @@ test('admin event pages render', function () {
     $this->actingAs($admin)->get(route('admin.events.create'))->assertOk();
     $this->actingAs($admin)->get(route('admin.events.edit', $event))->assertOk()->assertSee($event->title);
 });
+
+test('updating event release date syncs its showtimes to the new date and re-enables ticket booking', function () {
+    $admin = createAdmin();
+    $room = Room::factory()->create();
+
+    // Sự kiện và suất diễn cũ trong quá khứ (hết hạn)
+    $pastDate = Carbon\Carbon::today()->subDays(15);
+    $event = Event::factory()->create([
+        'release_date' => $pastDate,
+        'duration_minutes' => 180,
+        'status' => 'published',
+    ]);
+
+    $showtime = Showtime::factory()->for($event)->for($room)->create([
+        'start_time' => $pastDate->copy()->setTime(19, 0),
+        'end_time' => $pastDate->copy()->setTime(22, 0),
+    ]);
+
+    // Trang ngoài ban đầu báo hết hạn / chưa có suất mở bán
+    $this->get(route('events.show', $event->slug))
+        ->assertOk()
+        ->assertSee('Hiện chưa có suất diễn mở bán cho sự kiện này');
+
+    // Admin chỉnh lại ngày mở bán lùi về sau (thời điểm tương lai)
+    $futureDate = Carbon\Carbon::today()->addDays(10);
+    $response = $this->actingAs($admin)
+        ->put(route('admin.events.update', $event), eventPayload([
+            'title' => $event->title,
+            'category_id' => $event->category_id,
+            'release_date' => $futureDate->format('Y-m-d'),
+            'sync_showtimes' => '1',
+        ]));
+
+    $response->assertRedirect(route('admin.events.index'));
+    $response->assertSessionHas('success');
+
+    // Kiểm tra database: ngày mở bán và ngày giờ suất diễn đã được tự động dời sang tương lai
+    expect($event->fresh()->release_date->format('Y-m-d'))->toBe($futureDate->format('Y-m-d'));
+    
+    $freshShowtime = $showtime->fresh();
+    expect($freshShowtime->start_time->format('Y-m-d H:i'))->toBe($futureDate->format('Y-m-d') . ' 19:00')
+        ->and($freshShowtime->end_time->format('Y-m-d H:i'))->toBe($futureDate->format('Y-m-d') . ' 22:00')
+        ->and($freshShowtime->start_time->isFuture())->toBeTrue();
+
+    // Trang chi tiết sự kiện lập tức hiển thị lại suất diễn và mở bán vé bình thường
+    $this->get(route('events.show', $event->slug))
+        ->assertOk()
+        ->assertDontSee('Hiện chưa có suất diễn mở bán cho sự kiện này')
+        ->assertSee('19:00');
+});
+

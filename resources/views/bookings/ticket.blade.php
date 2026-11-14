@@ -52,8 +52,17 @@
             }
         }
     }">
-        <!-- Toast Notification -->
-        <div x-show="showToast" x-transition class="fixed bottom-6 right-6 z-50 bg-slate-900 text-white px-5 py-3 rounded-2xl shadow-xl border border-slate-700 text-xs font-bold" style="display: none;" x-text="toastMsg"></div>
+        <!-- Toast Notification (Hiển thị góc trên bên phải, tránh va chạm với TicketBot AI ở góc dưới) -->
+        <div x-show="showToast" 
+             x-transition:enter="ease-out duration-300"
+             x-transition:enter-start="opacity-0 -translate-y-4 scale-95"
+             x-transition:enter-end="opacity-100 translate-y-0 scale-100"
+             x-transition:leave="ease-in duration-200"
+             x-transition:leave-start="opacity-100 scale-100"
+             x-transition:leave-end="opacity-0 -translate-y-4 scale-95"
+             class="fixed top-20 right-5 sm:top-24 sm:right-8 z-50 bg-slate-900/95 text-white px-5 py-3.5 rounded-2xl shadow-xl border border-slate-700 text-xs font-bold pointer-events-none backdrop-blur-md" 
+             style="display: none;" 
+             x-text="toastMsg"></div>
 
         <!-- Navigation Breadcrumbs & Actions -->
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">

@@ -76,10 +76,17 @@
                         </div>
                         <div class="flex items-center justify-between text-gray-600 pt-1 border-t border-black/5">
                             <span>Trạng thái phát hành:</span>
-                            <span class="text-sage-forest font-black flex items-center gap-1.5">
-                                <span class="w-2 h-2 rounded-full bg-sage-forest animate-ping"></span>
-                                Đang mở bán trực tuyến
-                            </span>
+                            @if (!empty($showtimes))
+                                <span class="text-sage-forest font-black flex items-center gap-1.5">
+                                    <span class="w-2 h-2 rounded-full bg-sage-forest animate-ping"></span>
+                                    Đang mở bán trực tuyến
+                                </span>
+                            @else
+                                <span class="text-rose-600 font-bold flex items-center gap-1.5">
+                                    <span class="w-2 h-2 rounded-full bg-rose-500"></span>
+                                    Hết hạn / Chưa mở bán
+                                </span>
+                            @endif
                         </div>
                     </div>
 
@@ -194,6 +201,14 @@
                                 @endif
                                 <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg>
                             </a>
+                        </div>
+                    @else
+                        <div class="bg-[#FAF9F6] rounded-3xl p-5 border border-black/10 space-y-3 shadow-sm text-center">
+                            <div class="w-10 h-10 rounded-2xl bg-amber-50 border border-amber-200 text-amber-700 flex items-center justify-center mx-auto">
+                                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                            </div>
+                            <h4 class="font-display font-black text-sm text-black">Chưa Có Suất Mở Bán</h4>
+                            <p class="text-xs text-gray-500 leading-relaxed">Các suất diễn của sự kiện đã kết thúc hoặc ban tổ chức chưa công bố lịch diễn tiếp theo.</p>
                         </div>
                     @endif
                 </div>

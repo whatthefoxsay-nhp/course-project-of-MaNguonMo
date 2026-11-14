@@ -14,7 +14,10 @@ class EventRequest extends FormRequest
 
     protected function prepareForValidation(): void
     {
-        $this->merge(['is_seated' => $this->boolean('is_seated')]);
+        $this->merge([
+            'is_seated' => $this->boolean('is_seated'),
+            'sync_showtimes' => $this->boolean('sync_showtimes', true),
+        ]);
     }
 
     public function rules(): array
@@ -24,6 +27,7 @@ class EventRequest extends FormRequest
             'category_id' => ['required', 'integer', 'exists:categories,id'],
             'status' => ['required', Rule::in(['draft', 'published', 'archived'])],
             'is_seated' => ['boolean'],
+            'sync_showtimes' => ['nullable', 'boolean'],
             'duration_minutes' => ['required', 'integer', 'min:15', 'max:1440'],
             'release_date' => ['nullable', 'date'],
             'description' => ['nullable', 'string', 'max:5000'],

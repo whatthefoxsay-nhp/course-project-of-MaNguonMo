@@ -40,7 +40,7 @@ tests/
 | **UC_001** | Quản lý tài khoản | Admin | `tests/Feature/Admin/AdminUserManagementTest.php`, `LockedUserTest.php`, `RoleSeederTest.php` | 24 | Đã tự động hóa |
 | **UC_002** | Quản lý danh mục | Admin | `tests/Feature/Admin/AdminCategoryCrudTest.php`, `AdminRoleAndCrudVerificationTest.php` | 17 | Đã tự động hóa |
 | **UC_003** | Quản lý địa điểm | Admin | `tests/Feature/Admin/AdminRoomUseCaseTest.php`, `AdminRoomBuilderTest.php`, `AdminRoomSafetyTest.php` | 17 | Đã tự động hóa |
-| **UC_004** | Quản lý sự kiện | Admin | `tests/Feature/Admin/AdminEventUseCaseTest.php`, `AdminEventCrudTest.php` | 24 | Đã tự động hóa |
+| **UC_004** | Quản lý sự kiện | Admin | `tests/Feature/Admin/AdminEventUseCaseTest.php`, `AdminEventCrudTest.php` | 25 | Đã tự động hóa |
 | **UC_005** | Quản lý sơ đồ ghế | Admin | `tests/Feature/Admin/AdminSeatMapUseCaseTest.php`, `AdminRoomLayoutValidationTest.php` | 17 | Đã tự động hóa |
 | **UC_006** | Quản lý loại vé (Seat Zones) | Admin | `tests/Feature/Admin/AdminTicketTiersUseCaseTest.php`, `tests/Feature/Client/SeatZoneTest.php` | 19 | Đã tự động hóa |
 | **UC_007** | Quản lý đơn hàng | Admin | `tests/Feature/Admin/AdminBookingUseCaseTest.php`, `AdminBookingManagementTest.php` | 16 | Đã tự động hóa |
@@ -175,6 +175,7 @@ tests/
 | `TC_UC004_022` | Chặn xóa sự kiện đang có ghế giữ chỗ (`held`) | Integrity | Hệ thống từ chối xóa để đảm bảo luồng giao dịch thanh toán của khách hàng không bị gián đoạn. |
 | `TC_UC004_023` | Khách vãng lai truy cập route quản lý sự kiện | Security | Mọi request GET/POST/PUT/DELETE chuyển hướng về trang đăng nhập `/login`. |
 | `TC_UC004_024` | User thường truy cập route quản lý sự kiện | Security | Trả về mã lỗi HTTP 403 Forbidden cho mọi hành động xem, tạo, sửa, xóa sự kiện. |
+| `TC_UC004_025` | Dời ngày mở bán sự kiện sang tương lai — tự động đồng bộ ngày suất diễn | Positive/Sync | Khi Admin cập nhật ngày mở bán (`release_date`) lùi về sau (thời điểm tương lai), hệ thống tự động dời ngày bắt đầu & kết thúc của toàn bộ suất diễn sang mốc mới (giữ nguyên giờ diễn), chuyển trạng thái sang đang mở bán và phục hồi nút đặt vé trên web. |
 
 ---
 

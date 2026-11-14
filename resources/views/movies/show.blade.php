@@ -21,7 +21,7 @@
                 <div class="lg:col-span-4 space-y-6">
                     <div class="relative group rounded-3xl overflow-hidden bg-[#FAF9F6] border border-black/10 shadow-md aspect-[3/4]">
                         <img 
-                            src="{{ $movie->poster_path }}" 
+                            src="{{ $movie->poster_url }}" 
                             alt="{{ $movie->title }}" 
                             class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
                         >
@@ -76,10 +76,17 @@
                         </div>
                         <div class="flex items-center justify-between text-gray-600 pt-1 border-t border-black/5">
                             <span>Trạng thái phát hành:</span>
-                            <span class="text-sage-forest font-black flex items-center gap-1.5">
-                                <span class="w-2 h-2 rounded-full bg-sage-forest animate-ping"></span>
-                                Đang mở bán trực tuyến
-                            </span>
+                            @if (!empty($showtimes))
+                                <span class="text-sage-forest font-black flex items-center gap-1.5">
+                                    <span class="w-2 h-2 rounded-full bg-sage-forest animate-ping"></span>
+                                    Đang mở bán trực tuyến
+                                </span>
+                            @else
+                                <span class="text-rose-600 font-bold flex items-center gap-1.5">
+                                    <span class="w-2 h-2 rounded-full bg-rose-500"></span>
+                                    Hết hạn / Chưa mở bán
+                                </span>
+                            @endif
                         </div>
                     </div>
 
@@ -109,19 +116,100 @@
                         </div>
                     @endif
 
-                    <!-- Direct Quick Action -->
+                    <!-- Direct Quick Action / Showtime Selection Box -->
                     @if (!empty($showtimes))
-                        <a 
-                            href="{{ route('showtimes.seats', $showtimes[0]->id) }}" 
-                            class="w-full btn-rose py-4 rounded-2xl font-black text-sm flex items-center justify-center gap-2 shadow-md hover:shadow-lg transition-all"
+                        <div 
+                            class="bg-[#FAF9F6] rounded-3xl p-5 border border-black/10 space-y-4 shadow-sm"
+                            x-data="{ 
+                                selectedShowtimeId: {{ $showtimes[0]->id }},
+                                get targetUrl() {
+                                    return '{{ url('/showtimes') }}/' + this.selectedShowtimeId + '/seats';
+                                }
+                            }"
                         >
-                            @if ($movie->is_seated_concert)
-                                <span>Chọn Ghế Khán Đài &amp; Đặt Vé Ngay</span>
+                            <div class="flex items-center justify-between pb-2 border-b border-black/10">
+                                <span class="text-[10px] font-black uppercase tracking-wider text-gold-dark">
+                                    {{ count($showtimes) > 1 ? 'Chọn Suất Diễn Để Đặt Vé' : 'Suất Diễn Chính Thức' }}
+                                </span>
+                                @if (count($showtimes) > 1)
+                                    <span class="badge-gold text-[9px] px-2 py-0.5 rounded-full font-black">
+                                        {{ count($showtimes) }} Suất Mở Bán
+                                    </span>
+                                @else
+                                    <span class="badge-rose text-[9px] px-2 py-0.5 rounded-full font-bold">
+                                        1 Suất Duy Nhất
+                                    </span>
+                                @endif
+                            </div>
+
+                            @if (count($showtimes) > 1)
+                                <!-- Multi-showtimes picker under poster -->
+                                <div class="space-y-2">
+                                    <span class="text-[11px] text-gray-500 font-medium block">
+                                        Chọn 1 trong {{ count($showtimes) }} suất diễn bạn muốn tham dự:
+                                    </span>
+                                    <div class="grid grid-cols-1 gap-2">
+                                        @foreach ($showtimes as $st)
+                                            <button 
+                                                type="button"
+                                                @click="selectedShowtimeId = {{ $st->id }}"
+                                                class="w-full text-left p-3 rounded-2xl border transition-all flex items-center justify-between gap-3 text-xs cursor-pointer"
+                                                :class="selectedShowtimeId === {{ $st->id }} ? 'bg-black text-white border-black shadow-md font-bold' : 'bg-white text-gray-800 border-black/10 hover:border-black/30 font-medium'"
+                                            >
+                                                <div class="flex items-center gap-2.5">
+                                                    <span 
+                                                        class="w-4 h-4 rounded-full flex items-center justify-center border text-[9px]"
+                                                        :class="selectedShowtimeId === {{ $st->id }} ? 'border-gold-antique bg-gold-antique text-black font-black' : 'border-gray-300'"
+                                                    >
+                                                        <span x-show="selectedShowtimeId === {{ $st->id }}">✓</span>
+                                                    </span>
+                                                    <div>
+                                                        <strong class="block text-xs" :class="selectedShowtimeId === {{ $st->id }} ? 'text-white' : 'text-slate-900'">
+                                                            {{ $st->session_label }}
+                                                        </strong>
+                                                        <span class="text-[11px]" :class="selectedShowtimeId === {{ $st->id }} ? 'text-gray-300' : 'text-gray-500'">
+                                                            {{ $st->start_time->format('H:i - d/m/Y') }}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            </button>
+                                        @endforeach
+                                    </div>
+                                </div>
                             @else
-                                <span>Đặt Vé Tham Dự Ngay</span>
+                                <!-- Single showtime summary -->
+                                <div class="bg-white p-3.5 rounded-2xl border border-black/10 text-xs space-y-1">
+                                    <div class="flex items-center justify-between text-gray-500 text-[11px]">
+                                        <span>Khán phòng:</span>
+                                        <strong class="text-black">{{ $showtimes[0]->room->name }}</strong>
+                                    </div>
+                                    <div class="flex items-center justify-between text-gray-500 text-[11px]">
+                                        <span>Thời gian:</span>
+                                        <strong class="text-rose-taupe font-bold">{{ $showtimes[0]->start_time->format('H:i - d/m/Y') }}</strong>
+                                    </div>
+                                </div>
                             @endif
-                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg>
-                        </a>
+
+                            <a 
+                                :href="targetUrl" 
+                                class="w-full btn-rose py-4 rounded-2xl font-black text-sm flex items-center justify-center gap-2 shadow-md hover:shadow-lg transition-all"
+                            >
+                                @if ($movie->is_seated_concert)
+                                    <span>Chọn Ghế Khán Đài &amp; Đặt Vé Ngay</span>
+                                @else
+                                    <span>Đặt Vé Tham Dự Ngay</span>
+                                @endif
+                                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg>
+                            </a>
+                        </div>
+                    @else
+                        <div class="bg-[#FAF9F6] rounded-3xl p-5 border border-black/10 space-y-3 shadow-sm text-center">
+                            <div class="w-10 h-10 rounded-2xl bg-amber-50 border border-amber-200 text-amber-700 flex items-center justify-center mx-auto">
+                                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                            </div>
+                            <h4 class="font-display font-black text-sm text-black">Chưa Có Suất Mở Bán</h4>
+                            <p class="text-xs text-gray-500 leading-relaxed">Các suất diễn của sự kiện đã kết thúc hoặc ban tổ chức chưa công bố lịch diễn tiếp theo.</p>
+                        </div>
                     @endif
                 </div>
 
@@ -137,16 +225,34 @@
                                 <svg class="w-3.5 h-3.5 text-gold-dark fill-current" viewBox="0 0 20 20">
                                     <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
                                 </svg>
-                                <span>4.9/5 (1.200+ đánh giá xác thực)</span>
+                                <span>{{ $ratingCount ? number_format($ratingAverage, 1) : '—' }}/5 ({{ number_format($ratingCount) }} đánh giá)</span>
                             </span>
                             <span class="badge-sage px-3 py-1 rounded-full text-xs font-bold">
                                 Cam Kết Vé Thật 100%
                             </span>
                         </div>
 
-                        <h1 class="font-serif text-3xl sm:text-4xl lg:text-5xl font-black text-black leading-tight tracking-tight">
-                            {{ $movie->title }}
-                        </h1>
+                        <div class="flex items-start justify-between gap-4">
+                            <h1 class="font-serif text-3xl sm:text-4xl lg:text-5xl font-black text-black leading-tight tracking-tight flex-1">
+                                {{ $movie->title }}
+                            </h1>
+                            @php
+                                $isEventFav = auth()->check() && $movie->isFavoritedBy(auth()->user());
+                            @endphp
+                            <form action="{{ route('events.favorite.toggle', $movie->id) }}" method="POST" class="shrink-0 pt-1">
+                                @csrf
+                                <button
+                                    type="submit"
+                                    class="favorite-toggle-btn px-4 py-2 rounded-2xl border transition-all flex items-center gap-2 text-xs font-bold shadow-xs {{ $isEventFav ? 'bg-rose-50 border-rose-200 text-crimson' : 'bg-white border-black/10 text-gray-700 hover:text-crimson hover:border-rose-200' }}"
+                                    title="{{ $isEventFav ? 'Đã lưu yêu thích' : 'Lưu vào yêu thích' }}"
+                                >
+                                    <svg class="w-4 h-4 {{ $isEventFav ? 'fill-current text-crimson' : 'fill-none stroke-current' }}" viewBox="0 0 24 24" stroke-width="2">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                                    </svg>
+                                    <span class="{{ $isEventFav ? 'text-crimson' : '' }}">{{ $isEventFav ? 'Đã yêu thích' : 'Yêu thích' }}</span>
+                                </button>
+                            </form>
+                        </div>
 
                         <!-- Description -->
                         <div class="mt-4 text-sm sm:text-base text-gray-700 leading-relaxed font-normal border-b border-black/10 pb-6">
@@ -340,39 +446,31 @@
                             </div>
                         @endif
 
-                        <!-- 4. TICKET TIERS OVERVIEW (Bảng Giá & Quyền Lợi Hạng Vé) -->
+                        <!-- 4. TICKET TIERS OVERVIEW (Bảng giá theo khu của suất sắp tới) -->
+                        @if (! empty($zoneCards))
                         <div class="mt-8 space-y-4">
                             <div class="flex items-center justify-between">
                                 <div>
-                                    <span class="text-xs font-bold uppercase tracking-wider text-gold-dark">Hạng Vé &amp; Quyền Lợi</span>
+                                    <span class="text-xs font-bold uppercase tracking-wider text-gold-dark">Khu Vực &amp; Quyền Lợi</span>
                                     <h3 class="font-display font-black text-xl text-black">Bảng Giá Vé Sự Kiện</h3>
                                 </div>
                                 <span class="text-xs text-gray-500 italic hidden sm:inline">Chọn suất diễn bên dưới để mở sơ đồ chỗ ngồi</span>
                             </div>
 
                             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5">
-                                @foreach ($ticketTiers as $key => $tier)
-                                    <div class="bg-[#FAF9F6] rounded-2xl p-4 border border-black/10 hover:border-black/30 hover:shadow-md transition-all space-y-2">
-                                        <div class="flex items-center justify-between">
-                                            <span class="{{ $tier['badge'] }} text-[10px] px-2.5 py-0.5 rounded-full font-black uppercase flex items-center gap-1">
-                                                <span>{{ $tier['icon'] }}</span>
-                                                <span>{{ $tier['name'] }}</span>
-                                            </span>
-                                            <span class="font-display font-black text-sm text-black">
-                                                {{ number_format($tier['price']) }}₫
-                                            </span>
+                                @foreach ($zoneCards as $zone)
+                                    <div class="bg-[#FAF9F6] rounded-2xl p-4 border border-black/10 hover:shadow-md transition-all space-y-2" style="border-left: 5px solid {{ $zone['color'] }}">
+                                        <div class="flex items-center justify-between gap-2">
+                                            <span class="text-xs font-black text-black">{{ $zone['name'] }}</span>
+                                            <span class="font-display font-black text-sm text-black">{{ number_format($zone['price'], 0, ',', '.') }}₫</span>
                                         </div>
-
-                                        <p class="text-[11px] text-gray-600 leading-relaxed">
-                                            {{ $tier['description'] }}
-                                        </p>
-
-                                        @if (!empty($tier['perks']))
+                                        @if ($zone['description'])
+                                            <p class="text-[11px] text-gray-600 leading-relaxed">{{ $zone['description'] }}</p>
+                                        @endif
+                                        @if (! empty($zone['perks']))
                                             <div class="flex flex-wrap gap-1 pt-1">
-                                                @foreach ($tier['perks'] as $perk)
-                                                    <span class="bg-white border border-black/10 text-[9px] font-bold px-2 py-0.5 rounded-full text-gray-700">
-                                                        ✓ {{ $perk }}
-                                                    </span>
+                                                @foreach ($zone['perks'] as $perk)
+                                                    <span class="bg-white border border-black/10 text-[9px] font-bold px-2 py-0.5 rounded-full text-gray-700">✓ {{ $perk }}</span>
                                                 @endforeach
                                             </div>
                                         @endif
@@ -380,6 +478,7 @@
                                 @endforeach
                             </div>
                         </div>
+                        @endif
 
                         <!-- 5. SHOWTIME SELECTOR SECTION (Lịch Diễn & Suất Diễn) -->
                         <div class="mt-8 space-y-4">
@@ -387,45 +486,68 @@
                                 <div>
                                     <span class="text-xs font-bold uppercase tracking-wider text-gold-dark">Lịch Diễn &amp; Suất Chiếu</span>
                                     <h3 class="font-display font-black text-xl text-black">
-                                        @if ($movie->is_seated_concert)
-                                            Chọn Suất Diễn Để Mở Sơ Đồ Khán Phòng Sân Vận Động
+                                        @if (count($showtimes) > 1)
+                                            Sự Kiện Có {{ count($showtimes) }} Suất Diễn — Chọn Suất Bạn Muốn Tham Dự
+                                        @elseif ($movie->is_seated_concert)
+                                            Suất Diễn Duy Nhất — Sơ Đồ Khán Phòng Sân Vận Động
                                         @else
-                                            Chọn Suất Diễn Để Đặt Vé Tham Dự Trực Tiếp
+                                            Suất Diễn Duy Nhất — Đặt Vé Tham Dự Trực Tiếp
                                         @endif
                                     </h3>
                                 </div>
-                                <span class="text-xs text-rose-taupe font-bold">Click để vào đặt vé &rarr;</span>
+                                <span class="text-xs text-rose-taupe font-bold">Chọn suất để giữ chỗ &rarr;</span>
                             </div>
 
-                            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-{{ min(count($showtimes), 3) }} gap-4">
                                 @forelse ($showtimes as $showtime)
                                     <a 
                                         href="{{ route('showtimes.seats', $showtime->id) }}"
-                                        class="group bg-white rounded-3xl p-5 border-2 border-black/10 hover:border-gold-antique hover:shadow-xl transition-all block relative overflow-hidden"
+                                        class="group bg-white rounded-3xl p-5 border-2 border-black/10 hover:border-gold-antique hover:shadow-xl transition-all block relative overflow-hidden flex flex-col justify-between"
                                     >
-                                        <div class="flex items-center justify-between mb-2">
-                                            <span class="font-display font-black text-2xl text-black group-hover:text-gold-dark transition-colors">
-                                                {{ $showtime->start_time->format('H:i') }}
-                                            </span>
-                                            <span class="badge-gold text-[10px] px-2.5 py-0.5 rounded-full font-bold uppercase">
-                                                {{ $showtime->room->name }}
-                                            </span>
-                                        </div>
+                                        <div>
+                                            <div class="flex items-center justify-between mb-3">
+                                                <span class="badge-gold text-[11px] px-3 py-1 rounded-full font-black tracking-wide uppercase shadow-sm">
+                                                    {{ $showtime->session_short_label ?? ('Suất ' . $loop->iteration) }}
+                                                </span>
+                                                <span class="text-[11px] text-gray-700 bg-gray-100 font-bold px-2.5 py-0.5 rounded-md border border-gray-200">
+                                                    {{ $showtime->room->name }}
+                                                </span>
+                                            </div>
 
-                                        <div class="text-xs text-gray-600 space-y-1 font-medium">
-                                            <div class="flex items-center justify-between">
-                                                <span>Ngày biểu diễn:</span>
-                                                <strong class="text-black">{{ $showtime->start_time->format('d/m/Y') }}</strong>
+                                            <div class="mb-3">
+                                                <div class="flex items-baseline gap-2">
+                                                    <span class="font-display font-black text-3xl text-black group-hover:text-gold-dark transition-colors">
+                                                        {{ $showtime->start_time->format('H:i') }}
+                                                    </span>
+                                                    <span class="text-xs text-gray-700 font-bold">
+                                                        {{ $showtime->start_time->locale('vi')->isoFormat('dddd, DD/MM/YYYY') }}
+                                                    </span>
+                                                </div>
+                                                <div class="text-xs text-slate-800 font-semibold mt-1">
+                                                    {{ $showtime->session_label }}
+                                                </div>
+                                            </div>
+
+                                            <div class="text-xs text-gray-700 space-y-1.5 font-medium bg-[#FAF9F6] p-3 rounded-2xl border border-black/5">
+                                                <div class="flex items-center justify-between">
+                                                    <span class="text-gray-700">Trạng thái:</span>
+                                                    <span class="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-800">
+                                                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                                                        Đang mở bán
+                                                    </span>
+                                                </div>
                                             </div>
                                         </div>
 
-                                        <div class="mt-3 pt-3 border-t border-black/10 flex items-center justify-between text-xs font-black text-black group-hover:text-gold-dark">
-                                            @if ($movie->is_seated_concert)
-                                                <span>Mở Sơ Đồ Chọn Ghế Khán Đài</span>
-                                            @else
-                                                <span>Chọn Hạng Vé &amp; Số Lượng</span>
-                                            @endif
-                                            <span>&rarr;</span>
+                                        <div class="mt-4 pt-3 border-t border-black/10 flex items-center justify-between text-xs font-black text-black group-hover:text-gold-dark">
+                                            <span>
+                                                @if ($movie->is_seated_concert)
+                                                    Chọn Ghế Suất Này
+                                                @else
+                                                    Đặt Vé Suất Này
+                                                @endif
+                                            </span>
+                                            <span class="transition-transform group-hover:translate-x-1">&rarr;</span>
                                         </div>
                                     </a>
                                 @empty
@@ -450,31 +572,31 @@
                                 <div class="bg-[#FAF9F6] rounded-3xl p-6 border border-black/10 grid grid-cols-1 md:grid-cols-2 gap-4 text-xs shadow-sm">
                                     <div class="space-y-3">
                                         <div class="space-y-1">
-                                            <span class="font-bold text-black flex items-center gap-1.5">
-                                                <span class="text-gold-dark">🔞</span> Độ tuổi tham gia:
-                                            </span>
-                                            <p class="text-slate-800 font-medium leading-relaxed pl-5">{{ $movie->entry_policy['age'] }}</p>
+                                             <span class="font-bold text-black flex items-center gap-1.5">
+                                                 <span class="text-gold-dark">🔞</span> Độ tuổi tham gia:
+                                             </span>
+                                             <p class="text-slate-800 font-medium leading-relaxed pl-5">{{ $movie->entry_policy['age'] }}</p>
                                         </div>
                                         <div class="space-y-1">
-                                            <span class="font-bold text-black flex items-center gap-1.5">
-                                                <span class="text-sage-forest">🎫</span> Thủ tục Check-in:
-                                            </span>
-                                            <p class="text-slate-800 font-medium leading-relaxed pl-5">{{ $movie->entry_policy['checkin'] }}</p>
+                                             <span class="font-bold text-black flex items-center gap-1.5">
+                                                 <span class="text-sage-forest">🎫</span> Thủ tục Check-in:
+                                             </span>
+                                             <p class="text-slate-800 font-medium leading-relaxed pl-5">{{ $movie->entry_policy['checkin'] }}</p>
                                         </div>
                                         <div class="space-y-1">
-                                            <span class="font-bold text-black flex items-center gap-1.5">
-                                                <span class="text-blue-500">🔄</span> Chính sách hoàn/đổi vé:
-                                            </span>
-                                            <p class="text-slate-800 font-medium leading-relaxed pl-5">{{ $movie->entry_policy['refund'] }}</p>
+                                             <span class="font-bold text-black flex items-center gap-1.5">
+                                                 <span class="text-blue-500">🔄</span> Chính sách hoàn/đổi vé:
+                                             </span>
+                                             <p class="text-slate-800 font-medium leading-relaxed pl-5">{{ $movie->entry_policy['refund'] }}</p>
                                         </div>
                                     </div>
 
                                     <div class="space-y-3 md:border-l md:border-black/10 md:pl-4">
                                         <div class="space-y-1">
-                                            <span class="font-bold text-emerald-800 flex items-center gap-1.5">
-                                                <span>✅</span> Vật dụng ĐƯỢC PHÉP mang vào:
-                                            </span>
-                                            <p class="text-slate-800 font-medium leading-relaxed pl-5">{{ $movie->entry_policy['allowed'] }}</p>
+                                             <span class="font-bold text-emerald-800 flex items-center gap-1.5">
+                                                 <span>✅</span> Vật dụng ĐƯỢC PHÉP mang vào:
+                                             </span>
+                                             <p class="text-slate-800 font-medium leading-relaxed pl-5">{{ $movie->entry_policy['allowed'] }}</p>
                                         </div>
                                         <div class="space-y-1">
                                             <span class="font-bold text-rose-800 flex items-center gap-1.5">
@@ -489,7 +611,7 @@
 
                         <!-- 7. WEATHER INTEGRATION & LOCATION QUICK VIEW -->
                         <div class="mt-8 grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <!-- Location Card -->
+                            <!-- Location Card (Google Maps) -->
                             <div class="bg-[#FAF9F6] rounded-3xl p-5 border border-black/10 shadow-sm">
                                 <div class="flex items-center gap-2 mb-3">
                                     <svg class="w-4 h-4 text-gold-dark" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -498,13 +620,22 @@
                                     </svg>
                                     <span class="text-xs font-bold text-black uppercase tracking-wider">Địa Điểm Tổ Chức Sự Kiện</span>
                                 </div>
-                                <div class="h-28 rounded-2xl bg-white border border-black/10 flex flex-col items-center justify-center text-center p-3 text-xs text-gray-600 shadow-inner">
-                                    <span class="font-bold text-black text-sm">{{ $movie->venue_name ?? (!empty($showtimes) ? $showtimes[0]->room->name : 'Sân Vận Động Quân Khu 7') }}</span>
-                                    <span class="text-[11px] text-gray-500 mt-1">{{ $movie->venue_address ?? (!empty($showtimes) ? ($showtimes[0]->room->address ?? 'TP. Hồ Chí Minh') : 'TP. Hồ Chí Minh') }}</span>
-                                </div>
+                                <p class="text-sm font-bold text-black">{{ $movie->venue_name ?? $weatherShowtime?->room->name ?? 'Đang cập nhật' }}</p>
+                                <p class="text-[11px] text-gray-500 mb-3">{{ $movie->venue_address ?? $weatherShowtime?->room->address }}</p>
+                                @if ($mapUrl)
+                                    <iframe
+                                        src="{{ $mapUrl }}"
+                                        class="w-full h-48 rounded-2xl border border-black/10"
+                                        loading="lazy"
+                                        referrerpolicy="no-referrer-when-downgrade"
+                                        title="Bản đồ địa điểm"
+                                    ></iframe>
+                                @else
+                                    <div class="h-48 rounded-2xl bg-white border border-black/10 flex items-center justify-center text-xs text-gray-500">Chưa có bản đồ cho địa điểm này.</div>
+                                @endif
                             </div>
 
-                            <!-- Weather Card -->
+                            <!-- Weather Card (OpenWeatherMap) -->
                             <div class="bg-[#FAF9F6] rounded-3xl p-5 border border-black/10 shadow-sm">
                                 <div class="flex items-center gap-2 mb-3">
                                     <svg class="w-4 h-4 text-sage-forest" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -512,56 +643,90 @@
                                     </svg>
                                     <span class="text-xs font-bold text-black uppercase tracking-wider">Dự Báo Thời Tiết Sự Kiện</span>
                                 </div>
-                                <div class="h-28 rounded-2xl bg-white border border-black/10 flex items-center justify-around p-3 text-xs shadow-inner">
-                                    <div class="text-center">
-                                        <svg class="w-8 h-8 text-gold-dark mx-auto mb-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
-                                        </svg>
-                                        <span class="text-black font-bold">28°C · Nắng nhẹ</span>
+                                @if ($weather)
+                                    <div class="rounded-2xl bg-white border border-black/10 p-4 flex items-center gap-4 shadow-inner">
+                                        <img src="{{ $weather['icon_url'] }}" alt="{{ $weather['description'] }}" class="w-16 h-16">
+                                        <div class="space-y-0.5 text-xs">
+                                            <div class="font-display font-black text-2xl text-black">{{ $weather['temp'] }}°C</div>
+                                            <div class="font-bold text-black">{{ $weather['description'] }}</div>
+                                            <div class="text-gray-600">Độ ẩm: {{ $weather['humidity'] }}% · Gió: {{ $weather['wind_kmh'] }} km/h</div>
+                                            <div class="{{ $weather['is_favorable'] ? 'text-sage-forest' : 'text-[#CC0000]' }} font-bold">
+                                                {{ $weather['is_favorable'] ? 'Thuận lợi tổ chức' : 'Có thể mưa — nhớ mang áo mưa' }}
+                                            </div>
+                                        </div>
                                     </div>
-                                    <div class="text-left text-[11px] text-gray-600 space-y-0.5 border-l border-black/10 pl-3">
-                                        <div>Độ ẩm: 65%</div>
-                                        <div>Gió: 12 km/h</div>
-                                        <div class="text-sage-forest font-bold">Thuận lợi tổ chức</div>
+                                    <p class="mt-2 text-[10px] text-gray-500">
+                                        Dự báo lúc {{ $weather['forecast_at']->timezone(config('app.timezone'))->format('H:i d/m') }} cho suất {{ $weatherShowtime->start_time->format('H:i d/m/Y') }} · Nguồn: OpenWeatherMap
+                                    </p>
+                                @else
+                                    <div class="h-28 rounded-2xl bg-white border border-black/10 flex items-center justify-center text-center p-3 text-xs text-gray-500 shadow-inner">
+                                        Chưa có dự báo — dự báo chỉ có trong vòng {{ \App\Services\WeatherService::FORECAST_DAYS }} ngày trước giờ diễn.
                                     </div>
-                                </div>
+                                @endif
                             </div>
                         </div>
 
                         <!-- 8. COMMENTS / REVIEWS SECTION -->
-                        <div class="mt-10 pt-8 border-t border-black/10" x-data="{ newComment: '', comments: [{ user: 'Nguyễn Hoàng', time: '2 giờ trước', text: 'Dàn âm thanh L-Acoustics và visual pháo hoa đỉnh chóp, khuyên mọi người nên mua hạng SVIP hoặc VIP Floor!' }, { user: 'Trần Thảo', time: '1 ngày trước', text: 'Live concert tuyệt vời, chỗ ngồi khán đài A tầm nhìn cực rộng và bãi giữ xe rộng rãi.' }] }">
+                        <div class="mt-10 pt-8 border-t border-black/10"
+                             x-data="eventComments({
+                                 comments: @js($comments),
+                                 storeUrl: @js(route('comments.store', $movie->slug)),
+                                 destroyUrl: @js(route('comments.destroy', '__ID__')),
+                                 loginUrl: @js(route('login')),
+                                 canComment: @js(auth()->check()),
+                                 ratingAverage: @js($ratingAverage),
+                                 ratingCount: @js($ratingCount),
+                             })">
                             <div class="flex items-center justify-between mb-4">
                                 <h3 class="font-display font-black text-lg text-black">Đánh Giá &amp; Cảm Nhận Khán Giả</h3>
-                                <span class="text-xs text-gray-500" x-text="comments.length + ' bình luận'"></span>
+                                <span class="text-xs text-gray-500" x-text="comments.length + ' bình luận · ' + (ratingCount ? ratingAverage + '/5' : 'Chưa có điểm')"></span>
                             </div>
 
                             <!-- Comment Input Form -->
-                            <div class="bg-[#FAF9F6] rounded-2xl p-3 border border-black/10 mb-6 flex gap-2">
-                                <input 
-                                    type="text" 
+                            <form @submit.prevent="submit()" class="bg-[#FAF9F6] rounded-2xl p-3 border border-black/10 mb-2 flex gap-2">
+                                <label class="sr-only" for="event-rating">Đánh giá từ 1 đến 5 sao</label>
+                                <select id="event-rating" x-model.number="newRating" :disabled="!canComment" class="bg-white border border-black/10 rounded-xl text-xs px-2" aria-label="Đánh giá từ 1 đến 5 sao">
+                                    <option value="5">★★★★★ 5</option><option value="4">★★★★☆ 4</option><option value="3">★★★☆☆ 3</option><option value="2">★★☆☆☆ 2</option><option value="1">★☆☆☆☆ 1</option>
+                                </select>
+                                <input
+                                    type="text"
                                     x-model="newComment"
-                                    @keydown.enter="if(newComment.trim()) { comments.unshift({ user: 'Bạn', time: 'Vừa xong', text: newComment }); newComment = ''; }"
-                                    placeholder="Chia sẻ cảm nhận của bạn về sự kiện này..." 
+                                    maxlength="1000"
+                                    placeholder="{{ auth()->check() ? 'Chia sẻ cảm nhận của bạn về sự kiện này...' : 'Đăng nhập để bình luận...' }}"
                                     class="bg-transparent border-0 flex-1 text-xs text-black placeholder-gray-500 focus:ring-0 font-medium"
                                 >
-                                <button 
-                                    type="button" 
-                                    @click="if(newComment.trim()) { comments.unshift({ user: 'Bạn', time: 'Vừa xong', text: newComment }); newComment = ''; }"
-                                    class="btn-rose px-5 py-2 rounded-xl text-xs font-bold shrink-0 shadow-sm"
-                                >
-                                    Gửi
-                                </button>
-                            </div>
+                                <button
+                                    type="submit"
+                                    :disabled="isPosting"
+                                    class="btn-rose px-5 py-2 rounded-xl text-xs font-bold shrink-0 shadow-sm disabled:opacity-50"
+                                    x-text="isPosting ? 'Đang gửi...' : 'Gửi'"
+                                >Gửi</button>
+                            </form>
+                            <p x-show="error" x-text="error" class="text-[11px] font-bold text-[#CC0000] mb-4" style="display: none;"></p>
 
                             <!-- Comment list -->
-                            <div class="space-y-3">
-                                <template x-for="(c, idx) in comments" :key="idx">
+                            <div class="space-y-3 mt-4">
+                                <p x-show="comments.length === 0" class="text-xs text-gray-500">Chưa có bình luận nào. Hãy là người đầu tiên!</p>
+                                <template x-for="c in comments" :key="c.id">
                                     <div class="bg-[#FAF9F6] rounded-2xl p-4 border border-black/10 space-y-1 shadow-sm">
-                                        <div class="flex items-center justify-between text-xs">
-                                            <span class="font-bold text-black" x-text="c.user"></span>
-                                            <span class="text-[10px] text-gray-500" x-text="c.time"></span>
+                                        <div class="flex items-center justify-between text-xs gap-3">
+                                            <div class="flex items-center gap-2 min-w-0">
+                                                <template x-if="c.avatar_url">
+                                                    <img :src="c.avatar_url" alt="" class="w-6 h-6 rounded-full object-cover">
+                                                </template>
+                                                <span class="font-bold text-black truncate" x-text="c.user"></span>
+                                            </div>
+                                            <div class="flex items-center gap-3 shrink-0">
+                                                <span class="text-[10px] text-gray-500" x-text="c.time"></span>
+                                                <button type="button" x-show="c.can_delete" @click="remove(c)" class="text-[10px] font-bold text-[#CC0000] hover:underline">Xóa</button>
+                                            </div>
                                         </div>
-                                        <p class="text-xs text-gray-700" x-text="c.text"></p>
+                                        <p class="text-xs text-gray-700 whitespace-pre-line" x-text="c.text"></p>
+                                        <p x-show="c.rating" class="text-amber-600 text-xs" :aria-label="'Đánh giá ' + c.rating + ' trên 5 sao'" x-text="'★'.repeat(c.rating) + '☆'.repeat(5 - c.rating)"></p>
+                                        <div x-show="c.admin_reply" class="ml-3 mt-3 rounded-xl border border-emerald-200 bg-emerald-50 p-3 space-y-1">
+                                            <div class="flex items-center justify-between gap-2"><span class="text-[11px] font-black text-emerald-900">Phản hồi từ TicketBox</span><span class="text-[10px] text-emerald-800" x-text="c.admin_reply_time || ''"></span></div>
+                                            <p class="text-xs text-emerald-950 whitespace-pre-line" x-text="c.admin_reply"></p>
+                                        </div>
                                     </div>
                                 </template>
                             </div>
