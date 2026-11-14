@@ -114,6 +114,30 @@ test('public event poster route streams Drive image bytes from the same origin',
         ->assertContent('image bytes');
 });
 
+test('public event poster route gracefully redirects to fallback image when Drive image is unavailable', function () {
+    $event = Event::factory()->create([
+        'slug' => 'demo-event-test',
+        'poster_path' => 'https://drive.google.com/uc?id=broken_drive_file_id&export=download',
+    ]);
+    $drive = Mockery::mock(GoogleDriveService::class);
+    $drive->shouldReceive('extractFileId')->once()->andReturn('broken_drive_file_id');
+    $drive->shouldReceive('downloadImage')->once()->andReturnNull();
+    $this->app->instance(GoogleDriveService::class, $drive);
+
+    $this->get(route('events.poster', $event))
+        ->assertRedirect('https://picsum.photos/seed/demo-event-test/480/720');
+});
+
+test('event poster URL resolves local storage disk when poster path is local', function () {
+    Storage::disk('public')->put('posters/sample-test.jpg', 'local image content');
+
+    $event = Event::factory()->create([
+        'poster_path' => 'posters/sample-test.jpg',
+    ]);
+
+    expect($event->poster_url)->toContain('/storage/posters/sample-test.jpg');
+});
+
 test('admin event poster uploads to Google Drive when it is enabled', function () {
     $drive = Mockery::mock(GoogleDriveService::class);
     $drive->shouldReceive('isEnabled')->once()->andReturn(true);

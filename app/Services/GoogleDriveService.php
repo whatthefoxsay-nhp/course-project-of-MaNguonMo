@@ -118,32 +118,56 @@ class GoogleDriveService
     /** @return array{content: string, mime_type: string}|null */
     public function downloadImage(string $fileId): ?array
     {
-        if (! $this->isEnabled() || ! preg_match('/^[A-Za-z0-9_-]+$/', $fileId)) {
+        if (! preg_match('/^[A-Za-z0-9_-]+$/', $fileId)) {
             return null;
         }
 
-        try {
-            $response = $this->drive()->files->get($fileId, [
-                'alt' => 'media',
-                'supportsAllDrives' => true,
-            ]);
-            $mimeType = strtolower(trim(explode(';', $response->getHeaderLine('Content-Type'))[0]));
+        // 1. First, try authenticated Drive API if enabled
+        if ($this->isEnabled()) {
+            try {
+                $response = $this->drive()->files->get($fileId, [
+                    'alt' => 'media',
+                    'supportsAllDrives' => true,
+                ]);
+                $mimeType = strtolower(trim(explode(';', $response->getHeaderLine('Content-Type'))[0]));
 
-            if (! in_array($mimeType, ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/avif'], true)) {
-                return null;
+                if (in_array($mimeType, ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/avif'], true)) {
+                    return [
+                        'content' => $response->getBody()->getContents(),
+                        'mime_type' => $mimeType,
+                    ];
+                }
+            } catch (Throwable $exception) {
+                Log::warning('Google Drive image download failed via Drive API, attempting public fallback.', [
+                    'exception' => $exception::class,
+                ]);
             }
-
-            return [
-                'content' => $response->getBody()->getContents(),
-                'mime_type' => $mimeType,
-            ];
-        } catch (Throwable $exception) {
-            Log::warning('Google Drive image download failed.', [
-                'exception' => $exception::class,
-            ]);
-
-            return null;
         }
+
+        // 2. Fallback to public thumbnail CDN (works when OAuth token is expired or offline)
+        try {
+            $response = \Illuminate\Support\Facades\Http::timeout(8)
+                ->withHeaders([
+                    'User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                ])
+                ->get("https://drive.google.com/thumbnail?id={$fileId}&sz=w1200");
+
+            if ($response->successful()) {
+                $mimeType = strtolower(trim(explode(';', $response->header('Content-Type', 'image/jpeg'))[0]));
+                if (in_array($mimeType, ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/avif'], true)) {
+                    return [
+                        'content' => $response->body(),
+                        'mime_type' => $mimeType,
+                    ];
+                }
+            }
+        } catch (Throwable $fallbackException) {
+            Log::warning('Google Drive public thumbnail download failed.', [
+                'exception' => $fallbackException::class,
+            ]);
+        }
+
+        return null;
     }
 
     public function extractFileId(string $url): ?string

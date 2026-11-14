@@ -121,6 +121,12 @@ class Event extends Model
             if (Storage::disk('public')->exists($this->poster_path)) {
                 return Storage::url($this->poster_path);
             }
+            if (str_starts_with($this->poster_path, 'storage/') || str_starts_with($this->poster_path, '/storage/')) {
+                return asset(ltrim($this->poster_path, '/'));
+            }
+            if (file_exists(public_path($this->poster_path))) {
+                return asset($this->poster_path);
+            }
         }
         return "https://picsum.photos/seed/{$this->slug}/480/720";
     }
